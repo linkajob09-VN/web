@@ -1,0 +1,905 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Đội ngũ Advisor · LinkaJob</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=Inter:wght@400;500&display=swap');
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+body{font-family:'Inter',sans-serif;background:#F5F4F1;color:#1C1C1C;overflow-x:hidden;}
+
+/* ── NAV ── */
+.nav{display:flex;align-items:center;justify-content:space-between;padding:16px 32px;border-bottom:.5px solid rgba(255,255,255,.08);background:#0D0D0D;}
+.nav-logo{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:18px;color:#fc5229;text-decoration:none;letter-spacing:-.5px;}
+.nav-links{display:flex;gap:4px;align-items:center;}
+.nav-links a{font-size:13px;color:rgba(240,240,240,.5);text-decoration:none;font-family:'Space Grotesk',sans-serif;font-weight:500;padding:7px 13px;border-radius:8px;transition:all .2s;}
+.nav-links a:hover,.nav-links a.active{color:#F0F0F0;background:rgba(255,255,255,.05);}
+.nav-cta{background:#fc5229;color:#fff;font-size:13px;font-weight:600;font-family:'Space Grotesk',sans-serif;padding:8px 20px;border-radius:100px;border:none;cursor:pointer;margin-left:8px;}
+
+/* ── HERO ── */
+.hero{padding:56px 32px 36px;text-align:center;background:#0D0D0D;}
+.hero-eyebrow{display:inline-flex;align-items:center;gap:7px;background:#1A1A1A;border:.5px solid rgba(255,255,255,.09);border-radius:100px;padding:5px 14px;font-size:12px;color:rgba(240,240,240,.45);font-family:'Space Grotesk',sans-serif;margin-bottom:20px;}
+.hero-eyebrow-dot{width:5px;height:5px;border-radius:50%;background:#fc5229;}
+.hero h1{font-family:'Space Grotesk',sans-serif;font-size:40px;font-weight:700;line-height:1.1;letter-spacing:-1.8px;color:#F0F0F0;margin-bottom:12px;}
+.hero h1 em{color:#fc5229;font-style:normal;}
+.hero-sub{font-size:14px;color:rgba(240,240,240,.4);max-width:440px;margin:0 auto 28px;line-height:1.7;}
+.hero-stats{display:flex;justify-content:center;gap:0;border:.5px solid rgba(255,255,255,.07);border-radius:14px;overflow:hidden;max-width:480px;margin:0 auto;}
+.hstat{flex:1;padding:16px 12px;text-align:center;border-right:.5px solid rgba(255,255,255,.07);}
+.hstat:last-child{border-right:none;}
+.hstat-num{font-family:'Space Grotesk',sans-serif;font-size:22px;font-weight:700;color:#fc5229;line-height:1;}
+.hstat-lbl{font-size:10px;color:rgba(240,240,240,.28);margin-top:4px;text-transform:uppercase;letter-spacing:.06em;}
+
+/* ── FILTER ── */
+.filter-wrap{padding:24px 32px 0;display:flex;gap:6px;flex-wrap:wrap;align-items:center;background:#F5F4F1;}
+.filter-lbl{font-size:10px;color:rgba(28,28,28,.35);font-family:'Space Grotesk',sans-serif;letter-spacing:.1em;text-transform:uppercase;margin-right:4px;}
+.fbtn{background:#fff;border:.5px solid rgba(28,28,28,.12);border-radius:100px;padding:6px 14px;font-size:12px;font-family:'Space Grotesk',sans-serif;font-weight:500;color:rgba(28,28,28,.45);cursor:pointer;transition:all .18s;}
+.fbtn:hover{border-color:rgba(252,82,41,.4);color:#fc5229;}
+.fbtn.on{background:rgba(252,82,41,.1);border-color:#fc5229;color:#fc5229;}
+
+/* ── GRID ── */
+.grid-wrap{padding:20px 32px 0;}
+.grid-count{font-size:11px;color:rgba(28,28,28,.35);margin-bottom:16px;font-family:'Space Grotesk',sans-serif;}
+.grid-count span{color:rgba(28,28,28,.6);}
+.adv-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;}
+
+/* ── ADVISOR CARD (list) ── */
+.acard{background:#fff;border:.5px solid rgba(28,28,28,.08);border-radius:16px;overflow:hidden;transition:border-color .2s,transform .2s,box-shadow .2s;display:flex;flex-direction:column;}
+.acard:hover{border-color:rgba(252,82,41,.35);transform:translateY(-3px);box-shadow:0 8px 24px rgba(252,82,41,.08);}
+
+.acard-top{padding:18px 16px 0;display:flex;flex-direction:column;align-items:center;text-align:center;}
+.acard-ava{width:64px;height:64px;border-radius:50%;background:linear-gradient(135deg,#fdf1ee,#fce8e2);display:flex;align-items:center;justify-content:center;font-family:'Space Grotesk',sans-serif;font-size:20px;font-weight:700;color:#fc5229;border:.5px solid rgba(252,82,41,.15);margin-bottom:12px;position:relative;flex-shrink:0;}
+.acard-verified{position:absolute;bottom:0;right:0;width:18px;height:18px;background:#fc5229;border-radius:50%;display:flex;align-items:center;justify-content:center;border:2px solid #fff;}
+.acard-verified i{font-size:9px;color:#fff;}
+.acard-name{font-family:'Space Grotesk',sans-serif;font-size:14px;font-weight:700;color:#1C1C1C;margin-bottom:3px;line-height:1.2;}
+.acard-role{font-size:11px;color:rgba(28,28,28,.45);margin-bottom:2px;}
+.acard-co{font-size:11px;color:rgba(28,28,28,.32);display:flex;align-items:center;justify-content:center;gap:5px;margin-bottom:14px;}
+.acard-co-dot{width:4px;height:4px;border-radius:50%;background:#fc5229;}
+
+/* industry + program tags */
+.acard-tags{padding:0 14px;display:flex;flex-wrap:wrap;gap:4px;justify-content:center;margin-bottom:12px;}
+.atag{font-size:10px;font-family:'Space Grotesk',sans-serif;font-weight:500;padding:2px 8px;border-radius:4px;}
+.atag-ind{background:rgba(252,82,41,.08);color:rgba(252,82,41,.65);border:.5px solid rgba(252,82,41,.1);}
+.atag-prog{background:rgba(28,28,28,.04);color:rgba(28,28,28,.38);border:.5px solid rgba(28,28,28,.08);}
+
+/* perforated line */
+.acard-perf{margin:0 14px 12px;height:.5px;background:repeating-linear-gradient(90deg,rgba(28,28,28,.1) 0,rgba(28,28,28,.1) 4px,transparent 4px,transparent 8px);}
+
+/* bottom action */
+.acard-btn{margin:0 14px 14px;padding:9px;background:transparent;border:.5px solid rgba(28,28,28,.12);border-radius:100px;font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:12px;color:rgba(28,28,28,.45);cursor:pointer;transition:all .2s;width:calc(100% - 28px);}
+.acard:hover .acard-btn,.acard-btn:hover{background:rgba(252,82,41,.08);border-color:rgba(252,82,41,.3);color:#fc5229;}
+
+/* ── CTA STRIP ── */
+.cta-strip{margin:40px 32px 0;background:#fff;border:.5px solid rgba(252,82,41,.15);border-radius:14px;padding:20px 24px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;}
+.cta-strip-t{font-family:'Space Grotesk',sans-serif;font-size:14px;font-weight:700;color:#1C1C1C;}
+.cta-strip-s{font-size:12px;color:rgba(28,28,28,.45);margin-top:2px;}
+.cta-strip-btn{background:#fc5229;color:#fff;font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:12px;padding:10px 22px;border-radius:100px;border:none;cursor:pointer;white-space:nowrap;}
+
+/* ── FOOTER ── */
+.footer{padding:24px 32px;border-top:.5px solid rgba(28,28,28,.08);margin-top:56px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;background:#F5F4F1;}
+.footer-logo{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:15px;color:#fc5229;text-decoration:none;}
+.footer-copy{font-size:11px;color:rgba(28,28,28,.3);}
+.footer-links{display:flex;gap:18px;}
+.footer-links a{font-size:11px;color:rgba(28,28,28,.35);text-decoration:none;}
+
+/* ═══════════════════════════════════════
+   DETAIL DRAWER (slides in from right)
+   ═══════════════════════════════════════ */
+.drawer-overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);backdrop-filter:blur(6px);z-index:800;opacity:0;pointer-events:none;transition:opacity .25s;}
+.drawer-overlay.open{opacity:1;pointer-events:auto;}
+.drawer{position:fixed;top:0;right:0;bottom:0;width:480px;background:#111;border-left:.5px solid rgba(255,255,255,.09);z-index:801;transform:translateX(100%);transition:transform .28s cubic-bezier(.22,1,.36,1);overflow-y:auto;display:flex;flex-direction:column;}
+.drawer-overlay.open .drawer{transform:translateX(0);}
+
+/* drawer header */
+.dh{padding:20px 24px;border-bottom:.5px solid rgba(255,255,255,.07);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:#111;z-index:2;}
+.dh-label{font-size:11px;color:rgba(240,240,240,.28);font-family:'Space Grotesk',sans-serif;letter-spacing:.08em;text-transform:uppercase;}
+.dclose{width:30px;height:30px;border-radius:50%;background:rgba(255,255,255,.06);border:none;color:rgba(240,240,240,.4);font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .15s;}
+.dclose:hover{background:rgba(255,255,255,.12);color:#F0F0F0;}
+
+/* drawer identity */
+.d-identity{padding:24px 24px 0;display:flex;gap:16px;align-items:flex-start;}
+.d-ava{width:72px;height:72px;border-radius:50%;background:linear-gradient(135deg,#252525,#1a1a1a);display:flex;align-items:center;justify-content:center;font-family:'Space Grotesk',sans-serif;font-size:22px;font-weight:700;color:#fc5229;border:.5px solid rgba(252,82,41,.2);flex-shrink:0;position:relative;}
+.d-verified{position:absolute;bottom:1px;right:1px;width:20px;height:20px;background:#fc5229;border-radius:50%;display:flex;align-items:center;justify-content:center;border:2.5px solid #111;}
+.d-verified i{font-size:9px;color:#fff;}
+.d-meta{flex:1;}
+.d-name{font-family:'Space Grotesk',sans-serif;font-size:20px;font-weight:700;color:#F0F0F0;letter-spacing:-.5px;margin-bottom:4px;line-height:1.15;}
+.d-role{font-size:13px;color:rgba(240,240,240,.45);margin-bottom:3px;}
+.d-co{font-size:12px;color:rgba(240,240,240,.28);display:flex;align-items:center;gap:5px;}
+.d-co-dot{width:5px;height:5px;border-radius:50%;background:#fc5229;}
+
+/* tags row */
+.d-tags{padding:16px 24px 0;display:flex;flex-wrap:wrap;gap:5px;}
+
+/* message from advisor */
+.d-section{padding:20px 24px 0;}
+.d-sec-label{font-size:10px;color:rgba(240,240,240,.25);letter-spacing:.1em;text-transform:uppercase;font-family:'Space Grotesk',sans-serif;margin-bottom:10px;}
+.d-message{background:#1A1A1A;border:.5px solid rgba(255,255,255,.07);border-radius:12px;padding:16px 18px;font-size:13px;color:rgba(240,240,240,.55);line-height:1.75;position:relative;}
+.d-message::before{content:'"';font-family:'Space Grotesk',sans-serif;font-size:40px;color:rgba(252,82,41,.2);line-height:1;position:absolute;top:8px;left:14px;}
+.d-message p{padding-left:20px;}
+
+/* support items */
+.d-supports{display:flex;flex-direction:column;gap:8px;}
+.d-sup{display:flex;align-items:flex-start;gap:10px;padding:11px 14px;background:#1A1A1A;border:.5px solid rgba(255,255,255,.06);border-radius:10px;}
+.d-sup-icon{width:28px;height:28px;border-radius:8px;background:rgba(252,82,41,.08);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.d-sup-icon i{font-size:14px;color:#fc5229;}
+.d-sup-title{font-family:'Space Grotesk',sans-serif;font-size:13px;font-weight:600;color:#F0F0F0;margin-bottom:2px;}
+.d-sup-desc{font-size:11px;color:rgba(240,240,240,.38);line-height:1.5;}
+
+/* feedback */
+.d-feedbacks{display:flex;flex-direction:column;gap:8px;}
+.d-fb{background:#1A1A1A;border:.5px solid rgba(255,255,255,.06);border-radius:10px;padding:14px 16px;}
+.d-fb-badge{display:inline-block;font-size:9px;font-weight:700;font-family:'Space Grotesk',sans-serif;letter-spacing:.06em;text-transform:uppercase;background:rgba(252,82,41,.1);color:#fc5229;padding:2px 8px;border-radius:4px;margin-bottom:8px;}
+.d-fb-text{font-size:12px;color:rgba(240,240,240,.52);line-height:1.65;margin-bottom:10px;}
+.d-fb-text strong{color:#F0F0F0;font-weight:500;}
+.d-fb-author{display:flex;align-items:center;gap:8px;border-top:.5px solid rgba(255,255,255,.05);padding-top:10px;}
+.d-fb-ava{width:26px;height:26px;border-radius:50%;background:#222;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;font-family:'Space Grotesk',sans-serif;color:#fc5229;flex-shrink:0;}
+.d-fb-name{font-size:11px;font-weight:600;font-family:'Space Grotesk',sans-serif;color:#F0F0F0;}
+.d-fb-school{font-size:10px;color:rgba(240,240,240,.28);}
+
+/* drawer CTA */
+.d-cta{margin:24px 24px 32px;display:flex;gap:8px;}
+.d-btn-book{flex:1;padding:12px;background:#fc5229;border:none;border-radius:100px;font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:13px;color:#fff;cursor:pointer;transition:opacity .2s;}
+.d-btn-book:hover{opacity:.88;}
+.d-btn-pkg{padding:12px 18px;background:transparent;border:.5px solid rgba(255,255,255,.1);border-radius:100px;font-family:'Space Grotesk',sans-serif;font-weight:500;font-size:13px;color:rgba(240,240,240,.5);cursor:pointer;transition:all .2s;}
+.d-btn-pkg:hover{border-color:rgba(252,82,41,.35);color:#fc5229;}
+
+/* ═══════════════════════════════════
+   CHECKOUT MODAL (Flow 2)
+   ═══════════════════════════════════ */
+.m-overlay{position:fixed;inset:0;background:rgba(0,0,0,.85);backdrop-filter:blur(8px);z-index:900;display:flex;align-items:center;justify-content:center;padding:16px;opacity:0;pointer-events:none;transition:opacity .22s;}
+.m-overlay.open{opacity:1;pointer-events:auto;}
+.m-modal{background:#141414;border:.5px solid rgba(255,255,255,.1);border-radius:20px;width:100%;max-width:520px;max-height:90vh;overflow-y:auto;transform:translateY(14px);transition:transform .22s;}
+.m-overlay.open .m-modal{transform:translateY(0);}
+.mh{padding:20px 22px 0;display:flex;align-items:flex-start;justify-content:space-between;}
+.mh-title{font-family:'Space Grotesk',sans-serif;font-size:15px;font-weight:700;color:#F0F0F0;}
+.mh-sub{font-size:11px;color:rgba(240,240,240,.28);margin-top:2px;}
+.mxbtn{width:28px;height:28px;border-radius:50%;background:rgba(255,255,255,.06);border:none;color:rgba(240,240,240,.4);font-size:15px;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+.mxbtn:hover{background:rgba(255,255,255,.12);color:#F0F0F0;}
+.msteps{display:flex;align-items:center;padding:14px 22px 0;}
+.ms{display:flex;align-items:center;gap:6px;flex:1;}.ms:last-child{flex:none;}
+.ms-c{width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Space Grotesk',sans-serif;font-size:10px;font-weight:700;flex-shrink:0;transition:all .2s;}
+.ms-c.done{background:#fc5229;color:#fff;}.ms-c.active{background:rgba(252,82,41,.18);color:#fc5229;border:.5px solid #fc5229;}.ms-c.pend{background:rgba(255,255,255,.05);color:rgba(240,240,240,.2);}
+.ms-lbl{font-size:10px;font-family:'Space Grotesk',sans-serif;font-weight:600;white-space:nowrap;}
+.ms-lbl.done{color:rgba(240,240,240,.35);}.ms-lbl.active{color:#F0F0F0;}.ms-lbl.pend{color:rgba(240,240,240,.18);}
+.ms-line{flex:1;height:.5px;background:rgba(255,255,255,.07);margin:0 5px;}.ms-line.done{background:rgba(252,82,41,.35);}
+.mctx{margin:12px 22px 0;background:#1A1A1A;border:.5px solid rgba(255,255,255,.07);border-radius:10px;padding:10px 14px;display:flex;align-items:center;gap:10px;}
+.mctx-dot{width:5px;height:5px;border-radius:50%;background:#fc5229;flex-shrink:0;}
+.mctx-main{font-family:'Space Grotesk',sans-serif;font-size:12px;font-weight:700;color:#F0F0F0;}
+.mctx-sub{font-size:10px;color:rgba(240,240,240,.3);}
+.mbody{padding:16px 22px 22px;}
+.mpanel{display:none;}.mpanel.active{display:block;}
+.mpl{font-size:10px;color:rgba(240,240,240,.25);letter-spacing:.1em;text-transform:uppercase;margin-bottom:8px;}
+.mpt{font-family:'Space Grotesk',sans-serif;font-size:17px;font-weight:700;letter-spacing:-.4px;color:#F0F0F0;margin-bottom:4px;}
+.mps{font-size:12px;color:rgba(240,240,240,.35);margin-bottom:16px;line-height:1.6;}
+/* preselect banner */
+.apb{background:#1C0A06;border:.5px solid rgba(252,82,41,.22);border-radius:10px;padding:12px 14px;display:flex;align-items:center;gap:12px;margin-bottom:14px;}
+.apb-ava{width:36px;height:36px;border-radius:50%;background:#222;display:flex;align-items:center;justify-content:center;font-family:'Space Grotesk',sans-serif;font-size:12px;font-weight:700;color:#fc5229;flex-shrink:0;}
+.apb-badge{font-size:9px;font-family:'Space Grotesk',sans-serif;font-weight:700;background:rgba(252,82,41,.15);color:#fc5229;padding:2px 8px;border-radius:4px;letter-spacing:.06em;text-transform:uppercase;display:inline-block;margin-bottom:4px;}
+.apb-name{font-family:'Space Grotesk',sans-serif;font-size:13px;font-weight:700;color:#F0F0F0;}
+.apb-role{font-size:11px;color:rgba(240,240,240,.35);}
+/* pkg list */
+.pkglist{display:flex;flex-direction:column;gap:7px;}
+.pkgitem{background:#1A1A1A;border:.5px solid rgba(255,255,255,.07);border-radius:10px;padding:12px 14px;display:flex;align-items:center;gap:12px;cursor:pointer;transition:border-color .2s;}
+.pkgitem:hover{border-color:rgba(252,82,41,.3);}
+.pkgitem.sel{border-color:#fc5229;background:#1C0A06;}
+.pkgitem.pop{border-color:rgba(252,82,41,.22);}
+.pkg-l{flex:1;}
+.pkg-n{font-family:'Space Grotesk',sans-serif;font-size:13px;font-weight:700;color:#F0F0F0;margin-bottom:1px;display:flex;align-items:center;gap:6px;}
+.pkg-pb{font-size:9px;background:#fc5229;color:#fff;padding:1px 7px;border-radius:100px;font-weight:700;}
+.pkg-s{font-size:11px;color:rgba(240,240,240,.32);}
+.pkg-p{font-family:'Space Grotesk',sans-serif;font-size:15px;font-weight:700;color:#fc5229;}
+.pkg-r{width:18px;height:18px;border-radius:50%;border:.5px solid rgba(255,255,255,.15);display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .2s;}
+.pkgitem.sel .pkg-r{background:#fc5229;border-color:#fc5229;}
+.pkg-r i{font-size:10px;color:#fff;opacity:0;}
+.pkgitem.sel .pkg-r i{opacity:1;}
+/* form */
+.fgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.ffull{grid-column:1/-1;}
+.mf{display:flex;flex-direction:column;gap:5px;}
+.mf label{font-size:10px;color:rgba(240,240,240,.35);font-family:'Space Grotesk',sans-serif;font-weight:600;letter-spacing:.04em;text-transform:uppercase;}
+.mf label span{color:#fc5229;}
+.mf input,.mf select,.mf textarea{background:#1A1A1A;border:.5px solid rgba(255,255,255,.09);border-radius:8px;color:#F0F0F0;font-size:13px;font-family:'Inter',sans-serif;padding:9px 12px;outline:none;transition:border-color .2s;width:100%;}
+.mf input:focus,.mf select:focus,.mf textarea:focus{border-color:#fc5229;}
+.mf input::placeholder,.mf textarea::placeholder{color:rgba(240,240,240,.18);}
+.mf select option{background:#1A1A1A;}
+.mf textarea{resize:none;line-height:1.55;}
+/* confirm */
+.cbox{background:#1A1A1A;border:.5px solid rgba(255,255,255,.06);border-radius:12px;padding:14px;margin-bottom:12px;}
+.crow{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;padding:7px 0;border-bottom:.5px solid rgba(255,255,255,.04);}
+.crow:first-child{padding-top:0;}.crow:last-child{border-bottom:none;padding-bottom:0;}
+.cl{font-size:11px;color:rgba(240,240,240,.28);}
+.cv{font-family:'Space Grotesk',sans-serif;font-size:12px;font-weight:700;color:#F0F0F0;text-align:right;}
+.cv.o{color:#fc5229;}
+.ce{font-size:10px;color:rgba(240,240,240,.2);cursor:pointer;text-align:right;margin-top:1px;}
+.ce:hover{color:#fc5229;}
+.total-row{background:rgba(252,82,41,.08);border:.5px solid rgba(252,82,41,.18);border-radius:10px;padding:12px 16px;display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;}
+.total-l{font-family:'Space Grotesk',sans-serif;font-size:13px;font-weight:700;color:#F0F0F0;}
+.total-p{font-family:'Space Grotesk',sans-serif;font-size:20px;font-weight:700;color:#fc5229;}
+/* payment */
+.pay-wrap{display:flex;gap:14px;align-items:flex-start;margin-bottom:12px;}
+.pay-qr{background:#fff;border-radius:10px;padding:10px;flex-shrink:0;}
+.pay-qr svg{width:100px;height:100px;display:block;}
+.pay-det{flex:1;}
+.pay-bank{font-family:'Space Grotesk',sans-serif;font-size:13px;font-weight:700;color:#F0F0F0;margin-bottom:8px;}
+.prow{display:flex;justify-content:space-between;gap:8px;padding:6px 0;border-bottom:.5px solid rgba(255,255,255,.05);}
+.prow:last-child{border-bottom:none;}
+.pl{font-size:10px;color:rgba(240,240,240,.28);}
+.pv{font-size:12px;font-family:'Space Grotesk',sans-serif;font-weight:600;color:#F0F0F0;}
+.pv.o{color:#fc5229;}
+.pay-note{background:rgba(252,82,41,.06);border:.5px solid rgba(252,82,41,.14);border-radius:9px;padding:10px 13px;font-size:11px;color:rgba(240,240,240,.45);line-height:1.65;}
+.pay-note strong{color:#F0F0F0;font-weight:500;}
+/* nav btns */
+.mnav{display:flex;gap:8px;align-items:center;margin-top:16px;padding-top:14px;border-top:.5px solid rgba(255,255,255,.05);}
+.mback{background:transparent;border:.5px solid rgba(255,255,255,.1);color:rgba(240,240,240,.4);font-family:'Space Grotesk',sans-serif;font-weight:500;font-size:12px;padding:9px 16px;border-radius:100px;cursor:pointer;transition:all .2s;}
+.mback:hover{border-color:rgba(255,255,255,.22);color:#F0F0F0;}
+.mnext{background:#fc5229;color:#fff;font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:12px;padding:9px 22px;border-radius:100px;border:none;cursor:pointer;margin-left:auto;transition:opacity .2s;}
+.mnext:hover{opacity:.88;}.mnext:disabled{background:rgba(252,82,41,.22);cursor:not-allowed;}
+.mdone{background:#1A1A1A;border:.5px solid rgba(252,82,41,.28);color:#fc5229;font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:12px;padding:9px 20px;border-radius:100px;cursor:pointer;margin-left:auto;}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav class="nav">
+  <a href="#" class="nav-logo">LinkaJob</a>
+  <div class="nav-links">
+    <a href="#" class="active">Cố vấn 1-1</a>
+    <a href="#">Khoá học</a>
+    <a href="#">Thành công</a>
+    <a href="#">Blog</a>
+    <button class="nav-cta" onclick="openCheckout('','','','')">Đăng ký tư vấn</button>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-eyebrow"><span class="hero-eyebrow-dot"></span>Đang làm thật · Không phải coach lý thuyết</div>
+  <h1>Gặp người đã đi<br><em>con đường bạn đang chọn.</em></h1>
+  <p class="hero-sub">25+ advisor đang làm việc tại MNC — mỗi người hiểu rõ JD, vòng phỏng vấn và văn hoá công ty của ngành họ từ bên trong.</p>
+  <div class="hero-stats">
+    <div class="hstat"><div class="hstat-num">25+</div><div class="hstat-lbl">Advisors</div></div>
+    <div class="hstat"><div class="hstat-num">8</div><div class="hstat-lbl">Lĩnh vực</div></div>
+    <div class="hstat"><div class="hstat-num">~80%</div><div class="hstat-lbl">Nhận offer</div></div>
+    <div class="hstat"><div class="hstat-num">200+</div><div class="hstat-lbl">Kết nối</div></div>
+  </div>
+</section>
+
+<!-- WAVE DIVIDER -->
+<div style="background:#0D0D0D;line-height:0;"><svg viewBox="0 0 1440 40" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none" style="width:100%;height:40px;display:block;"><path d="M0,40 C360,0 1080,0 1440,40 L1440,40 L0,40 Z" fill="#F5F4F1"/></svg></div>
+<!-- FILTER -->
+<div class="filter-wrap">
+  <span class="filter-lbl">Lọc</span>
+  <button class="fbtn on" onclick="doFilter(this,'all')">Tất cả</button>
+  <button class="fbtn" onclick="doFilter(this,'fmcg')">FMCG</button>
+  <button class="fbtn" onclick="doFilter(this,'ecom')">E-Commerce</button>
+  <button class="fbtn" onclick="doFilter(this,'tech')">Tech</button>
+  <button class="fbtn" onclick="doFilter(this,'finance')">Finance</button>
+  <button class="fbtn" onclick="doFilter(this,'supply')">Supply Chain</button>
+  <button class="fbtn" onclick="doFilter(this,'audit')">Audit / Big 4</button>
+  <button class="fbtn" onclick="doFilter(this,'marketing')">Marketing</button>
+</div>
+
+<!-- GRID -->
+<div class="grid-wrap">
+  <div class="grid-count"><span id="countNum">9</span> advisors</div>
+  <div class="adv-grid" id="advGrid">
+
+    <!-- ADVISOR DATA: data-ind = filter key, data-id = JS lookup key -->
+
+    <div class="acard" data-ind="fmcg marketing" data-id="0">
+      <div class="acard-top">
+        <div class="acard-ava">KV<div class="acard-verified"><i class="ti ti-check"></i></div></div>
+        <div class="acard-name">Nguyễn Vũ Trí Kiên</div>
+        <div class="acard-role">Brand Manager</div>
+        <div class="acard-co"><span class="acard-co-dot"></span>Suntory PepsiCo Vietnam</div>
+      </div>
+      <div class="acard-tags">
+        <span class="atag atag-ind">FMCG</span>
+        <span class="atag atag-ind">Marketing</span>
+        <span class="atag atag-prog">MT Program</span>
+        <span class="atag atag-prog">Internship</span>
+      </div>
+      <div class="acard-perf"></div>
+      <button class="acard-btn" onclick="openDrawer(0)">Chi tiết về Advisor →</button>
+    </div>
+
+    <div class="acard" data-ind="ecom fmcg" data-id="1">
+      <div class="acard-top">
+        <div class="acard-ava">NP<div class="acard-verified"><i class="ti ti-check"></i></div></div>
+        <div class="acard-name">Dương Uy Trọng Phúc</div>
+        <div class="acard-role">Ecommerce Lead</div>
+        <div class="acard-co"><span class="acard-co-dot"></span>Mondelēz International</div>
+      </div>
+      <div class="acard-tags">
+        <span class="atag atag-ind">E-Commerce</span>
+        <span class="atag atag-ind">FMCG</span>
+        <span class="atag atag-prog">Fresher</span>
+        <span class="atag atag-prog">Internship</span>
+      </div>
+      <div class="acard-perf"></div>
+      <button class="acard-btn" onclick="openDrawer(1)">Chi tiết về Advisor →</button>
+    </div>
+
+    <div class="acard" data-ind="tech" data-id="2">
+      <div class="acard-top">
+        <div class="acard-ava">PL<div class="acard-verified"><i class="ti ti-check"></i></div></div>
+        <div class="acard-name">Phạm Ngọc Lâm</div>
+        <div class="acard-role">Senior Software Engineer</div>
+        <div class="acard-co"><span class="acard-co-dot"></span>TikTok Singapore</div>
+      </div>
+      <div class="acard-tags">
+        <span class="atag atag-ind">Tech</span>
+        <span class="atag atag-prog">Fresher SWE</span>
+        <span class="atag atag-prog">Big Tech</span>
+      </div>
+      <div class="acard-perf"></div>
+      <button class="acard-btn" onclick="openDrawer(2)">Chi tiết về Advisor →</button>
+    </div>
+
+    <div class="acard" data-ind="finance tech" data-id="3">
+      <div class="acard-top">
+        <div class="acard-ava">KN<div class="acard-verified"><i class="ti ti-check"></i></div></div>
+        <div class="acard-name">Nguyễn Kim Ngân</div>
+        <div class="acard-role">Business Performance Mgmt</div>
+        <div class="acard-co"><span class="acard-co-dot"></span>Grab Vietnam</div>
+      </div>
+      <div class="acard-tags">
+        <span class="atag atag-ind">Finance</span>
+        <span class="atag atag-ind">Tech</span>
+        <span class="atag atag-prog">FP&A</span>
+        <span class="atag atag-prog">Fresher</span>
+      </div>
+      <div class="acard-perf"></div>
+      <button class="acard-btn" onclick="openDrawer(3)">Chi tiết về Advisor →</button>
+    </div>
+
+    <div class="acard" data-ind="fmcg supply" data-id="4">
+      <div class="acard-top">
+        <div class="acard-ava">HP<div class="acard-verified"><i class="ti ti-check"></i></div></div>
+        <div class="acard-name">Vũ Hải Phong</div>
+        <div class="acard-role">Key Account Asst. Manager</div>
+        <div class="acard-co"><span class="acard-co-dot"></span>Unilever Vietnam</div>
+      </div>
+      <div class="acard-tags">
+        <span class="atag atag-ind">FMCG</span>
+        <span class="atag atag-ind">Supply Chain</span>
+        <span class="atag atag-prog">MT Program</span>
+        <span class="atag atag-prog">Assessment Center</span>
+      </div>
+      <div class="acard-perf"></div>
+      <button class="acard-btn" onclick="openDrawer(4)">Chi tiết về Advisor →</button>
+    </div>
+
+    <div class="acard" data-ind="marketing fmcg" data-id="5">
+      <div class="acard-top">
+        <div class="acard-ava">TL<div class="acard-verified"><i class="ti ti-check"></i></div></div>
+        <div class="acard-name">Nguyễn Thị Thu Linh</div>
+        <div class="acard-role">Product Manager</div>
+        <div class="acard-co"><span class="acard-co-dot"></span>Sanofi Vietnam</div>
+      </div>
+      <div class="acard-tags">
+        <span class="atag atag-ind">Marketing</span>
+        <span class="atag atag-ind">Pharma</span>
+        <span class="atag atag-prog">Fresher</span>
+        <span class="atag atag-prog">Internship</span>
+      </div>
+      <div class="acard-perf"></div>
+      <button class="acard-btn" onclick="openDrawer(5)">Chi tiết về Advisor →</button>
+    </div>
+
+    <div class="acard" data-ind="audit finance" data-id="6">
+      <div class="acard-top">
+        <div class="acard-ava">MT<div class="acard-verified"><i class="ti ti-check"></i></div></div>
+        <div class="acard-name">Trần Minh Tuấn</div>
+        <div class="acard-role">Audit Associate</div>
+        <div class="acard-co"><span class="acard-co-dot"></span>Deloitte Vietnam</div>
+      </div>
+      <div class="acard-tags">
+        <span class="atag atag-ind">Audit</span>
+        <span class="atag atag-ind">Big 4</span>
+        <span class="atag atag-prog">Fresher</span>
+        <span class="atag atag-prog">Intern Deloitte</span>
+      </div>
+      <div class="acard-perf"></div>
+      <button class="acard-btn" onclick="openDrawer(6)">Chi tiết về Advisor →</button>
+    </div>
+
+    <div class="acard" data-ind="supply" data-id="7">
+      <div class="acard-top">
+        <div class="acard-ava">QH<div class="acard-verified"><i class="ti ti-check"></i></div></div>
+        <div class="acard-name">Lê Quang Hưng</div>
+        <div class="acard-role">Supply Chain Analyst</div>
+        <div class="acard-co"><span class="acard-co-dot"></span>Maersk Vietnam</div>
+      </div>
+      <div class="acard-tags">
+        <span class="atag atag-ind">Supply Chain</span>
+        <span class="atag atag-ind">Logistics</span>
+        <span class="atag atag-prog">Operations</span>
+        <span class="atag atag-prog">Fresher</span>
+      </div>
+      <div class="acard-perf"></div>
+      <button class="acard-btn" onclick="openDrawer(7)">Chi tiết về Advisor →</button>
+    </div>
+
+    <div class="acard" data-ind="marketing fmcg ecom" data-id="8">
+      <div class="acard-top">
+        <div class="acard-ava">PT<div class="acard-verified"><i class="ti ti-check"></i></div></div>
+        <div class="acard-name">Phạm Hoài Thương</div>
+        <div class="acard-role">Consumer Insights Manager</div>
+        <div class="acard-co"><span class="acard-co-dot"></span>Nestlé Vietnam</div>
+      </div>
+      <div class="acard-tags">
+        <span class="atag atag-ind">Marketing</span>
+        <span class="atag atag-ind">FMCG</span>
+        <span class="atag atag-prog">Research & Insights</span>
+        <span class="atag atag-prog">Internship</span>
+      </div>
+      <div class="acard-perf"></div>
+      <button class="acard-btn" onclick="openDrawer(8)">Chi tiết về Advisor →</button>
+    </div>
+
+  </div>
+</div>
+
+<!-- CTA STRIP -->
+<div class="cta-strip">
+  <div>
+    <div class="cta-strip-t">Chưa biết nên chọn advisor nào?</div>
+    <div class="cta-strip-s">LinkaJob sẽ match advisor phù hợp nhất với ngành và mục tiêu của bạn — miễn phí.</div>
+  </div>
+  <button class="cta-strip-btn" onclick="openCheckout('','','','')">Nhờ LinkaJob tư vấn →</button>
+</div>
+
+<!-- FOOTER -->
+<footer class="footer">
+  <a href="#" class="footer-logo">LinkaJob</a>
+  <div class="footer-copy">© 2025 LinkaJob · Kết nối Cố vấn, Xây dựng Sự nghiệp</div>
+  <div class="footer-links"><a href="#">Giới thiệu</a><a href="#">Blog</a><a href="#">Liên hệ</a></div>
+</footer>
+
+
+<!-- ═══════════════════════════════════════
+     DETAIL DRAWER
+     ═══════════════════════════════════════ -->
+<div class="drawer-overlay" id="drawerOv" onclick="handleDrawerBg(event)">
+  <div class="drawer" id="drawer">
+
+    <div class="dh">
+      <div class="dh-label">Thông tin Advisor</div>
+      <button class="dclose" onclick="closeDrawer()"><i class="ti ti-x"></i></button>
+    </div>
+
+    <!-- identity -->
+    <div class="d-identity">
+      <div class="d-ava" id="dAva">?<div class="d-verified"><i class="ti ti-check"></i></div></div>
+      <div class="d-meta">
+        <div class="d-name" id="dName">—</div>
+        <div class="d-role" id="dRole">—</div>
+        <div class="d-co"><span class="d-co-dot"></span><span id="dCo">—</span></div>
+      </div>
+    </div>
+
+    <div class="d-tags" id="dTags"></div>
+
+    <!-- message -->
+    <div class="d-section">
+      <div class="d-sec-label">Lời nhắn từ Advisor</div>
+      <div class="d-message"><p id="dMessage">—</p></div>
+    </div>
+
+    <!-- support -->
+    <div class="d-section">
+      <div class="d-sec-label">Mình có thể hỗ trợ bạn</div>
+      <div class="d-supports" id="dSupports"></div>
+    </div>
+
+    <!-- feedback -->
+    <div class="d-section">
+      <div class="d-sec-label">Feedback từ Advisee</div>
+      <div class="d-feedbacks" id="dFeedbacks"></div>
+    </div>
+
+    <!-- CTA -->
+    <div class="d-cta">
+      <button class="d-btn-book" id="dBtnBook" onclick="bookFromDrawer()">Đặt lịch với Advisor này →</button>
+      <button class="d-btn-pkg" onclick="window.location.href='#'">Xem bảng giá</button>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════
+     CHECKOUT MODAL
+     ═══════════════════════════════════ -->
+<div class="m-overlay" id="mOverlay" onclick="handleMoBg(event)">
+<div class="m-modal" id="mModal">
+  <div class="mh">
+    <div><div class="mh-title">Đặt lịch tư vấn 1-1</div><div class="mh-sub" id="mhSub">LinkaJob · Career Consulting</div></div>
+    <button class="mxbtn" onclick="closeCheckout()"><i class="ti ti-x"></i></button>
+  </div>
+  <div class="msteps" id="msteps"></div>
+  <div class="mctx" id="mctx">
+    <div class="mctx-dot"></div>
+    <div><div class="mctx-main" id="mctxMain">—</div><div class="mctx-sub" id="mctxSub">—</div></div>
+  </div>
+  <div class="mbody">
+
+    <!-- step 1: gói -->
+    <div class="mpanel" id="mp1">
+      <div class="mpl">Bước 1 / 3</div>
+      <div class="mpt">Chọn gói meeting</div>
+      <div class="mps">Gói gắn với advisor trong suốt thời hạn sử dụng.</div>
+      <div class="apb" id="mApb">
+        <div class="apb-ava" id="mApbAva">LJ</div>
+        <div><div class="apb-badge">Advisor đã chọn</div><div class="apb-name" id="mApbName">LinkaJob sẽ match cho bạn</div><div class="apb-role" id="mApbRole">Tư vấn miễn phí trước khi chọn</div></div>
+      </div>
+      <div class="pkglist">
+        <div class="pkgitem" onclick="selPkg(this,'Trial','1 buổi · 30 phút','419',419)"><div class="pkg-l"><div class="pkg-n">Trial</div><div class="pkg-s">1 buổi · 30 phút · Thử trước khi commit</div></div><div class="pkg-p">419k</div><div class="pkg-r"><i class="ti ti-check"></i></div></div>
+        <div class="pkgitem" onclick="selPkg(this,'Cơ Bản','2 buổi · 45–60 phút','799',799)"><div class="pkg-l"><div class="pkg-n">Cơ Bản</div><div class="pkg-s">2 buổi · 45–60 phút · CV + định hướng</div></div><div class="pkg-p">799k</div><div class="pkg-r"><i class="ti ti-check"></i></div></div>
+        <div class="pkgitem pop" onclick="selPkg(this,'Đặc Biệt','4 buổi · 45–60 phút','1.499',1499)"><div class="pkg-l"><div class="pkg-n">Đặc Biệt <span class="pkg-pb">Phổ biến</span></div><div class="pkg-s">4 buổi · 45–60 phút · CV + phỏng vấn đầy đủ</div></div><div class="pkg-p">1.499k</div><div class="pkg-r"><i class="ti ti-check"></i></div></div>
+        <div class="pkgitem" onclick="selPkg(this,'Chuyên Sâu','6 buổi · 45–60 phút','2.199',2199)"><div class="pkg-l"><div class="pkg-n">Chuyên Sâu</div><div class="pkg-s">6 buổi · 45–60 phút · Hành trình toàn diện</div></div><div class="pkg-p">2.199k</div><div class="pkg-r"><i class="ti ti-check"></i></div></div>
+      </div>
+      <div class="mnav"><button class="mnext" id="mBtn1" onclick="goStep(2)" disabled>Tiếp theo →</button></div>
+    </div>
+
+    <!-- step 2: thông tin -->
+    <div class="mpanel" id="mp2">
+      <div class="mpl">Bước 2 / 3</div>
+      <div class="mpt">Thông tin của bạn</div>
+      <div class="mps">Để advisor chuẩn bị tốt nhất cho buổi đầu tiên.</div>
+      <div class="fgrid">
+        <div class="mf"><label>Họ và tên <span>*</span></label><input type="text" id="mName" placeholder="Nguyễn Văn A" oninput="chkF()"></div>
+        <div class="mf"><label>Số điện thoại <span>*</span></label><input type="tel" id="mPhone" placeholder="09xx xxx xxx" oninput="chkF()"></div>
+        <div class="mf ffull"><label>Email <span>*</span></label><input type="email" id="mEmail" placeholder="yourname@email.com" oninput="chkF()"></div>
+        <div class="mf"><label>Trường / Tổ chức</label><input type="text" id="mSchool" placeholder="UEH, RMIT..."></div>
+        <div class="mf"><label>Năm học</label><select id="mYear"><option value="">Chọn...</option><option>Năm 1</option><option>Năm 2</option><option>Năm 3</option><option>Năm 4</option><option>Mới tốt nghiệp</option><option>Đi làm 1–2 năm</option></select></div>
+        <div class="mf ffull"><label>Vị trí / Công ty muốn apply</label><input type="text" id="mTarget" placeholder="Marketing Intern tại Unilever..."></div>
+        <div class="mf ffull"><label>Kỳ vọng từ buổi tư vấn</label><textarea id="mGoal" rows="2" placeholder="Sửa CV, luyện phỏng vấn..."></textarea></div>
+      </div>
+      <div class="mnav">
+        <button class="mback" onclick="goStep(1)">← Quay lại</button>
+        <button class="mnext" id="mBtn2" onclick="goStep(3)" disabled>Xác nhận →</button>
+      </div>
+    </div>
+
+    <!-- step 3: xác nhận + QR -->
+    <div class="mpanel" id="mp3">
+      <div class="mpl">Bước 3 / 3</div>
+      <div class="mpt">Xác nhận & Thanh toán</div>
+      <div class="mps">Kiểm tra lại, sau đó quét QR để hoàn tất.</div>
+      <div class="cbox">
+        <div class="crow"><span class="cl">Gói</span><div><div class="cv o" id="cvPkg">—</div><div class="ce" onclick="goStep(1)">Đổi gói</div></div></div>
+        <div class="crow"><span class="cl">Buổi</span><div class="cv" id="cvSess">—</div></div>
+        <div class="crow"><span class="cl">Advisor</span><div class="cv" id="cvAdv">—</div></div>
+        <div class="crow"><span class="cl">Vị trí</span><div class="cv" id="cvRole" style="font-weight:400;font-size:11px;color:rgba(240,240,240,.4);">—</div></div>
+        <div class="crow"><span class="cl">Họ tên</span><div><div class="cv" id="cvName">—</div><div class="ce" onclick="goStep(2)">Sửa</div></div></div>
+        <div class="crow"><span class="cl">Email</span><div class="cv" id="cvEmail" style="font-weight:400;font-size:11px;">—</div></div>
+        <div class="crow"><span class="cl">SĐT</span><div class="cv" id="cvPhone" style="font-weight:400;font-size:11px;">—</div></div>
+      </div>
+      <div class="total-row"><div class="total-l">Tổng thanh toán</div><div class="total-p" id="cvTotal">—</div></div>
+      <div class="pay-wrap">
+        <div class="pay-qr">
+          <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+            <rect width="100" height="100" fill="white"/>
+            <rect x="5" y="5" width="28" height="28" rx="2" fill="none" stroke="#111" stroke-width="4"/><rect x="11" y="11" width="16" height="16" fill="#111"/>
+            <rect x="67" y="5" width="28" height="28" rx="2" fill="none" stroke="#111" stroke-width="4"/><rect x="73" y="11" width="16" height="16" fill="#111"/>
+            <rect x="5" y="67" width="28" height="28" rx="2" fill="none" stroke="#111" stroke-width="4"/><rect x="11" y="73" width="16" height="16" fill="#111"/>
+            <rect x="40" y="5" width="5" height="5" fill="#111"/><rect x="48" y="5" width="5" height="5" fill="#111"/><rect x="56" y="5" width="5" height="5" fill="#111"/>
+            <rect x="40" y="13" width="5" height="5" fill="#111"/><rect x="56" y="13" width="5" height="5" fill="#111"/>
+            <rect x="40" y="21" width="5" height="5" fill="#111"/><rect x="48" y="21" width="5" height="5" fill="#111"/>
+            <rect x="5" y="40" width="5" height="5" fill="#111"/><rect x="13" y="40" width="5" height="5" fill="#111"/>
+            <rect x="5" y="48" width="5" height="5" fill="#111"/><rect x="21" y="48" width="5" height="5" fill="#111"/>
+            <rect x="40" y="40" width="5" height="5" fill="#111"/><rect x="56" y="40" width="5" height="5" fill="#111"/>
+            <rect x="72" y="40" width="5" height="5" fill="#111"/><rect x="88" y="40" width="5" height="5" fill="#111"/>
+            <rect x="40" y="64" width="5" height="5" fill="#111"/><rect x="56" y="64" width="5" height="5" fill="#111"/>
+            <rect x="40" y="72" width="5" height="5" fill="#111"/><rect x="48" y="72" width="5" height="5" fill="#111"/>
+            <rect x="40" y="80" width="5" height="5" fill="#111"/><rect x="56" y="80" width="5" height="5" fill="#111"/>
+            <text x="50" y="97" text-anchor="middle" font-size="5.5" fill="#fc5229" font-family="Arial" font-weight="bold">LinkaJob</text>
+          </svg>
+        </div>
+        <div class="pay-det">
+          <div class="pay-bank">Chuyển khoản ngân hàng</div>
+          <div class="prow"><span class="pl">Ngân hàng</span><span class="pv">Vietcombank · MB Bank</span></div>
+          <div class="prow"><span class="pl">Chủ TK</span><span class="pv">LINKAJOB</span></div>
+          <div class="prow"><span class="pl">Số tiền</span><span class="pv o" id="payAmt">—</span></div>
+          <div class="prow"><span class="pl">Nội dung CK</span><span class="pv o" id="payCk">—</span></div>
+        </div>
+      </div>
+      <div class="pay-note">Gửi bill qua <strong>contact@linkajob.vn</strong> hoặc inbox Facebook/Instagram. Nhận <strong>link đặt lịch trong 24h</strong>.</div>
+      <div class="mnav">
+        <button class="mback" onclick="goStep(2)">← Sửa thông tin</button>
+        <button class="mdone" onclick="closeCheckout()">Đã chuyển khoản ✓</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+</div>
+
+
+<script>
+/* ─── ADVISOR DATA ─── */
+var ADVISORS = [
+  {
+    id:0, initials:'KV', name:'Nguyễn Vũ Trí Kiên', role:'Brand Manager', co:'Suntory PepsiCo Vietnam',
+    ind:['FMCG','Marketing'], prog:['MT Program','Internship'],
+    message:'Mình từng đứng ở đúng vị trí của các bạn — apply không biết bắt đầu từ đâu, CV chỉnh mãi vẫn không pass. Sau hành trình đó, mình muốn giúp các bạn tiết kiệm thời gian và tránh những sai lầm mình đã từng mắc phải.',
+    supports:[
+      {icon:'ti-file-text', title:'CV & LinkedIn theo đúng JD FMCG', desc:'Sửa hồ sơ theo từng vị trí cụ thể, không sửa chung chung.'},
+      {icon:'ti-presentation', title:'Luyện case interview Marketing', desc:'Framework phân tích case thương hiệu, chiến lược brand building.'},
+      {icon:'ti-map-2', title:'Lộ trình vào MT Program FMCG', desc:'Hiểu rõ quy trình tuyển dụng từ góc nhìn người đã pass.'},
+    ],
+    feedbacks:[
+      {badge:'✓ Offer — FMCG MNC', text:'"Sau buổi meeting em đã <strong>mạnh dạn nộp vào MNC và nhận được offer</strong>. Cảm ơn anh Kiên vì đã truyền động lực."', name:'Gia Hân', school:'International University – VNU HCMC', initials:'GH'},
+      {badge:'✓ Intern — Suntory', text:'"Anh Kiên giúp mình <strong>hiểu cách đọc JD và điều chỉnh CV</strong> rất rõ ràng và thực tế."', name:'Minh Đức', school:'UEH – Đại học Kinh tế TP.HCM', initials:'MĐ'},
+    ]
+  },
+  {
+    id:1, initials:'NP', name:'Dương Uy Trọng Phúc', role:'Ecommerce Lead', co:'Mondelēz International',
+    ind:['E-Commerce','FMCG'], prog:['Fresher','Internship'],
+    message:'Mảng E-commerce trong FMCG đang phát triển rất nhanh và tuyển dụng rất nhiều. Mình muốn giúp các bạn hiểu ngành từ trong ra ngoài — không chỉ để xin được việc mà còn để thực sự làm tốt.',
+    supports:[
+      {icon:'ti-brand-shopee', title:'Insight ngành E-Commerce trong FMCG MNC', desc:'Shopee, Lazada, TikTok Shop — hiểu cách MNC vận hành từng kênh.'},
+      {icon:'ti-file-cv', title:'CV & cover letter cho vị trí Digital/Ecom', desc:'Highlight đúng skills mà nhà tuyển dụng FMCG đang tìm.'},
+      {icon:'ti-users-group', title:'Luyện group discussion & presentation', desc:'Thực hành các tình huống thường gặp trong vòng Assessment.'},
+    ],
+    feedbacks:[
+      {badge:'✓ Intern — Mondelēz', text:'"Anh Phúc không chỉ sửa CV mà còn <strong>giúp mình hiểu ngành E-com FMCG</strong> một cách rất thực tế và dễ hiểu."', name:'Khánh Linh', school:'FTU – Đại học Ngoại thương', initials:'KL'},
+    ]
+  },
+  {
+    id:2, initials:'PL', name:'Phạm Ngọc Lâm', role:'Senior Software Engineer', co:'TikTok Singapore',
+    ind:['Tech'], prog:['Fresher SWE','Big Tech'],
+    message:'Tech tại Big Tech khác hoàn toàn so với startup. Mình muốn giúp các bạn hiểu sự khác biệt đó và chuẩn bị đúng hướng — từ cách viết CV cho đến cách nghĩ trong technical interview.',
+    supports:[
+      {icon:'ti-code', title:'Mock technical & behavioral interview', desc:'Luyện tập với format phỏng vấn thực tế của Big Tech như TikTok, Shopee.'},
+      {icon:'ti-file-text', title:'CV cho SWE / Data / PM tại MNC', desc:'Hiểu điều nhà tuyển dụng Tech đang tìm kiếm ở fresher.'},
+      {icon:'ti-map-pin', title:'Định hướng career path Tech tại Đông Nam Á', desc:'Lộ trình từ fresher → senior tại các công ty Tech khu vực.'},
+    ],
+    feedbacks:[
+      {badge:'✓ Intern — Tech MNC', text:'"Anh Lâm giúp mình <strong>hiểu cách tiếp cận technical interview</strong> tại Big Tech rất khác so với những gì mình đọc online."', name:'Quang Khải', school:'HCMUT – Bách Khoa TP.HCM', initials:'QK'},
+    ]
+  },
+  {
+    id:3, initials:'KN', name:'Nguyễn Kim Ngân', role:'Business Performance Mgmt', co:'Grab Vietnam',
+    ind:['Finance','Tech'], prog:['FP&A','Fresher'],
+    message:'Finance trong Tech MNC như Grab rất khác với ngân hàng hay FMCG truyền thống. Mình muốn giúp các bạn hiểu sự khác biệt đó và tìm ra con đường phù hợp với mình.',
+    supports:[
+      {icon:'ti-chart-bar', title:'CV Finance / FP&A tại Tech MNC', desc:'Định hướng hồ sơ cho vị trí Finance tại Grab, Shopee, Sea Group.'},
+      {icon:'ti-brain', title:'Luyện phỏng vấn năng lực & case Finance', desc:'Phân tích case business performance, financial modeling cơ bản.'},
+      {icon:'ti-route', title:'Lộ trình Finance trong Tech MNC', desc:'Hiểu sự khác biệt giữa Finance tại Tech vs. Banking vs. FMCG.'},
+    ],
+    feedbacks:[
+      {badge:'✓ Offer — Tech MNC', text:'"Chị Ngân giúp mình <strong>nhìn ra hướng đi rõ ràng hơn</strong> trong mảng Finance — và hiểu tại sao Tech MNC phù hợp với mình."', name:'Thanh Nhi', school:'UEH – Đại học Kinh tế TP.HCM', initials:'TN'},
+    ]
+  },
+  {
+    id:4, initials:'HP', name:'Vũ Hải Phong', role:'Key Account Asst. Manager', co:'Unilever Vietnam',
+    ind:['FMCG','Supply Chain'], prog:['MT Program','Assessment Center'],
+    message:'Unilever có quy trình tuyển dụng rất cụ thể và khắt khe. Mình đã trải qua toàn bộ hành trình đó và muốn giúp các bạn không phải vừa làm vừa dò đường như mình ngày trước.',
+    supports:[
+      {icon:'ti-target', title:'Chiến lược apply Unilever & FMCG lớn', desc:'Hiểu rõ tiêu chí từng vòng: CV screening, online test, interview.'},
+      {icon:'ti-users', title:'Luyện Assessment Center & Group Exercise', desc:'Thực hành các tình huống nhóm, case study FMCG thực tế.'},
+      {icon:'ti-certificate', title:'CV & LinkedIn cho Supply Chain / Sales', desc:'Đúng format, đúng keyword mà Unilever HR đang tìm.'},
+    ],
+    feedbacks:[
+      {badge:'✓ Intern — Unilever', text:'"Nhờ anh Phong mình mới <strong>hiểu Assessment Center thực sự test cái gì</strong> và biết cách chuẩn bị đúng hướng."', name:'Thanh Trúc', school:'RMIT Vietnam', initials:'TT'},
+      {badge:'✓ MT Program — FMCG', text:'"Anh hướng dẫn rất thực tế — <strong>không lý thuyết suông</strong>, toàn những gì thực sự xảy ra trong vòng phỏng vấn."', name:'Phúc Anh', school:'NEU – Đại học Kinh tế Quốc dân', initials:'PA'},
+    ]
+  },
+  {
+    id:5, initials:'TL', name:'Nguyễn Thị Thu Linh', role:'Product Manager', co:'Sanofi Vietnam',
+    ind:['Marketing','Pharma'], prog:['Fresher','Internship'],
+    message:'Ngành Dược phẩm MNC không khó vào như nhiều bạn nghĩ — nhưng cần hiểu đúng những gì họ tìm kiếm. Mình ở đây để giúp các bạn tiếp cận ngành một cách tự tin hơn.',
+    supports:[
+      {icon:'ti-pill', title:'Insight ngành Pharma & Healthcare MNC', desc:'Hiểu văn hoá, cơ hội và career path trong ngành Dược quốc tế.'},
+      {icon:'ti-file-text', title:'CV & phỏng vấn Product / Marketing Pharma', desc:'Sửa hồ sơ phù hợp với đặc thù ngành Dược.'},
+      {icon:'ti-compass', title:'Định hướng fresher vào ngành Dược quốc tế', desc:'Lộ trình từ intern đến full-time tại Sanofi, Pfizer, Novartis...'},
+    ],
+    feedbacks:[
+      {badge:'✓ Intern — Sanofi', text:'"Chị Linh giúp mình <strong>cải thiện mindset và những điểm chưa tốt</strong> — không chỉ về CV mà cả cách nhìn ngành."', name:'Phúc Anh N.', school:'Đại học Y Dược TP.HCM', initials:'PA'},
+    ]
+  },
+  {
+    id:6, initials:'MT', name:'Trần Minh Tuấn', role:'Audit Associate', co:'Deloitte Vietnam',
+    ind:['Audit','Big 4'], prog:['Fresher','Intern Deloitte'],
+    message:'Big 4 tuyển hàng trăm người mỗi năm — nhưng cũng loại hàng nghìn CV mỗi mùa. Mình muốn giúp các bạn hiểu culture Deloitte và những gì thực sự tạo ra sự khác biệt.',
+    supports:[
+      {icon:'ti-search', title:'Chiến lược apply Big 4 từ A đến Z', desc:'CV screening, aptitude test, competency interview — từng bước cụ thể.'},
+      {icon:'ti-file-description', title:'CV & cover letter cho Audit / Accounting', desc:'Format chuẩn Big 4, keyword phù hợp cho từng vị trí.'},
+      {icon:'ti-microphone', title:'Luyện phỏng vấn năng lực Big 4', desc:'Competency-based interview — STAR method thực chiến.'},
+    ],
+    feedbacks:[
+      {badge:'✓ Intern — PwC', text:'"Em có được offer nhờ anh giúp <strong>sửa CV trong round đầu tiên</strong>. Cảm ơn anh Tuấn nhiều ạ."', name:'Bùi Tuấn Anh', school:'Incoming Intern tại PwC', initials:'BT'},
+    ]
+  },
+  {
+    id:7, initials:'QH', name:'Lê Quang Hưng', role:'Supply Chain Analyst', co:'Maersk Vietnam',
+    ind:['Supply Chain','Logistics'], prog:['Operations','Fresher'],
+    message:'Supply Chain là ngành cần cả tư duy phân tích lẫn hiểu biết thực tế. Mình muốn chia sẻ những gì mình đã học được từ trong ngành để giúp các bạn bắt đầu đúng hướng.',
+    supports:[
+      {icon:'ti-ship', title:'Insight ngành Logistics & SCM quốc tế', desc:'Hiểu cách các tập đoàn như Maersk, DHL, Kuehne+Nagel vận hành.'},
+      {icon:'ti-file-text', title:'CV & phỏng vấn Operations / SCM', desc:'Highlight đúng skills quan trọng trong ngành Supply Chain.'},
+      {icon:'ti-clipboard-data', title:'Case study Supply Chain thực chiến', desc:'Luyện phân tích và xử lý tình huống vận hành thực tế.'},
+    ],
+    feedbacks:[
+      {badge:'✓ Intern — Logistics MNC', text:'"Anh Hưng giúp mình <strong>hiểu ngành Logistics một cách hệ thống</strong> — từ thuật ngữ đến cách apply đúng cách."', name:'Minh Khoa', school:'HCMUTE – Đại học Sư phạm Kỹ thuật', initials:'MK'},
+    ]
+  },
+  {
+    id:8, initials:'PT', name:'Phạm Hoài Thương', role:'Consumer Insights Manager', co:'Nestlé Vietnam',
+    ind:['Marketing','FMCG'], prog:['Research & Insights','Internship'],
+    message:'Consumer Insights là ngành vừa cần sáng tạo vừa cần tư duy phân tích. Mình muốn giúp các bạn hiểu ngành này không chỉ qua lý thuyết mà từ những dự án thực tế mình đã làm tại Nestlé.',
+    supports:[
+      {icon:'ti-eye', title:'Định hướng Marketing Research & Insights', desc:'Hiểu rõ career path trong Consumer Research tại MNC FMCG.'},
+      {icon:'ti-file-text', title:'CV & phỏng vấn cho vị trí Marketing MNC', desc:'Sửa hồ sơ theo đúng kỳ vọng của hiring manager tại Nestlé.'},
+      {icon:'ti-presentation-analytics', title:'Luyện case presentation & storytelling', desc:'Cách trình bày insights một cách thuyết phục và logic.'},
+    ],
+    feedbacks:[
+      {badge:'✓ Intern — Nestlé', text:'"Chị Thương giúp mình <strong>tìm lại được đam mê với ngành Marketing</strong> và biết cách định vị bản thân tốt hơn."', name:'Hoàng Anh', school:'UEH – Đại học Kinh tế TP.HCM', initials:'HA'},
+    ]
+  }
+];
+
+/* ─── State ─── */
+var S={adv:'',advRole:'',advCo:'',advInitials:'',pkg:'',sess:'',priceLabel:'',priceNum:0};
+var currentAdvisorId = -1;
+
+/* ─── FILTER ─── */
+function doFilter(btn, ind){
+  document.querySelectorAll('.fbtn').forEach(function(b){b.classList.remove('on');});
+  btn.classList.add('on');
+  var cards = document.querySelectorAll('.acard');
+  var vis = 0;
+  cards.forEach(function(c){
+    var show = ind==='all' || c.dataset.ind.indexOf(ind)>-1;
+    c.style.display = show ? 'flex' : 'none';
+    if(show) vis++;
+  });
+  document.getElementById('countNum').textContent = vis;
+}
+
+/* ─── DRAWER ─── */
+function openDrawer(id){
+  var a = ADVISORS[id];
+  currentAdvisorId = id;
+  document.getElementById('dAva').childNodes[0].textContent = a.initials;
+  document.getElementById('dName').textContent = a.name;
+  document.getElementById('dRole').textContent = a.role;
+  document.getElementById('dCo').textContent = a.co;
+  document.getElementById('dMessage').innerHTML = a.message;
+  document.getElementById('dBtnBook').textContent = 'Đặt lịch với '+a.name.split(' ').pop()+' →';
+
+  /* tags */
+  var tagsHtml = '';
+  a.ind.forEach(function(t){ tagsHtml += '<span class="atag atag-ind">'+t+'</span>'; });
+  a.prog.forEach(function(t){ tagsHtml += '<span class="atag atag-prog">'+t+'</span>'; });
+  document.getElementById('dTags').innerHTML = tagsHtml;
+
+  /* supports */
+  var supHtml = '';
+  a.supports.forEach(function(s){
+    supHtml += '<div class="d-sup"><div class="d-sup-icon"><i class="ti '+s.icon+'"></i></div><div><div class="d-sup-title">'+s.title+'</div><div class="d-sup-desc">'+s.desc+'</div></div></div>';
+  });
+  document.getElementById('dSupports').innerHTML = supHtml;
+
+  /* feedbacks */
+  var fbHtml = '';
+  a.feedbacks.forEach(function(f){
+    fbHtml += '<div class="d-fb"><div class="d-fb-badge">'+f.badge+'</div><div class="d-fb-text">'+f.text+'</div><div class="d-fb-author"><div class="d-fb-ava">'+f.initials+'</div><div><div class="d-fb-name">'+f.name+'</div><div class="d-fb-school">'+f.school+'</div></div></div></div>';
+  });
+  document.getElementById('dFeedbacks').innerHTML = fbHtml;
+
+  document.getElementById('drawerOv').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeDrawer(){
+  document.getElementById('drawerOv').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+function handleDrawerBg(e){
+  if(e.target === document.getElementById('drawerOv')) closeDrawer();
+}
+
+function bookFromDrawer(){
+  var a = ADVISORS[currentAdvisorId];
+  closeDrawer();
+  openCheckout(a.name, a.role, a.co, a.initials);
+}
+
+/* ─── CHECKOUT ─── */
+var STEPS = ['Chọn Gói','Thông tin','Xác nhận & Thanh toán'];
+
+function openCheckout(adv, role, co, initials){
+  S.adv=adv; S.advRole=role; S.advCo=co; S.advInitials=initials||'LJ';
+  S.pkg=''; S.sess=''; S.priceLabel=''; S.priceNum=0;
+  document.querySelectorAll('.pkgitem').forEach(function(e){e.classList.remove('sel');});
+  document.getElementById('mBtn1').disabled = true;
+  resetForm();
+  document.getElementById('mApbAva').textContent = initials||'LJ';
+  document.getElementById('mApbName').textContent = adv||'LinkaJob sẽ match cho bạn';
+  document.getElementById('mApbRole').textContent = role ? role+' · '+co : 'Tư vấn miễn phí trước khi chọn';
+  document.getElementById('mhSub').textContent = adv ? 'Advisor: '+adv : 'LinkaJob · Career Consulting';
+  setCtx(adv||'LinkaJob', role ? role+' · '+co : 'Chọn gói để bắt đầu');
+  renderSteps(1); showPanel('mp1');
+  document.getElementById('mOverlay').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeCheckout(){
+  document.getElementById('mOverlay').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+function handleMoBg(e){
+  if(e.target===document.getElementById('mOverlay')) closeCheckout();
+}
+
+function selPkg(el, pkg, sess, pl, pn){
+  document.querySelectorAll('.pkgitem').forEach(function(e){e.classList.remove('sel');});
+  el.classList.add('sel');
+  S.pkg=pkg; S.sess=sess; S.priceLabel=pl; S.priceNum=pn;
+  document.getElementById('mBtn1').disabled=false;
+}
+
+function goStep(step){
+  if(step===3){
+    var n = document.getElementById('mName').value.trim();
+    var ck = 'LJ '+S.pkg.toUpperCase()+' '+n.split(' ').pop().toUpperCase();
+    document.getElementById('cvPkg').textContent = 'Gói '+S.pkg;
+    document.getElementById('cvSess').textContent = S.sess;
+    document.getElementById('cvAdv').textContent = S.adv||'LinkaJob sẽ match';
+    document.getElementById('cvRole').textContent = S.advRole;
+    document.getElementById('cvName').textContent = n;
+    document.getElementById('cvEmail').textContent = document.getElementById('mEmail').value;
+    document.getElementById('cvPhone').textContent = document.getElementById('mPhone').value;
+    document.getElementById('cvTotal').textContent = S.priceLabel+'.000 đ';
+    document.getElementById('payAmt').textContent = S.priceNum.toLocaleString('vi-VN')+'.000 đ';
+    document.getElementById('payCk').textContent = ck;
+    setCtx('Gói '+S.pkg+' · '+(S.adv||'LinkaJob'), 'Tổng: '+S.priceLabel+'.000 đ');
+  } else if(step===2){
+    setCtx((S.adv||'LinkaJob')+' · Gói '+S.pkg, S.sess);
+  }
+  renderSteps(step);
+  showPanel('mp'+step);
+}
+
+function chkF(){
+  var ok = document.getElementById('mName').value.trim() && document.getElementById('mPhone').value.trim() && document.getElementById('mEmail').value.trim();
+  document.getElementById('mBtn2').disabled = !ok;
+}
+
+function resetForm(){
+  ['mName','mPhone','mEmail','mSchool','mTarget','mGoal'].forEach(function(id){var el=document.getElementById(id);if(el)el.value='';});
+  var y=document.getElementById('mYear');if(y)y.value='';
+  var b=document.getElementById('mBtn2');if(b)b.disabled=true;
+}
+
+function showPanel(id){
+  document.querySelectorAll('.mpanel').forEach(function(p){p.classList.remove('active');});
+  document.getElementById(id).classList.add('active');
+  document.getElementById('mModal').scrollTop=0;
+}
+
+function setCtx(main, sub){
+  document.getElementById('mctxMain').textContent = main;
+  document.getElementById('mctxSub').textContent = sub;
+}
+
+function renderSteps(active){
+  var html='';
+  STEPS.forEach(function(s,i){
+    var n=i+1, st=n<active?'done':n===active?'active':'pend';
+    html+='<div class="ms"><div class="ms-c '+st+'">'+(st==='done'?'✓':n)+'</div><div class="ms-lbl '+st+'">'+s+'</div></div>';
+    if(i<STEPS.length-1) html+='<div class="ms-line'+(n<active?' done':'')+'"></div>';
+  });
+  document.getElementById('msteps').innerHTML = html;
+}
+</script>
+</body>
+</html>

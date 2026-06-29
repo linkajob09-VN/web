@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Các gói meeting 1-1 · LinkaJob</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=Inter:wght@400;500&display=swap');
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+.lj{font-family:'Inter',sans-serif;background:#0D0D0D;color:#F0F0F0;overflow-x:hidden;}
+
+/* ── NAV ── */
+.lj-nav{display:flex;align-items:center;justify-content:space-between;padding:16px 32px;border-bottom:.5px solid rgba(255,255,255,.08);position:relative;z-index:200;}
+.lj-logo{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:18px;color:#fc5229;letter-spacing:-.5px;text-decoration:none;}
+.lj-nav-links{display:flex;gap:4px;align-items:center;}
+.lj-nav-item{position:relative;}
+.lj-nav-links a,.lj-nbp{font-size:13px;color:rgba(240,240,240,.5);text-decoration:none;font-family:'Space Grotesk',sans-serif;font-weight:500;transition:color .2s,background .2s;padding:8px 14px;border-radius:8px;display:inline-flex;align-items:center;gap:5px;cursor:pointer;background:transparent;border:none;}
+.lj-nav-links a:hover,.lj-nbp:hover{color:#F0F0F0;background:rgba(255,255,255,.05);}
+.lj-chev{font-size:11px;transition:transform .2s;color:rgba(240,240,240,.3);}
+.lj-nav-item:hover .lj-chev{transform:rotate(180deg);color:rgba(240,240,240,.6);}
+.lj-btn-nav{background:#fc5229;color:#fff;font-size:13px;font-weight:500;font-family:'Space Grotesk',sans-serif;padding:8px 20px;border-radius:100px;border:none;cursor:pointer;margin-left:8px;}
+.lj-dd{position:absolute;top:calc(100% + 8px);left:50%;transform:translateX(-50%) translateY(-6px);background:#161616;border:.5px solid rgba(255,255,255,.1);border-radius:14px;padding:8px;min-width:230px;opacity:0;pointer-events:none;transition:opacity .18s ease,transform .18s ease;z-index:300;}
+.lj-nav-item:hover .lj-dd{opacity:1;pointer-events:auto;transform:translateX(-50%) translateY(0);}
+.lj-di{display:flex;align-items:flex-start;gap:11px;padding:10px 12px;border-radius:10px;text-decoration:none;transition:background .15s;}
+.lj-di:hover{background:rgba(255,255,255,.05);}
+.lj-dii{width:32px;height:32px;border-radius:9px;background:rgba(252,82,41,.1);display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;}
+.lj-dii i{font-size:16px;color:#fc5229;}
+.lj-dd-courses .lj-dii{background:rgba(255,255,255,.05);}
+.lj-dd-courses .lj-dii i{color:rgba(240,240,240,.45);}
+.lj-dd-courses .lj-di:hover .lj-dii{background:rgba(252,82,41,.1);}
+.lj-dd-courses .lj-di:hover .lj-dii i{color:#fc5229;}
+.lj-dit{font-family:'Space Grotesk',sans-serif;font-size:13px;font-weight:600;color:#F0F0F0;margin-bottom:2px;}
+.lj-dis{font-size:11px;color:rgba(240,240,240,.38);line-height:1.45;}
+.lj-dhr{height:.5px;background:rgba(255,255,255,.07);margin:6px 0;}
+.lj-badge{display:inline-block;font-size:9px;font-weight:700;font-family:'Space Grotesk',sans-serif;letter-spacing:.06em;text-transform:uppercase;background:rgba(252,82,41,.15);color:#fc5229;padding:2px 7px;border-radius:4px;margin-left:6px;vertical-align:middle;}
+
+/* ── HERO ── */
+.hero{padding:64px 32px 40px;text-align:center;}
+.eyebrow{display:inline-flex;align-items:center;gap:7px;background:#1A1A1A;border:.5px solid rgba(255,255,255,.1);border-radius:100px;padding:6px 14px;font-size:12px;color:rgba(240,240,240,.5);font-family:'Space Grotesk',sans-serif;font-weight:500;margin-bottom:22px;}
+.eyebrow-dot{width:5px;height:5px;border-radius:50%;background:#fc5229;flex-shrink:0;}
+.hero h1{font-family:'Space Grotesk',sans-serif;font-size:44px;font-weight:700;line-height:1.08;letter-spacing:-2px;color:#F0F0F0;margin-bottom:14px;}
+.hero h1 em{color:#fc5229;font-style:normal;}
+.hero-sub{font-size:15px;color:rgba(240,240,240,.42);max-width:460px;margin:0 auto 32px;line-height:1.7;}
+.trust-row{display:flex;justify-content:center;gap:24px;flex-wrap:wrap;}
+.trust-item{display:flex;align-items:center;gap:6px;font-size:12px;color:rgba(240,240,240,.38);font-family:'Space Grotesk',sans-serif;}
+.trust-item i{font-size:13px;color:#fc5229;}
+
+/* ── HOW IT WORKS ── */
+.how{margin:40px 32px 0;background:#1A1A1A;border:.5px solid rgba(255,255,255,.08);border-radius:18px 18px 0 0;padding:32px 32px 28px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:0;}
+.how-step{display:flex;flex-direction:column;align-items:center;text-align:center;padding:0 24px;position:relative;}
+.how-step:not(:last-child)::after{content:'';position:absolute;right:0;top:22px;width:.5px;height:36px;background:rgba(255,255,255,.08);transform:translateY(-50%);}
+.how-tag{display:inline-block;font-size:9px;font-weight:700;font-family:'Space Grotesk',sans-serif;letter-spacing:.07em;text-transform:uppercase;background:rgba(252,82,41,.12);color:#fc5229;padding:2px 8px;border-radius:4px;margin-bottom:10px;}
+.how-icon{width:40px;height:40px;border-radius:11px;background:rgba(252,82,41,.1);display:flex;align-items:center;justify-content:center;margin-bottom:11px;}
+.how-icon i{font-size:19px;color:#fc5229;}
+.how-title{font-family:'Space Grotesk',sans-serif;font-size:13px;font-weight:700;color:#F0F0F0;margin-bottom:4px;}
+.how-sub{font-size:12px;color:rgba(240,240,240,.38);line-height:1.55;}
+.how-cta{margin:0 32px;background:rgba(252,82,41,.06);border:.5px solid rgba(252,82,41,.18);border-top:none;border-radius:0 0 18px 18px;padding:16px 28px;display:flex;align-items:center;justify-content:center;gap:14px;}
+.how-cta span{font-size:13px;color:rgba(240,240,240,.5);font-family:'Space Grotesk',sans-serif;}
+.how-cta strong{color:#F0F0F0;font-weight:600;}
+.how-cta-btn{background:#fc5229;color:#fff;font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:12px;padding:9px 20px;border-radius:100px;border:none;cursor:pointer;white-space:nowrap;}
+
+/* ── SOCIAL PROOF ── */
+.sp-section{padding:52px 32px 0;}
+.sec-label{font-size:11px;color:rgba(240,240,240,.28);letter-spacing:.12em;text-transform:uppercase;margin-bottom:8px;}
+.sec-title{font-family:'Space Grotesk',sans-serif;font-size:26px;font-weight:700;letter-spacing:-1px;color:#F0F0F0;margin-bottom:24px;line-height:1.15;}
+.sp-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;}
+.sp-card{background:#1A1A1A;border:.5px solid rgba(255,255,255,.07);border-radius:16px;padding:22px 20px;display:flex;flex-direction:column;gap:14px;}
+.sp-card.real{border-color:rgba(252,82,41,.2);background:#1C0F08;}
+.sp-quote{font-size:13px;color:rgba(240,240,240,.65);line-height:1.7;font-style:italic;flex:1;}
+.sp-quote::before{content:'"';color:#fc5229;font-size:18px;font-family:'Space Grotesk',sans-serif;font-weight:700;display:block;margin-bottom:4px;font-style:normal;}
+.sp-meta{display:flex;align-items:center;justify-content:space-between;gap:10px;}
+.sp-person{display:flex;flex-direction:column;gap:2px;}
+.sp-name{font-family:'Space Grotesk',sans-serif;font-size:12px;font-weight:700;color:#F0F0F0;}
+.sp-role{font-size:11px;color:rgba(240,240,240,.35);}
+.sp-pkg{display:inline-block;font-size:9px;font-weight:700;font-family:'Space Grotesk',sans-serif;letter-spacing:.06em;text-transform:uppercase;background:rgba(252,82,41,.12);color:#fc5229;padding:2px 8px;border-radius:4px;white-space:nowrap;}
+.sp-pkg.placeholder{background:rgba(255,255,255,.05);color:rgba(240,240,240,.25);}
+
+/* ── PRICING TABLE ── */
+.pt-section{padding:52px 32px 0;}
+.pt-wrap{overflow-x:auto;}
+table.pt{width:100%;border-collapse:collapse;}
+table.pt th,table.pt td{padding:0;text-align:center;}
+table.pt th:first-child,table.pt td:first-child{text-align:left;}
+
+/* header */
+.pt-thead th{padding:0 16px 16px;border-bottom:.5px solid rgba(255,255,255,.08);}
+.pt-thead .pt-th-feat{font-family:'Space Grotesk',sans-serif;font-size:11px;font-weight:700;color:rgba(240,240,240,.3);text-transform:uppercase;letter-spacing:.08em;padding-left:0;}
+.pt-thead .pt-th{padding-top:4px;}
+.pt-th-inner{display:flex;flex-direction:column;align-items:center;gap:4px;}
+.pt-th-name{font-family:'Space Grotesk',sans-serif;font-size:11px;font-weight:700;color:rgba(240,240,240,.4);text-transform:uppercase;letter-spacing:.08em;}
+.pt-th-name.hi{color:#fc5229;}
+.pt-th-price{font-family:'Space Grotesk',sans-serif;font-size:20px;font-weight:700;color:#F0F0F0;letter-spacing:-0.5px;}
+.pt-th-price.hi{color:#fc5229;}
+.pt-th-sessions{font-size:11px;color:rgba(240,240,240,.3);margin-top:1px;}
+.pt-th-pop{background:#fc5229;color:#fff;font-family:'Space Grotesk',sans-serif;font-size:9px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:2px 10px;border-radius:100px;display:inline-block;margin-bottom:4px;}
+
+/* group label */
+.pt-group td{font-family:'Space Grotesk',sans-serif;font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:rgba(240,240,240,.2);padding:18px 0 6px;border-bottom:none;}
+
+/* data rows */
+.pt-row td{padding:11px 16px;border-bottom:.5px solid rgba(255,255,255,.05);font-size:13px;color:rgba(240,240,240,.5);vertical-align:middle;}
+.pt-row td:first-child{padding-left:0;color:rgba(240,240,240,.65);}
+.pt-row td small{display:block;font-size:10px;color:rgba(240,240,240,.28);margin-top:1px;}
+.pt-row td.hi{background:rgba(252,82,41,.03);}
+.pt-row:last-child td{border-bottom:none;}
+.pt-check{color:#fc5229;font-size:16px;}
+.pt-dash{color:rgba(255,255,255,.15);}
+.pt-val{font-family:'Space Grotesk',sans-serif;font-size:12px;font-weight:500;color:#F0F0F0;}
+.pt-val.hi{color:#fc5229;}
+
+/* CTA row */
+.pt-cta-row td{padding:20px 16px 0;border-bottom:none;}
+.pt-cta-row td:first-child{padding-left:0;}
+.pt-btn{width:100%;padding:11px;border-radius:100px;font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:13px;cursor:pointer;border:none;transition:all .2s;white-space:nowrap;}
+.pt-btn-ghost{background:transparent;color:rgba(240,240,240,.6);border:.5px solid rgba(255,255,255,.14);}
+.pt-btn-ghost:hover{background:rgba(255,255,255,.05);color:#F0F0F0;}
+.pt-btn-main{background:#fc5229;color:#fff;}
+.pt-btn-main:hover{background:#e84820;}
+
+/* ── ADVISOR NOTE ── */
+.adv-note{margin:28px 32px 0;background:#1A1A1A;border:.5px solid rgba(255,255,255,.07);border-radius:14px;padding:18px 22px;display:flex;align-items:flex-start;gap:12px;}
+.adv-note-icon{width:34px;height:34px;border-radius:9px;background:rgba(255,255,255,.04);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.adv-note-icon i{font-size:17px;color:rgba(240,240,240,.4);}
+.adv-note-title{font-family:'Space Grotesk',sans-serif;font-size:13px;font-weight:600;color:#F0F0F0;margin-bottom:3px;}
+.adv-note-sub{font-size:12px;color:rgba(240,240,240,.38);line-height:1.6;}
+.adv-note-sub strong{color:rgba(240,240,240,.6);font-weight:500;}
+
+/* ── PAYMENT ── */
+.pay-section{padding:52px 32px 0;}
+.pay-inner{background:#1A1A1A;border:.5px solid rgba(255,255,255,.07);border-radius:20px;padding:36px 40px;display:grid;grid-template-columns:1fr 180px;gap:48px;align-items:start;}
+.pay-title{font-family:'Space Grotesk',sans-serif;font-size:22px;font-weight:700;letter-spacing:-.8px;color:#F0F0F0;margin-bottom:8px;}
+.pay-sub{font-size:13px;color:rgba(240,240,240,.38);line-height:1.7;margin-bottom:28px;}
+.pay-steps{display:flex;flex-direction:column;gap:14px;}
+.pay-step{display:flex;gap:12px;align-items:flex-start;}
+.pay-num{width:22px;height:22px;border-radius:50%;border:.5px solid rgba(252,82,41,.4);display:flex;align-items:center;justify-content:center;font-family:'Space Grotesk',sans-serif;font-size:11px;font-weight:700;color:#fc5229;flex-shrink:0;margin-top:1px;}
+.pay-text{font-size:13px;color:rgba(240,240,240,.5);line-height:1.55;}
+.pay-text strong{color:#F0F0F0;font-weight:500;}
+.qr-wrap{display:flex;flex-direction:column;align-items:center;gap:10px;}
+.qr-box{width:148px;height:148px;background:#fff;border-radius:14px;display:flex;align-items:center;justify-content:center;padding:12px;}
+.qr-box svg{width:100%;height:100%;}
+.qr-label{font-size:11px;color:rgba(240,240,240,.3);font-family:'Space Grotesk',sans-serif;text-align:center;}
+.qr-bank{font-size:12px;color:rgba(240,240,240,.5);font-family:'Space Grotesk',sans-serif;font-weight:500;}
+.qr-hint{font-size:10px;color:rgba(240,240,240,.2);font-family:'Space Grotesk',sans-serif;font-style:italic;}
+
+/* ── FAQ ── */
+.faq-section{padding:52px 32px 0;}
+.faq-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:28px;}
+.faq-item{background:#1A1A1A;border:.5px solid rgba(255,255,255,.07);border-radius:14px;overflow:hidden;}
+.faq-q{width:100%;background:none;border:none;display:flex;justify-content:space-between;align-items:center;padding:18px 20px;cursor:pointer;text-align:left;gap:14px;}
+.faq-q span{font-family:'Space Grotesk',sans-serif;font-size:13px;font-weight:600;color:#F0F0F0;line-height:1.4;}
+.faq-q i{font-size:15px;color:rgba(240,240,240,.28);flex-shrink:0;transition:transform .2s;}
+.faq-item.open .faq-q i{transform:rotate(45deg);color:#fc5229;}
+.faq-a{font-size:13px;color:rgba(240,240,240,.48);line-height:1.75;padding:0 20px 18px;display:none;}
+.faq-item.open .faq-a{display:block;}
+
+/* ── FINAL CTA ── */
+.cta-wrap{padding:52px 32px 64px;}
+.cta-box{background:#fc5229;border-radius:20px;padding:52px 48px;text-align:center;}
+.cta-box h2{font-family:'Space Grotesk',sans-serif;font-size:28px;font-weight:700;letter-spacing:-1px;color:#fff;margin-bottom:10px;line-height:1.15;}
+.cta-box p{font-size:14px;color:rgba(255,255,255,.7);margin-bottom:28px;}
+.cta-btn{background:#0D0D0D;color:#fc5229;font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:15px;padding:14px 32px;border-radius:100px;border:none;cursor:pointer;}
+
+/* ── FOOTER ── */
+.lj-footer{padding:24px 32px;border-top:.5px solid rgba(255,255,255,.08);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;}
+.lj-footer-copy{font-size:12px;color:rgba(240,240,240,.22);}
+.lj-footer-links{display:flex;gap:20px;}
+.lj-footer-links a{font-size:12px;color:rgba(240,240,240,.28);text-decoration:none;}
+</style>
+</head>
+<body>
+<div class="lj">
+
+<!-- NAV -->
+<nav class="lj-nav">
+  <a href="/" class="lj-logo">LinkaJob</a>
+  <div class="lj-nav-links">
+    <div class="lj-nav-item">
+      <button class="lj-nbp">Cố vấn 1-1 <i class="ti ti-chevron-down lj-chev"></i></button>
+      <div class="lj-dd">
+        <a class="lj-di" href="#"><div class="lj-dii"><i class="ti ti-user-star"></i></div><div><div class="lj-dit">Profile Advisor</div><div class="lj-dis">Tìm advisor phù hợp</div></div></a>
+        <div class="lj-dhr"></div>
+        <a class="lj-di" href="#"><div class="lj-dii"><i class="ti ti-calendar-event"></i></div><div><div class="lj-dit">Các gói meeting 1-1 <span class="lj-badge">Đang xem</span></div><div class="lj-dis">Tư vấn chọn gói miễn phí</div></div></a>
+      </div>
+    </div>
+    <div class="lj-nav-item">
+      <button class="lj-nbp">Khoá học <i class="ti ti-chevron-down lj-chev"></i></button>
+      <div class="lj-dd lj-dd-courses">
+        <a class="lj-di" href="#"><div class="lj-dii"><i class="ti ti-rocket"></i></div><div><div class="lj-dit">Land Your Dream Job</div><div class="lj-dis">CV · Interview · Offer</div></div></a>
+        <div class="lj-dhr"></div>
+        <a class="lj-di" href="#"><div class="lj-dii"><i class="ti ti-truck-delivery"></i></div><div><div class="lj-dit">Logistics Operation</div><div class="lj-dis">Thực chiến từ MNC insiders</div></div></a>
+        <div class="lj-dhr"></div>
+        <a class="lj-di" href="#"><div class="lj-dii"><i class="ti ti-topology-star-3"></i></div><div><div class="lj-dit">Supply Chain Principles</div><div class="lj-dis">Nền tảng cho fresher</div></div></a>
+      </div>
+    </div>
+    <div class="lj-nav-item">
+      <button class="lj-nbp">Thành công <i class="ti ti-chevron-down lj-chev"></i></button>
+      <div class="lj-dd">
+        <a class="lj-di" href="#"><div class="lj-dii"><i class="ti ti-trophy"></i></div><div><div class="lj-dit">Câu chuyện thành công</div><div class="lj-dis">Hành trình vào MNC thật</div></div></a>
+        <div class="lj-dhr"></div>
+        <a class="lj-di" href="#"><div class="lj-dii"><i class="ti ti-message-circle-2"></i></div><div><div class="lj-dit">Feedback dịch vụ</div><div class="lj-dis">~80% advisee nhận offer</div></div></a>
+      </div>
+    </div>
+    <a href="#">Blog</a>
+    <button class="lj-btn-nav" onclick="window.open('https://linkajob.vn/lien-he/','_blank')">Đăng ký tư vấn</button>
+  </div>
+</nav>
+
+<!-- 1. HERO — Tôi có đúng chỗ không? -->
+<section class="hero">
+  <div class="eyebrow"><span class="eyebrow-dot"></span>Cố vấn 1-1 · Gói meeting</div>
+  <h1>Chọn gói, được match<br>với <em>đúng advisor của bạn.</em></h1>
+  <p class="hero-sub">Advisor là người đang làm thật tại MNC · 45–60 phút/buổi · Google Meet · Gói gắn với 1 advisor cố định</p>
+  <div class="trust-row">
+    <div class="trust-item"><i class="ti ti-check"></i>Tư vấn chọn gói miễn phí</div>
+    <div class="trust-item"><i class="ti ti-check"></i>100% advisor từ MNC</div>
+    <div class="trust-item"><i class="ti ti-check"></i>Đổi advisor nếu không hợp</div>
+    <div class="trust-item"><i class="ti ti-check"></i>~80% advisee nhận offer</div>
+  </div>
+</section>
+
+<!-- 2. HOW IT WORKS — Cách này hoạt động thế nào? -->
+<div class="how">
+  <div class="how-step">
+    <div class="how-tag">Bước 1 · Miễn phí</div>
+    <div class="how-icon"><i class="ti ti-headset"></i></div>
+    <div class="how-title">Tư vấn chọn gói</div>
+    <div class="how-sub">Gặp đội hỗ trợ LinkaJob · được tư vấn gói phù hợp và match với advisor đúng chuyên môn</div>
+  </div>
+  <div class="how-step">
+    <div class="how-tag">Bước 2</div>
+    <div class="how-icon"><i class="ti ti-credit-card"></i></div>
+    <div class="how-title">Thanh toán & xác nhận</div>
+    <div class="how-sub">Chuyển khoản qua QR · nhận link đặt lịch trong 24h</div>
+  </div>
+  <div class="how-step">
+    <div class="how-tag">Bước 3</div>
+    <div class="how-icon"><i class="ti ti-user-star"></i></div>
+    <div class="how-title">Bắt đầu đồng hành</div>
+    <div class="how-sub">Đặt từng buổi theo lịch advisor · linh hoạt trong thời hạn gói</div>
+  </div>
+</div>
+<div class="how-cta">
+  <span><strong>Chưa biết chọn gói nào?</strong> Gặp đội hỗ trợ trước — miễn phí, không ràng buộc.</span>
+  <button class="how-cta-btn" onclick="window.open('https://linkajob.vn/lien-he/','_blank')">Đặt lịch tư vấn miễn phí</button>
+</div>
+
+<!-- 3. SOCIAL PROOF — Người khác dùng có tốt không? -->
+<section class="sp-section">
+  <div class="sec-label">Từ advisee thật</div>
+  <div class="sec-title">Họ đã làm được.</div>
+  <div class="sp-grid">
+
+    <!-- REAL testimonial -->
+    <div class="sp-card real">
+      <div class="sp-quote">Chị ấy đi chi tiết về CV của em lắm. Em khá rõ ràng về thực tế các vị trí mà em quan tâm — và nhận được lời mời phỏng vấn sau 3 buổi meeting.</div>
+      <div class="sp-meta">
+        <div class="sp-person">
+          <div class="sp-name">Advisee · Supply Chain FMCG</div>
+          <div class="sp-role">Nhận lời mời phỏng vấn sau 3 buổi</div>
+        </div>
+        <div class="sp-pkg">Gói Đặc Biệt</div>
+      </div>
+    </div>
+
+    <!-- Placeholder 2 -->
+    <div class="sp-card">
+      <div class="sp-quote" style="color:rgba(240,240,240,.2);font-style:normal;">← Thêm feedback thật của advisee vào đây. Ví dụ: "Sau 6 buổi với advisor, mình tự tin hơn hẳn khi vào phòng phỏng vấn..."</div>
+      <div class="sp-meta">
+        <div class="sp-person">
+          <div class="sp-name" style="color:rgba(240,240,240,.2);">Tên advisee · Ngành</div>
+          <div class="sp-role">Kết quả đạt được</div>
+        </div>
+        <div class="sp-pkg placeholder">Gói ?</div>
+      </div>
+    </div>
+
+    <!-- Placeholder 3 -->
+    <div class="sp-card">
+      <div class="sp-quote" style="color:rgba(240,240,240,.2);font-style:normal;">← Thêm feedback thật của advisee vào đây. Ví dụ: "Advisor giúp mình hiểu mình đang ở đâu và cần làm gì tiếp theo..."</div>
+      <div class="sp-meta">
+        <div class="sp-person">
+          <div class="sp-name" style="color:rgba(240,240,240,.2);">Tên advisee · Ngành</div>
+          <div class="sp-role">Kết quả đạt được</div>
+        </div>
+        <div class="sp-pkg placeholder">Gói ?</div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- 4. PRICING TABLE — Tôi nên chọn gì? -->
+<section class="pt-section">
+  <div class="sec-label">Các gói</div>
+  <div class="sec-title">Chọn gói phù hợp.</div>
+  <div class="pt-wrap">
+    <table class="pt">
+      <thead>
+        <tr class="pt-thead">
+          <th class="pt-th-feat">Nội dung hỗ trợ</th>
+          <th class="pt-th">
+            <div class="pt-th-inner">
+              <div class="pt-th-name">Trial</div>
+              <div class="pt-th-price">419k</div>
+              <div class="pt-th-sessions">1 buổi · 30 phút</div>
+            </div>
+          </th>
+          <th class="pt-th">
+            <div class="pt-th-inner">
+              <div class="pt-th-name">Cơ Bản</div>
+              <div class="pt-th-price">799k</div>
+              <div class="pt-th-sessions">2 buổi · 45–60 phút</div>
+            </div>
+          </th>
+          <th class="pt-th">
+            <div class="pt-th-inner">
+              <div class="pt-th-pop">Phổ biến nhất</div>
+              <div class="pt-th-name hi">Đặc Biệt</div>
+              <div class="pt-th-price hi">1.499k</div>
+              <div class="pt-th-sessions">4 buổi · 45–60 phút</div>
+            </div>
+          </th>
+          <th class="pt-th">
+            <div class="pt-th-inner">
+              <div class="pt-th-name">Chuyên Sâu</div>
+              <div class="pt-th-price">2.199k</div>
+              <div class="pt-th-sessions">6 buổi · 45–60 phút</div>
+            </div>
+          </th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr class="pt-group"><td colspan="5">Thời hạn & hồ sơ</td></tr>
+        <tr class="pt-row">
+          <td>Thời hạn sử dụng</td>
+          <td>03 ngày</td>
+          <td>02 tuần</td>
+          <td class="hi"><span class="pt-val hi">04 tuần</span></td>
+          <td>08 tuần</td>
+        </tr>
+        <tr class="pt-row">
+          <td>Sửa CV<small>Theo mục tiêu nghề nghiệp</small></td>
+          <td><span class="pt-val">1 lần</span><small>Nhận xét nhanh</small></td>
+          <td><span class="pt-val">1 lần</span><small>Nhận xét cơ bản</small></td>
+          <td class="hi"><span class="pt-val hi">1 lần</span><small>Nâng cao</small></td>
+          <td><span class="pt-val">1 lần</span><small>Nâng cao + LinkedIn</small></td>
+        </tr>
+        <tr class="pt-row">
+          <td>Sửa Cover Letter</td>
+          <td><span class="pt-dash">—</span></td>
+          <td><span class="pt-dash">—</span></td>
+          <td class="hi"><i class="ti ti-check pt-check"></i></td>
+          <td><i class="ti ti-check pt-check"></i></td>
+        </tr>
+
+        <tr class="pt-group"><td colspan="5">Tư vấn & luyện tập</td></tr>
+        <tr class="pt-row">
+          <td>Tư vấn ngành/phòng ban</td>
+          <td><i class="ti ti-check pt-check"></i></td>
+          <td><i class="ti ti-check pt-check"></i></td>
+          <td class="hi"><i class="ti ti-check pt-check"></i></td>
+          <td><i class="ti ti-check pt-check"></i></td>
+        </tr>
+        <tr class="pt-row">
+          <td>Luyện phỏng vấn HR<small>Chuyên môn</small></td>
+          <td><span class="pt-dash">—</span></td>
+          <td><span class="pt-dash">—</span></td>
+          <td class="hi"><i class="ti ti-check pt-check"></i></td>
+          <td><i class="ti ti-check pt-check"></i></td>
+        </tr>
+        <tr class="pt-row">
+          <td>Luyện phỏng vấn Case<small>Group interview</small></td>
+          <td><span class="pt-dash">—</span></td>
+          <td><span class="pt-dash">—</span></td>
+          <td class="hi"><span class="pt-dash">—</span></td>
+          <td><i class="ti ti-check pt-check"></i></td>
+        </tr>
+
+        <tr class="pt-group"><td colspan="5">Chiến lược & định hướng</td></tr>
+        <tr class="pt-row">
+          <td>Chiến lược apply</td>
+          <td><span class="pt-dash">—</span></td>
+          <td><span class="pt-val">1 công ty</span></td>
+          <td class="hi"><span class="pt-val hi">2 công ty</span></td>
+          <td><span class="pt-val">3 công ty</span></td>
+        </tr>
+        <tr class="pt-row">
+          <td>Định hướng phát triển</td>
+          <td><span class="pt-dash">—</span></td>
+          <td><i class="ti ti-check pt-check"></i></td>
+          <td class="hi"><i class="ti ti-check pt-check"></i></td>
+          <td><span class="pt-val">Lộ trình 6–12 tháng</span></td>
+        </tr>
+        <tr class="pt-row">
+          <td>Feedback LinkedIn<small>Gửi sau mỗi buổi</small></td>
+          <td><span class="pt-dash">—</span></td>
+          <td><span class="pt-dash">—</span></td>
+          <td class="hi"><i class="ti ti-check pt-check"></i></td>
+          <td><span class="pt-val">+ Tài liệu xây dựng</span></td>
+        </tr>
+        <tr class="pt-row">
+          <td>Ưu tiên đặt lịch</td>
+          <td><span class="pt-dash">—</span></td>
+          <td><span class="pt-dash">—</span></td>
+          <td class="hi"><i class="ti ti-check pt-check"></i></td>
+          <td><i class="ti ti-check pt-check"></i></td>
+        </tr>
+
+        <!-- CTA buttons row -->
+        <tr class="pt-cta-row">
+          <td></td>
+          <td><button class="pt-btn pt-btn-ghost" onclick="window.open('https://linkajob.vn/lien-he/','_blank')">Chọn Trial</button></td>
+          <td><button class="pt-btn pt-btn-ghost" onclick="window.open('https://linkajob.vn/lien-he/','_blank')">Chọn Cơ Bản</button></td>
+          <td><button class="pt-btn pt-btn-main" onclick="window.open('https://linkajob.vn/lien-he/','_blank')">Chọn Đặc Biệt</button></td>
+          <td><button class="pt-btn pt-btn-ghost" onclick="window.open('https://linkajob.vn/lien-he/','_blank')">Chọn Chuyên Sâu</button></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ADVISOR NOTE -->
+<div class="adv-note">
+  <div class="adv-note-icon"><i class="ti ti-arrows-exchange"></i></div>
+  <div>
+    <div class="adv-note-title">Muốn gặp nhiều hơn 1 advisor trong cùng gói?</div>
+    <div class="adv-note-sub">Mỗi gói mặc định gắn với <strong>1 advisor cố định</strong>. Muốn đổi — ví dụ gặp advisor A để sửa CV ngành FMCG, rồi gặp advisor B để luyện interview ngành Tech — phí đổi là <strong>+100.000đ/lần</strong>. Liên hệ đội hỗ trợ để sắp xếp.</div>
+  </div>
+</div>
+
+<!-- 5. PAYMENT — Thanh toán thế nào? -->
+<section class="pay-section">
+  <div class="pay-inner">
+    <div>
+      <div class="sec-label">Thanh toán</div>
+      <h2 class="pay-title">Chuyển khoản, xong trong 5 phút.</h2>
+      <p class="pay-sub">Không cần tài khoản, không cần thẻ. Quét QR → chuyển khoản → đội hỗ trợ xác nhận và gửi link đặt lịch.</p>
+      <div class="pay-steps">
+        <div class="pay-step"><div class="pay-num">1</div><div class="pay-text">Đăng ký tư vấn → được <strong>tư vấn gói & match advisor phù hợp</strong></div></div>
+        <div class="pay-step"><div class="pay-num">2</div><div class="pay-text"><strong>Quét QR</strong> bên cạnh · ghi rõ <strong>Họ tên + tên gói</strong></div></div>
+        <div class="pay-step"><div class="pay-num">3</div><div class="pay-text">Gửi bill qua <strong>contact@linkajob.vn</strong> hoặc inbox Facebook/Instagram</div></div>
+        <div class="pay-step"><div class="pay-num">4</div><div class="pay-text">Nhận <strong>link đặt lịch</strong> trong 24h · tự chọn thời gian trống của advisor</div></div>
+      </div>
+    </div>
+    <div class="qr-wrap">
+      <div class="qr-box">
+        <!-- Thay bằng: <img src="qr-chuyen-khoan.png" style="width:100%;border-radius:4px;"> -->
+        <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+          <rect width="100" height="100" fill="white"/>
+          <rect x="5" y="5" width="28" height="28" rx="3" fill="none" stroke="#0D0D0D" stroke-width="4"/><rect x="11" y="11" width="16" height="16" rx="1" fill="#0D0D0D"/>
+          <rect x="67" y="5" width="28" height="28" rx="3" fill="none" stroke="#0D0D0D" stroke-width="4"/><rect x="73" y="11" width="16" height="16" rx="1" fill="#0D0D0D"/>
+          <rect x="5" y="67" width="28" height="28" rx="3" fill="none" stroke="#0D0D0D" stroke-width="4"/><rect x="11" y="73" width="16" height="16" rx="1" fill="#0D0D0D"/>
+          <rect x="40" y="5" width="5" height="5" fill="#0D0D0D"/><rect x="48" y="5" width="5" height="5" fill="#0D0D0D"/><rect x="56" y="5" width="5" height="5" fill="#0D0D0D"/>
+          <rect x="40" y="13" width="5" height="5" fill="#0D0D0D"/><rect x="56" y="13" width="5" height="5" fill="#0D0D0D"/>
+          <rect x="40" y="21" width="5" height="5" fill="#0D0D0D"/><rect x="48" y="21" width="5" height="5" fill="#0D0D0D"/>
+          <rect x="5" y="40" width="5" height="5" fill="#0D0D0D"/><rect x="13" y="40" width="5" height="5" fill="#0D0D0D"/>
+          <rect x="5" y="48" width="5" height="5" fill="#0D0D0D"/><rect x="21" y="48" width="5" height="5" fill="#0D0D0D"/>
+          <rect x="5" y="56" width="5" height="5" fill="#0D0D0D"/><rect x="13" y="56" width="5" height="5" fill="#0D0D0D"/>
+          <rect x="40" y="40" width="5" height="5" fill="#0D0D0D"/><rect x="48" y="40" width="5" height="5" fill="#0D0D0D"/><rect x="56" y="40" width="5" height="5" fill="#0D0D0D"/><rect x="64" y="40" width="5" height="5" fill="#0D0D0D"/>
+          <rect x="40" y="48" width="5" height="5" fill="#0D0D0D"/><rect x="56" y="48" width="5" height="5" fill="#0D0D0D"/><rect x="64" y="48" width="5" height="5" fill="#0D0D0D"/>
+          <rect x="40" y="56" width="5" height="5" fill="#0D0D0D"/><rect x="48" y="56" width="5" height="5" fill="#0D0D0D"/>
+          <rect x="72" y="40" width="5" height="5" fill="#0D0D0D"/><rect x="80" y="40" width="5" height="5" fill="#0D0D0D"/><rect x="88" y="40" width="5" height="5" fill="#0D0D0D"/>
+          <rect x="72" y="48" width="5" height="5" fill="#0D0D0D"/><rect x="88" y="48" width="5" height="5" fill="#0D0D0D"/>
+          <rect x="80" y="56" width="5" height="5" fill="#0D0D0D"/><rect x="88" y="56" width="5" height="5" fill="#0D0D0D"/>
+          <rect x="40" y="64" width="5" height="5" fill="#0D0D0D"/><rect x="56" y="64" width="5" height="5" fill="#0D0D0D"/><rect x="64" y="64" width="5" height="5" fill="#0D0D0D"/><rect x="72" y="64" width="5" height="5" fill="#0D0D0D"/>
+          <rect x="40" y="72" width="5" height="5" fill="#0D0D0D"/><rect x="48" y="72" width="5" height="5" fill="#0D0D0D"/><rect x="64" y="72" width="5" height="5" fill="#0D0D0D"/><rect x="80" y="72" width="5" height="5" fill="#0D0D0D"/><rect x="88" y="72" width="5" height="5" fill="#0D0D0D"/>
+          <rect x="40" y="80" width="5" height="5" fill="#0D0D0D"/><rect x="56" y="80" width="5" height="5" fill="#0D0D0D"/><rect x="72" y="80" width="5" height="5" fill="#0D0D0D"/>
+          <rect x="40" y="88" width="5" height="5" fill="#0D0D0D"/><rect x="48" y="88" width="5" height="5" fill="#0D0D0D"/><rect x="56" y="88" width="5" height="5" fill="#0D0D0D"/><rect x="72" y="88" width="5" height="5" fill="#0D0D0D"/><rect x="88" y="88" width="5" height="5" fill="#0D0D0D"/>
+          <text x="50" y="97" text-anchor="middle" font-size="6" fill="#fc5229" font-family="Arial" font-weight="bold">LinkaJob</text>
+        </svg>
+      </div>
+      <div class="qr-label">Quét để thanh toán</div>
+      <div class="qr-bank">Vietcombank · MB Bank</div>
+      <div class="qr-hint">← Thay bằng QR thật</div>
+    </div>
+  </div>
+</section>
+
+<!-- 6. FAQ — Xử lý objection cuối -->
+<section class="faq-section">
+  <div class="sec-label">Câu hỏi thường gặp</div>
+  <div class="sec-title">Còn thắc mắc?</div>
+  <div class="faq-grid">
+    <div class="faq-item">
+      <button class="faq-q" onclick="toggleFaq(this)"><span>Buổi "tư vấn miễn phí" là gì? Có phải buổi coaching không?</span><i class="ti ti-plus"></i></button>
+      <div class="faq-a">Không. Đây là buổi gặp ngắn với đội hỗ trợ LinkaJob để hiểu mục tiêu của bạn, tư vấn gói phù hợp và match với advisor đúng chuyên môn. Hoàn toàn miễn phí, không ràng buộc mua gói.</div>
+    </div>
+    <div class="faq-item">
+      <button class="faq-q" onclick="toggleFaq(this)"><span>Tôi có tự chọn advisor được không?</span><i class="ti ti-plus"></i></button>
+      <div class="faq-a">Sau buổi tư vấn miễn phí, đội LinkaJob gợi ý advisor phù hợp nhất với mục tiêu của bạn. Bạn có thể đồng ý hoặc yêu cầu đổi. Nếu đã mua gói mà muốn đổi: +100.000đ/lần.</div>
+    </div>
+    <div class="faq-item">
+      <button class="faq-q" onclick="toggleFaq(this)"><span>Tôi có thể gặp nhiều advisor trong 1 gói không?</span><i class="ti ti-plus"></i></button>
+      <div class="faq-a">Được. Ví dụ gói Đặc Biệt có 4 buổi — bạn có thể dùng 2 buổi với advisor A (sửa CV ngành FMCG) và đổi sang advisor B (luyện interview ngành Tech) với phí đổi 100k. LinkaJob sắp xếp lịch cho bạn.</div>
+    </div>
+    <div class="faq-item">
+      <button class="faq-q" onclick="toggleFaq(this)"><span>Mỗi buổi kéo dài bao lâu, qua nền tảng nào?</span><i class="ti ti-plus"></i></button>
+      <div class="faq-a">Gói Trial: 30 phút. Các gói còn lại: 45–60 phút. Tất cả qua Google Meet — link được gửi tự động vào email sau khi đặt lịch.</div>
+    </div>
+    <div class="faq-item">
+      <button class="faq-q" onclick="toggleFaq(this)"><span>Tôi có cần đặt hết lịch ngay khi mua không?</span><i class="ti ti-plus"></i></button>
+      <div class="faq-a">Không. Chỉ cần đặt trước buổi đầu tiên. Các buổi còn lại bạn chủ động đặt trong thời hạn gói — không cần đặt tất cả một lúc.</div>
+    </div>
+    <div class="faq-item">
+      <button class="faq-q" onclick="toggleFaq(this)"><span>Hết hạn mà chưa dùng hết buổi thì sao?</span><i class="ti ti-plus"></i></button>
+      <div class="faq-a">Trial: 3 ngày · Cơ Bản: 2 tuần · Đặc Biệt: 4 tuần · Chuyên Sâu: 8 tuần — tính từ ngày xác nhận thanh toán. Thời hạn hiển thị rõ trước khi bạn chuyển khoản.</div>
+    </div>
+  </div>
+</section>
+
+<!-- 7. FINAL CTA -->
+<div class="cta-wrap">
+  <div class="cta-box">
+    <h2>Chưa biết chọn gói nào?<br>Gặp mình trước đã.</h2>
+    <p>Buổi tư vấn chọn gói miễn phí · Phản hồi trong 24h · Không ràng buộc.</p>
+    <button class="cta-btn" onclick="window.open('https://linkajob.vn/lien-he/','_blank')">Đặt lịch tư vấn miễn phí</button>
+  </div>
+</div>
+
+<!-- FOOTER -->
+<footer class="lj-footer">
+  <div class="lj-logo" style="font-size:15px;">LinkaJob</div>
+  <div class="lj-footer-copy">© 2025 LinkaJob · Kết nối Cố vấn, Xây dựng Sự nghiệp</div>
+  <div class="lj-footer-links"><a href="#">Giới thiệu</a><a href="#">Blog</a><a href="https://linkajob.vn/lien-he/">Liên hệ</a></div>
+</footer>
+
+</div>
+<script>
+function toggleFaq(btn){
+  var item=btn.parentElement,wasOpen=item.classList.contains('open');
+  document.querySelectorAll('.faq-item.open').forEach(function(el){el.classList.remove('open');});
+  if(!wasOpen)item.classList.add('open');
+}
+</script>
+</body>
+</html>
