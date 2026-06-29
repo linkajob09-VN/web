@@ -609,9 +609,10 @@ body{font-family:'Inter',sans-serif;background:#F5F4F1;color:#1C1C1C;overflow-x:
         </div>
       </div>
       <div class="pay-note">Gửi bill qua <strong>contact@linkajob.vn</strong> hoặc inbox Facebook/Instagram. Nhận <strong>link đặt lịch trong 24h</strong>.</div>
+      <div id="mSubmitStatus" style="display:none;margin-top:10px;padding:10px 12px;border-radius:8px;font-size:12.5px;line-height:1.5;"></div>
       <div class="mnav">
         <button class="mback" onclick="goStep(2)">← Sửa thông tin</button>
-        <button class="mdone" onclick="closeCheckout()">Đã chuyển khoản ✓</button>
+        <button class="mdone" id="mBtnDone" onclick="submitBooking()">Đã chuyển khoản ✓</button>
       </div>
     </div>
 
@@ -621,6 +622,10 @@ body{font-family:'Inter',sans-serif;background:#F5F4F1;color:#1C1C1C;overflow-x:
 
 
 <script>
+/* ─── CONFIG ─── */
+// URL Web App lấy từ: Deploy → Web App → Anyone (sau khi chạy setupProperties() + setupTriggers() trong Code.gs)
+var WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbx7Bd9VvoyzfiiezQV9huoY2BKHH_Br1RAFIz00mjdyKeis-Zv-38a0gf_b-fMlul2C/exec';
+
 /* ─── ADVISOR DATA ─── */
 var ADVISORS = [
   {
@@ -878,12 +883,86 @@ function resetForm(){
   ['mName','mPhone','mEmail','mSchool','mTarget','mGoal'].forEach(function(id){var el=document.getElementById(id);if(el)el.value='';});
   var y=document.getElementById('mYear');if(y)y.value='';
   var b=document.getElementById('mBtn2');if(b)b.disabled=true;
+  var st=document.getElementById('mSubmitStatus');if(st){st.style.display='none';st.textContent='';}
+  var bd=document.getElementById('mBtnDone');if(bd){bd.disabled=false;bd.textContent='Đã chuyển khoản ✓';}
 }
 
 function showPanel(id){
   document.querySelectorAll('.mpanel').forEach(function(p){p.classList.remove('active');});
   document.getElementById(id).classList.add('active');
   document.getElementById('mModal').scrollTop=0;
+}
+
+/* ─── SUBMIT BOOKING (gửi về Apps Script) ─── */
+function buildGoalText(){
+  var school = (document.getElementById('mSchool').value||'').trim();
+  var target = (document.getElementById('mTarget').value||'').trim();
+  var goal   = (document.getElementById('mGoal').value||'').trim();
+  var parts = [];
+  if(target) parts.push('Vị trí/Công ty muốn apply: '+target);
+  if(goal)   parts.push('Kỳ vọng: '+goal);
+  if(school) parts.push('Trường/Tổ chức: '+school);
+  return parts.join(' | ');
+}
+
+function setSubmitStatus(kind, msg){
+  var box = document.getElementById('mSubmitStatus');
+  box.style.display = 'block';
+  box.textContent = msg;
+  if(kind==='error'){
+    box.style.background = 'rgba(252,82,41,.1)';
+    box.style.border = '1px solid rgba(252,82,41,.4)';
+    box.style.color = '#fc5229';
+  } else if(kind==='success'){
+    box.style.background = 'rgba(62,207,142,.1)';
+    box.style.border = '1px solid rgba(62,207,142,.4)';
+    box.style.color = '#3ecf8e';
+  } else {
+    box.style.background = 'rgba(240,240,240,.06)';
+    box.style.border = '1px solid rgba(240,240,240,.12)';
+    box.style.color = 'rgba(240,240,240,.7)';
+  }
+}
+
+function submitBooking(){
+  var btn = document.getElementById('mBtnDone');
+  if(btn.disabled) return; // chặn double-click
+
+  var payload = {
+    advisee_name    : document.getElementById('mName').value.trim(),
+    advisee_phone   : document.getElementById('mPhone').value.trim(),
+    advisee_email   : document.getElementById('mEmail').value.trim(),
+    advisee_year    : document.getElementById('mYear').value || '',
+    advisee_industry: '',
+    advisee_goal    : buildGoalText(),
+    advisor_name    : S.adv || '',
+    advisor_email   : '',
+    package_name    : S.pkg
+  };
+
+  btn.disabled = true;
+  btn.textContent = 'Đang gửi...';
+  setSubmitStatus('pending', 'Đang gửi thông tin đặt lịch...');
+
+  fetch(WEBAPP_URL, {
+    method : 'POST',
+    // Cố tình dùng text/plain để tránh CORS preflight (Apps Script không tự xử lý OPTIONS).
+    // doPost() ở backend vẫn JSON.parse(e.postData.contents) như thường.
+    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+    body   : JSON.stringify(payload)
+  })
+  .then(function(res){ return res.json(); })
+  .then(function(data){
+    if(!data.success) throw new Error(data.error || 'Lỗi không xác định từ server');
+    setSubmitStatus('success', '✓ Đã ghi nhận! Mã booking: '+data.booking_id+'. Đội LinkaJob sẽ xác nhận và gửi link đặt lịch trong 24h.');
+    btn.textContent = 'Hoàn tất ✓';
+    setTimeout(closeCheckout, 2800);
+  })
+  .catch(function(err){
+    setSubmitStatus('error', '⚠ Gửi thất bại ('+err.message+'). Vui lòng thử lại hoặc gửi bill qua contact@linkajob.vn.');
+    btn.disabled = false;
+    btn.textContent = 'Đã chuyển khoản ✓';
+  });
 }
 
 function setCtx(main, sub){
