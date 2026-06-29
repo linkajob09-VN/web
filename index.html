@@ -114,23 +114,64 @@
   .lj-footer-links { display: flex; gap: 20px; }
   .lj-footer-links a { font-size: 12px; color: rgba(240,240,240,0.28); text-decoration: none; }
 
-  /* LIVE EDITOR */
-  .lj-editor { position: fixed; bottom: 16px; right: 16px; background: #1A1A1A; border: 0.5px solid rgba(255,255,255,0.12); border-radius: 14px; padding: 14px 16px; width: 230px; z-index: 999; }
-  .lj-editor-title { font-family: 'Space Grotesk', sans-serif; font-size: 11px; font-weight: 700; color: #fc5229; letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; }
-  .lj-editor-body { overflow: hidden; max-height: 400px; transition: max-height 0.3s ease; }
-  .lj-editor-body.collapsed { max-height: 0; }
-  .lj-editor-row { margin-bottom: 10px; }
-  .lj-editor-lbl { font-size: 10px; color: rgba(240,240,240,0.35); margin-bottom: 4px; }
-  .lj-editor input[type=text] { width: 100%; background: #111; border: 0.5px solid rgba(255,255,255,0.1); border-radius: 7px; color: #F0F0F0; font-size: 11px; padding: 6px 9px; box-sizing: border-box; outline: none; font-family: 'Inter', sans-serif; }
-  .lj-editor input[type=text]:focus { border-color: #fc5229; }
-  .lj-editor input[type=color] { width: 100%; height: 30px; background: #111; border: 0.5px solid rgba(255,255,255,0.1); border-radius: 7px; cursor: pointer; padding: 2px 4px; }
+  /* CONSULT WIDGET */
+  .cw-overlay { position: fixed; inset: 0; background: transparent; z-index: 998; display: none; }
+  .cw-overlay.show { display: block; }
+  .cw-box { position: fixed; bottom: 20px; right: 20px; width: 360px; max-width: calc(100vw - 32px); max-height: calc(100vh - 40px); background: #161616; border: 0.5px solid rgba(255,255,255,0.1); border-radius: 18px; box-shadow: 0 20px 60px rgba(0,0,0,0.5); z-index: 999; display: flex; flex-direction: column; overflow: hidden; }
+  .cw-head { display: flex; align-items: flex-start; justify-content: space-between; padding: 18px 20px 14px; border-bottom: 0.5px solid rgba(255,255,255,0.08); flex-shrink: 0; }
+  .cw-title { font-family: 'Space Grotesk', sans-serif; font-size: 15px; font-weight: 700; color: #F0F0F0; }
+  .cw-sub { font-size: 12px; color: rgba(240,240,240,0.4); margin-top: 3px; }
+  .cw-close { background: rgba(255,255,255,0.06); border: none; width: 28px; height: 28px; border-radius: 8px; color: rgba(240,240,240,0.6); cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .cw-close:hover { background: rgba(255,255,255,0.12); color: #F0F0F0; }
+  .cw-close i { font-size: 15px; }
+  .cw-step { padding: 18px 20px 20px; overflow-y: auto; }
+  .cw-field { margin-bottom: 14px; }
+  .cw-field label { display: block; font-size: 12px; color: rgba(240,240,240,0.55); font-family: 'Space Grotesk', sans-serif; font-weight: 500; margin-bottom: 6px; }
+  .cw-field label span { color: #fc5229; }
+  .cw-field input, .cw-field select, .cw-field textarea { width: 100%; background: #0D0D0D; border: 0.5px solid rgba(255,255,255,0.12); border-radius: 9px; padding: 10px 12px; color: #F0F0F0; font-size: 13px; font-family: 'Inter', sans-serif; outline: none; box-sizing: border-box; }
+  .cw-field input:focus, .cw-field select:focus, .cw-field textarea:focus { border-color: #fc5229; }
+  .cw-field textarea { resize: none; line-height: 1.5; }
+  .cw-field select { appearance: none; }
+  .cw-note { display: flex; gap: 8px; align-items: flex-start; font-size: 11.5px; color: rgba(240,240,240,0.5); line-height: 1.6; background: rgba(252,82,41,0.06); border: 0.5px solid rgba(252,82,41,0.15); border-radius: 10px; padding: 10px 12px; margin-bottom: 16px; }
+  .cw-note i { color: #fc5229; font-size: 14px; flex-shrink: 0; margin-top: 1px; }
+  .cw-next { width: 100%; background: #fc5229; color: #fff; font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 13.5px; padding: 12px; border-radius: 100px; border: none; cursor: pointer; }
+  .cw-next:disabled { opacity: 0.35; cursor: not-allowed; }
+  .cw-back { background: transparent; color: rgba(240,240,240,0.5); font-family: 'Space Grotesk', sans-serif; font-weight: 500; font-size: 12.5px; border: none; cursor: pointer; padding: 12px 4px; white-space: nowrap; }
+  .cw-nav-row { display: flex; align-items: center; gap: 10px; margin-top: 4px; }
+  .cw-nav-row .cw-next { flex: 1; }
+  .cw-cal-title { font-family: 'Space Grotesk', sans-serif; font-size: 13px; font-weight: 700; color: #F0F0F0; margin-bottom: 10px; text-align: center; text-transform: capitalize; }
+  .cw-cal-days-lbl { display: grid; grid-template-columns: repeat(7,1fr); margin-bottom: 4px; }
+  .cw-cal-days-lbl span { text-align: center; font-size: 10px; color: rgba(240,240,240,0.35); font-family: 'Space Grotesk', sans-serif; }
+  .cw-cal-grid { display: grid; grid-template-columns: repeat(7,1fr); gap: 3px; margin-bottom: 16px; }
+  .cw-day { height: 32px; display: flex; align-items: center; justify-content: center; font-size: 12.5px; color: rgba(240,240,240,0.6); border-radius: 8px; cursor: default; position: relative; }
+  .cw-day.empty { visibility: hidden; }
+  .cw-day.past { opacity: 0.25; }
+  .cw-day.no-slots { opacity: 0.3; }
+  .cw-day.has-slots { color: #F0F0F0; font-weight: 500; cursor: pointer; }
+  .cw-day.has-slots:hover { background: rgba(255,255,255,0.06); }
+  .cw-day.has-slots::after { content: ''; position: absolute; bottom: 3px; left: 50%; transform: translateX(-50%); width: 4px; height: 4px; border-radius: 50%; background: #fc5229; }
+  .cw-day.selected { background: #fc5229; color: #fff; }
+  .cw-day.selected::after { display: none; }
+  .cw-ts-label { font-size: 11px; color: rgba(240,240,240,0.4); margin-bottom: 10px; }
+  .cw-ts-slots { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 18px; min-height: 36px; }
+  .cw-ts-slot { padding: 8px 14px; border-radius: 100px; border: 0.5px solid rgba(255,255,255,0.12); background: transparent; color: #F0F0F0; font-size: 12px; font-family: 'Space Grotesk', sans-serif; font-weight: 500; cursor: pointer; }
+  .cw-ts-slot:hover { border-color: rgba(252,82,41,0.5); color: #fc5229; }
+  .cw-ts-slot.on { background: #fc5229; border-color: #fc5229; color: #fff; }
+  .cw-success-icon { width: 52px; height: 52px; border-radius: 50%; background: rgba(252,82,41,0.12); display: flex; align-items: center; justify-content: center; margin: 6px auto 16px; }
+  .cw-success-icon i { font-size: 26px; color: #fc5229; }
+  .cw-success-title { font-family: 'Space Grotesk', sans-serif; font-size: 16px; font-weight: 700; color: #F0F0F0; text-align: center; margin-bottom: 8px; }
+  .cw-success-sub { font-size: 12.5px; color: rgba(240,240,240,0.5); text-align: center; line-height: 1.7; margin-bottom: 20px; }
+  @media (max-width: 480px) {
+    .cw-box { left: 16px; right: 16px; bottom: 16px; width: auto; }
+  }
+
 </style>
 
 <div class="lj">
 
   <!-- NAV -->
   <nav class="lj-nav">
-    <div class="lj-logo">LinkaJob</div>
+    <a href="index.html" class="lj-logo" style="text-decoration:none;cursor:pointer;">LinkaJob</a>
     <div class="lj-nav-links">
 
       <!-- Cố vấn 1-1 -->
@@ -208,7 +249,7 @@
       </div>
 
       <a href="#">Blog</a>
-      <button class="lj-btn-nav" onclick="location.href='advisor.html'">Đăng ký tư vấn</button>
+      <button class="lj-btn-nav" onclick="openConsultWidget()">Đăng ký tư vấn</button>
     </div>
   </nav>
 
@@ -221,7 +262,7 @@
     <h1>Vào MNC<br>không cần<br><em>đi một mình.</em></h1>
     <p class="lj-hero-sub">Kết nối với advisor đang làm thật tại các tập đoàn đa quốc gia — được đồng hành từ CV đến offer letter.</p>
     <div class="lj-hero-cta">
-      <button class="lj-btn-primary" onclick="location.href='advisor.html'">Đăng ký tư vấn miễn phí</button>
+      <button class="lj-btn-primary" onclick="openConsultWidget()">Đăng ký tư vấn miễn phí</button>
       <button class="lj-btn-ghost">Xem câu chuyện thành công</button>
     </div>
     <div class="lj-stats-row">
@@ -301,7 +342,7 @@
             </div>
           </div>
         </div>
-        <button class="lj-btn-svc" onclick="location.href='advisor.html'">Xem dịch vụ Cố vấn 1-1 →</button>
+        <button class="lj-btn-svc" onclick="location.href='linkajob_pricing.html'">Xem dịch vụ Cố vấn 1-1 →</button>
       </div>
 
       <!-- COURSE -->
@@ -392,7 +433,7 @@
     <div class="lj-cta-box">
       <h2>Bắt đầu hành trình<br>vào MNC của bạn.</h2>
       <p>Buổi tư vấn đầu tiên miễn phí — advisor phản hồi trong 24h.</p>
-      <button class="lj-btn-cta" onclick="location.href='advisor.html'">Đăng ký tư vấn</button>
+      <button class="lj-btn-cta" onclick="openConsultWidget()">Đăng ký tư vấn</button>
     </div>
   </div>
 
@@ -404,61 +445,152 @@
   </footer>
 </div>
 
-<!-- LIVE EDITOR -->
-<div class="lj-editor">
-  <div class="lj-editor-title" onclick="toggleEd()">
-    <span>✏ Live Editor</span><span id="edbtn">▾</span>
-  </div>
-  <div class="lj-editor-body" id="edbody">
-    <div class="lj-editor-row">
-      <div class="lj-editor-lbl">Màu accent</div>
-      <input type="color" value="#fc5229" oninput="setAccent(this.value)">
+<!-- CONSULT WIDGET -->
+<div class="cw-overlay" id="cwOverlay" onclick="if(event.target===this)closeConsultWidget()">
+  <div class="cw-box" id="cwBox">
+    <div class="cw-head">
+      <div>
+        <div class="cw-title">Đăng ký tư vấn</div>
+        <div class="cw-sub" id="cwSub">Điền thông tin để được tư vấn miễn phí</div>
+      </div>
+      <button class="cw-close" onclick="closeConsultWidget()"><i class="ti ti-x" aria-hidden="true"></i></button>
     </div>
-    <div class="lj-editor-row">
-      <div class="lj-editor-lbl">Hero title dòng highlight</div>
-      <input type="text" value="đi một mình." oninput="document.querySelector('h1 em').textContent=this.value">
+
+    <!-- STEP 1: info form -->
+    <div class="cw-step" id="cwStep1">
+      <div class="cw-field">
+        <label>Họ và tên <span>*</span></label>
+        <input type="text" id="cwName" placeholder="Nguyễn Văn A" oninput="cwCheckStep1()">
+      </div>
+      <div class="cw-field">
+        <label>Số điện thoại (Zalo) <span>*</span></label>
+        <input type="tel" id="cwPhone" placeholder="09xx xxx xxx" oninput="cwCheckStep1()">
+      </div>
+      <div class="cw-field">
+        <label>Quan tâm dịch vụ</label>
+        <select id="cwService">
+          <option value="Cố vấn 1-1">Cố vấn 1-1</option>
+          <option value="Khoá học">Khoá học</option>
+          <option value="Chưa rõ — cần tư vấn thêm">Chưa rõ — cần tư vấn thêm</option>
+        </select>
+      </div>
+      <div class="cw-field">
+        <label>Câu hỏi muốn tư vấn</label>
+        <textarea id="cwQuestion" rows="3" placeholder="VD: Mình đang muốn tìm advisor ngành Marketing..."></textarea>
+      </div>
+      <div class="cw-note"><i class="ti ti-video" aria-hidden="true"></i> Chúng tôi sẽ tư vấn qua Google Meet — bạn vui lòng chọn khung giờ phù hợp ở bước tiếp theo.</div>
+      <button class="cw-next" id="cwBtn1" onclick="cwGoStep(2)" disabled>Tiếp theo →</button>
     </div>
-    <div class="lj-editor-row">
-      <div class="lj-editor-lbl">Hero subtitle</div>
-      <input type="text" value="Kết nối với advisor đang làm thật..." oninput="document.querySelector('.lj-hero-sub').textContent=this.value">
+
+    <!-- STEP 2: calendar -->
+    <div class="cw-step" id="cwStep2" style="display:none;">
+      <div class="cw-cal-title" id="cwCalTitle">—</div>
+      <div class="cw-cal-days-lbl">
+        <span>CN</span><span>T2</span><span>T3</span><span>T4</span><span>T5</span><span>T6</span><span>T7</span>
+      </div>
+      <div class="cw-cal-grid" id="cwCalGrid"></div>
+      <div class="cw-ts-label" id="cwTsLabel">Chọn ngày có chấm cam để xem giờ trống</div>
+      <div class="cw-ts-slots" id="cwTsSlots"></div>
+      <div class="cw-nav-row">
+        <button class="cw-back" onclick="cwGoStep(1)">← Quay lại</button>
+        <button class="cw-next" id="cwBtn2" onclick="cwConfirm()" disabled>Xác nhận đặt lịch</button>
+      </div>
     </div>
-    <div class="lj-editor-row">
-      <div class="lj-editor-lbl">Stat: kết nối đã diễn ra</div>
-      <input type="text" value="200+" oninput="document.querySelectorAll('.lj-stat-num')[0].textContent=this.value">
-    </div>
-    <div class="lj-editor-row">
-      <div class="lj-editor-lbl">Stat: số advisors</div>
-      <input type="text" value="25+" oninput="document.querySelectorAll('.lj-stat-num')[1].textContent=this.value">
+
+    <!-- STEP 3: success -->
+    <div class="cw-step" id="cwStep3" style="display:none;">
+      <div class="cw-success-icon"><i class="ti ti-check" aria-hidden="true"></i></div>
+      <div class="cw-success-title">Đã ghi nhận lịch tư vấn!</div>
+      <div class="cw-success-sub" id="cwSuccessDetail">—</div>
+      <button class="cw-next" onclick="closeConsultWidget()">Đóng</button>
     </div>
   </div>
 </div>
 
 <script>
-function toggleEd(){
-  var b=document.getElementById('edbody'),btn=document.getElementById('edbtn');
-  b.classList.toggle('collapsed');
-  btn.textContent=b.classList.contains('collapsed')?'▸':'▾';
+/* ─── CONSULT WIDGET ─── */
+function openConsultWidget(){
+  document.getElementById('cwOverlay').classList.add('show');
+  cwGoStep(1);
 }
-function setAccent(c){
-  var r=parseInt(c.slice(1,3),16),g=parseInt(c.slice(3,5),16),b=parseInt(c.slice(5,7),16);
-  var rgb=`rgba(${r},${g},${b},`;
-  document.querySelectorAll('.lj-logo').forEach(e=>e.style.color=c);
-  document.querySelectorAll('.lj-btn-nav,.lj-btn-primary').forEach(e=>e.style.background=c);
-  document.querySelectorAll('.lj-cta-box').forEach(e=>e.style.background=c);
-  document.querySelectorAll('.lj-stat-num').forEach(e=>e.style.color=c);
-  document.querySelectorAll('.lj-pill-dot').forEach(e=>e.style.background=c);
-  document.querySelectorAll('.lj-ticker-item span').forEach(e=>e.style.color=c);
-  document.querySelectorAll('.lj-offer-badge').forEach(e=>{e.style.color=c;e.style.background=rgb+'0.1)';});
-  document.querySelectorAll('.lj-svc-badge').forEach(e=>{e.style.color=c;e.style.background=rgb+'0.1)';e.style.borderColor=rgb+'0.2)';});
-  document.querySelectorAll('.lj-about-icon-wrap').forEach(e=>e.style.background=rgb+'0.1)');
-  document.querySelectorAll('.lj-about-icon-wrap i').forEach(e=>e.style.color=c);
-  document.querySelectorAll('.lj-benefit-icon').forEach(e=>e.style.background=rgb+'0.08)');
-  document.querySelectorAll('.lj-benefit-icon i').forEach(e=>e.style.color=c);
-  document.querySelectorAll('.lj-btn-svc').forEach(e=>{e.style.color=c;e.style.background=rgb+'0.1)';e.style.borderColor=rgb+'0.25)';});
-  document.querySelectorAll('.lj-btn-cta,.lj-btn-dark').forEach(e=>e.style.color=c);
-  document.querySelectorAll('h1 em').forEach(e=>e.style.color=c);
-  document.querySelectorAll('.lj-testi-ava').forEach(e=>e.style.color=c);
-  document.querySelectorAll('.lj-editor-title').forEach(e=>e.style.color=c);
-  document.querySelectorAll('.lj-ratio-bar:last-of-type').forEach(e=>e.style.background=c);
+function closeConsultWidget(){
+  document.getElementById('cwOverlay').classList.remove('show');
+}
+function cwGoStep(n){
+  [1,2,3].forEach(function(i){
+    document.getElementById('cwStep'+i).style.display = (i===n?'block':'none');
+  });
+  var subs = {1:'Điền thông tin để được tư vấn miễn phí', 2:'Chọn khung giờ phù hợp với bạn', 3:'Cảm ơn bạn đã đăng ký'};
+  document.getElementById('cwSub').textContent = subs[n];
+  if(n===2) cwRenderCalendar();
+}
+function cwCheckStep1(){
+  var name = document.getElementById('cwName').value.trim();
+  var phone = document.getElementById('cwPhone').value.trim();
+  document.getElementById('cwBtn1').disabled = !(name && phone);
+}
+
+/* mock available slots theo thứ trong tuần — thay bằng data thật từ Apps Script sau */
+var CW_SLOTS_BY_WEEKDAY = {
+  1: ['19:00–20:00','20:00–21:00'],
+  3: ['19:00–20:00','20:00–21:00','21:00–22:00'],
+  5: ['19:00–20:00','20:00–21:00'],
+};
+var cwSelectedDate = null, cwSelectedTime = null;
+var cwMonthNames = ['Tháng 1','Tháng 2','Tháng 3','Tháng 4','Tháng 5','Tháng 6','Tháng 7','Tháng 8','Tháng 9','Tháng 10','Tháng 11','Tháng 12'];
+
+function cwRenderCalendar(){
+  var today = new Date();
+  var y = today.getFullYear(), m = today.getMonth();
+  document.getElementById('cwCalTitle').textContent = cwMonthNames[m]+', '+y;
+  var grid = document.getElementById('cwCalGrid');
+  var startOffset = new Date(y,m,1).getDay();
+  var daysInMonth = new Date(y,m+1,0).getDate();
+  var todayStart = new Date(y,today.getMonth(),today.getDate());
+  var html = '';
+  for(var i=0;i<startOffset;i++) html += '<div class="cw-day empty"></div>';
+  for(var d=1; d<=daysInMonth; d++){
+    var dateObj = new Date(y,m,d);
+    var wd = dateObj.getDay();
+    var isPast = dateObj < todayStart;
+    var hasSlots = !isPast && CW_SLOTS_BY_WEEKDAY[wd];
+    var cls = 'cw-day'+(isPast?' past':(hasSlots?' has-slots':' no-slots'));
+    html += '<div class="'+cls+'"'+(hasSlots?(' onclick="cwSelectDay(this,'+y+','+m+','+d+')"'):'')+'>'+d+'</div>';
+  }
+  grid.innerHTML = html;
+  document.getElementById('cwTsLabel').textContent = 'Chọn ngày có chấm cam để xem giờ trống';
+  document.getElementById('cwTsSlots').innerHTML = '';
+  cwSelectedDate = null; cwSelectedTime = null;
+  document.getElementById('cwBtn2').disabled = true;
+}
+function cwSelectDay(el,y,m,d){
+  document.querySelectorAll('.cw-day').forEach(function(x){x.classList.remove('selected');});
+  el.classList.add('selected');
+  var dateObj = new Date(y,m,d);
+  cwSelectedDate = dateObj;
+  cwSelectedTime = null;
+  var slots = CW_SLOTS_BY_WEEKDAY[dateObj.getDay()] || [];
+  document.getElementById('cwTsLabel').textContent = 'Giờ trống — '+d+'/'+(m+1)+'/'+y;
+  var html = '';
+  slots.forEach(function(s){
+    html += '<button class="cw-ts-slot" onclick="cwSelectTime(this,\''+s+'\')">'+s+'</button>';
+  });
+  document.getElementById('cwTsSlots').innerHTML = html;
+  document.getElementById('cwBtn2').disabled = true;
+}
+function cwSelectTime(el,t){
+  document.querySelectorAll('.cw-ts-slot').forEach(function(x){x.classList.remove('on');});
+  el.classList.add('on');
+  cwSelectedTime = t;
+  document.getElementById('cwBtn2').disabled = false;
+}
+function cwConfirm(){
+  var name = document.getElementById('cwName').value.trim();
+  var d = cwSelectedDate;
+  var dateStr = d.getDate()+'/'+(d.getMonth()+1)+'/'+d.getFullYear();
+  document.getElementById('cwSuccessDetail').innerHTML =
+    'Cảm ơn <strong>'+name+'</strong>! Lịch tư vấn của bạn:<br><strong>'+dateStr+' · '+cwSelectedTime+'</strong><br><br>'+
+    'Link Google Meet sẽ được gửi qua Zalo/SMS trước giờ hẹn.';
+  cwGoStep(3);
 }
 </script>
