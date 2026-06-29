@@ -186,15 +186,89 @@
 <body>
 
 <!-- NAV -->
-<nav class="lj-nav">
-  <a href="index.html" class="lj-logo">LinkaJob</a>
-  <div class="lj-nav-right">
-    <a href="#modules" class="lj-nav-link">Nội dung</a>
-    <a href="#instructor" class="lj-nav-link">Giảng viên</a>
-    <a href="#faq" class="lj-nav-link">FAQ</a>
-    <button class="lj-btn-nav" onclick="document.getElementById('contact').scrollIntoView({behavior:'smooth'})">Đăng ký tư vấn</button>
-  </div>
-</nav>
+  <nav class="lj-nav">
+    <a href="index.html" class="lj-logo" style="text-decoration:none;cursor:pointer;">LinkaJob</a>
+    <div class="lj-nav-links">
+
+      <!-- Cố vấn 1-1 -->
+      <div class="lj-nav-item">
+        <button class="lj-nav-btn-plain">Cố vấn 1-1 <i class="ti ti-chevron-down lj-nav-chevron" aria-hidden="true"></i></button>
+        <div class="lj-dropdown">
+          <a class="lj-di" href="advisor.html">
+            <div class="lj-di-icon"><i class="ti ti-user-star" aria-hidden="true"></i></div>
+            <div>
+              <div class="lj-di-title">Profile Advisor</div>
+              <div class="lj-di-sub">Tìm advisor phù hợp với định hướng của bạn</div>
+            </div>
+          </a>
+          <div class="lj-dropdown-divider"></div>
+          <a class="lj-di" href="pricing.html">
+            <div class="lj-di-icon"><i class="ti ti-calendar-event" aria-hidden="true"></i></div>
+            <div>
+              <div class="lj-di-title">Các gói meeting 1-1 <span class="lj-dropdown-badge">Phổ biến</span></div>
+              <div class="lj-di-sub">Buổi đầu miễn phí · 3–7 sessions/gói</div>
+            </div>
+          </a>
+        </div>
+      </div>
+
+      <!-- Khoá học -->
+      <div class="lj-nav-item">
+        <button class="lj-nav-btn-plain">Khoá học <i class="ti ti-chevron-down lj-nav-chevron" aria-hidden="true"></i></button>
+        <div class="lj-dropdown lj-dropdown-courses">
+          <a class="lj-di" href="#">
+            <div class="lj-di-icon"><i class="ti ti-rocket" aria-hidden="true"></i></div>
+            <div>
+              <div class="lj-di-title">Land Your Dream Job</div>
+              <div class="lj-di-sub">CV · Interview · Offer negotiation</div>
+            </div>
+          </a>
+          <div class="lj-dropdown-divider"></div>
+          <a class="lj-di" href="#">
+            <div class="lj-di-icon"><i class="ti ti-truck-delivery" aria-hidden="true"></i></div>
+            <div>
+              <div class="lj-di-title">Logistics Operation</div>
+              <div class="lj-di-sub">Thực chiến logistics từ MNC insiders</div>
+            </div>
+          </a>
+          <div class="lj-dropdown-divider"></div>
+          <a class="lj-di" href="supply_chain_principles.html">
+            <div class="lj-di-icon"><i class="ti ti-topology-star-3" aria-hidden="true"></i></div>
+            <div>
+              <div class="lj-di-title">Supply Chain Principles</div>
+              <div class="lj-di-sub">Nền tảng supply chain cho fresher</div>
+            </div>
+          </a>
+        </div>
+      </div>
+
+      <!-- Thành công -->
+      <div class="lj-nav-item">
+        <button class="lj-nav-btn-plain">Thành công <i class="ti ti-chevron-down lj-nav-chevron" aria-hidden="true"></i></button>
+        <div class="lj-dropdown">
+          <a class="lj-di" href="#">
+            <div class="lj-di-icon"><i class="ti ti-trophy" aria-hidden="true"></i></div>
+            <div>
+              <div class="lj-di-title">Câu chuyện thành công</div>
+              <div class="lj-di-sub">Hành trình vào MNC từ sinh viên thật</div>
+            </div>
+          </a>
+          <div class="lj-dropdown-divider"></div>
+          <a class="lj-di" href="#">
+            <div class="lj-di-icon"><i class="ti ti-message-circle-2" aria-hidden="true"></i></div>
+            <div>
+              <div class="lj-di-title">Feedback dịch vụ</div>
+              <div class="lj-di-sub">~80% advisee nhận offer sau khi hoàn thành</div>
+            </div>
+          </a>
+        </div>
+      </div>
+
+      <a href="#">Blog</a>
+      <button class="lj-btn-nav" onclick="openConsultWidget()">Đăng ký tư vấn</button>
+    </div>
+  </nav>
+
 
 <!-- TICKER -->
 <div class="lj-ticker">
