@@ -22,14 +22,17 @@
 
   body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); overflow-x: hidden; }
 
-  /* ── NAV ── */
-  .lj-nav { display: flex; align-items: center; justify-content: space-between; padding: 16px 32px; border-bottom: 0.5px solid var(--border); position: sticky; top: 0; z-index: 200; background: rgba(13,13,13,0.92); backdrop-filter: blur(12px); }
-  .lj-logo { font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 18px; color: var(--accent); letter-spacing: -0.5px; text-decoration: none; }
-  .lj-nav-right { display: flex; align-items: center; gap: 12px; }
-  .lj-nav-link { font-size: 13px; color: var(--muted); text-decoration: none; font-family: 'Space Grotesk', sans-serif; font-weight: 500; transition: color 0.2s; padding: 6px 0; }
-  .lj-nav-link:hover { color: var(--text); }
-  .lj-btn-nav { background: var(--accent); color: #fff; font-size: 13px; font-weight: 600; font-family: 'Space Grotesk', sans-serif; padding: 9px 20px; border-radius: 100px; border: none; cursor: pointer; transition: opacity 0.2s; }
-  .lj-btn-nav:hover { opacity: 0.88; }
+  /* NAV */
+  .lj-nav { display: flex; align-items: center; justify-content: space-between; padding: 16px 32px; border-bottom: 0.5px solid rgba(255,255,255,0.08); position: relative; z-index: 200; }
+  .lj-logo { font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 18px; color: #fc5229; letter-spacing: -0.5px; }
+  .lj-nav-links { display: flex; gap: 4px; align-items: center; }
+  .lj-nav-item { position: relative; }
+  .lj-nav-links a, .lj-nav-btn-plain { font-size: 13px; color: rgba(240,240,240,0.5); text-decoration: none; font-family: 'Space Grotesk', sans-serif; font-weight: 500; transition: color 0.2s, background 0.2s; padding: 8px 14px; border-radius: 8px; display: inline-flex; align-items: center; gap: 5px; cursor: pointer; background: transparent; border: none; }
+  .lj-nav-links a:hover, .lj-nav-btn-plain:hover { color: #F0F0F0; background: rgba(255,255,255,0.05); }
+  .lj-nav-chevron { font-size: 11px; transition: transform 0.2s; color: rgba(240,240,240,0.3); }
+  .lj-nav-item:hover .lj-nav-chevron { transform: rotate(180deg); color: rgba(240,240,240,0.6); }
+  .lj-btn-nav { background: #fc5229; color: #fff; font-size: 13px; font-weight: 500; font-family: 'Space Grotesk', sans-serif; padding: 8px 20px; border-radius: 100px; border: none; cursor: pointer; white-space: nowrap; margin-left: 8px; }
+   
 
   /* ── TICKER ── */
   .lj-ticker { overflow: hidden; border-top: 0.5px solid var(--border); border-bottom: 0.5px solid var(--border); padding: 11px 0; background: var(--bg); }
