@@ -5,479 +5,394 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>LinkaJob Dashboard</title>
 <style>
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-
-  :root {
-    --brand: #F4451A;
-    --brand-light: #fff1ee;
-    --bg: #F7F6F3;
-    --white: #ffffff;
-    --text: #111111;
-    --muted: #555555;
-    --border: #D8D5D0;
-    --warn: #F4451A;
-    --radius-sm: 10px;
-    --radius-md: 16px;
-    --radius-lg: 20px;
-    --shadow: 0 1px 4px rgba(0,0,0,0.08), 0 0 0 1px rgba(0,0,0,0.06);
-  }
-
-  body {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-    background: var(--bg);
-    color: var(--text);
-    min-height: 100vh;
-  }
-
-  /* ─── LOGIN PAGE ─── */
-  #login-page {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    min-height: 100vh;
-    padding: 40px 16px;
-  }
-
-  .logo-row {
-    display: flex;
-    align-items: center;
-    gap: 14px;
-    margin-bottom: 40px;
-  }
-
-  .logo-icon {
-    width: 52px; height: 52px;
-    background: var(--brand);
-    border-radius: 14px;
-    display: flex; align-items: center; justify-content: center;
-  }
-
-  .logo-icon svg { width: 26px; height: 26px; }
-
-  .logo-name {
-    font-size: 28px;
-    font-weight: 700;
-    letter-spacing: -0.5px;
-  }
-
-  .login-card {
-    background: var(--white);
-    border-radius: var(--radius-lg);
-    box-shadow: var(--shadow);
-    padding: 40px 44px 44px;
-    width: 100%;
-    max-width: 520px;
-  }
-
-  .login-card h2 {
-    font-size: 28px;
-    font-weight: 700;
-    margin-bottom: 6px;
-  }
-
-  .login-card .subtitle {
-    font-size: 17px;
-    color: var(--muted);
-    margin-bottom: 32px;
-  }
-
-  .field-label {
-    font-size: 15px;
-    color: var(--muted);
-    margin-bottom: 8px;
-  }
-
-  .field-group {
-    margin-bottom: 20px;
-  }
-
-  .field-input {
-    width: 100%;
-    padding: 16px 18px;
-    font-size: 18px;
-    border: 1.5px solid var(--border);
-    border-radius: var(--radius-sm);
-    background: var(--white);
-    color: var(--text);
-    outline: none;
-    transition: border-color 0.15s;
-  }
-
-  .field-input:focus {
-    border-color: var(--brand);
-  }
-
-  .role-row {
-    display: flex;
-    gap: 12px;
-    margin-bottom: 24px;
-  }
-
-  .role-btn {
-    flex: 1;
-    padding: 16px 0;
-    font-size: 17px;
-    font-weight: 500;
-    border-radius: 100px;
-    border: 1.5px solid var(--border);
-    background: var(--white);
-    color: var(--muted);
-    cursor: pointer;
-    transition: all 0.15s;
-  }
-
-  .role-btn.active {
-    background: var(--brand);
-    color: #fff;
-    border-color: var(--brand);
-    font-weight: 600;
-  }
-
-  .role-btn:hover:not(.active) {
-    border-color: var(--brand);
-    color: var(--brand);
-  }
-
-  .login-btn {
-    width: 100%;
-    padding: 18px;
-    font-size: 18px;
-    font-weight: 700;
-    border-radius: var(--radius-sm);
-    border: 1.5px solid var(--border);
-    background: var(--white);
-    color: var(--text);
-    cursor: pointer;
-    transition: all 0.15s;
-  }
-
-  .login-btn:hover {
-    background: var(--brand);
-    color: #fff;
-    border-color: var(--brand);
-  }
-
-  /* ─── DASHBOARD PAGE ─── */
-  #dashboard-page {
-    display: none;
-    min-height: 100vh;
-    background: var(--bg);
-  }
-
-  /* Navbar */
-  .navbar {
-    background: var(--white);
-    border-bottom: 1px solid var(--border);
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 0 28px;
-    height: 58px;
-    position: sticky;
-    top: 0;
-    z-index: 10;
-  }
-
-  .nav-left {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-  }
-
-  .nav-logo-icon {
-    width: 34px; height: 34px;
-    background: var(--brand);
-    border-radius: 8px;
-    display: flex; align-items: center; justify-content: center;
-  }
-
-  .nav-logo-icon svg { width: 18px; height: 18px; }
-
-  .nav-brand { font-size: 17px; font-weight: 700; }
-
-  .role-badge {
-    background: #FFE9E4;
-    color: var(--brand);
-    font-size: 13px;
-    font-weight: 600;
-    padding: 3px 10px;
-    border-radius: 100px;
-  }
-
-  .nav-user {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    font-size: 15px;
-    font-weight: 500;
-  }
-
-  .avatar {
-    width: 34px; height: 34px;
-    border-radius: 50%;
-    background: #D6CFBF;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 13px;
-    font-weight: 700;
-    color: var(--text);
-    flex-shrink: 0;
-  }
-
-  /* Tabs */
-  .tab-bar {
-    background: var(--white);
-    border-bottom: 1px solid var(--border);
-    display: flex;
-    gap: 4px;
-    padding: 0 28px;
-  }
-
-  .tab {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 14px 16px;
-    font-size: 14px;
-    font-weight: 500;
-    color: var(--muted);
-    cursor: pointer;
-    border-bottom: 2px solid transparent;
-    transition: all 0.15s;
-    white-space: nowrap;
-  }
-
-  .tab.active {
-    color: var(--text);
-    border-bottom-color: var(--text);
-    font-weight: 600;
-  }
-
-  .tab:hover:not(.active) { color: var(--text); }
-
-  .tab-icon {
-    width: 16px; height: 16px;
-    border: 1.5px solid currentColor;
-    border-radius: 3px;
-    display: inline-flex;
-    flex-shrink: 0;
-  }
-
-  /* Content */
-  .content {
-    max-width: 900px;
-    margin: 0 auto;
-    padding: 32px 24px;
-  }
-
-  /* Stats row */
-  .stats-row {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 0;
-    margin-bottom: 24px;
-    background: var(--white);
-    border-radius: var(--radius-md);
-    box-shadow: var(--shadow);
-    overflow: hidden;
-  }
-
-  .stat-cell {
-    padding: 24px 28px;
-  }
-
-  .stat-cell + .stat-cell {
-    border-left: 1px solid var(--border);
-  }
-
-  .stat-num {
-    font-size: 36px;
-    font-weight: 800;
-    line-height: 1;
-    margin-bottom: 6px;
-  }
-
-  .stat-label {
-    font-size: 14px;
-    color: var(--muted);
-    margin-bottom: 8px;
-  }
-
-  .stat-detail {
-    font-size: 13px;
-    color: var(--muted);
-    line-height: 1.5;
-  }
-
-  .stat-detail .highlight { color: var(--brand); font-weight: 600; }
-
-  /* Cards */
-  .card {
-    background: var(--white);
-    border-radius: var(--radius-md);
-    box-shadow: var(--shadow);
-    margin-bottom: 20px;
-    overflow: hidden;
-  }
-
-  .card-header {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 20px 24px 16px;
-    font-size: 16px;
-    font-weight: 700;
-  }
-
-  .card-header .tab-icon { border-color: var(--text); }
-
-  /* Session list */
-  .session-item {
-    display: flex;
-    align-items: center;
-    gap: 14px;
-    padding: 16px 24px;
-    border-top: 1px solid var(--border);
-  }
-
-  .session-item:last-child { border-bottom: none; }
-
-  .av-circle {
-    width: 40px; height: 40px;
-    border-radius: 50%;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 13px;
-    font-weight: 700;
-    flex-shrink: 0;
-  }
-
-  .av-gh { background: #D0E8FF; color: #2475B0; }
-  .av-ta { background: #FFD6D0; color: #C0392B; }
-  .av-pl { background: #D0E8FF; color: #2475B0; }
-
-  .session-info { flex: 1; min-width: 0; }
-
-  .session-name {
-    font-size: 15px;
-    font-weight: 600;
-    margin-bottom: 2px;
-  }
-
-  .session-meta {
-    font-size: 13px;
-    color: var(--muted);
-  }
-
-  .session-time {
-    text-align: right;
-    font-size: 13px;
-    color: var(--muted);
-    line-height: 1.5;
-    flex-shrink: 0;
-    margin-right: 14px;
-  }
-
-  .session-time strong {
-    display: block;
-    font-size: 14px;
-    color: var(--text);
-    font-weight: 600;
-  }
-
-  .detail-btn {
-    display: flex;
-    align-items: center;
-    gap: 7px;
-    padding: 9px 16px;
-    border: 1.5px solid var(--border);
-    border-radius: var(--radius-sm);
-    font-size: 13px;
-    font-weight: 500;
-    color: var(--text);
-    background: var(--white);
-    cursor: pointer;
-    white-space: nowrap;
-    transition: all 0.15s;
-  }
-
-  .detail-btn:hover {
-    border-color: var(--brand);
-    color: var(--brand);
-  }
-
-  .detail-btn .tab-icon { width: 13px; height: 13px; }
-
-  /* Advisee table */
-  .advisee-table {
-    width: 100%;
-    border-collapse: collapse;
-  }
-
-  .advisee-table thead tr {
-    border-top: 1px solid var(--border);
-  }
-
-  .advisee-table th {
-    padding: 10px 24px;
-    font-size: 11px;
-    font-weight: 700;
-    color: var(--muted);
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-    text-align: left;
-  }
-
-  .advisee-table td {
-    padding: 16px 24px;
-    font-size: 14px;
-    border-top: 1px solid var(--border);
-    vertical-align: middle;
-  }
-
-  .advisee-table th:nth-child(3),
-  .advisee-table td:nth-child(3) { text-align: center; }
-
-  .advisee-name { font-weight: 600; font-size: 14px; margin-bottom: 2px; }
-  .advisee-sub { font-size: 12px; color: var(--muted); }
-
-  .remaining {
-    font-weight: 700;
-    font-size: 15px;
-  }
-
-  .remaining.warn { color: var(--brand); }
-
-  .empty-dash { color: var(--muted); }
-
-  /* Tab panels */
-  .tab-panel { display: none; }
-  .tab-panel.active { display: block; }
-
-  /* Send schedule panel placeholder */
-  .placeholder-panel {
-    background: var(--white);
-    border-radius: var(--radius-md);
-    box-shadow: var(--shadow);
-    padding: 60px 40px;
-    text-align: center;
-    color: var(--muted);
-  }
-
-  .placeholder-panel h3 { font-size: 18px; color: var(--text); margin-bottom: 8px; }
-  .placeholder-panel p { font-size: 14px; }
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --brand: #F4451A;
+  --brand-light: #fff1ee;
+  --bg: #F7F6F3;
+  --white: #ffffff;
+  --text: #111111;
+  --muted: #555555;
+  --border: #D8D5D0;
+  --green: #16a34a;
+  --green-bg: #f0fdf4;
+  --radius-sm: 10px;
+  --radius-md: 16px;
+  --radius-lg: 20px;
+  --shadow: 0 1px 4px rgba(0,0,0,0.08), 0 0 0 1px rgba(0,0,0,0.06);
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+}
+
+/* ── TOAST ── */
+#toast {
+  position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%);
+  background: #111; color: #fff; padding: 12px 22px;
+  border-radius: 100px; font-size: 14px; font-weight: 500;
+  opacity: 0; pointer-events: none; z-index: 9999;
+  transition: opacity 0.2s;
+  white-space: nowrap;
+}
+#toast.show { opacity: 1; }
+#toast.error { background: var(--brand); }
+#toast.success { background: var(--green); }
+
+/* ── SPINNER ── */
+.spinner {
+  display: inline-block; width: 18px; height: 18px;
+  border: 2.5px solid rgba(255,255,255,0.3);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+  vertical-align: middle;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── LOGIN ── */
+#login-page {
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  min-height: 100vh; padding: 40px 16px;
+}
+.logo-row {
+  display: flex; align-items: center; gap: 14px; margin-bottom: 40px;
+}
+.logo-icon {
+  width: 52px; height: 52px; background: var(--brand);
+  border-radius: 14px; display: flex; align-items: center; justify-content: center;
+}
+.logo-icon svg { width: 26px; height: 26px; }
+.logo-name { font-size: 28px; font-weight: 700; letter-spacing: -0.5px; }
+
+.login-card {
+  background: var(--white); border-radius: var(--radius-lg);
+  box-shadow: var(--shadow); padding: 40px 44px 44px;
+  width: 100%; max-width: 520px;
+}
+.login-card h2 { font-size: 28px; font-weight: 700; margin-bottom: 6px; }
+.login-card .subtitle { font-size: 17px; color: var(--muted); margin-bottom: 32px; }
+
+.field-label { font-size: 15px; color: var(--muted); margin-bottom: 8px; }
+.field-group { margin-bottom: 20px; }
+
+.field-input {
+  width: 100%; padding: 14px 18px; font-size: 16px;
+  border: 1.5px solid var(--border); border-radius: var(--radius-sm);
+  background: var(--white); color: var(--text); outline: none;
+  transition: border-color 0.15s;
+}
+.field-input:focus { border-color: var(--brand); }
+.field-input.error { border-color: var(--brand); }
+
+.role-row { display: flex; gap: 10px; margin-bottom: 24px; }
+.role-btn {
+  flex: 1; padding: 14px 0; font-size: 16px; font-weight: 500;
+  border-radius: 100px; border: 1.5px solid var(--border);
+  background: var(--white); color: var(--muted); cursor: pointer;
+  transition: all 0.15s;
+}
+.role-btn.active { background: var(--brand); color: #fff; border-color: var(--brand); font-weight: 600; }
+.role-btn:hover:not(.active) { border-color: var(--brand); color: var(--brand); }
+
+.login-btn {
+  width: 100%; padding: 16px; font-size: 17px; font-weight: 700;
+  border-radius: var(--radius-sm); border: none;
+  background: var(--brand); color: #fff; cursor: pointer;
+  transition: opacity 0.15s; display: flex; align-items: center; justify-content: center; gap: 8px;
+}
+.login-btn:hover { opacity: 0.88; }
+.login-btn:disabled { opacity: 0.55; cursor: not-allowed; }
+
+.login-error {
+  color: var(--brand); font-size: 13px; margin-top: 10px;
+  text-align: center; display: none;
+}
+
+/* ── DASHBOARD ── */
+#dashboard-page { display: none; min-height: 100vh; background: var(--bg); }
+
+.navbar {
+  background: var(--white); border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 28px; height: 58px; position: sticky; top: 0; z-index: 10;
+}
+.nav-left { display: flex; align-items: center; gap: 12px; }
+.nav-logo-icon {
+  width: 34px; height: 34px; background: var(--brand);
+  border-radius: 8px; display: flex; align-items: center; justify-content: center;
+}
+.nav-logo-icon svg { width: 18px; height: 18px; }
+.nav-brand { font-size: 17px; font-weight: 700; }
+.role-badge {
+  background: #FFE9E4; color: var(--brand);
+  font-size: 13px; font-weight: 600; padding: 3px 10px; border-radius: 100px;
+}
+.nav-right { display: flex; align-items: center; gap: 12px; }
+.nav-user { display: flex; align-items: center; gap: 10px; font-size: 15px; font-weight: 500; }
+.avatar {
+  width: 34px; height: 34px; border-radius: 50%; background: #D6CFBF;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 13px; font-weight: 700; color: var(--text); flex-shrink: 0;
+}
+.logout-btn {
+  font-size: 13px; color: var(--muted); background: none;
+  border: 1px solid var(--border); padding: 5px 12px;
+  border-radius: 100px; cursor: pointer; transition: all 0.15s;
+}
+.logout-btn:hover { border-color: var(--brand); color: var(--brand); }
+
+/* Tabs */
+.tab-bar {
+  background: var(--white); border-bottom: 1px solid var(--border);
+  display: flex; gap: 4px; padding: 0 28px;
+}
+.tab {
+  display: flex; align-items: center; gap: 8px;
+  padding: 14px 16px; font-size: 14px; font-weight: 500;
+  color: var(--muted); cursor: pointer;
+  border-bottom: 2px solid transparent; transition: all 0.15s; white-space: nowrap;
+}
+.tab.active { color: var(--text); border-bottom-color: var(--brand); font-weight: 600; }
+.tab:hover:not(.active) { color: var(--text); }
+
+.content { max-width: 920px; margin: 0 auto; padding: 32px 24px; }
+
+/* Stats */
+.stats-row {
+  display: grid; grid-template-columns: repeat(3, 1fr);
+  margin-bottom: 24px; background: var(--white);
+  border-radius: var(--radius-md); box-shadow: var(--shadow); overflow: hidden;
+}
+.stat-cell { padding: 24px 28px; }
+.stat-cell + .stat-cell { border-left: 1px solid var(--border); }
+.stat-num { font-size: 36px; font-weight: 800; line-height: 1; margin-bottom: 6px; }
+.stat-label { font-size: 14px; color: var(--muted); margin-bottom: 6px; }
+.stat-detail { font-size: 13px; color: var(--muted); line-height: 1.6; }
+.stat-detail .hl { color: var(--brand); font-weight: 600; }
+
+/* Cards */
+.card { background: var(--white); border-radius: var(--radius-md); box-shadow: var(--shadow); margin-bottom: 20px; overflow: hidden; }
+.card-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 18px 24px 14px; font-size: 15px; font-weight: 700;
+}
+.card-header-left { display: flex; align-items: center; gap: 8px; }
+
+/* Session items */
+.session-item {
+  display: flex; align-items: center; gap: 14px;
+  padding: 14px 24px; border-top: 1px solid var(--border);
+}
+.av-circle {
+  width: 38px; height: 38px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12px; font-weight: 700; flex-shrink: 0;
+}
+.session-info { flex: 1; min-width: 0; }
+.session-name { font-size: 14px; font-weight: 600; margin-bottom: 2px; }
+.session-meta { font-size: 12px; color: var(--muted); }
+.session-time { text-align: right; font-size: 13px; color: var(--muted); line-height: 1.5; flex-shrink: 0; margin-right: 12px; }
+.session-time strong { display: block; font-size: 14px; color: var(--text); font-weight: 600; }
+
+.detail-btn {
+  display: flex; align-items: center; gap: 6px;
+  padding: 8px 14px; border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm); font-size: 13px; font-weight: 500;
+  color: var(--text); background: var(--white); cursor: pointer; white-space: nowrap;
+  transition: all 0.15s; text-decoration: none;
+}
+.detail-btn:hover { border-color: var(--brand); color: var(--brand); }
+
+/* Advisee table */
+.advisee-table { width: 100%; border-collapse: collapse; }
+.advisee-table th {
+  padding: 10px 24px; font-size: 11px; font-weight: 700;
+  color: var(--muted); letter-spacing: 0.06em; text-transform: uppercase;
+  text-align: left; border-top: 1px solid var(--border);
+}
+.advisee-table td { padding: 14px 24px; font-size: 14px; border-top: 1px solid var(--border); vertical-align: middle; }
+.advisee-name { font-weight: 600; font-size: 14px; margin-bottom: 2px; }
+.advisee-sub { font-size: 12px; color: var(--muted); }
+.remaining { font-weight: 700; font-size: 14px; }
+.remaining.warn { color: var(--brand); }
+
+/* Status badges */
+.badge {
+  display: inline-block; padding: 3px 9px; border-radius: 100px;
+  font-size: 12px; font-weight: 600;
+}
+.badge-pending { background: #FEF3C7; color: #92400E; }
+.badge-confirmed { background: var(--green-bg); color: var(--green); }
+.badge-completed { background: #EDE9FE; color: #6D28D9; }
+.badge-cancelled { background: #F3F4F6; color: #6B7280; }
+
+/* Tab panels */
+.tab-panel { display: none; }
+.tab-panel.active { display: block; }
+
+/* Skeleton loader */
+.skeleton { animation: shimmer 1.5s infinite; background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%); background-size: 200% 100%; border-radius: 6px; }
+@keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+.skel-line { height: 16px; margin-bottom: 8px; }
+.skel-row { display: flex; gap: 12px; padding: 16px 24px; border-top: 1px solid var(--border); align-items: center; }
+
+/* Empty state */
+.empty-state { padding: 48px 24px; text-align: center; color: var(--muted); font-size: 14px; }
+.empty-state .icon { font-size: 32px; margin-bottom: 12px; }
+
+/* ── BOOKING FORM (tab-bookings) ── */
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; padding: 24px; }
+.form-grid .full { grid-column: 1 / -1; }
+.form-label { font-size: 13px; color: var(--muted); margin-bottom: 6px; font-weight: 500; }
+.form-select {
+  width: 100%; padding: 11px 14px; font-size: 14px;
+  border: 1.5px solid var(--border); border-radius: var(--radius-sm);
+  background: var(--white); color: var(--text); outline: none;
+  transition: border-color 0.15s; appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23555' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: right 14px center;
+  padding-right: 36px;
+}
+.form-select:focus, .form-input:focus { border-color: var(--brand); }
+.form-input {
+  width: 100%; padding: 11px 14px; font-size: 14px;
+  border: 1.5px solid var(--border); border-radius: var(--radius-sm);
+  background: var(--white); color: var(--text); outline: none;
+  transition: border-color 0.15s;
+}
+.form-textarea {
+  width: 100%; padding: 11px 14px; font-size: 14px;
+  border: 1.5px solid var(--border); border-radius: var(--radius-sm);
+  background: var(--white); color: var(--text); outline: none;
+  transition: border-color 0.15s; resize: vertical; min-height: 80px;
+  font-family: inherit;
+}
+.form-textarea:focus { border-color: var(--brand); }
+.form-footer { padding: 0 24px 24px; display: flex; gap: 12px; align-items: center; }
+.submit-btn {
+  padding: 12px 28px; font-size: 15px; font-weight: 700;
+  border-radius: var(--radius-sm); border: none;
+  background: var(--brand); color: #fff; cursor: pointer;
+  transition: opacity 0.15s; display: flex; align-items: center; gap: 8px;
+}
+.submit-btn:hover { opacity: 0.88; }
+.submit-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.cancel-btn {
+  padding: 12px 20px; font-size: 15px; font-weight: 500;
+  border-radius: var(--radius-sm); border: 1.5px solid var(--border);
+  background: var(--white); color: var(--muted); cursor: pointer;
+}
+.cancel-btn:hover { border-color: var(--brand); color: var(--brand); }
+
+/* ── SLOT PICKER ── */
+.week-nav { display: flex; align-items: center; gap: 12px; padding: 18px 24px 0; }
+.week-nav button {
+  width: 32px; height: 32px; border-radius: 50%; border: 1.5px solid var(--border);
+  background: var(--white); font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center;
+  transition: all 0.15s;
+}
+.week-nav button:hover { border-color: var(--brand); color: var(--brand); }
+.week-label { font-size: 14px; font-weight: 600; }
+.slot-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; padding: 16px 24px 24px; }
+.slot-day-header { text-align: center; font-size: 12px; font-weight: 700; color: var(--muted); padding-bottom: 8px; text-transform: uppercase; }
+.slot-btn {
+  padding: 7px 4px; border-radius: 8px; border: 1.5px solid var(--border);
+  background: var(--white); font-size: 12px; cursor: pointer; text-align: center;
+  transition: all 0.15s; color: var(--text);
+}
+.slot-btn:hover { border-color: var(--brand); color: var(--brand); }
+.slot-btn.selected { background: var(--brand); color: #fff; border-color: var(--brand); font-weight: 600; }
+.slot-btn.booked { background: #F3F4F6; color: #9CA3AF; border-color: #E5E7EB; cursor: not-allowed; }
+.slot-send-btn {
+  margin: 0 24px 24px; padding: 12px; font-size: 15px; font-weight: 700;
+  border-radius: var(--radius-sm); border: none; background: var(--brand);
+  color: #fff; cursor: pointer; width: calc(100% - 48px);
+  transition: opacity 0.15s; display: flex; align-items: center; justify-content: center; gap: 8px;
+}
+.slot-send-btn:hover { opacity: 0.88; }
+.slot-send-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.selected-count { padding: 0 24px 8px; font-size: 13px; color: var(--muted); }
+.selected-count span { color: var(--brand); font-weight: 700; }
+
+/* Bookings list table */
+.bookings-table { width: 100%; border-collapse: collapse; }
+.bookings-table th {
+  padding: 10px 20px; font-size: 11px; font-weight: 700; color: var(--muted);
+  letter-spacing: 0.06em; text-transform: uppercase; text-align: left;
+  border-top: 1px solid var(--border);
+}
+.bookings-table td { padding: 13px 20px; font-size: 13px; border-top: 1px solid var(--border); vertical-align: middle; }
+.update-btn {
+  padding: 5px 12px; font-size: 12px; font-weight: 600;
+  border-radius: 6px; border: 1.5px solid var(--border);
+  background: var(--white); cursor: pointer; transition: all 0.15s; color: var(--text);
+}
+.update-btn:hover { border-color: var(--brand); color: var(--brand); }
+.update-btn.green { border-color: var(--green); color: var(--green); }
+.update-btn.green:hover { background: var(--green); color: #fff; }
+
+/* Modal */
+.modal-overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.4);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 100; opacity: 0; pointer-events: none; transition: opacity 0.2s;
+}
+.modal-overlay.open { opacity: 1; pointer-events: all; }
+.modal {
+  background: var(--white); border-radius: var(--radius-lg);
+  width: 100%; max-width: 500px; margin: 16px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+  transform: translateY(16px); transition: transform 0.2s;
+}
+.modal-overlay.open .modal { transform: translateY(0); }
+.modal-header { padding: 20px 24px 16px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+.modal-header h3 { font-size: 17px; font-weight: 700; }
+.modal-close { background: none; border: none; font-size: 20px; cursor: pointer; color: var(--muted); }
+.modal-body { padding: 20px 24px 24px; }
+.modal-field { margin-bottom: 16px; }
+.modal-actions { display: flex; gap: 10px; padding: 0 24px 24px; }
+
+/* Refresh btn */
+.refresh-btn {
+  padding: 6px 14px; font-size: 13px; font-weight: 500;
+  border-radius: 100px; border: 1.5px solid var(--border);
+  background: var(--white); cursor: pointer; color: var(--muted);
+  transition: all 0.15s; display: flex; align-items: center; gap: 6px;
+}
+.refresh-btn:hover { border-color: var(--brand); color: var(--brand); }
 </style>
 </head>
 <body>
 
-<!-- ═══════════════════════════════════════════════
+<div id="toast"></div>
+
+<!-- ════════════════════════════════
+     MODAL: Chi tiết buổi / Cập nhật
+════════════════════════════════ -->
+<div class="modal-overlay" id="modal-overlay">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="modal-title">Chi tiết buổi</h3>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-body" id="modal-body"></div>
+    <div class="modal-actions" id="modal-actions"></div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════
      LOGIN PAGE
-═══════════════════════════════════════════════ -->
+════════════════════════════════ -->
 <div id="login-page">
   <div class="logo-row">
     <div class="logo-icon">
-      <svg viewBox="0 0 26 26" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <rect x="4" y="4" width="18" height="18" rx="3" stroke="white" stroke-width="2.2" fill="none"/>
-      </svg>
+      <svg viewBox="0 0 26 26" fill="none"><rect x="4" y="4" width="18" height="18" rx="3" stroke="white" stroke-width="2.2"/></svg>
     </div>
     <div class="logo-name">LinkaJob</div>
   </div>
@@ -488,233 +403,794 @@
 
     <div class="field-group">
       <div class="field-label">Email</div>
-      <input class="field-input" type="email" value="nguyenvukien@linkajob.vn" placeholder="Email của bạn" id="login-email">
+      <input class="field-input" type="email" id="login-email" placeholder="Email của bạn" autocomplete="email">
     </div>
 
     <div class="field-group">
       <div class="field-label">Mật khẩu</div>
-      <input class="field-input" type="password" value="●●●●●●●●" placeholder="Mật khẩu" id="login-password">
+      <input class="field-input" type="password" id="login-password" placeholder="Mật khẩu" autocomplete="current-password">
     </div>
 
     <div class="field-group">
       <div class="field-label">Vai trò</div>
       <div class="role-row">
-        <button class="role-btn" onclick="selectRole('Staff', this)">Staff</button>
-        <button class="role-btn active" onclick="selectRole('Advisor', this)">Advisor</button>
-        <button class="role-btn" onclick="selectRole('Advisee', this)">Advisee</button>
+        <button class="role-btn" onclick="selectRole('Staff',this)">Staff</button>
+        <button class="role-btn active" onclick="selectRole('Advisor',this)">Advisor</button>
+        <button class="role-btn" onclick="selectRole('Advisee',this)">Advisee</button>
       </div>
     </div>
 
-    <button class="login-btn" onclick="doLogin()">Đăng nhập</button>
+    <button class="login-btn" id="login-btn" onclick="doLogin()">Đăng nhập</button>
+    <div class="login-error" id="login-error">Email hoặc mật khẩu không đúng</div>
   </div>
 </div>
 
 
-<!-- ═══════════════════════════════════════════════
+<!-- ════════════════════════════════
      DASHBOARD PAGE
-═══════════════════════════════════════════════ -->
+════════════════════════════════ -->
 <div id="dashboard-page">
 
-  <!-- Navbar -->
   <nav class="navbar">
     <div class="nav-left">
       <div class="nav-logo-icon">
-        <svg viewBox="0 0 26 26" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <rect x="4" y="4" width="18" height="18" rx="3" stroke="white" stroke-width="2.2" fill="none"/>
-        </svg>
+        <svg viewBox="0 0 26 26" fill="none"><rect x="4" y="4" width="18" height="18" rx="3" stroke="white" stroke-width="2.2"/></svg>
       </div>
       <span class="nav-brand">LinkaJob</span>
       <span class="role-badge" id="role-badge">Advisor</span>
     </div>
-    <div class="nav-user">
-      <div class="avatar" id="user-avatar">KV</div>
-      <span id="user-name">Nguyễn Vũ Trí Kiên</span>
+    <div class="nav-right">
+      <div class="nav-user">
+        <div class="avatar" id="user-avatar">KV</div>
+        <span id="user-name">Nguyễn Vũ Trí Kiên</span>
+      </div>
+      <button class="logout-btn" onclick="doLogout()">Đăng xuất</button>
     </div>
   </nav>
 
-  <!-- Tab bar -->
-  <div class="tab-bar">
-    <div class="tab active" onclick="switchTab('overview', this)">
-      <span class="tab-icon"></span> Tổng quan
-    </div>
-    <div class="tab" onclick="switchTab('schedule', this)">
-      <span class="tab-icon"></span> Gửi lịch cố vấn
-    </div>
-    <div class="tab" onclick="switchTab('booked', this)">
-      <span class="tab-icon"></span> Buổi đã book
-    </div>
-  </div>
+  <!-- ── TAB BAR (thay đổi theo role) ── -->
+  <div class="tab-bar" id="tab-bar"></div>
 
-  <!-- Content -->
-  <div class="content">
-
-    <!-- Tab: Tổng quan -->
-    <div class="tab-panel active" id="tab-overview">
-
-      <!-- Stats -->
-      <div class="stats-row">
-        <div class="stat-cell">
-          <div class="stat-num">3</div>
-          <div class="stat-label">Advisee active</div>
-        </div>
-        <div class="stat-cell">
-          <div class="stat-num">6</div>
-          <div class="stat-label">Cần gửi lịch trống</div>
-          <div class="stat-detail">
-            <span class="highlight">2</span> advisee × 2 buổi/tuần + <span class="highlight">1</span> backup<br>
-            = tối thiểu <span class="highlight">5</span> slot, khuyến nghị <span class="highlight">6</span>
-          </div>
-        </div>
-        <div class="stat-cell">
-          <div class="stat-num">28</div>
-          <div class="stat-label">Tổng buổi hoàn thành</div>
-        </div>
-      </div>
-
-      <!-- Lịch đã book tuần này -->
-      <div class="card">
-        <div class="card-header">
-          <span class="tab-icon"></span>
-          Lịch đã book tuần này
-        </div>
-
-        <div class="session-item">
-          <div class="av-circle av-gh">GH</div>
-          <div class="session-info">
-            <div class="session-name">Trần Gia Hân</div>
-            <div class="session-meta">Gói Đặc Biệt · Buổi 2/4</div>
-          </div>
-          <div class="session-time">
-            <strong>T3, 1/7</strong>
-            20:00 – 21:00
-          </div>
-          <button class="detail-btn">
-            <span class="tab-icon"></span> Chi tiết buổi
-          </button>
-        </div>
-
-        <div class="session-item">
-          <div class="av-circle av-ta">TA</div>
-          <div class="session-info">
-            <div class="session-name">Bùi Tuấn Anh</div>
-            <div class="session-meta">Gói Cơ Bản · Buổi 1/2</div>
-          </div>
-          <div class="session-time">
-            <strong>T5, 3/7</strong>
-            19:00 – 20:00
-          </div>
-          <button class="detail-btn">
-            <span class="tab-icon"></span> Chi tiết buổi
-          </button>
-        </div>
-      </div>
-
-      <!-- Advisee của bạn -->
-      <div class="card">
-        <div class="card-header">
-          <span class="tab-icon"></span>
-          Advisee của bạn
-        </div>
-
-        <table class="advisee-table">
-          <thead>
-            <tr>
-              <th>ADVISEE</th>
-              <th>GÓI</th>
-              <th>CÒN LẠI</th>
-              <th>BUỔI GẦN NHẤT</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td>
-                <div style="display:flex;align-items:center;gap:12px;">
-                  <div class="av-circle av-gh">GH</div>
-                  <div>
-                    <div class="advisee-name">Trần Gia Hân</div>
-                    <div class="advisee-sub">Sinh viên NEU</div>
-                  </div>
-                </div>
-              </td>
-              <td>Gói Đặc Biệt</td>
-              <td><span class="remaining warn">3/4</span></td>
-              <td>T3 1/7 · 20:00</td>
-            </tr>
-            <tr>
-              <td>
-                <div style="display:flex;align-items:center;gap:12px;">
-                  <div class="av-circle av-ta">TA</div>
-                  <div>
-                    <div class="advisee-name">Bùi Tuấn Anh</div>
-                    <div class="advisee-sub">Fresher Marketing</div>
-                  </div>
-                </div>
-              </td>
-              <td>Gói Cơ Bản</td>
-              <td><span class="remaining warn">1/2</span></td>
-              <td>T5 3/7 · 19:00</td>
-            </tr>
-            <tr>
-              <td>
-                <div style="display:flex;align-items:center;gap:12px;">
-                  <div class="av-circle av-pl">PL</div>
-                  <div>
-                    <div class="advisee-name">Nguyễn Phúc Lộc</div>
-                    <div class="advisee-sub">Fresher Brand</div>
-                  </div>
-                </div>
-              </td>
-              <td>Gói Đặc Biệt</td>
-              <td><span class="remaining" style="font-weight:700;">0/4</span></td>
-              <td class="empty-dash">—</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-
-    </div><!-- /tab-overview -->
-
-    <!-- Tab: Gửi lịch cố vấn -->
-    <div class="tab-panel" id="tab-schedule">
-      <div class="placeholder-panel">
-        <h3>Gửi lịch cố vấn</h3>
-        <p>Chọn các khung giờ trống để advisee có thể đặt lịch với bạn.</p>
-      </div>
-    </div>
-
-    <!-- Tab: Buổi đã book -->
-    <div class="tab-panel" id="tab-booked">
-      <div class="placeholder-panel">
-        <h3>Buổi đã book</h3>
-        <p>Danh sách tất cả các buổi cố vấn đã được đặt lịch.</p>
-      </div>
-    </div>
-
-  </div><!-- /content -->
-</div><!-- /dashboard-page -->
+  <div class="content" id="main-content"></div>
+</div>
 
 
 <script>
-  let selectedRole = 'Advisor';
+// ══════════════════════════════════════════════════
+//  CONFIG
+// ══════════════════════════════════════════════════
+const API = 'https://script.google.com/macros/s/AKfycbx7Bd9VvoyzfiiezQV9huoY2BKHH_Br1RAFIz00mjdyKeis-Zv-38a0gf_b-fMlul2C/exec';
 
-  function selectRole(role, btn) {
-    selectedRole = role;
-    document.querySelectorAll('.role-btn').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
+// ── Tài khoản demo (thay bằng logic auth thật nếu cần) ──
+const DEMO_ACCOUNTS = [
+  { email: 'kien@linkajob.vn',      password: '123456', role: 'Advisor',  name: 'Nguyễn Vũ Trí Kiên',  initials: 'KV' },
+  { email: 'phuong@linkajob.vn',    password: '123456', role: 'Staff',    name: 'Phương Staff',          initials: 'PS' },
+  { email: 'advisee@linkajob.vn',   password: '123456', role: 'Advisee',  name: 'Trần Gia Hân',          initials: 'GH' },
+];
+
+const PACKAGES = {
+  'Trial':       { price: 419000,  sessions: 1 },
+  'Cơ Bản':     { price: 799000,  sessions: 2 },
+  'Đặc Biệt':   { price: 1499000, sessions: 4 },
+  'Chuyên Sâu': { price: 2199000, sessions: 6 },
+};
+
+const TIME_SLOTS = ['08:00','09:00','10:00','11:00','14:00','15:00','16:00','17:00','18:00','19:00','20:00','21:00'];
+const DAYS_VI = ['CN','T2','T3','T4','T5','T6','T7'];
+
+let currentUser = null;
+let selectedRole = 'Advisor';
+let sheetData = { bookings: [], advisors: [], slots: [], sessions: [] };
+let selectedSlots = new Set();
+let weekOffset = 0;
+
+// ══════════════════════════════════════════════════
+//  TOAST
+// ══════════════════════════════════════════════════
+function toast(msg, type = '') {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = 'show ' + type;
+  clearTimeout(el._t);
+  el._t = setTimeout(() => el.className = '', 3000);
+}
+
+// ══════════════════════════════════════════════════
+//  API CALLS
+// ══════════════════════════════════════════════════
+async function apiGet(action, params = {}) {
+  const qs = new URLSearchParams({ action, ...params }).toString();
+  const res = await fetch(`${API}?${qs}`);
+  return res.json();
+}
+
+async function apiPost(payload) {
+  const res = await fetch(API, {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+  return res.json();
+}
+
+// ══════════════════════════════════════════════════
+//  LOGIN / LOGOUT
+// ══════════════════════════════════════════════════
+function selectRole(role, btn) {
+  selectedRole = role;
+  document.querySelectorAll('.role-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+async function doLogin() {
+  const email    = document.getElementById('login-email').value.trim();
+  const password = document.getElementById('login-password').value;
+  const errEl    = document.getElementById('login-error');
+  const btn      = document.getElementById('login-btn');
+
+  errEl.style.display = 'none';
+  if (!email || !password) { errEl.textContent = 'Vui lòng điền đầy đủ thông tin'; errEl.style.display = 'block'; return; }
+
+  // Tìm trong demo accounts (hoặc gọi API kiểm tra)
+  let user = DEMO_ACCOUNTS.find(a => a.email === email && a.password === password && a.role === selectedRole);
+
+  if (!user) {
+    // Thử gọi API xác thực (nếu Apps Script có doGet?action=auth)
+    try {
+      btn.innerHTML = '<span class="spinner"></span>';
+      btn.disabled = true;
+      const res = await apiGet('auth', { email, role: selectedRole });
+      if (res.success) {
+        user = { email, role: selectedRole, name: res.name || email, initials: initials(res.name || email) };
+      }
+    } catch(e) {}
+    btn.innerHTML = 'Đăng nhập';
+    btn.disabled = false;
   }
 
-  function doLogin() {
-    document.getElementById('login-page').style.display = 'none';
-    document.getElementById('dashboard-page').style.display = 'block';
-    document.getElementById('role-badge').textContent = selectedRole;
+  if (!user) {
+    errEl.textContent = 'Email hoặc mật khẩu không đúng';
+    errEl.style.display = 'block';
+    document.getElementById('login-email').classList.add('error');
+    return;
   }
 
-  function switchTab(tab, el) {
-    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
-    el.classList.add('active');
-    document.getElementById('tab-' + tab).classList.add('active');
+  currentUser = user;
+  document.getElementById('login-page').style.display = 'none';
+  document.getElementById('dashboard-page').style.display = 'block';
+  document.getElementById('role-badge').textContent = user.role;
+  document.getElementById('user-avatar').textContent = user.initials;
+  document.getElementById('user-name').textContent = user.name;
+
+  buildTabBar(user.role);
+  loadDashboard(user.role);
+}
+
+function doLogout() {
+  currentUser = null;
+  document.getElementById('dashboard-page').style.display = 'none';
+  document.getElementById('login-page').style.display = 'flex';
+  document.getElementById('login-email').value = '';
+  document.getElementById('login-password').value = '';
+  document.getElementById('login-error').style.display = 'none';
+  document.getElementById('login-email').classList.remove('error');
+}
+
+function initials(name) {
+  return name.split(' ').filter(Boolean).map(w => w[0]).join('').slice(0,2).toUpperCase();
+}
+
+// ══════════════════════════════════════════════════
+//  TAB BAR
+// ══════════════════════════════════════════════════
+const TAB_DEFS = {
+  Advisor: [
+    { id: 'overview',  label: 'Tổng quan' },
+    { id: 'schedule',  label: 'Gửi lịch trống' },
+    { id: 'booked',    label: 'Buổi đã book' },
+  ],
+  Staff: [
+    { id: 'all-bookings', label: 'Tất cả Booking' },
+    { id: 'new-booking',  label: 'Tạo booking mới' },
+    { id: 'advisors',     label: 'Advisors' },
+  ],
+  Advisee: [
+    { id: 'my-bookings',  label: 'Booking của tôi' },
+    { id: 'new-booking',  label: 'Đặt lịch mới' },
+  ],
+};
+
+let activeTab = null;
+function buildTabBar(role) {
+  const tabs = TAB_DEFS[role] || [];
+  document.getElementById('tab-bar').innerHTML = tabs.map((t, i) =>
+    `<div class="tab${i===0?' active':''}" data-tab="${t.id}" onclick="switchTab('${t.id}',this)">${t.label}</div>`
+  ).join('');
+  activeTab = tabs[0]?.id;
+}
+
+function switchTab(tabId, el) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  activeTab = tabId;
+  loadDashboard(currentUser.role, tabId);
+}
+
+// ══════════════════════════════════════════════════
+//  LOAD DASHBOARD
+// ══════════════════════════════════════════════════
+async function loadDashboard(role, tab) {
+  tab = tab || TAB_DEFS[role][0].id;
+  const content = document.getElementById('main-content');
+  content.innerHTML = skeletonRows(3);
+
+  try {
+    // Fetch data từ Sheet
+    const [bookRes, slotRes] = await Promise.all([
+      apiGet('getBookings', { advisor: role === 'Advisor' ? currentUser.name : '', role }),
+      apiGet('getSlots', { advisor: role === 'Advisor' ? currentUser.name : '' }),
+    ]);
+    if (bookRes.data) sheetData.bookings = bookRes.data;
+    if (slotRes.data) sheetData.slots = slotRes.data;
+  } catch(e) {
+    // Sheet chưa có data / chưa deploy doGet → dùng data rỗng
   }
+
+  if (role === 'Advisor') renderAdvisor(tab);
+  else if (role === 'Staff') renderStaff(tab);
+  else renderAdvisee(tab);
+}
+
+// ══════════════════════════════════════════════════
+//  RENDER ADVISOR
+// ══════════════════════════════════════════════════
+function renderAdvisor(tab) {
+  const content = document.getElementById('main-content');
+  if (tab === 'overview') content.innerHTML = renderAdvisorOverview();
+  else if (tab === 'schedule') content.innerHTML = renderSchedulePicker();
+  else if (tab === 'booked') content.innerHTML = renderBookedSessions();
+}
+
+function renderAdvisorOverview() {
+  const myBookings = sheetData.bookings.filter(b => b.advisor_name === currentUser.name && b.status === 'confirmed');
+  const advisees = [...new Map(myBookings.map(b => [b.advisee_name, b])).values()];
+  const activeAdvisees = advisees.length;
+  const completed = sheetData.bookings.filter(b => b.advisor_name === currentUser.name && b.status === 'completed').length;
+  const slotNeeded = Math.max(0, activeAdvisees * 2 + 1);
+
+  // Buổi tuần này
+  const now = new Date();
+  const weekStart = new Date(now); weekStart.setDate(now.getDate() - now.getDay());
+  const weekEnd = new Date(weekStart); weekEnd.setDate(weekStart.getDate() + 7);
+  const thisWeek = myBookings.filter(b => {
+    if (!b.session_date) return false;
+    const d = new Date(b.session_date);
+    return d >= weekStart && d < weekEnd;
+  });
+
+  return `
+  <div class="stats-row">
+    <div class="stat-cell">
+      <div class="stat-num">${activeAdvisees || 0}</div>
+      <div class="stat-label">Advisee active</div>
+    </div>
+    <div class="stat-cell">
+      <div class="stat-num">${slotNeeded}</div>
+      <div class="stat-label">Cần gửi lịch trống</div>
+      <div class="stat-detail">
+        <span class="hl">${activeAdvisees}</span> advisee × 2 buổi/tuần + <span class="hl">1</span> backup<br>
+        = tối thiểu <span class="hl">${Math.max(0,activeAdvisees*2)}</span> slot, khuyến nghị <span class="hl">${slotNeeded}</span>
+      </div>
+    </div>
+    <div class="stat-cell">
+      <div class="stat-num">${completed}</div>
+      <div class="stat-label">Tổng buổi hoàn thành</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <div class="card-header-left">📅 Lịch đã book tuần này</div>
+      <button class="refresh-btn" onclick="loadDashboard(currentUser.role,'overview')">↻ Làm mới</button>
+    </div>
+    ${thisWeek.length === 0
+      ? `<div class="empty-state"><div class="icon">📭</div>Không có buổi nào tuần này</div>`
+      : thisWeek.map(b => sessionItemHTML(b)).join('')
+    }
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <div class="card-header-left">👥 Advisee của bạn</div>
+    </div>
+    ${advisees.length === 0
+      ? `<div class="empty-state"><div class="icon">👤</div>Chưa có advisee nào</div>`
+      : `<table class="advisee-table">
+          <thead><tr>
+            <th>ADVISEE</th><th>GÓI</th><th>CÒN LẠI</th><th>BUỔI GẦN NHẤT</th>
+          </tr></thead>
+          <tbody>
+            ${advisees.map(b => {
+              const used = b.sessions_used || 0;
+              const total = b.sessions_total || 0;
+              const rem = total - used;
+              const warn = rem <= Math.ceil(total/2);
+              const nearest = myBookings
+                .filter(x => x.advisee_name === b.advisee_name && x.session_date)
+                .sort((a,c) => new Date(a.session_date) - new Date(c.session_date))[0];
+              return `<tr>
+                <td>
+                  <div style="display:flex;align-items:center;gap:12px">
+                    ${avatarCircle(b.advisee_name)}
+                    <div>
+                      <div class="advisee-name">${b.advisee_name}</div>
+                      <div class="advisee-sub">${b.advisee_industry || b.advisee_year || ''}</div>
+                    </div>
+                  </div>
+                </td>
+                <td>${b.package_name || '—'}</td>
+                <td><span class="remaining${warn?' warn':''}">${rem}/${total}</span></td>
+                <td>${nearest ? fmtDate(nearest.session_date) : '<span style="color:var(--muted)">—</span>'}</td>
+              </tr>`;
+            }).join('')}
+          </tbody>
+        </table>`
+    }
+  </div>`;
+}
+
+function renderSchedulePicker() {
+  const now = new Date();
+  const monday = getMondayOfWeek(now, weekOffset);
+  const days = Array.from({length: 7}, (_, i) => {
+    const d = new Date(monday);
+    d.setDate(monday.getDate() + i);
+    return d;
+  });
+
+  const bookedSlotKeys = new Set(sheetData.slots
+    .filter(s => s.advisor === currentUser.name && s.status === 'booked')
+    .map(s => s.slot_key));
+
+  const selectedSlotKeys = new Set(sheetData.slots
+    .filter(s => s.advisor === currentUser.name && s.status === 'available')
+    .map(s => s.slot_key));
+
+  const weekLabel = `${fmtShort(days[0])} – ${fmtShort(days[6])}`;
+
+  return `
+  <div class="card">
+    <div class="card-header">
+      <div class="card-header-left">📤 Gửi lịch trống tuần này</div>
+    </div>
+    <div class="week-nav">
+      <button onclick="changeWeek(-1)">‹</button>
+      <span class="week-label">${weekLabel}</span>
+      <button onclick="changeWeek(1)">›</button>
+    </div>
+    <div class="slot-grid" id="slot-grid">
+      ${days.map(d => `<div class="slot-day-header">${DAYS_VI[d.getDay()]}<br><span style="font-weight:400;font-size:11px">${d.getDate()}/${d.getMonth()+1}</span></div>`).join('')}
+      ${TIME_SLOTS.map(t =>
+        days.map(d => {
+          const key = slotKey(d, t);
+          const isBooked = bookedSlotKeys.has(key);
+          const isSel = selectedSlots.has(key) || selectedSlotKeys.has(key);
+          return `<button class="slot-btn${isBooked?' booked':isSel?' selected':''}"
+            data-key="${key}" ${isBooked?'disabled':''} onclick="toggleSlot(this,'${key}')">${t}</button>`;
+        }).join('')
+      ).join('')}
+    </div>
+    <div class="selected-count" id="sel-count">Đã chọn <span>${selectedSlots.size}</span> slot</div>
+    <button class="slot-send-btn" id="slot-send-btn" onclick="sendSlots()">
+      Gửi lịch trống (${selectedSlots.size} slot)
+    </button>
+  </div>`;
+}
+
+function renderBookedSessions() {
+  const mine = sheetData.bookings.filter(b => b.advisor_name === currentUser.name);
+  return `
+  <div class="card">
+    <div class="card-header">
+      <div class="card-header-left">📋 Tất cả buổi đã book</div>
+      <button class="refresh-btn" onclick="loadDashboard(currentUser.role,'booked')">↻ Làm mới</button>
+    </div>
+    ${mine.length === 0
+      ? `<div class="empty-state"><div class="icon">📭</div>Chưa có buổi nào</div>`
+      : `<table class="bookings-table">
+          <thead><tr>
+            <th>ADVISEE</th><th>GÓI</th><th>NGÀY GIỜ</th><th>TRẠNG THÁI</th><th></th>
+          </tr></thead>
+          <tbody>
+            ${mine.map(b => `<tr>
+              <td>
+                <div style="display:flex;align-items:center;gap:10px">
+                  ${avatarCircle(b.advisee_name, 30)}
+                  <div>
+                    <div style="font-weight:600">${b.advisee_name}</div>
+                    <div style="font-size:12px;color:var(--muted)">${b.booking_id||''}</div>
+                  </div>
+                </div>
+              </td>
+              <td>${b.package_name||'—'}</td>
+              <td>${b.session_date ? fmtDate(b.session_date) : '—'}</td>
+              <td>${statusBadge(b.status)}</td>
+              <td>
+                ${b.status === 'confirmed'
+                  ? `<button class="update-btn green" onclick="markComplete('${b.booking_id}')">✓ Hoàn thành</button>`
+                  : `<button class="update-btn" onclick="showDetail(${JSON.stringify(b).replace(/"/g,'&quot;')})">Chi tiết</button>`}
+                ${b.meet_link ? `<a href="${b.meet_link}" target="_blank" class="detail-btn" style="margin-left:6px">Meet</a>` : ''}
+              </td>
+            </tr>`).join('')}
+          </tbody>
+        </table>`
+    }
+  </div>`;
+}
+
+// ══════════════════════════════════════════════════
+//  RENDER STAFF
+// ══════════════════════════════════════════════════
+function renderStaff(tab) {
+  const content = document.getElementById('main-content');
+  if (tab === 'all-bookings') content.innerHTML = renderAllBookings();
+  else if (tab === 'new-booking') content.innerHTML = renderNewBookingForm();
+  else if (tab === 'advisors') content.innerHTML = renderAdvisorsList();
+}
+
+function renderAllBookings() {
+  const all = sheetData.bookings;
+  const byStatus = { pending_payment: 0, confirmed: 0, completed: 0, cancelled: 0 };
+  all.forEach(b => { if (byStatus[b.status] !== undefined) byStatus[b.status]++; });
+
+  return `
+  <div class="stats-row" style="grid-template-columns:repeat(4,1fr)">
+    ${Object.entries(byStatus).map(([s,n]) => `
+      <div class="stat-cell">
+        <div class="stat-num">${n}</div>
+        <div class="stat-label">${statusLabel(s)}</div>
+      </div>`).join('')}
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <div class="card-header-left">📋 Tất cả Booking</div>
+      <button class="refresh-btn" onclick="loadDashboard('Staff','all-bookings')">↻ Làm mới</button>
+    </div>
+    ${all.length === 0
+      ? `<div class="empty-state"><div class="icon">📭</div>Chưa có booking nào trong Sheet</div>`
+      : `<table class="bookings-table">
+          <thead><tr>
+            <th>BOOKING ID</th><th>ADVISEE</th><th>ADVISOR</th><th>GÓI</th><th>TRẠNG THÁI</th><th></th>
+          </tr></thead>
+          <tbody>
+            ${all.map(b => `<tr>
+              <td style="font-size:12px;color:var(--muted)">${b.booking_id||'—'}</td>
+              <td><b>${b.advisee_name||'—'}</b><br><span style="font-size:12px;color:var(--muted)">${b.advisee_email||''}</span></td>
+              <td>${b.advisor_name||'—'}</td>
+              <td>${b.package_name||'—'}</td>
+              <td>${statusBadge(b.status)}</td>
+              <td>
+                ${b.status === 'pending_payment'
+                  ? `<button class="update-btn green" onclick="confirmBooking('${b.booking_id}')">✓ Xác nhận</button>`
+                  : `<button class="update-btn" onclick="showDetail(${JSON.stringify(b).replace(/"/g,'&quot;')})">Chi tiết</button>`}
+              </td>
+            </tr>`).join('')}
+          </tbody>
+        </table>`
+    }
+  </div>`;
+}
+
+function renderNewBookingForm() {
+  return `
+  <div class="card">
+    <div class="card-header"><div class="card-header-left">➕ Tạo Booking mới</div></div>
+    <div class="form-grid">
+      <div>
+        <div class="form-label">Tên Advisee *</div>
+        <input class="form-input" id="f-advisee-name" placeholder="Nguyễn Văn A">
+      </div>
+      <div>
+        <div class="form-label">SĐT Advisee *</div>
+        <input class="form-input" id="f-advisee-phone" placeholder="0901234567">
+      </div>
+      <div>
+        <div class="form-label">Email Advisee *</div>
+        <input class="form-input" id="f-advisee-email" type="email" placeholder="email@gmail.com">
+      </div>
+      <div>
+        <div class="form-label">Năm / Cấp độ</div>
+        <input class="form-input" id="f-advisee-year" placeholder="Sinh viên năm 3 / Fresher">
+      </div>
+      <div>
+        <div class="form-label">Ngành</div>
+        <input class="form-input" id="f-advisee-industry" placeholder="Marketing, Brand...">
+      </div>
+      <div>
+        <div class="form-label">Gói *</div>
+        <select class="form-select" id="f-package">
+          ${Object.entries(PACKAGES).map(([k,v]) => `<option value="${k}">${k} — ${v.price.toLocaleString()}đ · ${v.sessions} buổi</option>`).join('')}
+        </select>
+      </div>
+      <div>
+        <div class="form-label">Advisor *</div>
+        <input class="form-input" id="f-advisor-name" placeholder="Tên advisor">
+      </div>
+      <div>
+        <div class="form-label">Email Advisor</div>
+        <input class="form-input" id="f-advisor-email" type="email" placeholder="advisor@linkajob.vn">
+      </div>
+      <div class="full">
+        <div class="form-label">Mục tiêu của Advisee</div>
+        <textarea class="form-textarea" id="f-goal" placeholder="Mô tả mục tiêu, định hướng..."></textarea>
+      </div>
+    </div>
+    <div class="form-footer">
+      <button class="submit-btn" id="submit-booking-btn" onclick="submitBooking()">
+        Tạo Booking & Gửi Email
+      </button>
+      <span id="submit-msg" style="font-size:13px;color:var(--muted)"></span>
+    </div>
+  </div>`;
+}
+
+function renderAdvisorsList() {
+  return `
+  <div class="card">
+    <div class="card-header"><div class="card-header-left">👨‍💼 Danh sách Advisors</div>
+      <button class="refresh-btn" onclick="loadDashboard('Staff','advisors')">↻ Làm mới</button>
+    </div>
+    <div class="empty-state"><div class="icon">📊</div>Dữ liệu được kéo từ tab Advisors trong Google Sheet.<br>Thêm advisor trực tiếp vào Sheet là tự động hiển thị ở đây.</div>
+  </div>`;
+}
+
+// ══════════════════════════════════════════════════
+//  RENDER ADVISEE
+// ══════════════════════════════════════════════════
+function renderAdvisee(tab) {
+  const content = document.getElementById('main-content');
+  if (tab === 'my-bookings') content.innerHTML = renderMyBookings();
+  else content.innerHTML = renderNewBookingForm();
+}
+
+function renderMyBookings() {
+  const mine = sheetData.bookings.filter(b => b.advisee_email === currentUser.email || b.advisee_name === currentUser.name);
+  return `
+  <div class="card">
+    <div class="card-header"><div class="card-header-left">📋 Booking của tôi</div></div>
+    ${mine.length === 0
+      ? `<div class="empty-state"><div class="icon">📭</div>Bạn chưa có booking nào.<br><br>
+          <button class="submit-btn" onclick="switchTabById('new-booking')" style="margin:0 auto">Đặt lịch ngay</button></div>`
+      : mine.map(b => `
+          <div class="session-item">
+            ${avatarCircle(b.advisor_name)}
+            <div class="session-info">
+              <div class="session-name">${b.advisor_name}</div>
+              <div class="session-meta">${b.package_name} · ${b.sessions_used||0}/${b.sessions_total||0} buổi đã dùng</div>
+            </div>
+            <div>${statusBadge(b.status)}</div>
+            ${b.meet_link ? `<a href="${b.meet_link}" target="_blank" class="detail-btn">Meet</a>` : ''}
+          </div>`).join('')
+    }
+  </div>`;
+}
+
+// ══════════════════════════════════════════════════
+//  ACTIONS
+// ══════════════════════════════════════════════════
+async function submitBooking() {
+  const btn = document.getElementById('submit-booking-btn');
+  const msg = document.getElementById('submit-msg');
+
+  const data = {
+    advisee_name:     val('f-advisee-name'),
+    advisee_phone:    val('f-advisee-phone'),
+    advisee_email:    val('f-advisee-email'),
+    advisee_year:     val('f-advisee-year'),
+    advisee_industry: val('f-advisee-industry'),
+    advisee_goal:     val('f-goal'),
+    advisor_name:     val('f-advisor-name'),
+    advisor_email:    val('f-advisor-email'),
+    package_name:     document.getElementById('f-package').value,
+  };
+
+  if (!data.advisee_name || !data.advisee_email || !data.advisor_name) {
+    toast('Vui lòng điền đầy đủ các trường bắt buộc (*)', 'error'); return;
+  }
+
+  btn.innerHTML = '<span class="spinner"></span> Đang gửi...';
+  btn.disabled = true;
+
+  try {
+    const res = await apiPost(data);
+    if (res.success) {
+      toast(`✓ Booking ${res.booking_id} đã tạo! Email đã gửi đến admin.`, 'success');
+      msg.textContent = `Booking ID: ${res.booking_id}`;
+      msg.style.color = 'var(--green)';
+    } else {
+      throw new Error(res.error || 'Lỗi không xác định');
+    }
+  } catch(e) {
+    toast('Lỗi kết nối Apps Script: ' + e.message, 'error');
+    msg.textContent = 'Lỗi: ' + e.message;
+    msg.style.color = 'var(--brand)';
+  }
+
+  btn.innerHTML = 'Tạo Booking & Gửi Email';
+  btn.disabled = false;
+}
+
+async function confirmBooking(bookingId) {
+  try {
+    const res = await apiPost({ action: 'updateStatus', booking_id: bookingId, status: 'confirmed' });
+    if (res.success) {
+      toast('✓ Đã xác nhận booking! Hệ thống tự gửi email & tạo Meet link.', 'success');
+      loadDashboard('Staff', 'all-bookings');
+    } else throw new Error(res.error);
+  } catch(e) {
+    // Fallback: hướng dẫn đổi trực tiếp trong Sheet
+    toast('Vào Google Sheet → cột Status → đổi thành "confirmed" để trigger tự động.', 'error');
+  }
+}
+
+async function markComplete(bookingId) {
+  try {
+    const res = await apiPost({ action: 'updateStatus', booking_id: bookingId, status: 'completed' });
+    if (res.success) { toast('✓ Buổi đã được đánh dấu hoàn thành!', 'success'); loadDashboard('Advisor', 'booked'); }
+    else throw new Error(res.error);
+  } catch(e) {
+    toast('Vào Google Sheet → cột Status → đổi thành "completed".', 'error');
+  }
+}
+
+function toggleSlot(btn, key) {
+  if (selectedSlots.has(key)) {
+    selectedSlots.delete(key);
+    btn.classList.remove('selected');
+  } else {
+    selectedSlots.add(key);
+    btn.classList.add('selected');
+  }
+  document.getElementById('sel-count').innerHTML = `Đã chọn <span>${selectedSlots.size}</span> slot`;
+  document.getElementById('slot-send-btn').textContent = `Gửi lịch trống (${selectedSlots.size} slot)`;
+}
+
+async function sendSlots() {
+  if (selectedSlots.size === 0) { toast('Chưa chọn slot nào!', 'error'); return; }
+  const btn = document.getElementById('slot-send-btn');
+  btn.innerHTML = '<span class="spinner"></span> Đang gửi...';
+  btn.disabled = true;
+
+  try {
+    const res = await apiPost({
+      action: 'addSlots',
+      advisor: currentUser.name,
+      advisor_email: currentUser.email,
+      slots: [...selectedSlots],
+    });
+    if (res.success) {
+      toast(`✓ Đã gửi ${selectedSlots.size} slot lịch trống!`, 'success');
+      selectedSlots.clear();
+      loadDashboard('Advisor', 'schedule');
+    } else throw new Error(res.error);
+  } catch(e) {
+    toast('Lỗi gửi slot: ' + e.message + '. Vui lòng thêm trực tiếp vào Sheet tab AvailableSlots.', 'error');
+    btn.innerHTML = `Gửi lịch trống (${selectedSlots.size} slot)`;
+    btn.disabled = false;
+  }
+}
+
+function changeWeek(dir) {
+  weekOffset += dir;
+  loadDashboard('Advisor', 'schedule');
+}
+
+// ══════════════════════════════════════════════════
+//  MODAL
+// ══════════════════════════════════════════════════
+function showDetail(b) {
+  document.getElementById('modal-title').textContent = 'Chi tiết Booking';
+  document.getElementById('modal-body').innerHTML = `
+    <div class="modal-field"><b>Booking ID:</b> ${b.booking_id||'—'}</div>
+    <div class="modal-field"><b>Advisee:</b> ${b.advisee_name||'—'} · ${b.advisee_email||''}</div>
+    <div class="modal-field"><b>Advisor:</b> ${b.advisor_name||'—'}</div>
+    <div class="modal-field"><b>Gói:</b> ${b.package_name||'—'} · ${b.sessions_total||0} buổi</div>
+    <div class="modal-field"><b>Đã dùng:</b> ${b.sessions_used||0} / ${b.sessions_total||0}</div>
+    <div class="modal-field"><b>Trạng thái:</b> ${statusBadge(b.status)}</div>
+    ${b.meet_link ? `<div class="modal-field"><b>Meet:</b> <a href="${b.meet_link}" target="_blank">${b.meet_link}</a></div>` : ''}
+    ${b.notes ? `<div class="modal-field"><b>Ghi chú:</b> ${b.notes}</div>` : ''}
+  `;
+  document.getElementById('modal-actions').innerHTML = `<button class="cancel-btn" onclick="closeModal()">Đóng</button>`;
+  document.getElementById('modal-overlay').classList.add('open');
+}
+
+function closeModal() { document.getElementById('modal-overlay').classList.remove('open'); }
+document.getElementById('modal-overlay').addEventListener('click', e => { if(e.target.id==='modal-overlay') closeModal(); });
+
+// ══════════════════════════════════════════════════
+//  HELPERS
+// ══════════════════════════════════════════════════
+const AVATAR_COLORS = [
+  ['#D0E8FF','#2475B0'],['#FFD6D0','#C0392B'],['#D0F0E8','#1A7A5E'],
+  ['#EDE9FE','#6D28D9'],['#FEF3C7','#92400E'],['#FCE7F3','#9D174D'],
+];
+const colorCache = {};
+function avatarColor(name) {
+  if (!colorCache[name]) {
+    const i = name.charCodeAt(0) % AVATAR_COLORS.length;
+    colorCache[name] = AVATAR_COLORS[i];
+  }
+  return colorCache[name];
+}
+function avatarCircle(name, size=38) {
+  const [bg, fg] = avatarColor(name||'?');
+  const ini = (name||'?').split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
+  return `<div class="av-circle" style="width:${size}px;height:${size}px;background:${bg};color:${fg};font-size:${size*0.33}px">${ini}</div>`;
+}
+
+function statusBadge(s) {
+  const map = { pending_payment:'badge-pending', confirmed:'badge-confirmed', completed:'badge-completed', cancelled:'badge-cancelled' };
+  const lbl = { pending_payment:'Chờ thanh toán', confirmed:'Đã xác nhận', completed:'Hoàn thành', cancelled:'Đã hủy' };
+  return `<span class="badge ${map[s]||'badge-pending'}">${lbl[s]||s||'—'}</span>`;
+}
+function statusLabel(s) {
+  return { pending_payment:'Chờ thanh toán', confirmed:'Đã xác nhận', completed:'Hoàn thành', cancelled:'Đã hủy' }[s] || s;
+}
+
+function sessionItemHTML(b) {
+  return `<div class="session-item">
+    ${avatarCircle(b.advisee_name)}
+    <div class="session-info">
+      <div class="session-name">${b.advisee_name}</div>
+      <div class="session-meta">${b.package_name||''} · Buổi ${b.sessions_used||0}/${b.sessions_total||0}</div>
+    </div>
+    <div class="session-time">
+      <strong>${b.session_date ? fmtDate(b.session_date) : '—'}</strong>
+      ${b.session_time || ''}
+    </div>
+    <button class="detail-btn" onclick="showDetail(${JSON.stringify(b).replace(/"/g,'&quot;')})">Chi tiết buổi</button>
+    ${b.meet_link ? `<a href="${b.meet_link}" target="_blank" class="detail-btn">Meet</a>` : ''}
+  </div>`;
+}
+
+function skeletonRows(n) {
+  return '<div class="card">' + Array.from({length:n}, () =>
+    `<div class="skel-row">
+      <div class="skeleton" style="width:38px;height:38px;border-radius:50%;flex-shrink:0"></div>
+      <div style="flex:1"><div class="skeleton skel-line" style="width:60%"></div><div class="skeleton skel-line" style="width:40%;height:12px"></div></div>
+    </div>`
+  ).join('') + '</div>';
+}
+
+function getMondayOfWeek(date, offset=0) {
+  const d = new Date(date);
+  const day = d.getDay();
+  const diff = d.getDate() - day + (day===0 ? -6 : 1) + offset*7;
+  d.setDate(diff); d.setHours(0,0,0,0);
+  return d;
+}
+
+function slotKey(date, time) {
+  return `${date.getFullYear()}-${pad(date.getMonth()+1)}-${pad(date.getDate())}_${time}`;
+}
+
+function fmtDate(d) {
+  if (!d) return '—';
+  const dt = new Date(d);
+  return `${DAYS_VI[dt.getDay()]} ${dt.getDate()}/${dt.getMonth()+1} · ${pad(dt.getHours())}:${pad(dt.getMinutes())}`;
+}
+
+function fmtShort(d) { return `${d.getDate()}/${d.getMonth()+1}`; }
+function pad(n) { return String(n).padStart(2,'0'); }
+function val(id) { return (document.getElementById(id)||{}).value?.trim() || ''; }
+
+function switchTabById(tabId) {
+  const el = document.querySelector(`[data-tab="${tabId}"]`);
+  if (el) switchTab(tabId, el);
+}
+
+// Enter để đăng nhập
+document.getElementById('login-password').addEventListener('keydown', e => { if(e.key==='Enter') doLogin(); });
 </script>
 </body>
 </html>
