@@ -1,0 +1,422 @@
+
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=Inter:wght@400;500&display=swap');
+*{box-sizing:border-box;margin:0;padding:0;}
+.wrap{font-family:'Inter',sans-serif;background:var(--color-background-tertiary);min-height:600px;}
+
+/* tab switcher */
+.tabs{display:flex;gap:0;border-bottom:0.5px solid var(--color-border-tertiary);background:var(--color-background-primary);padding:0 24px;}
+.tab{padding:14px 20px;font-family:'Space Grotesk',sans-serif;font-size:13px;font-weight:500;color:var(--color-text-secondary);cursor:pointer;border-bottom:2px solid transparent;transition:all .2s;background:none;border-top:none;border-left:none;border-right:none;display:flex;align-items:center;gap:7px;}
+.tab i{font-size:15px;}
+.tab.on{color:var(--color-text-primary);border-bottom-color:#fc5229;}
+.screen{display:none;padding:24px;}.screen.on{display:block;}
+
+/* ── ADVISOR PORTAL ── */
+.ap-header{background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:18px 20px;display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;}
+.ap-user{display:flex;align-items:center;gap:12px;}
+.ap-ava{width:42px;height:42px;border-radius:50%;background:#fdf1ee;display:flex;align-items:center;justify-content:center;font-family:'Space Grotesk',sans-serif;font-size:14px;font-weight:700;color:#fc5229;border:0.5px solid rgba(252,82,41,.2);flex-shrink:0;}
+.ap-name{font-family:'Space Grotesk',sans-serif;font-size:14px;font-weight:700;color:var(--color-text-primary);}
+.ap-role{font-size:12px;color:var(--color-text-secondary);}
+.ap-status{display:flex;align-items:center;gap:6px;background:var(--color-background-success);border:0.5px solid var(--color-border-success);border-radius:100px;padding:5px 12px;font-size:12px;color:var(--color-text-success);font-family:'Space Grotesk',sans-serif;font-weight:500;}
+.ap-status i{font-size:12px;}
+
+/* week label */
+.week-bar{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;}
+.week-label{font-family:'Space Grotesk',sans-serif;font-size:13px;font-weight:700;color:var(--color-text-primary);}
+.week-sub{font-size:11px;color:var(--color-text-secondary);margin-top:2px;}
+.deadline-pill{display:flex;align-items:center;gap:5px;background:var(--color-background-warning);border:0.5px solid var(--color-border-warning);border-radius:100px;padding:4px 10px;font-size:11px;color:var(--color-text-warning);font-family:'Space Grotesk',sans-serif;font-weight:500;}
+.deadline-pill i{font-size:12px;}
+
+/* slot grid */
+.slot-grid{background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);overflow:hidden;margin-bottom:16px;}
+.sg-head{display:grid;grid-template-columns:80px repeat(7,1fr);border-bottom:0.5px solid var(--color-border-tertiary);}
+.sg-head-cell{padding:10px 6px;text-align:center;font-size:11px;font-family:'Space Grotesk',sans-serif;font-weight:500;color:var(--color-text-secondary);border-right:0.5px solid var(--color-border-tertiary);}
+.sg-head-cell:last-child{border-right:none;}
+.sg-head-cell .day-name{font-size:11px;font-weight:700;color:var(--color-text-primary);}
+.sg-head-cell .day-date{font-size:10px;color:var(--color-text-secondary);margin-top:2px;}
+.sg-row{display:grid;grid-template-columns:80px repeat(7,1fr);border-bottom:0.5px solid var(--color-border-tertiary);}
+.sg-row:last-child{border-bottom:none;}
+.sg-time{padding:10px 8px;font-size:11px;color:var(--color-text-secondary);display:flex;align-items:center;justify-content:flex-end;border-right:0.5px solid var(--color-border-tertiary);}
+.sg-cell{padding:5px 4px;border-right:0.5px solid var(--color-border-tertiary);display:flex;align-items:center;justify-content:center;}
+.sg-cell:last-child{border-right:none;}
+.slot-btn{width:100%;padding:6px 0;border-radius:6px;font-size:10px;font-family:'Space Grotesk',sans-serif;font-weight:600;cursor:pointer;border:0.5px solid var(--color-border-tertiary);background:transparent;color:var(--color-text-secondary);transition:all .15s;}
+.slot-btn:hover{border-color:rgba(252,82,41,.4);color:#fc5229;background:rgba(252,82,41,.05);}
+.slot-btn.on{background:rgba(252,82,41,.08);border-color:#fc5229;color:#fc5229;}
+.slot-btn.booked{background:var(--color-background-secondary);border-color:var(--color-border-tertiary);color:var(--color-text-secondary);cursor:default;opacity:.5;}
+.slot-btn.booked::after{content:'Đã book';display:block;font-size:9px;}
+
+/* summary bar */
+.sum-bar{background:var(--color-background-secondary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-md);padding:12px 16px;display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
+.sum-count{font-family:'Space Grotesk',sans-serif;font-size:13px;font-weight:700;color:var(--color-text-primary);}
+.sum-hint{font-size:11px;color:var(--color-text-secondary);margin-top:2px;}
+.ap-submit{width:100%;padding:13px;background:#fc5229;border:none;border-radius:100px;font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:14px;color:#fff;cursor:pointer;}
+.ap-submit:disabled{opacity:.35;cursor:not-allowed;}
+
+/* booked sessions indicator */
+.booked-sessions{background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:16px 18px;margin-bottom:16px;}
+.bs-label{font-size:11px;color:var(--color-text-secondary);font-family:'Space Grotesk',sans-serif;letter-spacing:.06em;text-transform:uppercase;margin-bottom:12px;}
+.bs-item{display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-bottom:0.5px solid var(--color-border-tertiary);}
+.bs-item:last-child{border-bottom:none;}
+.bs-who{display:flex;align-items:center;gap:10px;}
+.bs-ava{width:28px;height:28px;border-radius:50%;background:var(--color-background-info);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;font-family:'Space Grotesk',sans-serif;color:var(--color-text-info);flex-shrink:0;}
+.bs-name{font-size:13px;font-weight:500;color:var(--color-text-primary);}
+.bs-pkg{font-size:11px;color:var(--color-text-secondary);}
+.bs-time{font-size:12px;font-family:'Space Grotesk',sans-serif;font-weight:500;color:var(--color-text-primary);text-align:right;}
+.bs-time-sub{font-size:10px;color:var(--color-text-secondary);}
+
+/* ── ADVISEE BOOKING ── */
+.bk-header{background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:18px 20px;margin-bottom:16px;}
+.bk-advisor{display:flex;align-items:center;gap:12px;margin-bottom:14px;}
+.bk-adv-ava{width:48px;height:48px;border-radius:50%;background:#fdf1ee;display:flex;align-items:center;justify-content:center;font-family:'Space Grotesk',sans-serif;font-size:16px;font-weight:700;color:#fc5229;border:0.5px solid rgba(252,82,41,.2);}
+.bk-adv-name{font-family:'Space Grotesk',sans-serif;font-size:15px;font-weight:700;color:var(--color-text-primary);}
+.bk-adv-role{font-size:12px;color:var(--color-text-secondary);}
+.bk-adv-co{font-size:11px;color:var(--color-text-secondary);}
+.bk-pkg-row{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:var(--color-background-secondary);border-radius:var(--border-radius-md);}
+.bk-pkg-left{display:flex;align-items:center;gap:8px;}
+.bk-pkg-dot{width:6px;height:6px;border-radius:50%;background:#fc5229;}
+.bk-pkg-name{font-family:'Space Grotesk',sans-serif;font-size:13px;font-weight:700;color:var(--color-text-primary);}
+.bk-pkg-sess{font-size:11px;color:var(--color-text-secondary);}
+.bk-pkg-remain{font-size:11px;color:#fc5229;font-family:'Space Grotesk',sans-serif;font-weight:600;}
+
+/* calendar picker */
+.cal-section{background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);overflow:hidden;margin-bottom:14px;}
+.cal-top{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:0.5px solid var(--color-border-tertiary);}
+.cal-title{font-family:'Space Grotesk',sans-serif;font-size:13px;font-weight:700;color:var(--color-text-primary);}
+.cal-nav{display:flex;gap:4px;}
+.cal-nav-btn{width:28px;height:28px;border-radius:var(--border-radius-md);border:0.5px solid var(--color-border-tertiary);background:transparent;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--color-text-secondary);}
+.cal-nav-btn i{font-size:14px;}
+.cal-nav-btn:hover{background:var(--color-background-secondary);}
+.cal-days-head{display:grid;grid-template-columns:repeat(7,1fr);padding:8px 12px 0;}
+.cal-day-lbl{text-align:center;font-size:10px;font-family:'Space Grotesk',sans-serif;font-weight:500;color:var(--color-text-secondary);padding:4px 0;}
+.cal-days{display:grid;grid-template-columns:repeat(7,1fr);padding:4px 12px 12px;gap:3px;}
+.cal-day{height:32px;border-radius:var(--border-radius-md);display:flex;align-items:center;justify-content:center;font-size:13px;cursor:pointer;color:var(--color-text-secondary);transition:all .15s;position:relative;}
+.cal-day:hover:not(.empty):not(.past):not(.no-slots){background:var(--color-background-secondary);}
+.cal-day.has-slots{color:var(--color-text-primary);font-weight:500;}
+.cal-day.has-slots::after{content:'';position:absolute;bottom:3px;left:50%;transform:translateX(-50%);width:4px;height:4px;border-radius:50%;background:#fc5229;}
+.cal-day.selected{background:#fc5229;color:#fff;font-weight:700;}
+.cal-day.selected::after{display:none;}
+.cal-day.past{opacity:.3;cursor:default;}
+.cal-day.empty{pointer-events:none;}
+.cal-day.no-slots{opacity:.25;cursor:default;}
+
+/* time slots */
+.time-section{background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:16px;margin-bottom:14px;}
+.ts-label{font-size:11px;color:var(--color-text-secondary);font-family:'Space Grotesk',sans-serif;letter-spacing:.06em;text-transform:uppercase;margin-bottom:12px;}
+.ts-slots{display:flex;flex-wrap:wrap;gap:8px;}
+.ts-slot{padding:9px 16px;border-radius:100px;border:0.5px solid var(--color-border-tertiary);font-size:13px;font-family:'Space Grotesk',sans-serif;font-weight:500;color:var(--color-text-primary);cursor:pointer;transition:all .15s;background:transparent;}
+.ts-slot:hover{border-color:rgba(252,82,41,.4);color:#fc5229;}
+.ts-slot.on{background:#fc5229;border-color:#fc5229;color:#fff;}
+.ts-slot.taken{opacity:.3;cursor:default;text-decoration:line-through;}
+
+/* question box */
+.q-section{background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:16px;margin-bottom:14px;}
+.q-label{font-size:11px;color:var(--color-text-secondary);font-family:'Space Grotesk',sans-serif;letter-spacing:.06em;text-transform:uppercase;margin-bottom:8px;}
+.q-hint{font-size:12px;color:var(--color-text-secondary);margin-bottom:10px;line-height:1.6;}
+.q-input{width:100%;border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-md);padding:10px 12px;font-size:13px;font-family:'Inter',sans-serif;color:var(--color-text-primary);background:var(--color-background-secondary);resize:none;outline:none;line-height:1.6;}
+.q-input:focus{border-color:rgba(252,82,41,.5);}
+
+/* confirm strip */
+.bk-confirm-strip{background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:14px 16px;margin-bottom:14px;}
+.bk-confirm-row{display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:0.5px solid var(--color-border-tertiary);}
+.bk-confirm-row:last-child{border-bottom:none;}
+.bk-cl{font-size:12px;color:var(--color-text-secondary);}
+.bk-cv{font-size:13px;font-family:'Space Grotesk',sans-serif;font-weight:600;color:var(--color-text-primary);}
+.bk-cv.o{color:#fc5229;}
+.bk-cv.gray{color:var(--color-text-secondary);font-weight:400;}
+
+.bk-submit{width:100%;padding:13px;background:#fc5229;border:none;border-radius:100px;font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:14px;color:#fff;cursor:pointer;}
+.bk-submit:disabled{opacity:.3;cursor:not-allowed;}
+
+/* success state */
+.success-box{background:var(--color-background-success);border:0.5px solid var(--color-border-success);border-radius:var(--border-radius-lg);padding:24px;text-align:center;display:none;}
+.success-box.show{display:block;}
+.success-icon{width:48px;height:48px;border-radius:50%;background:var(--color-text-success);display:flex;align-items:center;justify-content:center;margin:0 auto 14px;}
+.success-icon i{font-size:22px;color:#fff;}
+.success-title{font-family:'Space Grotesk',sans-serif;font-size:16px;font-weight:700;color:var(--color-text-success);margin-bottom:6px;}
+.success-sub{font-size:13px;color:var(--color-text-secondary);line-height:1.6;}
+</style>
+
+<div class="wrap">
+<h2 class="sr-only">LinkaJob scheduling: Advisor portal and Advisee booking page</h2>
+
+<div class="tabs">
+  <button class="tab on" onclick="switchTab('advisor')"><i class="ti ti-calendar-event" aria-hidden="true"></i>Advisor Portal — gửi lịch trống</button>
+  <button class="tab" onclick="switchTab('booking')"><i class="ti ti-clock" aria-hidden="true"></i>Advisee — đặt lịch buổi meeting</button>
+</div>
+
+<!-- ══════════════════════════════════
+     SCREEN 1: ADVISOR PORTAL
+     ══════════════════════════════════ -->
+<div class="screen on" id="s-advisor">
+
+  <div class="ap-header">
+    <div class="ap-user">
+      <div class="ap-ava">KV</div>
+      <div>
+        <div class="ap-name">Nguyễn Vũ Trí Kiên</div>
+        <div class="ap-role">Brand Manager · Suntory PepsiCo Vietnam</div>
+      </div>
+    </div>
+    <div class="ap-status"><i class="ti ti-users" aria-hidden="true"></i>3 advisee đang active</div>
+  </div>
+
+  <!-- booked sessions this week -->
+  <div class="booked-sessions">
+    <div class="bs-label">Lịch đã book tuần này</div>
+    <div class="bs-item">
+      <div class="bs-who">
+        <div class="bs-ava">GH</div>
+        <div><div class="bs-name">Gia Hân</div><div class="bs-pkg">Gói Đặc Biệt · Buổi 2/4</div></div>
+      </div>
+      <div><div class="bs-time">T3, 23/6</div><div class="bs-time-sub">20:00 – 21:00</div></div>
+    </div>
+    <div class="bs-item">
+      <div class="bs-who">
+        <div class="bs-ava">BT</div>
+        <div><div class="bs-name">Bùi Tuấn Anh</div><div class="bs-pkg">Gói Cơ Bản · Buổi 1/2</div></div>
+      </div>
+      <div><div class="bs-time">T5, 25/6</div><div class="bs-time-sub">19:00 – 20:00</div></div>
+    </div>
+  </div>
+
+  <!-- week slot submission -->
+  <div class="week-bar">
+    <div>
+      <div class="week-label">Lịch trống tuần sau — 30/6 đến 6/7</div>
+      <div class="week-sub">Chọn các slot bạn available. Advisee sẽ đặt vào các slot này.</div>
+    </div>
+    <div class="deadline-pill"><i class="ti ti-alarm" aria-hidden="true"></i>Deadline: CN 10pm</div>
+  </div>
+
+  <div class="slot-grid">
+    <div class="sg-head">
+      <div class="sg-head-cell"></div>
+      <div class="sg-head-cell"><div class="day-name">T2</div><div class="day-date">30/6</div></div>
+      <div class="sg-head-cell"><div class="day-name">T3</div><div class="day-date">1/7</div></div>
+      <div class="sg-head-cell"><div class="day-name">T4</div><div class="day-date">2/7</div></div>
+      <div class="sg-head-cell"><div class="day-name">T5</div><div class="day-date">3/7</div></div>
+      <div class="sg-head-cell"><div class="day-name">T6</div><div class="day-date">4/7</div></div>
+      <div class="sg-head-cell"><div class="day-name">T7</div><div class="day-date">5/7</div></div>
+      <div class="sg-head-cell"><div class="day-name">CN</div><div class="day-date">6/7</div></div>
+    </div>
+    <div class="sg-row">
+      <div class="sg-time">19:00–20:00</div>
+      <div class="sg-cell"><button class="slot-btn" onclick="togSlot(this)">Trống</button></div>
+      <div class="sg-cell"><button class="slot-btn booked" disabled>Đã book</button></div>
+      <div class="sg-cell"><button class="slot-btn" onclick="togSlot(this)">Trống</button></div>
+      <div class="sg-cell"><button class="slot-btn" onclick="togSlot(this)">Trống</button></div>
+      <div class="sg-cell"><button class="slot-btn on" onclick="togSlot(this)">Có mặt</button></div>
+      <div class="sg-cell"><button class="slot-btn" onclick="togSlot(this)">Trống</button></div>
+      <div class="sg-cell"><button class="slot-btn" onclick="togSlot(this)">Trống</button></div>
+    </div>
+    <div class="sg-row">
+      <div class="sg-time">20:00–21:00</div>
+      <div class="sg-cell"><button class="slot-btn on" onclick="togSlot(this)">Có mặt</button></div>
+      <div class="sg-cell"><button class="slot-btn on" onclick="togSlot(this)">Có mặt</button></div>
+      <div class="sg-cell"><button class="slot-btn" onclick="togSlot(this)">Trống</button></div>
+      <div class="sg-cell"><button class="slot-btn on" onclick="togSlot(this)">Có mặt</button></div>
+      <div class="sg-cell"><button class="slot-btn" onclick="togSlot(this)">Trống</button></div>
+      <div class="sg-cell"><button class="slot-btn on" onclick="togSlot(this)">Có mặt</button></div>
+      <div class="sg-cell"><button class="slot-btn" onclick="togSlot(this)">Trống</button></div>
+    </div>
+    <div class="sg-row">
+      <div class="sg-time">21:00–22:00</div>
+      <div class="sg-cell"><button class="slot-btn" onclick="togSlot(this)">Trống</button></div>
+      <div class="sg-cell"><button class="slot-btn" onclick="togSlot(this)">Trống</button></div>
+      <div class="sg-cell"><button class="slot-btn on" onclick="togSlot(this)">Có mặt</button></div>
+      <div class="sg-cell"><button class="slot-btn" onclick="togSlot(this)">Trống</button></div>
+      <div class="sg-cell"><button class="slot-btn on" onclick="togSlot(this)">Có mặt</button></div>
+      <div class="sg-cell"><button class="slot-btn" onclick="togSlot(this)">Trống</button></div>
+      <div class="sg-cell"><button class="slot-btn" onclick="togSlot(this)">Trống</button></div>
+    </div>
+  </div>
+
+  <div class="sum-bar">
+    <div>
+      <div class="sum-count" id="slotCount">6 slot đã chọn</div>
+      <div class="sum-hint">Advisee sẽ thấy và đặt vào các slot này từ thứ Hai</div>
+    </div>
+  </div>
+  <button class="ap-submit" id="apSubmit" onclick="submitSlots()">Xác nhận lịch trống tuần 30/6 – 6/7</button>
+
+</div>
+
+<!-- ══════════════════════════════════
+     SCREEN 2: ADVISEE BOOKING
+     ══════════════════════════════════ -->
+<div class="screen" id="s-booking">
+
+  <div class="bk-header">
+    <div class="bk-advisor">
+      <div class="bk-adv-ava">KV</div>
+      <div>
+        <div class="bk-adv-name">Nguyễn Vũ Trí Kiên</div>
+        <div class="bk-adv-role">Brand Manager</div>
+        <div class="bk-adv-co">Suntory PepsiCo Vietnam</div>
+      </div>
+    </div>
+    <div class="bk-pkg-row">
+      <div class="bk-pkg-left">
+        <div class="bk-pkg-dot"></div>
+        <div>
+          <div class="bk-pkg-name">Gói Đặc Biệt</div>
+          <div class="bk-pkg-sess">4 buổi · 45–60 phút</div>
+        </div>
+      </div>
+      <div class="bk-pkg-remain">Còn 3 buổi</div>
+    </div>
+  </div>
+
+  <div id="bk-form-wrap">
+    <!-- calendar -->
+    <div class="cal-section">
+      <div class="cal-top">
+        <div class="cal-title">Tháng 7, 2025</div>
+        <div class="cal-nav">
+          <button class="cal-nav-btn" aria-label="Tuần trước"><i class="ti ti-chevron-left" aria-hidden="true"></i></button>
+          <button class="cal-nav-btn" aria-label="Tuần sau"><i class="ti ti-chevron-right" aria-hidden="true"></i></button>
+        </div>
+      </div>
+      <div class="cal-days-head">
+        <div class="cal-day-lbl">T2</div><div class="cal-day-lbl">T3</div><div class="cal-day-lbl">T4</div>
+        <div class="cal-day-lbl">T5</div><div class="cal-day-lbl">T6</div><div class="cal-day-lbl">T7</div><div class="cal-day-lbl">CN</div>
+      </div>
+      <div class="cal-days">
+        <div class="cal-day past">30</div>
+        <div class="cal-day past">1</div>
+        <div class="cal-day past">2</div>
+        <div class="cal-day past">3</div>
+        <div class="cal-day past">4</div>
+        <div class="cal-day past">5</div>
+        <div class="cal-day past">6</div>
+        <div class="cal-day has-slots" onclick="selectDay(this,'T2 7/7')">7</div>
+        <div class="cal-day has-slots" onclick="selectDay(this,'T3 8/7')">8</div>
+        <div class="cal-day no-slots">9</div>
+        <div class="cal-day has-slots" onclick="selectDay(this,'T5 10/7')">10</div>
+        <div class="cal-day has-slots" onclick="selectDay(this,'T6 11/7')">11</div>
+        <div class="cal-day no-slots">12</div>
+        <div class="cal-day no-slots">13</div>
+        <div class="cal-day no-slots">14</div>
+        <div class="cal-day has-slots" onclick="selectDay(this,'T3 15/7')">15</div>
+        <div class="cal-day no-slots">16</div>
+        <div class="cal-day no-slots">17</div>
+        <div class="cal-day no-slots">18</div>
+        <div class="cal-day no-slots">19</div>
+        <div class="cal-day no-slots">20</div>
+      </div>
+    </div>
+
+    <!-- time slots -->
+    <div class="time-section" id="ts-wrap">
+      <div class="ts-label" id="ts-day-label">Chọn ngày để xem slot trống</div>
+      <div class="ts-slots" id="ts-slots">
+        <div style="font-size:13px;color:var(--color-text-secondary);">← Chọn ngày có dấu chấm cam</div>
+      </div>
+    </div>
+
+    <!-- question -->
+    <div class="q-section">
+      <div class="q-label">Câu hỏi cho buổi meeting</div>
+      <div class="q-hint">Advisor sẽ đọc trước để chuẩn bị tốt nhất. Bạn có thể đặt tối đa 3 câu hỏi.</div>
+      <textarea class="q-input" id="q-input" rows="4" placeholder="VD: Mình đang apply vị trí Brand Intern tại Unilever, muốn nhờ anh/chị review CV và chia sẻ về vòng phỏng vấn..."></textarea>
+    </div>
+
+    <!-- confirm summary -->
+    <div class="bk-confirm-strip" id="confirm-strip" style="display:none;">
+      <div class="bk-confirm-row"><span class="bk-cl">Ngày</span><span class="bk-cv o" id="cf-day">—</span></div>
+      <div class="bk-confirm-row"><span class="bk-cl">Giờ</span><span class="bk-cv o" id="cf-time">—</span></div>
+      <div class="bk-confirm-row"><span class="bk-cl">Advisor</span><span class="bk-cv">Nguyễn Vũ Trí Kiên</span></div>
+      <div class="bk-confirm-row"><span class="bk-cl">Hình thức</span><span class="bk-cv gray">Google Meet · Link gửi qua email</span></div>
+    </div>
+
+    <button class="bk-submit" id="bk-submit" onclick="confirmBooking()" disabled>Xác nhận đặt lịch</button>
+  </div>
+
+  <!-- success -->
+  <div class="success-box" id="success-box">
+    <div class="success-icon"><i class="ti ti-check" aria-hidden="true"></i></div>
+    <div class="success-title">Đặt lịch thành công!</div>
+    <div class="success-sub" id="success-detail">—</div>
+  </div>
+
+</div>
+</div>
+
+<script>
+function switchTab(t){
+  document.querySelectorAll('.tab').forEach(function(b,i){b.classList.toggle('on',i===(t==='advisor'?0:1));});
+  document.getElementById('s-advisor').classList.toggle('on',t==='advisor');
+  document.getElementById('s-booking').classList.toggle('on',t==='booking');
+}
+
+var slotCount=6;
+function togSlot(btn){
+  if(btn.classList.contains('booked'))return;
+  var on=btn.classList.toggle('on');
+  btn.textContent=on?'Có mặt':'Trống';
+  slotCount+=on?1:-1;
+  document.getElementById('slotCount').textContent=slotCount+' slot đã chọn';
+}
+function submitSlots(){
+  var btn=document.getElementById('apSubmit');
+  btn.textContent='✓ Đã gửi lịch — Advisee sẽ thấy từ thứ Hai';
+  btn.style.background='var(--color-text-success)';
+  btn.disabled=true;
+}
+
+var SLOTS={
+  'T2 7/7':['19:00–20:00','20:00–21:00'],
+  'T3 8/7':['20:00–21:00','21:00–22:00'],
+  'T5 10/7':['19:00–20:00','20:00–21:00'],
+  'T6 11/7':['19:00–20:00','21:00–22:00'],
+  'T3 15/7':['20:00–21:00'],
+};
+var selectedDay='', selectedTime='';
+
+function selectDay(el,day){
+  document.querySelectorAll('.cal-day').forEach(function(d){d.classList.remove('selected');});
+  el.classList.add('selected');
+  selectedDay=day; selectedTime='';
+  var slots=SLOTS[day]||[];
+  document.getElementById('ts-day-label').textContent='Slot trống — '+day;
+  var html='';
+  slots.forEach(function(s){
+    html+='<button class="ts-slot" onclick="selectTime(this,\''+s+'\')">'+s+'</button>';
+  });
+  document.getElementById('ts-slots').innerHTML=html||'<span style="font-size:13px;color:var(--color-text-secondary);">Không có slot trống ngày này</span>';
+  updateConfirm();
+}
+
+function selectTime(el,t){
+  document.querySelectorAll('.ts-slot').forEach(function(s){s.classList.remove('on');});
+  el.classList.add('on');
+  selectedTime=t;
+  updateConfirm();
+}
+
+function updateConfirm(){
+  var strip=document.getElementById('confirm-strip');
+  var btn=document.getElementById('bk-submit');
+  if(selectedDay&&selectedTime){
+    document.getElementById('cf-day').textContent=selectedDay;
+    document.getElementById('cf-time').textContent=selectedTime;
+    strip.style.display='block';
+    btn.disabled=false;
+  } else {
+    strip.style.display='none';
+    btn.disabled=true;
+  }
+}
+
+function confirmBooking(){
+  var q=document.getElementById('q-input').value.trim();
+  document.getElementById('bk-form-wrap').style.display='none';
+  var box=document.getElementById('success-box');
+  box.classList.add('show');
+  document.getElementById('success-detail').innerHTML=
+    '<strong>'+selectedDay+' · '+selectedTime+'</strong> với anh Kiên<br><br>'+
+    'Google Meet invite đã gửi vào email của bạn.<br>'+
+    (q?'Câu hỏi của bạn đã được chuyển cho advisor chuẩn bị.<br>':'')+'<br>'+
+    '<span style="color:var(--color-text-success);font-weight:500;">Chúc bạn buổi meeting thật hiệu quả!</span>';
+}
+</script>
