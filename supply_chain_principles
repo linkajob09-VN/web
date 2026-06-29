@@ -1,0 +1,659 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Supply Chain Principles – LinkaJob</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=Inter:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --accent: #fc5229;
+    --bg: #0D0D0D;
+    --surface: #1A1A1A;
+    --border: rgba(255,255,255,0.08);
+    --text: #F0F0F0;
+    --muted: rgba(240,240,240,0.4);
+    --dim: rgba(240,240,240,0.22);
+  }
+
+  body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); overflow-x: hidden; }
+
+  /* ── NAV ── */
+  .lj-nav { display: flex; align-items: center; justify-content: space-between; padding: 16px 32px; border-bottom: 0.5px solid var(--border); position: sticky; top: 0; z-index: 200; background: rgba(13,13,13,0.92); backdrop-filter: blur(12px); }
+  .lj-logo { font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 18px; color: var(--accent); letter-spacing: -0.5px; text-decoration: none; }
+  .lj-nav-right { display: flex; align-items: center; gap: 12px; }
+  .lj-nav-link { font-size: 13px; color: var(--muted); text-decoration: none; font-family: 'Space Grotesk', sans-serif; font-weight: 500; transition: color 0.2s; padding: 6px 0; }
+  .lj-nav-link:hover { color: var(--text); }
+  .lj-btn-nav { background: var(--accent); color: #fff; font-size: 13px; font-weight: 600; font-family: 'Space Grotesk', sans-serif; padding: 9px 20px; border-radius: 100px; border: none; cursor: pointer; transition: opacity 0.2s; }
+  .lj-btn-nav:hover { opacity: 0.88; }
+
+  /* ── TICKER ── */
+  .lj-ticker { overflow: hidden; border-top: 0.5px solid var(--border); border-bottom: 0.5px solid var(--border); padding: 11px 0; background: var(--bg); }
+  .lj-ticker-track { display: flex; gap: 48px; animation: ticker 26s linear infinite; white-space: nowrap; width: max-content; }
+  .lj-ticker-item { font-family: 'Space Grotesk', sans-serif; font-size: 12px; font-weight: 500; color: rgba(240,240,240,0.28); display: flex; align-items: center; gap: 7px; }
+  .lj-ticker-item span { color: var(--accent); }
+  @keyframes ticker { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+
+  /* ── HERO ── */
+  .lj-hero { padding: 72px 32px 56px; max-width: 860px; margin: 0 auto; }
+  .lj-badge-row { display: flex; align-items: center; gap: 10px; margin-bottom: 28px; flex-wrap: wrap; }
+  .lj-pill { display: inline-flex; align-items: center; gap: 7px; background: var(--surface); border: 0.5px solid rgba(255,255,255,0.1); border-radius: 100px; padding: 6px 14px; font-size: 12px; color: rgba(240,240,240,0.6); font-family: 'Space Grotesk', sans-serif; font-weight: 500; }
+  .lj-pill-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); flex-shrink: 0; }
+  .lj-hero h1 { font-family: 'Space Grotesk', sans-serif; font-size: 58px; font-weight: 700; line-height: 1.03; letter-spacing: -2.8px; color: var(--text); margin-bottom: 22px; }
+  .lj-hero h1 em { color: var(--accent); font-style: normal; }
+  .lj-hero-sub { font-size: 16px; color: var(--muted); max-width: 520px; line-height: 1.75; margin-bottom: 36px; }
+  .lj-hero-cta { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; margin-bottom: 52px; }
+  .lj-btn-primary { background: var(--accent); color: #fff; font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 14px; padding: 13px 28px; border-radius: 100px; border: none; cursor: pointer; transition: opacity 0.2s; }
+  .lj-btn-primary:hover { opacity: 0.88; }
+  .lj-btn-ghost { background: transparent; color: var(--text); font-family: 'Space Grotesk', sans-serif; font-weight: 500; font-size: 14px; padding: 12px 26px; border-radius: 100px; border: 0.5px solid rgba(240,240,240,0.2); cursor: pointer; transition: border-color 0.2s; }
+  .lj-btn-ghost:hover { border-color: rgba(240,240,240,0.45); }
+
+  /* hero stats */
+  .lj-stats-row { display: flex; gap: 0; border: 0.5px solid var(--border); border-radius: 16px; overflow: hidden; }
+  .lj-stat { flex: 1; padding: 20px 24px; border-right: 0.5px solid var(--border); }
+  .lj-stat:last-child { border-right: none; }
+  .lj-stat-num { font-family: 'Space Grotesk', sans-serif; font-size: 30px; font-weight: 700; color: var(--accent); line-height: 1; }
+  .lj-stat-label { font-size: 11px; color: var(--muted); margin-top: 5px; line-height: 1.4; }
+
+  /* ── SECTION BASE ── */
+  .lj-sec { padding: 56px 32px; max-width: 860px; margin: 0 auto; }
+  .lj-sec-label { font-size: 10px; color: rgba(240,240,240,0.28); letter-spacing: 0.13em; text-transform: uppercase; margin-bottom: 10px; font-family: 'Space Grotesk', sans-serif; }
+  .lj-sec-title { font-family: 'Space Grotesk', sans-serif; font-size: 30px; font-weight: 700; letter-spacing: -1.2px; color: var(--text); margin-bottom: 10px; line-height: 1.15; }
+  .lj-sec-sub { font-size: 14px; color: var(--muted); margin-bottom: 36px; line-height: 1.7; max-width: 520px; }
+
+  /* ── FOR WHOM ── */
+  .lj-whom-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+  .lj-whom-card { background: var(--surface); border: 0.5px solid rgba(255,255,255,0.07); border-radius: 16px; padding: 24px 22px; }
+  .lj-whom-icon { font-size: 26px; margin-bottom: 14px; }
+  .lj-whom-title { font-family: 'Space Grotesk', sans-serif; font-size: 15px; font-weight: 700; color: var(--text); margin-bottom: 8px; }
+  .lj-whom-desc { font-size: 13px; color: var(--muted); line-height: 1.6; }
+
+  /* ── MODULES ── */
+  .lj-modules-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .lj-module { background: var(--surface); border: 0.5px solid rgba(255,255,255,0.07); border-radius: 14px; padding: 20px 22px; display: flex; gap: 16px; align-items: flex-start; transition: border-color 0.2s; }
+  .lj-module:hover { border-color: rgba(252,82,41,0.3); }
+  .lj-module-num { font-family: 'Space Grotesk', sans-serif; font-size: 11px; font-weight: 700; color: var(--accent); letter-spacing: 0.06em; flex-shrink: 0; padding-top: 2px; min-width: 24px; }
+  .lj-module-title { font-family: 'Space Grotesk', sans-serif; font-size: 14px; font-weight: 700; color: var(--text); margin-bottom: 5px; line-height: 1.3; }
+  .lj-module-desc { font-size: 12px; color: var(--muted); line-height: 1.6; }
+
+  /* ── SKILLS ── */
+  .lj-skills-wrap { display: flex; flex-wrap: wrap; gap: 8px; }
+  .lj-skill-tag { font-family: 'Space Grotesk', sans-serif; font-size: 12px; font-weight: 600; padding: 8px 16px; border-radius: 100px; border: 0.5px solid rgba(255,255,255,0.1); color: rgba(240,240,240,0.6); background: var(--surface); transition: all 0.2s; cursor: default; }
+  .lj-skill-tag:hover { background: rgba(252,82,41,0.1); border-color: rgba(252,82,41,0.3); color: var(--accent); }
+
+  /* ── OUTCOMES ── */
+  .lj-outcomes-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .lj-outcome { background: var(--surface); border: 0.5px solid rgba(255,255,255,0.07); border-radius: 14px; padding: 22px 22px; display: flex; gap: 14px; }
+  .lj-outcome-check { width: 28px; height: 28px; border-radius: 50%; background: rgba(252,82,41,0.1); display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 1px; }
+  .lj-outcome-check i { font-size: 15px; color: var(--accent); }
+  .lj-outcome-title { font-family: 'Space Grotesk', sans-serif; font-size: 14px; font-weight: 700; color: var(--text); margin-bottom: 5px; }
+  .lj-outcome-desc { font-size: 12px; color: var(--muted); line-height: 1.6; }
+
+  /* ── INSTRUCTOR ── */
+  .lj-instructor { background: var(--surface); border: 0.5px solid rgba(255,255,255,0.07); border-radius: 20px; padding: 32px; display: flex; gap: 28px; align-items: flex-start; }
+  .lj-instructor-img { width: 80px; height: 80px; border-radius: 50%; background: #2a2a2a; object-fit: cover; flex-shrink: 0; }
+  .lj-instructor-img-placeholder { width: 80px; height: 80px; border-radius: 50%; background: rgba(252,82,41,0.1); display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-family: 'Space Grotesk', sans-serif; font-size: 22px; font-weight: 700; color: var(--accent); }
+  .lj-instructor-name { font-family: 'Space Grotesk', sans-serif; font-size: 22px; font-weight: 700; color: var(--text); margin-bottom: 4px; letter-spacing: -0.5px; }
+  .lj-instructor-role { font-size: 13px; color: var(--accent); font-weight: 500; margin-bottom: 12px; }
+  .lj-instructor-bio { font-size: 13px; color: var(--muted); line-height: 1.7; margin-bottom: 20px; }
+  .lj-career-track { display: flex; flex-direction: column; gap: 10px; }
+  .lj-career-item { display: flex; gap: 12px; align-items: flex-start; }
+  .lj-career-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); margin-top: 5px; flex-shrink: 0; }
+  .lj-career-company { font-family: 'Space Grotesk', sans-serif; font-size: 13px; font-weight: 600; color: var(--text); }
+  .lj-career-period { font-size: 11px; color: var(--muted); margin-top: 1px; }
+
+  /* ── PROCESS ── */
+  .lj-process-row { display: flex; gap: 0; border: 0.5px solid var(--border); border-radius: 16px; overflow: hidden; }
+  .lj-process-step { flex: 1; padding: 28px 24px; border-right: 0.5px solid var(--border); }
+  .lj-process-step:last-child { border-right: none; }
+  .lj-process-num { font-family: 'Space Grotesk', sans-serif; font-size: 36px; font-weight: 700; color: var(--accent); line-height: 1; margin-bottom: 12px; opacity: 0.4; }
+  .lj-process-title { font-family: 'Space Grotesk', sans-serif; font-size: 15px; font-weight: 700; color: var(--text); margin-bottom: 6px; }
+  .lj-process-desc { font-size: 13px; color: var(--muted); line-height: 1.65; }
+
+  /* ── PRICING CARD ── */
+  .lj-pricing { background: var(--surface); border: 0.5px solid rgba(252,82,41,0.25); border-radius: 20px; padding: 32px; max-width: 480px; }
+  .lj-pricing-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 24px; }
+  .lj-pricing-label { font-size: 10px; font-weight: 700; font-family: 'Space Grotesk', sans-serif; letter-spacing: 0.1em; text-transform: uppercase; color: var(--accent); background: rgba(252,82,41,0.1); padding: 5px 12px; border-radius: 100px; }
+  .lj-pricing-price { font-family: 'Space Grotesk', sans-serif; font-size: 36px; font-weight: 700; color: var(--text); letter-spacing: -1.5px; line-height: 1; }
+  .lj-pricing-sub { font-size: 12px; color: var(--muted); margin-top: 3px; }
+  .lj-pricing-divider { height: 0.5px; background: var(--border); margin: 20px 0; }
+  .lj-pricing-features { display: flex; flex-direction: column; gap: 12px; margin-bottom: 24px; }
+  .lj-feature { display: flex; align-items: center; gap: 10px; font-size: 13px; color: var(--muted); }
+  .lj-feature i { color: var(--accent); font-size: 16px; flex-shrink: 0; }
+  .lj-feature strong { color: var(--text); }
+  .lj-pricing-open { font-size: 12px; color: var(--accent); text-align: center; margin-top: 12px; font-family: 'Space Grotesk', sans-serif; font-weight: 500; }
+
+  /* ── FAQ ── */
+  .lj-faq { display: flex; flex-direction: column; gap: 8px; }
+  .lj-faq-item { background: var(--surface); border: 0.5px solid rgba(255,255,255,0.07); border-radius: 12px; overflow: hidden; }
+  .lj-faq-q { display: flex; justify-content: space-between; align-items: center; padding: 18px 20px; cursor: pointer; font-family: 'Space Grotesk', sans-serif; font-size: 14px; font-weight: 600; color: var(--text); user-select: none; gap: 12px; }
+  .lj-faq-q:hover { color: var(--text); }
+  .lj-faq-icon { font-size: 18px; color: var(--muted); transition: transform 0.25s; flex-shrink: 0; }
+  .lj-faq-a { font-size: 13px; color: var(--muted); line-height: 1.7; padding: 0 20px 18px; display: none; }
+  .lj-faq-item.open .lj-faq-icon { transform: rotate(45deg); color: var(--accent); }
+  .lj-faq-item.open .lj-faq-a { display: block; }
+
+  /* ── FORM ── */
+  .lj-form-wrap { background: var(--surface); border: 0.5px solid rgba(255,255,255,0.07); border-radius: 20px; padding: 36px; }
+  .lj-form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .lj-form-full { grid-column: 1 / -1; }
+  .lj-field { display: flex; flex-direction: column; gap: 6px; }
+  .lj-label { font-size: 11px; color: var(--muted); font-family: 'Space Grotesk', sans-serif; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; }
+  .lj-input, .lj-select, .lj-textarea { background: #111; border: 0.5px solid rgba(255,255,255,0.1); border-radius: 10px; color: var(--text); font-size: 13px; font-family: 'Inter', sans-serif; padding: 11px 14px; outline: none; transition: border-color 0.2s; width: 100%; }
+  .lj-input:focus, .lj-select:focus, .lj-textarea:focus { border-color: var(--accent); }
+  .lj-select { cursor: pointer; }
+  .lj-textarea { resize: vertical; min-height: 90px; }
+  .lj-btn-submit { width: 100%; background: var(--accent); color: #fff; font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 15px; padding: 14px; border-radius: 100px; border: none; cursor: pointer; margin-top: 6px; transition: opacity 0.2s; }
+  .lj-btn-submit:hover { opacity: 0.88; }
+
+  /* ── FINAL CTA ── */
+  .lj-cta-wrap { padding: 0 32px 64px; max-width: 860px; margin: 0 auto; }
+  .lj-cta-box { background: var(--accent); border-radius: 20px; padding: 52px 48px; display: flex; align-items: center; justify-content: space-between; gap: 32px; }
+  .lj-cta-box h2 { font-family: 'Space Grotesk', sans-serif; font-size: 28px; font-weight: 700; letter-spacing: -1px; color: #fff; line-height: 1.2; }
+  .lj-cta-box p { font-size: 13px; color: rgba(255,255,255,0.72); margin-top: 8px; }
+  .lj-btn-cta { background: var(--bg); color: var(--accent); font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 14px; padding: 14px 28px; border-radius: 100px; border: none; cursor: pointer; white-space: nowrap; transition: opacity 0.2s; }
+  .lj-btn-cta:hover { opacity: 0.88; }
+
+  /* ── FOOTER ── */
+  .lj-footer { padding: 24px 32px; border-top: 0.5px solid var(--border); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; max-width: 860px; margin: 0 auto; }
+  .lj-footer-copy { font-size: 12px; color: var(--dim); }
+  .lj-footer-links { display: flex; gap: 20px; }
+  .lj-footer-links a { font-size: 12px; color: rgba(240,240,240,0.28); text-decoration: none; }
+  .lj-footer-links a:hover { color: var(--muted); }
+
+  /* ── DIVIDER ── */
+  .lj-rule { height: 0.5px; background: var(--border); max-width: 860px; margin: 0 auto; }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 680px) {
+    .lj-hero h1 { font-size: 38px; letter-spacing: -1.5px; }
+    .lj-whom-grid, .lj-modules-grid, .lj-outcomes-grid, .lj-form-grid { grid-template-columns: 1fr; }
+    .lj-stats-row, .lj-process-row { flex-direction: column; }
+    .lj-stat, .lj-process-step { border-right: none; border-bottom: 0.5px solid var(--border); }
+    .lj-stat:last-child, .lj-process-step:last-child { border-bottom: none; }
+    .lj-instructor { flex-direction: column; }
+    .lj-cta-box { flex-direction: column; text-align: center; padding: 36px 28px; }
+    .lj-nav-right .lj-nav-link { display: none; }
+    .lj-sec { padding: 40px 20px; }
+    .lj-hero { padding: 48px 20px 40px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav class="lj-nav">
+  <a href="https://linkajob.vn" class="lj-logo">LinkaJob</a>
+  <div class="lj-nav-right">
+    <a href="#modules" class="lj-nav-link">Nội dung</a>
+    <a href="#instructor" class="lj-nav-link">Giảng viên</a>
+    <a href="#faq" class="lj-nav-link">FAQ</a>
+    <button class="lj-btn-nav" onclick="document.getElementById('contact').scrollIntoView({behavior:'smooth'})">Đăng ký tư vấn</button>
+  </div>
+</nav>
+
+<!-- TICKER -->
+<div class="lj-ticker">
+  <div class="lj-ticker-track">
+    <span class="lj-ticker-item"><span>✦</span>Raw Materials</span>
+    <span class="lj-ticker-item"><span>✦</span>Demand Planning</span>
+    <span class="lj-ticker-item"><span>✦</span>Sourcing</span>
+    <span class="lj-ticker-item"><span>✦</span>Procurement</span>
+    <span class="lj-ticker-item"><span>✦</span>Manufacturing</span>
+    <span class="lj-ticker-item"><span>✦</span>Warehouse</span>
+    <span class="lj-ticker-item"><span>✦</span>Logistics</span>
+    <span class="lj-ticker-item"><span>✦</span>Inventory</span>
+    <span class="lj-ticker-item"><span>✦</span>Distribution</span>
+    <span class="lj-ticker-item"><span>✦</span>Reverse Logistics</span>
+    <span class="lj-ticker-item"><span>✦</span>Lazada · Maersk · OnPoint</span>
+    <!-- duplicate for infinite loop -->
+    <span class="lj-ticker-item"><span>✦</span>Raw Materials</span>
+    <span class="lj-ticker-item"><span>✦</span>Demand Planning</span>
+    <span class="lj-ticker-item"><span>✦</span>Sourcing</span>
+    <span class="lj-ticker-item"><span>✦</span>Procurement</span>
+    <span class="lj-ticker-item"><span>✦</span>Manufacturing</span>
+    <span class="lj-ticker-item"><span>✦</span>Warehouse</span>
+    <span class="lj-ticker-item"><span>✦</span>Logistics</span>
+    <span class="lj-ticker-item"><span>✦</span>Inventory</span>
+    <span class="lj-ticker-item"><span>✦</span>Distribution</span>
+    <span class="lj-ticker-item"><span>✦</span>Reverse Logistics</span>
+    <span class="lj-ticker-item"><span>✦</span>Lazada · Maersk · OnPoint</span>
+  </div>
+</div>
+
+<!-- HERO -->
+<section class="lj-hero">
+  <div class="lj-badge-row">
+    <div class="lj-pill"><span class="lj-pill-dot"></span>Khai giảng 01/07/2026</div>
+    <div class="lj-pill"><span class="lj-pill-dot"></span>4 tuần · 8 buổi · Zoom</div>
+    <div class="lj-pill"><span class="lj-pill-dot"></span>Giảng viên từ Lazada · Maersk</div>
+  </div>
+
+  <h1>Hiểu toàn diện<br><em>Supply Chain</em><br>từ nền tảng đến<br>thực chiến.</h1>
+  <p class="lj-hero-sub">Khoá học Supply Chain Principles giúp bạn nắm vững 11 thành phần chuỗi cung ứng — được đào tạo trực tiếp bởi chuyên gia 10+ năm tại Lazada, Maersk, OnPoint.</p>
+
+  <div class="lj-hero-cta">
+    <button class="lj-btn-primary" onclick="document.getElementById('contact').scrollIntoView({behavior:'smooth'})">Đăng ký tư vấn ngay</button>
+    <button class="lj-btn-ghost" onclick="document.getElementById('modules').scrollIntoView({behavior:'smooth'})">Xem nội dung khoá →</button>
+  </div>
+
+  <div class="lj-stats-row">
+    <div class="lj-stat">
+      <div class="lj-stat-num">11</div>
+      <div class="lj-stat-label">Thành phần chuỗi cung ứng</div>
+    </div>
+    <div class="lj-stat">
+      <div class="lj-stat-num">8</div>
+      <div class="lj-stat-label">Modules chuyên sâu</div>
+    </div>
+    <div class="lj-stat">
+      <div class="lj-stat-num">13</div>
+      <div class="lj-stat-label">Kỹ năng thực chiến</div>
+    </div>
+    <div class="lj-stat">
+      <div class="lj-stat-num">10+</div>
+      <div class="lj-stat-label">Năm kinh nghiệm GV</div>
+    </div>
+  </div>
+</section>
+
+<div class="lj-rule"></div>
+
+<!-- FOR WHOM -->
+<section class="lj-sec">
+  <div class="lj-sec-label">Khoá học này dành cho ai?</div>
+  <h2 class="lj-sec-title">Bạn là ai trong<br>bức tranh này?</h2>
+  <p class="lj-sec-sub">Khoá học phù hợp với những ai muốn bước vào ngành Supply Chain &amp; Logistics với nền tảng vững chắc.</p>
+
+  <div class="lj-whom-grid">
+    <div class="lj-whom-card">
+      <div class="lj-whom-icon">🎓</div>
+      <div class="lj-whom-title">Sinh viên</div>
+      <div class="lj-whom-desc">Đang học Kinh tế, Logistics, Quản trị kinh doanh và muốn apply vị trí Intern, Fresh Graduate tại các công ty đa quốc gia.</div>
+    </div>
+    <div class="lj-whom-card">
+      <div class="lj-whom-icon">🔄</div>
+      <div class="lj-whom-title">Người chuyển ngành</div>
+      <div class="lj-whom-desc">Đang làm ở lĩnh vực khác nhưng muốn hiểu Supply Chain để chuyển sang vị trí phù hợp trong chuỗi cung ứng.</div>
+    </div>
+    <div class="lj-whom-card">
+      <div class="lj-whom-icon">📈</div>
+      <div class="lj-whom-title">Fresher chưa định hướng</div>
+      <div class="lj-whom-desc">Đã có CV nhưng chưa rõ mình phù hợp vai trò nào: Planner, Buyer, Logistics Coordinator hay Warehouse Supervisor?</div>
+    </div>
+  </div>
+</section>
+
+<div class="lj-rule"></div>
+
+<!-- MODULES -->
+<section class="lj-sec" id="modules">
+  <div class="lj-sec-label">Nội dung khoá học</div>
+  <h2 class="lj-sec-title">4 tuần – 8 modules</h2>
+  <p class="lj-sec-sub">Từ bức tranh tổng thể đến từng mắt xích vận hành, bạn sẽ hiểu chuỗi cung ứng hoạt động như thế nào trong doanh nghiệp thực tế.</p>
+
+  <div class="lj-modules-grid">
+    <div class="lj-module">
+      <div class="lj-module-num">M1</div>
+      <div>
+        <div class="lj-module-title">Bức tranh tổng thể của Supply Chain &amp; Logistics</div>
+        <div class="lj-module-desc">Xác định đầy đủ 11 thành phần từ Raw Materials đến Reverse. Phân tích SC trong 3 ngành: E-commerce, Sản xuất, Bán lẻ.</div>
+      </div>
+    </div>
+    <div class="lj-module">
+      <div class="lj-module-num">M2</div>
+      <div>
+        <div class="lj-module-title">What's in Supply Chain?</div>
+        <div class="lj-module-desc">Hiểu sức cạnh tranh và xu hướng chuyển đổi số trong Supply Chain hiện đại — tại sao SC là xương sống của mọi doanh nghiệp.</div>
+      </div>
+    </div>
+    <div class="lj-module">
+      <div class="lj-module-num">M3</div>
+      <div>
+        <div class="lj-module-title">Planning – Nghệ thuật dự đoán &amp; lập kế hoạch</div>
+        <div class="lj-module-desc">Phân biệt 3 mô hình MTS, MTO, ETO. Vai trò cốt lõi của Demand Planning &amp; Supply Planning trong vận hành thực tế.</div>
+      </div>
+    </div>
+    <div class="lj-module">
+      <div class="lj-module-num">M4</div>
+      <div>
+        <div class="lj-module-title">Sourcing – Tìm kiếm &amp; đánh giá nguồn cung</div>
+        <div class="lj-module-desc">Toàn bộ quy trình Tender/RFQ, đánh giá supplier theo 5 mô hình sourcing, xây dựng bảng tiêu chí chọn nhà cung cấp.</div>
+      </div>
+    </div>
+    <div class="lj-module">
+      <div class="lj-module-num">M5</div>
+      <div>
+        <div class="lj-module-title">Procurement &amp; Purchasing – Mua hàng chiến lược</div>
+        <div class="lj-module-desc">Kỹ thuật, quy trình và công cụ tối ưu chi phí, giảm rủi ro và quản lý quan hệ nhà cung cấp hiệu quả.</div>
+      </div>
+    </div>
+    <div class="lj-module">
+      <div class="lj-module-num">M6</div>
+      <div>
+        <div class="lj-module-title">Manufacturing – Từ nguyên liệu đến sản phẩm</div>
+        <div class="lj-module-desc">Phân tích Production Plan hoàn chỉnh, đánh giá công suất và so sánh Discontinuous vs Continuous Manufacturing.</div>
+      </div>
+    </div>
+    <div class="lj-module">
+      <div class="lj-module-num">M7</div>
+      <div>
+        <div class="lj-module-title">B2B &amp; B2C – Logistics &amp; 5 phương thức vận tải</div>
+        <div class="lj-module-desc">Nắm các khái niệm Bulk/Break Bulk, LCL/LTL, FCL/FTL và sự khác biệt trong logistics B2B vs B2C.</div>
+      </div>
+    </div>
+    <div class="lj-module">
+      <div class="lj-module-num">M8</div>
+      <div>
+        <div class="lj-module-title">Reverse Logistics – Hành trình ngược &amp; giá trị thu hồi</div>
+        <div class="lj-module-desc">Mô hình Closed-loop Supply Chain, tác động môi trường và 7 vai trò của logistics ngược: Return, Recycling, Refurbishing…</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="lj-rule"></div>
+
+<!-- SKILLS -->
+<section class="lj-sec">
+  <div class="lj-sec-label">Kỹ năng đạt được</div>
+  <h2 class="lj-sec-title">13 kỹ năng bạn sẽ sở hữu</h2>
+  <p class="lj-sec-sub">Mỗi kỹ năng được xây dựng từ bài học thực tế — để bạn tự tin ứng tuyển ngay sau khoá.</p>
+
+  <div class="lj-skills-wrap">
+    <span class="lj-skill-tag">Supply Chain Fundamentals</span>
+    <span class="lj-skill-tag">Demand Planning</span>
+    <span class="lj-skill-tag">Supply Planning</span>
+    <span class="lj-skill-tag">Sourcing</span>
+    <span class="lj-skill-tag">Logistics Operations</span>
+    <span class="lj-skill-tag">Quality Control</span>
+    <span class="lj-skill-tag">Reverse Logistics</span>
+    <span class="lj-skill-tag">Tender Process</span>
+    <span class="lj-skill-tag">Inventory Management</span>
+    <span class="lj-skill-tag">Procurement</span>
+    <span class="lj-skill-tag">Warehouse Management</span>
+    <span class="lj-skill-tag">Transportation</span>
+    <span class="lj-skill-tag">Manufacturing Planning</span>
+  </div>
+</section>
+
+<div class="lj-rule"></div>
+
+<!-- OUTCOMES -->
+<section class="lj-sec">
+  <div class="lj-sec-label">Sau khoá học</div>
+  <h2 class="lj-sec-title">Bạn nhận được gì?</h2>
+  <p class="lj-sec-sub">Không chỉ kiến thức — bạn có một bộ công cụ thực chiến để bước vào thị trường lao động với lợi thế rõ ràng.</p>
+
+  <div class="lj-outcomes-grid">
+    <div class="lj-outcome">
+      <div class="lj-outcome-check"><i class="ti ti-check"></i></div>
+      <div>
+        <div class="lj-outcome-title">Nền tảng kiến thức vững chắc</div>
+        <div class="lj-outcome-desc">Hiểu rõ cách doanh nghiệp Supply Chain &amp; Logistics vận hành — từ tổng thể đến từng mắt xích.</div>
+      </div>
+    </div>
+    <div class="lj-outcome">
+      <div class="lj-outcome-check"><i class="ti ti-check"></i></div>
+      <div>
+        <div class="lj-outcome-title">Làm chủ kỹ năng phân tích</div>
+        <div class="lj-outcome-desc">Thành thạo Planning, Sourcing, Data Analysis và Process Mapping — những kỹ năng được nhà tuyển dụng tìm kiếm nhất.</div>
+      </div>
+    </div>
+    <div class="lj-outcome">
+      <div class="lj-outcome-check"><i class="ti ti-check"></i></div>
+      <div>
+        <div class="lj-outcome-title">Định hướng đúng vai trò</div>
+        <div class="lj-outcome-desc">Hiểu rõ mình phù hợp vị trí nào trong chuỗi cung ứng và xây dựng lộ trình sự nghiệp phù hợp.</div>
+      </div>
+    </div>
+    <div class="lj-outcome">
+      <div class="lj-outcome-check"><i class="ti ti-check"></i></div>
+      <div>
+        <div class="lj-outcome-title">Tài liệu ứng tuyển đa quốc gia</div>
+        <div class="lj-outcome-desc">Nhận bộ tài liệu hỗ trợ ứng tuyển vào các công ty đa quốc gia trong ngành Supply Chain &amp; Logistics.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="lj-rule"></div>
+
+<!-- INSTRUCTOR -->
+<section class="lj-sec" id="instructor">
+  <div class="lj-sec-label">Giảng viên</div>
+  <h2 class="lj-sec-title">Người đứng lớp</h2>
+  <p class="lj-sec-sub">Học từ người đã thực sự làm — không phải lý thuyết suông.</p>
+
+  <div class="lj-instructor">
+    <img src="https://linkajob.vn/wp-content/uploads/2026/06/supplychainprinciples.webp" alt="ThS. Trần Quốc Toản" class="lj-instructor-img" onerror="this.outerHTML='<div class=\'lj-instructor-img-placeholder\'>TT</div>'">
+    <div>
+      <div class="lj-instructor-name">ThS. Trần Quốc Toản</div>
+      <div class="lj-instructor-role">Advisor tại LinkaJob · Senior Operation Manager @ Lazada E-logistics</div>
+      <p class="lj-instructor-bio">Từ sản xuất, chuỗi cung ứng, thương mại điện tử đến logistics quốc tế — ThS. Trần Quốc Toản có hơn 10 năm làm việc thực chiến tại các tập đoàn đa quốc gia. Anh hiểu rõ từng vai trò trong chuỗi cung ứng và biết cách đào tạo để bạn không chỉ học lý thuyết mà còn ứng dụng được ngay vào công việc thực tế.</p>
+      <div class="lj-career-track">
+        <div class="lj-career-item">
+          <div class="lj-career-dot"></div>
+          <div>
+            <div class="lj-career-company">Senior Operation Manager · Lazada E-logistics</div>
+            <div class="lj-career-period">05/2026 – Hiện tại</div>
+          </div>
+        </div>
+        <div class="lj-career-item">
+          <div class="lj-career-dot"></div>
+          <div>
+            <div class="lj-career-company">Senior Business Solutions Manager · A.P. Moller – Maersk</div>
+            <div class="lj-career-period">06/2025 – 01/2026</div>
+          </div>
+        </div>
+        <div class="lj-career-item">
+          <div class="lj-career-dot"></div>
+          <div>
+            <div class="lj-career-company">Supply Chain &amp; Logistics Manager · OnPoint E-commerce</div>
+            <div class="lj-career-period">12/2021 – 10/2022</div>
+          </div>
+        </div>
+        <div class="lj-career-item">
+          <div class="lj-career-dot"></div>
+          <div>
+            <div class="lj-career-company">Inventory Manager → Outbound Manager · Lazada eLogistics Vietnam</div>
+            <div class="lj-career-period">01/2019 – 12/2021</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="lj-rule"></div>
+
+<!-- PRICING + PROCESS -->
+<section class="lj-sec">
+  <div class="lj-sec-label">Học phí &amp; Quy trình</div>
+  <h2 class="lj-sec-title">2 bước để bắt đầu</h2>
+  <p class="lj-sec-sub">Đơn giản, nhanh chóng — chúng tôi sẽ đồng hành từ bước đầu tiên.</p>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;align-items:start">
+    <!-- Pricing -->
+    <div class="lj-pricing">
+      <div class="lj-pricing-header">
+        <div>
+          <div class="lj-pricing-label">📦 Supply Chain Principles</div>
+        </div>
+      </div>
+      <div class="lj-pricing-price">5.000.000₫</div>
+      <div class="lj-pricing-sub">Thanh toán linh hoạt • Học trực tiếp cùng Advisor</div>
+      <div class="lj-pricing-divider"></div>
+      <div class="lj-pricing-features">
+        <div class="lj-feature"><i class="ti ti-calendar-event"></i><span>Khai giảng <strong>01/07/2026</strong></span></div>
+        <div class="lj-feature"><i class="ti ti-video"></i><span>Học qua <strong>Zoom</strong> · 4 tuần · 8 buổi</span></div>
+        <div class="lj-feature"><i class="ti ti-certificate"></i><span><strong>13 kỹ năng</strong> được chứng nhận</span></div>
+        <div class="lj-feature"><i class="ti ti-file-text"></i><span>Bộ tài liệu ứng tuyển <strong>MNC</strong></span></div>
+        <div class="lj-feature"><i class="ti ti-brand-zoom"></i><span>Ghi lại buổi học để <strong>ôn tập</strong></span></div>
+        <div class="lj-feature"><i class="ti ti-briefcase"></i><span>Giới thiệu <strong>cơ hội việc làm</strong> đối tác</span></div>
+      </div>
+      <button class="lj-btn-submit" onclick="document.getElementById('contact').scrollIntoView({behavior:'smooth'})">Đăng ký tư vấn →</button>
+      <div class="lj-pricing-open">Số lượng có hạn · Đăng ký sớm để giữ chỗ</div>
+    </div>
+
+    <!-- Process -->
+    <div style="display:flex;flex-direction:column;gap:12px;">
+      <div class="lj-process-row" style="border-radius:14px;flex-direction:column;">
+        <div class="lj-process-step" style="border-right:none;border-bottom:0.5px solid var(--border);">
+          <div class="lj-process-num">01</div>
+          <div class="lj-process-title">Đăng ký tư vấn</div>
+          <div class="lj-process-desc">Điền form bên dưới để LinkaJob liên hệ tư vấn lộ trình phù hợp với mục tiêu của bạn trong 24h.</div>
+        </div>
+        <div class="lj-process-step" style="border-right:none;">
+          <div class="lj-process-num">02</div>
+          <div class="lj-process-title">Xác nhận &amp; học thôi!</div>
+          <div class="lj-process-desc">Hoàn tất đăng ký, thanh toán linh hoạt và chuẩn bị cho ngày khai giảng <strong style="color:var(--accent)">01/07/2026</strong>.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="lj-rule"></div>
+
+<!-- CONTACT FORM -->
+<section class="lj-sec" id="contact">
+  <div class="lj-sec-label">Đăng ký ngay</div>
+  <h2 class="lj-sec-title">Sẵn sàng bắt đầu<br>hành trình Supply Chain?</h2>
+  <p class="lj-sec-sub">Khai giảng <strong style="color:var(--accent)">01/07/2026</strong>. Số lượng học viên có hạn để đảm bảo chất lượng đào tạo 1-1 với Advisor.</p>
+
+  <div class="lj-form-wrap">
+    <div class="lj-form-grid">
+      <div class="lj-field">
+        <label class="lj-label">Họ và tên</label>
+        <input class="lj-input" type="text" placeholder="Nguyễn Văn A">
+      </div>
+      <div class="lj-field">
+        <label class="lj-label">Email</label>
+        <input class="lj-input" type="email" placeholder="email@example.com">
+      </div>
+      <div class="lj-field">
+        <label class="lj-label">Số điện thoại</label>
+        <input class="lj-input" type="tel" placeholder="09xxxxxxxx">
+      </div>
+      <div class="lj-field">
+        <label class="lj-label">Bạn đang là</label>
+        <select class="lj-select">
+          <option value="">- Tình trạng của bạn -</option>
+          <option>Sinh viên năm 1, 2</option>
+          <option>Sinh viên năm 3, 4</option>
+          <option>Đã tốt nghiệp dưới 2 năm</option>
+          <option>Khác</option>
+        </select>
+      </div>
+      <div class="lj-field lj-form-full">
+        <label class="lj-label">Tình trạng cụ thể</label>
+        <input class="lj-input" type="text" placeholder="Ví dụ: Mình đang tìm intern vị trí Logistics tại MNC...">
+      </div>
+      <div class="lj-field lj-form-full">
+        <label class="lj-label">Khó khăn / Câu hỏi muốn giải đáp</label>
+        <textarea class="lj-textarea" placeholder="Ví dụ: Mình chưa biết mình phù hợp với vị trí nào trong Supply Chain..."></textarea>
+      </div>
+    </div>
+    <button class="lj-btn-submit" style="margin-top:20px">Gửi đăng ký tư vấn</button>
+  </div>
+</section>
+
+<div class="lj-rule"></div>
+
+<!-- FAQ -->
+<section class="lj-sec" id="faq">
+  <div class="lj-sec-label">Câu hỏi thường gặp</div>
+  <h2 class="lj-sec-title">Bạn đang thắc mắc<br>điều gì?</h2>
+  <p class="lj-sec-sub">Những câu hỏi phổ biến nhất từ học viên trước khi đăng ký.</p>
+
+  <div class="lj-faq">
+    <div class="lj-faq-item">
+      <div class="lj-faq-q" onclick="toggleFaq(this)">
+        Khoá học phù hợp với ai?
+        <i class="ti ti-plus lj-faq-icon"></i>
+      </div>
+      <div class="lj-faq-a">Khoá học dành cho sinh viên, fresher và người muốn chuyển sang ngành Supply Chain &amp; Logistics. Bạn không cần có kinh nghiệm trước — khoá học được thiết kế từ nền tảng, giúp bạn hiểu toàn bộ bức tranh chuỗi cung ứng từ đầu.</div>
+    </div>
+    <div class="lj-faq-item">
+      <div class="lj-faq-q" onclick="toggleFaq(this)">
+        Học theo hình thức nào?
+        <i class="ti ti-plus lj-faq-icon"></i>
+      </div>
+      <div class="lj-faq-a">Học trực tiếp với Giảng viên qua Zoom. Khoá học kéo dài 4 tuần với 8 buổi. Lịch học sẽ được thống nhất với học viên để phù hợp với thời gian của bạn.</div>
+    </div>
+    <div class="lj-faq-item">
+      <div class="lj-faq-q" onclick="toggleFaq(this)">
+        Học phí và thanh toán như thế nào?
+        <i class="ti ti-plus lj-faq-icon"></i>
+      </div>
+      <div class="lj-faq-a">Học phí khoá học là <strong>5.000.000 VNĐ</strong>. LinkaJob hỗ trợ thanh toán linh hoạt — bạn có thể trao đổi thêm với Advisor trong buổi tư vấn để biết các hình thức phù hợp.</div>
+    </div>
+    <div class="lj-faq-item">
+      <div class="lj-faq-q" onclick="toggleFaq(this)">
+        Khoá học khai giảng khi nào? Còn bao nhiêu chỗ?
+        <i class="ti ti-plus lj-faq-icon"></i>
+      </div>
+      <div class="lj-faq-a">Khoá học khai giảng ngày <strong>01/07/2026</strong>. Số lượng học viên có hạn để đảm bảo chất lượng tương tác 1-1 với Advisor. Bạn nên đăng ký sớm để giữ chỗ trước khi khoá đầy.</div>
+    </div>
+    <div class="lj-faq-item">
+      <div class="lj-faq-q" onclick="toggleFaq(this)">
+        Sau khoá học, tôi có thể ứng tuyển vị trí nào?
+        <i class="ti ti-plus lj-faq-icon"></i>
+      </div>
+      <div class="lj-faq-a">Bạn sẽ có đủ nền tảng để ứng tuyển các vị trí như: Supply Chain Analyst, Demand Planner, Sourcing Executive, Procurement Officer, Logistics Coordinator, Inventory Analyst, Warehouse Supervisor... tại các công ty Việt Nam và đa quốc gia.</div>
+    </div>
+    <div class="lj-faq-item">
+      <div class="lj-faq-q" onclick="toggleFaq(this)">
+        LinkaJob có hỗ trợ tìm việc sau khoá học không?
+        <i class="ti ti-plus lj-faq-icon"></i>
+      </div>
+      <div class="lj-faq-a">Có. Học viên sẽ nhận được bộ tài liệu hỗ trợ ứng tuyển vào các công ty đa quốc gia, được Advisor review CV và định hướng vai trò phù hợp. Ngoài ra, LinkaJob cũng giới thiệu cơ hội việc làm từ đối tác trực tiếp.</div>
+    </div>
+    <div class="lj-faq-item">
+      <div class="lj-faq-q" onclick="toggleFaq(this)">
+        Tôi có thể xem lại bài giảng sau buổi học không?
+        <i class="ti ti-plus lj-faq-icon"></i>
+      </div>
+      <div class="lj-faq-a">Buổi học qua Zoom sẽ được ghi lại và chia sẻ cho học viên để ôn tập. Ngoài ra bạn còn nhận được tài liệu kèm theo từng module để tham khảo sau khoá học.</div>
+    </div>
+  </div>
+</section>
+
+<!-- FINAL CTA -->
+<div class="lj-cta-wrap">
+  <div class="lj-cta-box">
+    <div>
+      <h2>Bắt đầu hành trình<br>Supply Chain của bạn.</h2>
+      <p>Khai giảng 01/07/2026 · Số lượng có hạn · Advisor phản hồi trong 24h.</p>
+    </div>
+    <button class="lj-btn-cta" onclick="document.getElementById('contact').scrollIntoView({behavior:'smooth'})">Đăng ký tư vấn ngay</button>
+  </div>
+</div>
+
+<!-- FOOTER -->
+<div class="lj-rule"></div>
+<footer class="lj-footer">
+  <a href="https://linkajob.vn" class="lj-logo" style="font-size:15px;">LinkaJob</a>
+  <div class="lj-footer-copy">© 2026 LinkaJob · Khoá học Supply Chain Principles</div>
+  <div class="lj-footer-links">
+    <a href="https://linkajob.vn">Trang chủ</a>
+    <a href="#">Blog</a>
+    <a href="#contact">Liên hệ</a>
+  </div>
+</footer>
+
+<script>
+  function toggleFaq(el) {
+    const item = el.parentElement;
+    const isOpen = item.classList.contains('open');
+    document.querySelectorAll('.lj-faq-item.open').forEach(i => i.classList.remove('open'));
+    if (!isOpen) item.classList.add('open');
+  }
+</script>
+</body>
+</html>
