@@ -1,422 +1,720 @@
-
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LinkaJob Dashboard</title>
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=Inter:wght@400;500&display=swap');
-*{box-sizing:border-box;margin:0;padding:0;}
-.wrap{font-family:'Inter',sans-serif;background:var(--color-background-tertiary);min-height:600px;}
+  * { margin: 0; padding: 0; box-sizing: border-box; }
 
-/* tab switcher */
-.tabs{display:flex;gap:0;border-bottom:0.5px solid var(--color-border-tertiary);background:var(--color-background-primary);padding:0 24px;}
-.tab{padding:14px 20px;font-family:'Space Grotesk',sans-serif;font-size:13px;font-weight:500;color:var(--color-text-secondary);cursor:pointer;border-bottom:2px solid transparent;transition:all .2s;background:none;border-top:none;border-left:none;border-right:none;display:flex;align-items:center;gap:7px;}
-.tab i{font-size:15px;}
-.tab.on{color:var(--color-text-primary);border-bottom-color:#fc5229;}
-.screen{display:none;padding:24px;}.screen.on{display:block;}
+  :root {
+    --brand: #F4451A;
+    --brand-light: #fff1ee;
+    --bg: #F7F6F3;
+    --white: #ffffff;
+    --text: #111111;
+    --muted: #555555;
+    --border: #D8D5D0;
+    --warn: #F4451A;
+    --radius-sm: 10px;
+    --radius-md: 16px;
+    --radius-lg: 20px;
+    --shadow: 0 1px 4px rgba(0,0,0,0.08), 0 0 0 1px rgba(0,0,0,0.06);
+  }
 
-/* ── ADVISOR PORTAL ── */
-.ap-header{background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:18px 20px;display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;}
-.ap-user{display:flex;align-items:center;gap:12px;}
-.ap-ava{width:42px;height:42px;border-radius:50%;background:#fdf1ee;display:flex;align-items:center;justify-content:center;font-family:'Space Grotesk',sans-serif;font-size:14px;font-weight:700;color:#fc5229;border:0.5px solid rgba(252,82,41,.2);flex-shrink:0;}
-.ap-name{font-family:'Space Grotesk',sans-serif;font-size:14px;font-weight:700;color:var(--color-text-primary);}
-.ap-role{font-size:12px;color:var(--color-text-secondary);}
-.ap-status{display:flex;align-items:center;gap:6px;background:var(--color-background-success);border:0.5px solid var(--color-border-success);border-radius:100px;padding:5px 12px;font-size:12px;color:var(--color-text-success);font-family:'Space Grotesk',sans-serif;font-weight:500;}
-.ap-status i{font-size:12px;}
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+  }
 
-/* week label */
-.week-bar{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;}
-.week-label{font-family:'Space Grotesk',sans-serif;font-size:13px;font-weight:700;color:var(--color-text-primary);}
-.week-sub{font-size:11px;color:var(--color-text-secondary);margin-top:2px;}
-.deadline-pill{display:flex;align-items:center;gap:5px;background:var(--color-background-warning);border:0.5px solid var(--color-border-warning);border-radius:100px;padding:4px 10px;font-size:11px;color:var(--color-text-warning);font-family:'Space Grotesk',sans-serif;font-weight:500;}
-.deadline-pill i{font-size:12px;}
+  /* ─── LOGIN PAGE ─── */
+  #login-page {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    padding: 40px 16px;
+  }
 
-/* slot grid */
-.slot-grid{background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);overflow:hidden;margin-bottom:16px;}
-.sg-head{display:grid;grid-template-columns:80px repeat(7,1fr);border-bottom:0.5px solid var(--color-border-tertiary);}
-.sg-head-cell{padding:10px 6px;text-align:center;font-size:11px;font-family:'Space Grotesk',sans-serif;font-weight:500;color:var(--color-text-secondary);border-right:0.5px solid var(--color-border-tertiary);}
-.sg-head-cell:last-child{border-right:none;}
-.sg-head-cell .day-name{font-size:11px;font-weight:700;color:var(--color-text-primary);}
-.sg-head-cell .day-date{font-size:10px;color:var(--color-text-secondary);margin-top:2px;}
-.sg-row{display:grid;grid-template-columns:80px repeat(7,1fr);border-bottom:0.5px solid var(--color-border-tertiary);}
-.sg-row:last-child{border-bottom:none;}
-.sg-time{padding:10px 8px;font-size:11px;color:var(--color-text-secondary);display:flex;align-items:center;justify-content:flex-end;border-right:0.5px solid var(--color-border-tertiary);}
-.sg-cell{padding:5px 4px;border-right:0.5px solid var(--color-border-tertiary);display:flex;align-items:center;justify-content:center;}
-.sg-cell:last-child{border-right:none;}
-.slot-btn{width:100%;padding:6px 0;border-radius:6px;font-size:10px;font-family:'Space Grotesk',sans-serif;font-weight:600;cursor:pointer;border:0.5px solid var(--color-border-tertiary);background:transparent;color:var(--color-text-secondary);transition:all .15s;}
-.slot-btn:hover{border-color:rgba(252,82,41,.4);color:#fc5229;background:rgba(252,82,41,.05);}
-.slot-btn.on{background:rgba(252,82,41,.08);border-color:#fc5229;color:#fc5229;}
-.slot-btn.booked{background:var(--color-background-secondary);border-color:var(--color-border-tertiary);color:var(--color-text-secondary);cursor:default;opacity:.5;}
-.slot-btn.booked::after{content:'Đã book';display:block;font-size:9px;}
+  .logo-row {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 40px;
+  }
 
-/* summary bar */
-.sum-bar{background:var(--color-background-secondary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-md);padding:12px 16px;display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
-.sum-count{font-family:'Space Grotesk',sans-serif;font-size:13px;font-weight:700;color:var(--color-text-primary);}
-.sum-hint{font-size:11px;color:var(--color-text-secondary);margin-top:2px;}
-.ap-submit{width:100%;padding:13px;background:#fc5229;border:none;border-radius:100px;font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:14px;color:#fff;cursor:pointer;}
-.ap-submit:disabled{opacity:.35;cursor:not-allowed;}
+  .logo-icon {
+    width: 52px; height: 52px;
+    background: var(--brand);
+    border-radius: 14px;
+    display: flex; align-items: center; justify-content: center;
+  }
 
-/* booked sessions indicator */
-.booked-sessions{background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:16px 18px;margin-bottom:16px;}
-.bs-label{font-size:11px;color:var(--color-text-secondary);font-family:'Space Grotesk',sans-serif;letter-spacing:.06em;text-transform:uppercase;margin-bottom:12px;}
-.bs-item{display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-bottom:0.5px solid var(--color-border-tertiary);}
-.bs-item:last-child{border-bottom:none;}
-.bs-who{display:flex;align-items:center;gap:10px;}
-.bs-ava{width:28px;height:28px;border-radius:50%;background:var(--color-background-info);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;font-family:'Space Grotesk',sans-serif;color:var(--color-text-info);flex-shrink:0;}
-.bs-name{font-size:13px;font-weight:500;color:var(--color-text-primary);}
-.bs-pkg{font-size:11px;color:var(--color-text-secondary);}
-.bs-time{font-size:12px;font-family:'Space Grotesk',sans-serif;font-weight:500;color:var(--color-text-primary);text-align:right;}
-.bs-time-sub{font-size:10px;color:var(--color-text-secondary);}
+  .logo-icon svg { width: 26px; height: 26px; }
 
-/* ── ADVISEE BOOKING ── */
-.bk-header{background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:18px 20px;margin-bottom:16px;}
-.bk-advisor{display:flex;align-items:center;gap:12px;margin-bottom:14px;}
-.bk-adv-ava{width:48px;height:48px;border-radius:50%;background:#fdf1ee;display:flex;align-items:center;justify-content:center;font-family:'Space Grotesk',sans-serif;font-size:16px;font-weight:700;color:#fc5229;border:0.5px solid rgba(252,82,41,.2);}
-.bk-adv-name{font-family:'Space Grotesk',sans-serif;font-size:15px;font-weight:700;color:var(--color-text-primary);}
-.bk-adv-role{font-size:12px;color:var(--color-text-secondary);}
-.bk-adv-co{font-size:11px;color:var(--color-text-secondary);}
-.bk-pkg-row{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:var(--color-background-secondary);border-radius:var(--border-radius-md);}
-.bk-pkg-left{display:flex;align-items:center;gap:8px;}
-.bk-pkg-dot{width:6px;height:6px;border-radius:50%;background:#fc5229;}
-.bk-pkg-name{font-family:'Space Grotesk',sans-serif;font-size:13px;font-weight:700;color:var(--color-text-primary);}
-.bk-pkg-sess{font-size:11px;color:var(--color-text-secondary);}
-.bk-pkg-remain{font-size:11px;color:#fc5229;font-family:'Space Grotesk',sans-serif;font-weight:600;}
+  .logo-name {
+    font-size: 28px;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+  }
 
-/* calendar picker */
-.cal-section{background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);overflow:hidden;margin-bottom:14px;}
-.cal-top{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:0.5px solid var(--color-border-tertiary);}
-.cal-title{font-family:'Space Grotesk',sans-serif;font-size:13px;font-weight:700;color:var(--color-text-primary);}
-.cal-nav{display:flex;gap:4px;}
-.cal-nav-btn{width:28px;height:28px;border-radius:var(--border-radius-md);border:0.5px solid var(--color-border-tertiary);background:transparent;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--color-text-secondary);}
-.cal-nav-btn i{font-size:14px;}
-.cal-nav-btn:hover{background:var(--color-background-secondary);}
-.cal-days-head{display:grid;grid-template-columns:repeat(7,1fr);padding:8px 12px 0;}
-.cal-day-lbl{text-align:center;font-size:10px;font-family:'Space Grotesk',sans-serif;font-weight:500;color:var(--color-text-secondary);padding:4px 0;}
-.cal-days{display:grid;grid-template-columns:repeat(7,1fr);padding:4px 12px 12px;gap:3px;}
-.cal-day{height:32px;border-radius:var(--border-radius-md);display:flex;align-items:center;justify-content:center;font-size:13px;cursor:pointer;color:var(--color-text-secondary);transition:all .15s;position:relative;}
-.cal-day:hover:not(.empty):not(.past):not(.no-slots){background:var(--color-background-secondary);}
-.cal-day.has-slots{color:var(--color-text-primary);font-weight:500;}
-.cal-day.has-slots::after{content:'';position:absolute;bottom:3px;left:50%;transform:translateX(-50%);width:4px;height:4px;border-radius:50%;background:#fc5229;}
-.cal-day.selected{background:#fc5229;color:#fff;font-weight:700;}
-.cal-day.selected::after{display:none;}
-.cal-day.past{opacity:.3;cursor:default;}
-.cal-day.empty{pointer-events:none;}
-.cal-day.no-slots{opacity:.25;cursor:default;}
+  .login-card {
+    background: var(--white);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow);
+    padding: 40px 44px 44px;
+    width: 100%;
+    max-width: 520px;
+  }
 
-/* time slots */
-.time-section{background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:16px;margin-bottom:14px;}
-.ts-label{font-size:11px;color:var(--color-text-secondary);font-family:'Space Grotesk',sans-serif;letter-spacing:.06em;text-transform:uppercase;margin-bottom:12px;}
-.ts-slots{display:flex;flex-wrap:wrap;gap:8px;}
-.ts-slot{padding:9px 16px;border-radius:100px;border:0.5px solid var(--color-border-tertiary);font-size:13px;font-family:'Space Grotesk',sans-serif;font-weight:500;color:var(--color-text-primary);cursor:pointer;transition:all .15s;background:transparent;}
-.ts-slot:hover{border-color:rgba(252,82,41,.4);color:#fc5229;}
-.ts-slot.on{background:#fc5229;border-color:#fc5229;color:#fff;}
-.ts-slot.taken{opacity:.3;cursor:default;text-decoration:line-through;}
+  .login-card h2 {
+    font-size: 28px;
+    font-weight: 700;
+    margin-bottom: 6px;
+  }
 
-/* question box */
-.q-section{background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:16px;margin-bottom:14px;}
-.q-label{font-size:11px;color:var(--color-text-secondary);font-family:'Space Grotesk',sans-serif;letter-spacing:.06em;text-transform:uppercase;margin-bottom:8px;}
-.q-hint{font-size:12px;color:var(--color-text-secondary);margin-bottom:10px;line-height:1.6;}
-.q-input{width:100%;border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-md);padding:10px 12px;font-size:13px;font-family:'Inter',sans-serif;color:var(--color-text-primary);background:var(--color-background-secondary);resize:none;outline:none;line-height:1.6;}
-.q-input:focus{border-color:rgba(252,82,41,.5);}
+  .login-card .subtitle {
+    font-size: 17px;
+    color: var(--muted);
+    margin-bottom: 32px;
+  }
 
-/* confirm strip */
-.bk-confirm-strip{background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:14px 16px;margin-bottom:14px;}
-.bk-confirm-row{display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:0.5px solid var(--color-border-tertiary);}
-.bk-confirm-row:last-child{border-bottom:none;}
-.bk-cl{font-size:12px;color:var(--color-text-secondary);}
-.bk-cv{font-size:13px;font-family:'Space Grotesk',sans-serif;font-weight:600;color:var(--color-text-primary);}
-.bk-cv.o{color:#fc5229;}
-.bk-cv.gray{color:var(--color-text-secondary);font-weight:400;}
+  .field-label {
+    font-size: 15px;
+    color: var(--muted);
+    margin-bottom: 8px;
+  }
 
-.bk-submit{width:100%;padding:13px;background:#fc5229;border:none;border-radius:100px;font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:14px;color:#fff;cursor:pointer;}
-.bk-submit:disabled{opacity:.3;cursor:not-allowed;}
+  .field-group {
+    margin-bottom: 20px;
+  }
 
-/* success state */
-.success-box{background:var(--color-background-success);border:0.5px solid var(--color-border-success);border-radius:var(--border-radius-lg);padding:24px;text-align:center;display:none;}
-.success-box.show{display:block;}
-.success-icon{width:48px;height:48px;border-radius:50%;background:var(--color-text-success);display:flex;align-items:center;justify-content:center;margin:0 auto 14px;}
-.success-icon i{font-size:22px;color:#fff;}
-.success-title{font-family:'Space Grotesk',sans-serif;font-size:16px;font-weight:700;color:var(--color-text-success);margin-bottom:6px;}
-.success-sub{font-size:13px;color:var(--color-text-secondary);line-height:1.6;}
+  .field-input {
+    width: 100%;
+    padding: 16px 18px;
+    font-size: 18px;
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--white);
+    color: var(--text);
+    outline: none;
+    transition: border-color 0.15s;
+  }
+
+  .field-input:focus {
+    border-color: var(--brand);
+  }
+
+  .role-row {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 24px;
+  }
+
+  .role-btn {
+    flex: 1;
+    padding: 16px 0;
+    font-size: 17px;
+    font-weight: 500;
+    border-radius: 100px;
+    border: 1.5px solid var(--border);
+    background: var(--white);
+    color: var(--muted);
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .role-btn.active {
+    background: var(--brand);
+    color: #fff;
+    border-color: var(--brand);
+    font-weight: 600;
+  }
+
+  .role-btn:hover:not(.active) {
+    border-color: var(--brand);
+    color: var(--brand);
+  }
+
+  .login-btn {
+    width: 100%;
+    padding: 18px;
+    font-size: 18px;
+    font-weight: 700;
+    border-radius: var(--radius-sm);
+    border: 1.5px solid var(--border);
+    background: var(--white);
+    color: var(--text);
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .login-btn:hover {
+    background: var(--brand);
+    color: #fff;
+    border-color: var(--brand);
+  }
+
+  /* ─── DASHBOARD PAGE ─── */
+  #dashboard-page {
+    display: none;
+    min-height: 100vh;
+    background: var(--bg);
+  }
+
+  /* Navbar */
+  .navbar {
+    background: var(--white);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 28px;
+    height: 58px;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+
+  .nav-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .nav-logo-icon {
+    width: 34px; height: 34px;
+    background: var(--brand);
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+  }
+
+  .nav-logo-icon svg { width: 18px; height: 18px; }
+
+  .nav-brand { font-size: 17px; font-weight: 700; }
+
+  .role-badge {
+    background: #FFE9E4;
+    color: var(--brand);
+    font-size: 13px;
+    font-weight: 600;
+    padding: 3px 10px;
+    border-radius: 100px;
+  }
+
+  .nav-user {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 15px;
+    font-weight: 500;
+  }
+
+  .avatar {
+    width: 34px; height: 34px;
+    border-radius: 50%;
+    background: #D6CFBF;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text);
+    flex-shrink: 0;
+  }
+
+  /* Tabs */
+  .tab-bar {
+    background: var(--white);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    gap: 4px;
+    padding: 0 28px;
+  }
+
+  .tab {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 14px 16px;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--muted);
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    transition: all 0.15s;
+    white-space: nowrap;
+  }
+
+  .tab.active {
+    color: var(--text);
+    border-bottom-color: var(--text);
+    font-weight: 600;
+  }
+
+  .tab:hover:not(.active) { color: var(--text); }
+
+  .tab-icon {
+    width: 16px; height: 16px;
+    border: 1.5px solid currentColor;
+    border-radius: 3px;
+    display: inline-flex;
+    flex-shrink: 0;
+  }
+
+  /* Content */
+  .content {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 32px 24px;
+  }
+
+  /* Stats row */
+  .stats-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0;
+    margin-bottom: 24px;
+    background: var(--white);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow);
+    overflow: hidden;
+  }
+
+  .stat-cell {
+    padding: 24px 28px;
+  }
+
+  .stat-cell + .stat-cell {
+    border-left: 1px solid var(--border);
+  }
+
+  .stat-num {
+    font-size: 36px;
+    font-weight: 800;
+    line-height: 1;
+    margin-bottom: 6px;
+  }
+
+  .stat-label {
+    font-size: 14px;
+    color: var(--muted);
+    margin-bottom: 8px;
+  }
+
+  .stat-detail {
+    font-size: 13px;
+    color: var(--muted);
+    line-height: 1.5;
+  }
+
+  .stat-detail .highlight { color: var(--brand); font-weight: 600; }
+
+  /* Cards */
+  .card {
+    background: var(--white);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow);
+    margin-bottom: 20px;
+    overflow: hidden;
+  }
+
+  .card-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 20px 24px 16px;
+    font-size: 16px;
+    font-weight: 700;
+  }
+
+  .card-header .tab-icon { border-color: var(--text); }
+
+  /* Session list */
+  .session-item {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 16px 24px;
+    border-top: 1px solid var(--border);
+  }
+
+  .session-item:last-child { border-bottom: none; }
+
+  .av-circle {
+    width: 40px; height: 40px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px;
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+
+  .av-gh { background: #D0E8FF; color: #2475B0; }
+  .av-ta { background: #FFD6D0; color: #C0392B; }
+  .av-pl { background: #D0E8FF; color: #2475B0; }
+
+  .session-info { flex: 1; min-width: 0; }
+
+  .session-name {
+    font-size: 15px;
+    font-weight: 600;
+    margin-bottom: 2px;
+  }
+
+  .session-meta {
+    font-size: 13px;
+    color: var(--muted);
+  }
+
+  .session-time {
+    text-align: right;
+    font-size: 13px;
+    color: var(--muted);
+    line-height: 1.5;
+    flex-shrink: 0;
+    margin-right: 14px;
+  }
+
+  .session-time strong {
+    display: block;
+    font-size: 14px;
+    color: var(--text);
+    font-weight: 600;
+  }
+
+  .detail-btn {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    padding: 9px 16px;
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-sm);
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text);
+    background: var(--white);
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.15s;
+  }
+
+  .detail-btn:hover {
+    border-color: var(--brand);
+    color: var(--brand);
+  }
+
+  .detail-btn .tab-icon { width: 13px; height: 13px; }
+
+  /* Advisee table */
+  .advisee-table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  .advisee-table thead tr {
+    border-top: 1px solid var(--border);
+  }
+
+  .advisee-table th {
+    padding: 10px 24px;
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--muted);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    text-align: left;
+  }
+
+  .advisee-table td {
+    padding: 16px 24px;
+    font-size: 14px;
+    border-top: 1px solid var(--border);
+    vertical-align: middle;
+  }
+
+  .advisee-table th:nth-child(3),
+  .advisee-table td:nth-child(3) { text-align: center; }
+
+  .advisee-name { font-weight: 600; font-size: 14px; margin-bottom: 2px; }
+  .advisee-sub { font-size: 12px; color: var(--muted); }
+
+  .remaining {
+    font-weight: 700;
+    font-size: 15px;
+  }
+
+  .remaining.warn { color: var(--brand); }
+
+  .empty-dash { color: var(--muted); }
+
+  /* Tab panels */
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+
+  /* Send schedule panel placeholder */
+  .placeholder-panel {
+    background: var(--white);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow);
+    padding: 60px 40px;
+    text-align: center;
+    color: var(--muted);
+  }
+
+  .placeholder-panel h3 { font-size: 18px; color: var(--text); margin-bottom: 8px; }
+  .placeholder-panel p { font-size: 14px; }
 </style>
+</head>
+<body>
 
-<div class="wrap">
-<h2 class="sr-only">LinkaJob scheduling: Advisor portal and Advisee booking page</h2>
+<!-- ═══════════════════════════════════════════════
+     LOGIN PAGE
+═══════════════════════════════════════════════ -->
+<div id="login-page">
+  <div class="logo-row">
+    <div class="logo-icon">
+      <svg viewBox="0 0 26 26" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect x="4" y="4" width="18" height="18" rx="3" stroke="white" stroke-width="2.2" fill="none"/>
+      </svg>
+    </div>
+    <div class="logo-name">LinkaJob</div>
+  </div>
 
-<div class="tabs">
-  <button class="tab on" onclick="switchTab('advisor')"><i class="ti ti-calendar-event" aria-hidden="true"></i>Advisor Portal — gửi lịch trống</button>
-  <button class="tab" onclick="switchTab('booking')"><i class="ti ti-clock" aria-hidden="true"></i>Advisee — đặt lịch buổi meeting</button>
+  <div class="login-card">
+    <h2>Đăng nhập</h2>
+    <p class="subtitle">Chọn vai trò để truy cập dashboard phù hợp</p>
+
+    <div class="field-group">
+      <div class="field-label">Email</div>
+      <input class="field-input" type="email" value="nguyenvukien@linkajob.vn" placeholder="Email của bạn" id="login-email">
+    </div>
+
+    <div class="field-group">
+      <div class="field-label">Mật khẩu</div>
+      <input class="field-input" type="password" value="●●●●●●●●" placeholder="Mật khẩu" id="login-password">
+    </div>
+
+    <div class="field-group">
+      <div class="field-label">Vai trò</div>
+      <div class="role-row">
+        <button class="role-btn" onclick="selectRole('Staff', this)">Staff</button>
+        <button class="role-btn active" onclick="selectRole('Advisor', this)">Advisor</button>
+        <button class="role-btn" onclick="selectRole('Advisee', this)">Advisee</button>
+      </div>
+    </div>
+
+    <button class="login-btn" onclick="doLogin()">Đăng nhập</button>
+  </div>
 </div>
 
-<!-- ══════════════════════════════════
-     SCREEN 1: ADVISOR PORTAL
-     ══════════════════════════════════ -->
-<div class="screen on" id="s-advisor">
 
-  <div class="ap-header">
-    <div class="ap-user">
-      <div class="ap-ava">KV</div>
-      <div>
-        <div class="ap-name">Nguyễn Vũ Trí Kiên</div>
-        <div class="ap-role">Brand Manager · Suntory PepsiCo Vietnam</div>
+<!-- ═══════════════════════════════════════════════
+     DASHBOARD PAGE
+═══════════════════════════════════════════════ -->
+<div id="dashboard-page">
+
+  <!-- Navbar -->
+  <nav class="navbar">
+    <div class="nav-left">
+      <div class="nav-logo-icon">
+        <svg viewBox="0 0 26 26" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect x="4" y="4" width="18" height="18" rx="3" stroke="white" stroke-width="2.2" fill="none"/>
+        </svg>
       </div>
+      <span class="nav-brand">LinkaJob</span>
+      <span class="role-badge" id="role-badge">Advisor</span>
     </div>
-    <div class="ap-status"><i class="ti ti-users" aria-hidden="true"></i>3 advisee đang active</div>
-  </div>
+    <div class="nav-user">
+      <div class="avatar" id="user-avatar">KV</div>
+      <span id="user-name">Nguyễn Vũ Trí Kiên</span>
+    </div>
+  </nav>
 
-  <!-- booked sessions this week -->
-  <div class="booked-sessions">
-    <div class="bs-label">Lịch đã book tuần này</div>
-    <div class="bs-item">
-      <div class="bs-who">
-        <div class="bs-ava">GH</div>
-        <div><div class="bs-name">Gia Hân</div><div class="bs-pkg">Gói Đặc Biệt · Buổi 2/4</div></div>
-      </div>
-      <div><div class="bs-time">T3, 23/6</div><div class="bs-time-sub">20:00 – 21:00</div></div>
+  <!-- Tab bar -->
+  <div class="tab-bar">
+    <div class="tab active" onclick="switchTab('overview', this)">
+      <span class="tab-icon"></span> Tổng quan
     </div>
-    <div class="bs-item">
-      <div class="bs-who">
-        <div class="bs-ava">BT</div>
-        <div><div class="bs-name">Bùi Tuấn Anh</div><div class="bs-pkg">Gói Cơ Bản · Buổi 1/2</div></div>
-      </div>
-      <div><div class="bs-time">T5, 25/6</div><div class="bs-time-sub">19:00 – 20:00</div></div>
+    <div class="tab" onclick="switchTab('schedule', this)">
+      <span class="tab-icon"></span> Gửi lịch cố vấn
     </div>
-  </div>
-
-  <!-- week slot submission -->
-  <div class="week-bar">
-    <div>
-      <div class="week-label">Lịch trống tuần sau — 30/6 đến 6/7</div>
-      <div class="week-sub">Chọn các slot bạn available. Advisee sẽ đặt vào các slot này.</div>
-    </div>
-    <div class="deadline-pill"><i class="ti ti-alarm" aria-hidden="true"></i>Deadline: CN 10pm</div>
-  </div>
-
-  <div class="slot-grid">
-    <div class="sg-head">
-      <div class="sg-head-cell"></div>
-      <div class="sg-head-cell"><div class="day-name">T2</div><div class="day-date">30/6</div></div>
-      <div class="sg-head-cell"><div class="day-name">T3</div><div class="day-date">1/7</div></div>
-      <div class="sg-head-cell"><div class="day-name">T4</div><div class="day-date">2/7</div></div>
-      <div class="sg-head-cell"><div class="day-name">T5</div><div class="day-date">3/7</div></div>
-      <div class="sg-head-cell"><div class="day-name">T6</div><div class="day-date">4/7</div></div>
-      <div class="sg-head-cell"><div class="day-name">T7</div><div class="day-date">5/7</div></div>
-      <div class="sg-head-cell"><div class="day-name">CN</div><div class="day-date">6/7</div></div>
-    </div>
-    <div class="sg-row">
-      <div class="sg-time">19:00–20:00</div>
-      <div class="sg-cell"><button class="slot-btn" onclick="togSlot(this)">Trống</button></div>
-      <div class="sg-cell"><button class="slot-btn booked" disabled>Đã book</button></div>
-      <div class="sg-cell"><button class="slot-btn" onclick="togSlot(this)">Trống</button></div>
-      <div class="sg-cell"><button class="slot-btn" onclick="togSlot(this)">Trống</button></div>
-      <div class="sg-cell"><button class="slot-btn on" onclick="togSlot(this)">Có mặt</button></div>
-      <div class="sg-cell"><button class="slot-btn" onclick="togSlot(this)">Trống</button></div>
-      <div class="sg-cell"><button class="slot-btn" onclick="togSlot(this)">Trống</button></div>
-    </div>
-    <div class="sg-row">
-      <div class="sg-time">20:00–21:00</div>
-      <div class="sg-cell"><button class="slot-btn on" onclick="togSlot(this)">Có mặt</button></div>
-      <div class="sg-cell"><button class="slot-btn on" onclick="togSlot(this)">Có mặt</button></div>
-      <div class="sg-cell"><button class="slot-btn" onclick="togSlot(this)">Trống</button></div>
-      <div class="sg-cell"><button class="slot-btn on" onclick="togSlot(this)">Có mặt</button></div>
-      <div class="sg-cell"><button class="slot-btn" onclick="togSlot(this)">Trống</button></div>
-      <div class="sg-cell"><button class="slot-btn on" onclick="togSlot(this)">Có mặt</button></div>
-      <div class="sg-cell"><button class="slot-btn" onclick="togSlot(this)">Trống</button></div>
-    </div>
-    <div class="sg-row">
-      <div class="sg-time">21:00–22:00</div>
-      <div class="sg-cell"><button class="slot-btn" onclick="togSlot(this)">Trống</button></div>
-      <div class="sg-cell"><button class="slot-btn" onclick="togSlot(this)">Trống</button></div>
-      <div class="sg-cell"><button class="slot-btn on" onclick="togSlot(this)">Có mặt</button></div>
-      <div class="sg-cell"><button class="slot-btn" onclick="togSlot(this)">Trống</button></div>
-      <div class="sg-cell"><button class="slot-btn on" onclick="togSlot(this)">Có mặt</button></div>
-      <div class="sg-cell"><button class="slot-btn" onclick="togSlot(this)">Trống</button></div>
-      <div class="sg-cell"><button class="slot-btn" onclick="togSlot(this)">Trống</button></div>
+    <div class="tab" onclick="switchTab('booked', this)">
+      <span class="tab-icon"></span> Buổi đã book
     </div>
   </div>
 
-  <div class="sum-bar">
-    <div>
-      <div class="sum-count" id="slotCount">6 slot đã chọn</div>
-      <div class="sum-hint">Advisee sẽ thấy và đặt vào các slot này từ thứ Hai</div>
-    </div>
-  </div>
-  <button class="ap-submit" id="apSubmit" onclick="submitSlots()">Xác nhận lịch trống tuần 30/6 – 6/7</button>
+  <!-- Content -->
+  <div class="content">
 
-</div>
+    <!-- Tab: Tổng quan -->
+    <div class="tab-panel active" id="tab-overview">
 
-<!-- ══════════════════════════════════
-     SCREEN 2: ADVISEE BOOKING
-     ══════════════════════════════════ -->
-<div class="screen" id="s-booking">
-
-  <div class="bk-header">
-    <div class="bk-advisor">
-      <div class="bk-adv-ava">KV</div>
-      <div>
-        <div class="bk-adv-name">Nguyễn Vũ Trí Kiên</div>
-        <div class="bk-adv-role">Brand Manager</div>
-        <div class="bk-adv-co">Suntory PepsiCo Vietnam</div>
-      </div>
-    </div>
-    <div class="bk-pkg-row">
-      <div class="bk-pkg-left">
-        <div class="bk-pkg-dot"></div>
-        <div>
-          <div class="bk-pkg-name">Gói Đặc Biệt</div>
-          <div class="bk-pkg-sess">4 buổi · 45–60 phút</div>
+      <!-- Stats -->
+      <div class="stats-row">
+        <div class="stat-cell">
+          <div class="stat-num">3</div>
+          <div class="stat-label">Advisee active</div>
+        </div>
+        <div class="stat-cell">
+          <div class="stat-num">6</div>
+          <div class="stat-label">Cần gửi lịch trống</div>
+          <div class="stat-detail">
+            <span class="highlight">2</span> advisee × 2 buổi/tuần + <span class="highlight">1</span> backup<br>
+            = tối thiểu <span class="highlight">5</span> slot, khuyến nghị <span class="highlight">6</span>
+          </div>
+        </div>
+        <div class="stat-cell">
+          <div class="stat-num">28</div>
+          <div class="stat-label">Tổng buổi hoàn thành</div>
         </div>
       </div>
-      <div class="bk-pkg-remain">Còn 3 buổi</div>
-    </div>
-  </div>
 
-  <div id="bk-form-wrap">
-    <!-- calendar -->
-    <div class="cal-section">
-      <div class="cal-top">
-        <div class="cal-title">Tháng 7, 2025</div>
-        <div class="cal-nav">
-          <button class="cal-nav-btn" aria-label="Tuần trước"><i class="ti ti-chevron-left" aria-hidden="true"></i></button>
-          <button class="cal-nav-btn" aria-label="Tuần sau"><i class="ti ti-chevron-right" aria-hidden="true"></i></button>
+      <!-- Lịch đã book tuần này -->
+      <div class="card">
+        <div class="card-header">
+          <span class="tab-icon"></span>
+          Lịch đã book tuần này
+        </div>
+
+        <div class="session-item">
+          <div class="av-circle av-gh">GH</div>
+          <div class="session-info">
+            <div class="session-name">Trần Gia Hân</div>
+            <div class="session-meta">Gói Đặc Biệt · Buổi 2/4</div>
+          </div>
+          <div class="session-time">
+            <strong>T3, 1/7</strong>
+            20:00 – 21:00
+          </div>
+          <button class="detail-btn">
+            <span class="tab-icon"></span> Chi tiết buổi
+          </button>
+        </div>
+
+        <div class="session-item">
+          <div class="av-circle av-ta">TA</div>
+          <div class="session-info">
+            <div class="session-name">Bùi Tuấn Anh</div>
+            <div class="session-meta">Gói Cơ Bản · Buổi 1/2</div>
+          </div>
+          <div class="session-time">
+            <strong>T5, 3/7</strong>
+            19:00 – 20:00
+          </div>
+          <button class="detail-btn">
+            <span class="tab-icon"></span> Chi tiết buổi
+          </button>
         </div>
       </div>
-      <div class="cal-days-head">
-        <div class="cal-day-lbl">T2</div><div class="cal-day-lbl">T3</div><div class="cal-day-lbl">T4</div>
-        <div class="cal-day-lbl">T5</div><div class="cal-day-lbl">T6</div><div class="cal-day-lbl">T7</div><div class="cal-day-lbl">CN</div>
+
+      <!-- Advisee của bạn -->
+      <div class="card">
+        <div class="card-header">
+          <span class="tab-icon"></span>
+          Advisee của bạn
+        </div>
+
+        <table class="advisee-table">
+          <thead>
+            <tr>
+              <th>ADVISEE</th>
+              <th>GÓI</th>
+              <th>CÒN LẠI</th>
+              <th>BUỔI GẦN NHẤT</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>
+                <div style="display:flex;align-items:center;gap:12px;">
+                  <div class="av-circle av-gh">GH</div>
+                  <div>
+                    <div class="advisee-name">Trần Gia Hân</div>
+                    <div class="advisee-sub">Sinh viên NEU</div>
+                  </div>
+                </div>
+              </td>
+              <td>Gói Đặc Biệt</td>
+              <td><span class="remaining warn">3/4</span></td>
+              <td>T3 1/7 · 20:00</td>
+            </tr>
+            <tr>
+              <td>
+                <div style="display:flex;align-items:center;gap:12px;">
+                  <div class="av-circle av-ta">TA</div>
+                  <div>
+                    <div class="advisee-name">Bùi Tuấn Anh</div>
+                    <div class="advisee-sub">Fresher Marketing</div>
+                  </div>
+                </div>
+              </td>
+              <td>Gói Cơ Bản</td>
+              <td><span class="remaining warn">1/2</span></td>
+              <td>T5 3/7 · 19:00</td>
+            </tr>
+            <tr>
+              <td>
+                <div style="display:flex;align-items:center;gap:12px;">
+                  <div class="av-circle av-pl">PL</div>
+                  <div>
+                    <div class="advisee-name">Nguyễn Phúc Lộc</div>
+                    <div class="advisee-sub">Fresher Brand</div>
+                  </div>
+                </div>
+              </td>
+              <td>Gói Đặc Biệt</td>
+              <td><span class="remaining" style="font-weight:700;">0/4</span></td>
+              <td class="empty-dash">—</td>
+            </tr>
+          </tbody>
+        </table>
       </div>
-      <div class="cal-days">
-        <div class="cal-day past">30</div>
-        <div class="cal-day past">1</div>
-        <div class="cal-day past">2</div>
-        <div class="cal-day past">3</div>
-        <div class="cal-day past">4</div>
-        <div class="cal-day past">5</div>
-        <div class="cal-day past">6</div>
-        <div class="cal-day has-slots" onclick="selectDay(this,'T2 7/7')">7</div>
-        <div class="cal-day has-slots" onclick="selectDay(this,'T3 8/7')">8</div>
-        <div class="cal-day no-slots">9</div>
-        <div class="cal-day has-slots" onclick="selectDay(this,'T5 10/7')">10</div>
-        <div class="cal-day has-slots" onclick="selectDay(this,'T6 11/7')">11</div>
-        <div class="cal-day no-slots">12</div>
-        <div class="cal-day no-slots">13</div>
-        <div class="cal-day no-slots">14</div>
-        <div class="cal-day has-slots" onclick="selectDay(this,'T3 15/7')">15</div>
-        <div class="cal-day no-slots">16</div>
-        <div class="cal-day no-slots">17</div>
-        <div class="cal-day no-slots">18</div>
-        <div class="cal-day no-slots">19</div>
-        <div class="cal-day no-slots">20</div>
+
+    </div><!-- /tab-overview -->
+
+    <!-- Tab: Gửi lịch cố vấn -->
+    <div class="tab-panel" id="tab-schedule">
+      <div class="placeholder-panel">
+        <h3>Gửi lịch cố vấn</h3>
+        <p>Chọn các khung giờ trống để advisee có thể đặt lịch với bạn.</p>
       </div>
     </div>
 
-    <!-- time slots -->
-    <div class="time-section" id="ts-wrap">
-      <div class="ts-label" id="ts-day-label">Chọn ngày để xem slot trống</div>
-      <div class="ts-slots" id="ts-slots">
-        <div style="font-size:13px;color:var(--color-text-secondary);">← Chọn ngày có dấu chấm cam</div>
+    <!-- Tab: Buổi đã book -->
+    <div class="tab-panel" id="tab-booked">
+      <div class="placeholder-panel">
+        <h3>Buổi đã book</h3>
+        <p>Danh sách tất cả các buổi cố vấn đã được đặt lịch.</p>
       </div>
     </div>
 
-    <!-- question -->
-    <div class="q-section">
-      <div class="q-label">Câu hỏi cho buổi meeting</div>
-      <div class="q-hint">Advisor sẽ đọc trước để chuẩn bị tốt nhất. Bạn có thể đặt tối đa 3 câu hỏi.</div>
-      <textarea class="q-input" id="q-input" rows="4" placeholder="VD: Mình đang apply vị trí Brand Intern tại Unilever, muốn nhờ anh/chị review CV và chia sẻ về vòng phỏng vấn..."></textarea>
-    </div>
+  </div><!-- /content -->
+</div><!-- /dashboard-page -->
 
-    <!-- confirm summary -->
-    <div class="bk-confirm-strip" id="confirm-strip" style="display:none;">
-      <div class="bk-confirm-row"><span class="bk-cl">Ngày</span><span class="bk-cv o" id="cf-day">—</span></div>
-      <div class="bk-confirm-row"><span class="bk-cl">Giờ</span><span class="bk-cv o" id="cf-time">—</span></div>
-      <div class="bk-confirm-row"><span class="bk-cl">Advisor</span><span class="bk-cv">Nguyễn Vũ Trí Kiên</span></div>
-      <div class="bk-confirm-row"><span class="bk-cl">Hình thức</span><span class="bk-cv gray">Google Meet · Link gửi qua email</span></div>
-    </div>
-
-    <button class="bk-submit" id="bk-submit" onclick="confirmBooking()" disabled>Xác nhận đặt lịch</button>
-  </div>
-
-  <!-- success -->
-  <div class="success-box" id="success-box">
-    <div class="success-icon"><i class="ti ti-check" aria-hidden="true"></i></div>
-    <div class="success-title">Đặt lịch thành công!</div>
-    <div class="success-sub" id="success-detail">—</div>
-  </div>
-
-</div>
-</div>
 
 <script>
-function switchTab(t){
-  document.querySelectorAll('.tab').forEach(function(b,i){b.classList.toggle('on',i===(t==='advisor'?0:1));});
-  document.getElementById('s-advisor').classList.toggle('on',t==='advisor');
-  document.getElementById('s-booking').classList.toggle('on',t==='booking');
-}
+  let selectedRole = 'Advisor';
 
-var slotCount=6;
-function togSlot(btn){
-  if(btn.classList.contains('booked'))return;
-  var on=btn.classList.toggle('on');
-  btn.textContent=on?'Có mặt':'Trống';
-  slotCount+=on?1:-1;
-  document.getElementById('slotCount').textContent=slotCount+' slot đã chọn';
-}
-function submitSlots(){
-  var btn=document.getElementById('apSubmit');
-  btn.textContent='✓ Đã gửi lịch — Advisee sẽ thấy từ thứ Hai';
-  btn.style.background='var(--color-text-success)';
-  btn.disabled=true;
-}
-
-var SLOTS={
-  'T2 7/7':['19:00–20:00','20:00–21:00'],
-  'T3 8/7':['20:00–21:00','21:00–22:00'],
-  'T5 10/7':['19:00–20:00','20:00–21:00'],
-  'T6 11/7':['19:00–20:00','21:00–22:00'],
-  'T3 15/7':['20:00–21:00'],
-};
-var selectedDay='', selectedTime='';
-
-function selectDay(el,day){
-  document.querySelectorAll('.cal-day').forEach(function(d){d.classList.remove('selected');});
-  el.classList.add('selected');
-  selectedDay=day; selectedTime='';
-  var slots=SLOTS[day]||[];
-  document.getElementById('ts-day-label').textContent='Slot trống — '+day;
-  var html='';
-  slots.forEach(function(s){
-    html+='<button class="ts-slot" onclick="selectTime(this,\''+s+'\')">'+s+'</button>';
-  });
-  document.getElementById('ts-slots').innerHTML=html||'<span style="font-size:13px;color:var(--color-text-secondary);">Không có slot trống ngày này</span>';
-  updateConfirm();
-}
-
-function selectTime(el,t){
-  document.querySelectorAll('.ts-slot').forEach(function(s){s.classList.remove('on');});
-  el.classList.add('on');
-  selectedTime=t;
-  updateConfirm();
-}
-
-function updateConfirm(){
-  var strip=document.getElementById('confirm-strip');
-  var btn=document.getElementById('bk-submit');
-  if(selectedDay&&selectedTime){
-    document.getElementById('cf-day').textContent=selectedDay;
-    document.getElementById('cf-time').textContent=selectedTime;
-    strip.style.display='block';
-    btn.disabled=false;
-  } else {
-    strip.style.display='none';
-    btn.disabled=true;
+  function selectRole(role, btn) {
+    selectedRole = role;
+    document.querySelectorAll('.role-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
   }
-}
 
-function confirmBooking(){
-  var q=document.getElementById('q-input').value.trim();
-  document.getElementById('bk-form-wrap').style.display='none';
-  var box=document.getElementById('success-box');
-  box.classList.add('show');
-  document.getElementById('success-detail').innerHTML=
-    '<strong>'+selectedDay+' · '+selectedTime+'</strong> với anh Kiên<br><br>'+
-    'Google Meet invite đã gửi vào email của bạn.<br>'+
-    (q?'Câu hỏi của bạn đã được chuyển cho advisor chuẩn bị.<br>':'')+'<br>'+
-    '<span style="color:var(--color-text-success);font-weight:500;">Chúc bạn buổi meeting thật hiệu quả!</span>';
-}
+  function doLogin() {
+    document.getElementById('login-page').style.display = 'none';
+    document.getElementById('dashboard-page').style.display = 'block';
+    document.getElementById('role-badge').textContent = selectedRole;
+  }
+
+  function switchTab(tab, el) {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    el.classList.add('active');
+    document.getElementById('tab-' + tab).classList.add('active');
+  }
 </script>
+</body>
+</html>
