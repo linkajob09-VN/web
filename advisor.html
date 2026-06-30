@@ -1062,6 +1062,7 @@ function submitBooking(){
   if(btn.disabled) return; // chặn double-click
 
   var payload = {
+    action          : 'createBooking',
     advisee_name    : document.getElementById('mName').value.trim(),
     advisee_phone   : document.getElementById('mPhone').value.trim(),
     advisee_email   : document.getElementById('mEmail').value.trim(),
