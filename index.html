@@ -186,7 +186,7 @@
             </div>
           </a>
           <div class="lj-dropdown-divider"></div>
-          <a class="lj-di" href="pricing.html">
+          <a class="lj-di" href="linkajob_pricing.html">
             <div class="lj-di-icon"><i class="ti ti-calendar-event" aria-hidden="true"></i></div>
             <div>
               <div class="lj-di-title">Các gói meeting 1-1 <span class="lj-dropdown-badge">Phổ biến</span></div>
@@ -216,7 +216,7 @@
             </div>
           </a>
           <div class="lj-dropdown-divider"></div>
-          <a class="lj-di" href="supply_chain_principles.html">
+          <a class="lj-di" href="#">
             <div class="lj-di-icon"><i class="ti ti-topology-star-3" aria-hidden="true"></i></div>
             <div>
               <div class="lj-di-title">Supply Chain Principles</div>
@@ -342,7 +342,7 @@
             </div>
           </div>
         </div>
-        <button class="lj-btn-svc" onclick="location.href='pricing.html'">Xem dịch vụ Cố vấn 1-1 →</button>
+        <button class="lj-btn-svc" onclick="location.href='linkajob_pricing.html'">Xem dịch vụ Cố vấn 1-1 →</button>
       </div>
 
       <!-- COURSE -->
@@ -509,6 +509,8 @@
 
 <script>
 /* ─── CONSULT WIDGET ─── */
+var CW_WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbx7Bd9VvoyzfiiezQV9huoY2BKHH_Br1RAFIz00mjdyKeis-Zv-38a0gf_b-fMlul2C/exec';
+
 function openConsultWidget(){
   document.getElementById('cwOverlay').classList.add('show');
   cwGoStep(1);
@@ -585,12 +587,59 @@ function cwSelectTime(el,t){
   document.getElementById('cwBtn2').disabled = false;
 }
 function cwConfirm(){
-  var name = document.getElementById('cwName').value.trim();
+  var btn = document.getElementById('cwBtn2');
+  if(btn.disabled && btn.dataset.sending) return; // chặn double-click khi đang gửi
+
+  var name    = document.getElementById('cwName').value.trim();
+  var phone   = document.getElementById('cwPhone').value.trim();
+  var service = document.getElementById('cwService').value;
+  var question= document.getElementById('cwQuestion').value.trim();
   var d = cwSelectedDate;
   var dateStr = d.getDate()+'/'+(d.getMonth()+1)+'/'+d.getFullYear();
-  document.getElementById('cwSuccessDetail').innerHTML =
-    'Cảm ơn <strong>'+name+'</strong>! Lịch tư vấn của bạn:<br><strong>'+dateStr+' · '+cwSelectedTime+'</strong><br><br>'+
-    'Link Google Meet sẽ được gửi qua Zalo/SMS trước giờ hẹn.';
-  cwGoStep(3);
+
+  var goalParts = ['Quan tâm: '+service];
+  if(question) goalParts.push('Câu hỏi: '+question);
+  goalParts.push('Khung giờ mong muốn: '+dateStr+' · '+cwSelectedTime+' (qua Google Meet)');
+
+  var payload = {
+    action          : 'registerAdvisee',
+    advisee_name    : name,
+    advisee_phone   : phone,
+    advisee_email   : '',
+    advisee_year    : '',
+    advisee_industry: service,
+    advisee_goal    : goalParts.join(' | '),
+    package_name    : 'Tư vấn miễn phí'
+  };
+
+  btn.dataset.sending = '1';
+  btn.disabled = true;
+  btn.textContent = 'Đang gửi...';
+
+  fetch(CW_WEBAPP_URL, {
+    method : 'POST',
+    // text/plain để tránh CORS preflight; backend vẫn JSON.parse bình thường
+    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+    body   : JSON.stringify(payload)
+  })
+  .then(function(res){ return res.json(); })
+  .then(function(data){
+    if(!data.success) throw new Error(data.error || 'Lỗi không xác định từ server');
+    document.getElementById('cwSuccessDetail').innerHTML =
+      'Cảm ơn <strong>'+name+'</strong>! Lịch tư vấn của bạn:<br><strong>'+dateStr+' · '+cwSelectedTime+'</strong><br><br>'+
+      'Mã đăng ký: <strong>'+data.booking_id+'</strong><br>'+
+      'Link Google Meet sẽ được gửi qua Zalo/SMS trước giờ hẹn.';
+    cwGoStep(3);
+    btn.dataset.sending = '';
+    btn.disabled = false;
+    btn.textContent = 'Xác nhận đặt lịch';
+  })
+  .catch(function(err){
+    btn.dataset.sending = '';
+    btn.disabled = false;
+    btn.textContent = 'Xác nhận đặt lịch';
+    document.getElementById('cwTsLabel').innerHTML =
+      '<span style="color:#fc5229">⚠ Gửi thất bại: '+err.message+'. Vui lòng thử lại.</span>';
+  });
 }
 </script>
