@@ -272,7 +272,7 @@ body{font-family:'Inter',sans-serif;background:#F5F4F1;color:#1C1C1C;overflow-x:
           <a class="lj-di" href="advisor.html">
             <div class="lj-di-icon"><i class="ti ti-user-star" aria-hidden="true"></i></div>
             <div>
-              <div class="lj-di-title">Profile Advisor</div>
+              <div class="lj-di-title">Profile Advisor <span class="lj-dropdown-badge">Đang xem</span></div>
               <div class="lj-di-sub">Tìm advisor phù hợp với định hướng của bạn</div>
             </div>
           </a>
@@ -291,7 +291,7 @@ body{font-family:'Inter',sans-serif;background:#F5F4F1;color:#1C1C1C;overflow-x:
       <div class="lj-nav-item">
         <button class="lj-nav-btn-plain">Khoá học <i class="ti ti-chevron-down lj-nav-chevron" aria-hidden="true"></i></button>
         <div class="lj-dropdown lj-dropdown-courses">
-          <a class="lj-di" href="#">
+          <a class="lj-di" href="land-your-dream-job.html">
             <div class="lj-di-icon"><i class="ti ti-rocket" aria-hidden="true"></i></div>
             <div>
               <div class="lj-di-title">Land Your Dream Job</div>
@@ -299,7 +299,7 @@ body{font-family:'Inter',sans-serif;background:#F5F4F1;color:#1C1C1C;overflow-x:
             </div>
           </a>
           <div class="lj-dropdown-divider"></div>
-          <a class="lj-di" href="#">
+          <a class="lj-di" href="logistics-operation.html">
             <div class="lj-di-icon"><i class="ti ti-truck-delivery" aria-hidden="true"></i></div>
             <div>
               <div class="lj-di-title">Logistics Operation</div>
@@ -307,7 +307,7 @@ body{font-family:'Inter',sans-serif;background:#F5F4F1;color:#1C1C1C;overflow-x:
             </div>
           </a>
           <div class="lj-dropdown-divider"></div>
-          <a class="lj-di" href="supply_chain_principles.html">
+          <a class="lj-di" href="supply-chain-principles.html">
             <div class="lj-di-icon"><i class="ti ti-topology-star-3" aria-hidden="true"></i></div>
             <div>
               <div class="lj-di-title">Supply Chain Principles</div>
@@ -321,7 +321,7 @@ body{font-family:'Inter',sans-serif;background:#F5F4F1;color:#1C1C1C;overflow-x:
       <div class="lj-nav-item">
         <button class="lj-nav-btn-plain">Thành công <i class="ti ti-chevron-down lj-nav-chevron" aria-hidden="true"></i></button>
         <div class="lj-dropdown">
-          <a class="lj-di" href="#">
+          <a class="lj-di" href="success-stories.html">
             <div class="lj-di-icon"><i class="ti ti-trophy" aria-hidden="true"></i></div>
             <div>
               <div class="lj-di-title">Câu chuyện thành công</div>
@@ -329,7 +329,7 @@ body{font-family:'Inter',sans-serif;background:#F5F4F1;color:#1C1C1C;overflow-x:
             </div>
           </a>
           <div class="lj-dropdown-divider"></div>
-          <a class="lj-di" href="#">
+          <a class="lj-di" href="feedback.html">
             <div class="lj-di-icon"><i class="ti ti-message-circle-2" aria-hidden="true"></i></div>
             <div>
               <div class="lj-di-title">Feedback dịch vụ</div>
@@ -339,7 +339,7 @@ body{font-family:'Inter',sans-serif;background:#F5F4F1;color:#1C1C1C;overflow-x:
         </div>
       </div>
 
-      <a href="#">Blog</a>
+      <a href="blog.html">Blog</a>
       <button class="lj-btn-nav" onclick="openConsultWidget()">Đăng ký tư vấn</button>
     </div>
   </nav>
@@ -357,6 +357,11 @@ body{font-family:'Inter',sans-serif;background:#F5F4F1;color:#1C1C1C;overflow-x:
     <div class="hstat"><div class="hstat-num">200+</div><div class="hstat-lbl">Kết nối</div></div>
   </div>
 </section>
+
+<div class="preset-banner" id="presetBanner" style="display:none;margin:16px 32px 0;background:#1C0A06;border:.5px solid rgba(252,82,41,.25);border-radius:14px;padding:14px 20px;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;">
+  <div style="font-family:'Space Grotesk',sans-serif;font-size:13px;color:#F0F0F0;"><strong style="color:#fc5229;">Gói đã chọn:</strong> <span id="presetPkgName"></span> — chọn 1 Advisor bên dưới để đặt lịch ngay.</div>
+  <button onclick="presetPackage=null;document.getElementById('presetBanner').style.display='none';" style="background:transparent;border:.5px solid rgba(255,255,255,.15);color:rgba(240,240,240,.5);font-family:'Space Grotesk',sans-serif;font-size:11px;padding:6px 14px;border-radius:100px;cursor:pointer;">Bỏ chọn gói</button>
+</div>
 
 <!-- WAVE DIVIDER -->
 <div style="background:#0D0D0D;line-height:0;"><svg viewBox="0 0 1440 40" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none" style="width:100%;height:40px;display:block;"><path d="M0,40 C360,0 1080,0 1440,40 L1440,40 L0,40 Z" fill="#F5F4F1"/></svg></div>
@@ -629,10 +634,10 @@ body{font-family:'Inter',sans-serif;background:#F5F4F1;color:#1C1C1C;overflow-x:
         <div><div class="apb-badge">Advisor đã chọn</div><div class="apb-name" id="mApbName">LinkaJob sẽ match cho bạn</div><div class="apb-role" id="mApbRole">Tư vấn miễn phí trước khi chọn</div></div>
       </div>
       <div class="pkglist">
-        <div class="pkgitem" onclick="selPkg(this,'Trial','1 buổi · 30 phút','419',419)"><div class="pkg-l"><div class="pkg-n">Trial</div><div class="pkg-s">1 buổi · 30 phút · Thử trước khi commit</div></div><div class="pkg-p">419k</div><div class="pkg-r"><i class="ti ti-check"></i></div></div>
-        <div class="pkgitem" onclick="selPkg(this,'Cơ Bản','2 buổi · 45–60 phút','799',799)"><div class="pkg-l"><div class="pkg-n">Cơ Bản</div><div class="pkg-s">2 buổi · 45–60 phút · CV + định hướng</div></div><div class="pkg-p">799k</div><div class="pkg-r"><i class="ti ti-check"></i></div></div>
-        <div class="pkgitem pop" onclick="selPkg(this,'Đặc Biệt','4 buổi · 45–60 phút','1.499',1499)"><div class="pkg-l"><div class="pkg-n">Đặc Biệt <span class="pkg-pb">Phổ biến</span></div><div class="pkg-s">4 buổi · 45–60 phút · CV + phỏng vấn đầy đủ</div></div><div class="pkg-p">1.499k</div><div class="pkg-r"><i class="ti ti-check"></i></div></div>
-        <div class="pkgitem" onclick="selPkg(this,'Chuyên Sâu','6 buổi · 45–60 phút','2.199',2199)"><div class="pkg-l"><div class="pkg-n">Chuyên Sâu</div><div class="pkg-s">6 buổi · 45–60 phút · Hành trình toàn diện</div></div><div class="pkg-p">2.199k</div><div class="pkg-r"><i class="ti ti-check"></i></div></div>
+        <div class="pkgitem" data-pkg="Trial" onclick="selPkg(this,'Trial','1 buổi · 30 phút','419',419)"><div class="pkg-l"><div class="pkg-n">Trial</div><div class="pkg-s">1 buổi · 30 phút · Thử trước khi commit</div></div><div class="pkg-p">419k</div><div class="pkg-r"><i class="ti ti-check"></i></div></div>
+        <div class="pkgitem" data-pkg="Co-Ban" onclick="selPkg(this,'Cơ Bản','2 buổi · 45–60 phút','799',799)"><div class="pkg-l"><div class="pkg-n">Cơ Bản</div><div class="pkg-s">2 buổi · 45–60 phút · CV + định hướng</div></div><div class="pkg-p">799k</div><div class="pkg-r"><i class="ti ti-check"></i></div></div>
+        <div class="pkgitem pop" data-pkg="Dac-Biet" onclick="selPkg(this,'Đặc Biệt','4 buổi · 45–60 phút','1.499',1499)"><div class="pkg-l"><div class="pkg-n">Đặc Biệt <span class="pkg-pb">Phổ biến</span></div><div class="pkg-s">4 buổi · 45–60 phút · CV + phỏng vấn đầy đủ</div></div><div class="pkg-p">1.499k</div><div class="pkg-r"><i class="ti ti-check"></i></div></div>
+        <div class="pkgitem" data-pkg="Chuyen-Sau" onclick="selPkg(this,'Chuyên Sâu','6 buổi · 45–60 phút','2.199',2199)"><div class="pkg-l"><div class="pkg-n">Chuyên Sâu</div><div class="pkg-s">6 buổi · 45–60 phút · Hành trình toàn diện</div></div><div class="pkg-p">2.199k</div><div class="pkg-r"><i class="ti ti-check"></i></div></div>
       </div>
       <div class="mnav"><button class="mnext" id="mBtn1" onclick="goStep(2)" disabled>Tiếp theo →</button></div>
     </div>
@@ -845,6 +850,35 @@ var ADVISORS = [
 var S={adv:'',advRole:'',advCo:'',advInitials:'',pkg:'',sess:'',priceLabel:'',priceNum:0};
 var currentAdvisorId = -1;
 
+/* ─── PRESELECTED PACKAGE (từ pricing.html ?package=...) ─── */
+var PKG_DATA = {
+  'Trial'      : {name:'Trial',      sess:'1 buổi · 30 phút',   priceLabel:'419',   priceNum:419},
+  'Co-Ban'     : {name:'Cơ Bản',     sess:'2 buổi · 45–60 phút', priceLabel:'799',   priceNum:799},
+  'Dac-Biet'   : {name:'Đặc Biệt',   sess:'4 buổi · 45–60 phút', priceLabel:'1.499', priceNum:1499},
+  'Chuyen-Sau' : {name:'Chuyên Sâu', sess:'6 buổi · 45–60 phút', priceLabel:'2.199', priceNum:2199}
+};
+var urlParams = new URLSearchParams(window.location.search);
+var presetPackage = urlParams.get('package');
+if(presetPackage && !PKG_DATA[presetPackage]) presetPackage = null;
+
+document.addEventListener('DOMContentLoaded', function(){
+  if(presetPackage){
+    document.getElementById('presetPkgName').textContent = PKG_DATA[presetPackage].name;
+    document.getElementById('presetBanner').style.display = 'flex';
+  }
+});
+
+function applyPackageSelection(slug){
+  var d = PKG_DATA[slug];
+  if(!d) return false;
+  S.pkg = d.name; S.sess = d.sess; S.priceLabel = d.priceLabel; S.priceNum = d.priceNum;
+  document.querySelectorAll('.pkgitem').forEach(function(e){
+    e.classList.toggle('sel', e.getAttribute('data-pkg')===slug);
+  });
+  document.getElementById('mBtn1').disabled = false;
+  return true;
+}
+
 /* ─── FILTER ─── */
 function doFilter(btn, ind){
   document.querySelectorAll('.fbtn').forEach(function(b){b.classList.remove('on');});
@@ -922,8 +956,15 @@ function openCheckout(adv, role, co, initials){
   document.getElementById('mApbName').textContent = adv||'LinkaJob sẽ match cho bạn';
   document.getElementById('mApbRole').textContent = role ? role+' · '+co : 'Tư vấn miễn phí trước khi chọn';
   document.getElementById('mhSub').textContent = adv ? 'Advisor: '+adv : 'LinkaJob · Career Consulting';
-  setCtx(adv||'LinkaJob', role ? role+' · '+co : 'Chọn gói để bắt đầu');
-  renderSteps(1); showPanel('mp1');
+
+  if(presetPackage && applyPackageSelection(presetPackage)){
+    setCtx((adv||'LinkaJob')+' · Gói '+S.pkg, S.sess);
+    renderSteps(2); showPanel('mp2');
+  } else {
+    setCtx(adv||'LinkaJob', role ? role+' · '+co : 'Chọn gói để bắt đầu');
+    renderSteps(1); showPanel('mp1');
+  }
+
   document.getElementById('mOverlay').classList.add('open');
   document.body.style.overflow = 'hidden';
 }
