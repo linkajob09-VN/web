@@ -438,8 +438,10 @@ function renderSchedulePicker() {
   const bookedKeys = {};
   const savedKeys = {};
   sheetData.slots.forEach(function(s){
-    if (s.advisor === currentUser.name && s.status === 'booked') bookedKeys[s.slot_key] = true;
-    if (s.advisor === currentUser.name && s.status === 'available') savedKeys[s.slot_key] = true;
+    // sheet that dung advisor_name, date, time_start thay vi advisor/slot_key
+    var key = slotKeyFromSheetRow(s);
+    if (s.advisor_name === currentUser.name && s.status === 'booked') bookedKeys[key] = true;
+    if (s.advisor_name === currentUser.name && s.status === 'available') savedKeys[key] = true;
   });
   const wLabel = fmtShort(days[0]) + ' – ' + fmtShort(days[6]);
 
@@ -696,6 +698,12 @@ function getMondayOfWeek(date, offset) {
   return d;
 }
 function slotKey(date, time) { return date.getFullYear() + '-' + pad(date.getMonth()+1) + '-' + pad(date.getDate()) + '_' + time; }
+function slotKeyFromSheetRow(s) {
+  // Sheet that tra ve date dang "2026-07-01" va time_start dang "19:00"
+  if (!s.date || !s.time_start) return '';
+  var d = String(s.date).slice(0,10); // phong khi date la ISO datetime
+  return d + '_' + s.time_start;
+}
 function fmtDate(d) { if (!d) return '—'; const dt = new Date(d); return DAYS_VI[dt.getDay()] + ' ' + dt.getDate() + '/' + (dt.getMonth()+1) + ' · ' + pad(dt.getHours()) + ':' + pad(dt.getMinutes()); }
 function fmtShort(d) { return d.getDate() + '/' + (d.getMonth()+1); }
 function pad(n) { return String(n).padStart(2,'0'); }
