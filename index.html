@@ -432,7 +432,7 @@
   <div class="lj-cta-wrap">
     <div class="lj-cta-box">
       <h2>Bắt đầu hành trình<br>vào MNC của bạn.</h2>
-      <p>Buổi tư vấn đầu tiên miễn phí — advisor phản hồi trong 24h.</p>
+      <p>Buổi tư vấn đầu tiên miễn phí — đội ngũ LinkaJob phản hồi trong 24h.</p>
       <button class="lj-btn-cta" onclick="openConsultWidget()">Đăng ký tư vấn</button>
     </div>
   </div>
@@ -484,7 +484,11 @@
 
     <!-- STEP 2: calendar -->
     <div class="cw-step" id="cwStep2" style="display:none;">
-      <div class="cw-cal-title" id="cwCalTitle">—</div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+        <button onclick="cwChangeMonth(-1)" style="background:rgba(255,255,255,0.06);border:none;width:26px;height:26px;border-radius:7px;color:#F0F0F0;cursor:pointer;font-size:14px;">‹</button>
+        <div class="cw-cal-title" id="cwCalTitle" style="margin-bottom:0;">—</div>
+        <button onclick="cwChangeMonth(1)" style="background:rgba(255,255,255,0.06);border:none;width:26px;height:26px;border-radius:7px;color:#F0F0F0;cursor:pointer;font-size:14px;">›</button>
+      </div>
       <div class="cw-cal-days-lbl">
         <span>CN</span><span>T2</span><span>T3</span><span>T4</span><span>T5</span><span>T6</span><span>T7</span>
       </div>
@@ -513,6 +517,9 @@ var CW_WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbx7Bd9VvoyzfiiezQV9
 
 function openConsultWidget(){
   document.getElementById('cwOverlay').classList.add('show');
+  var t = new Date();
+  cwViewYear = t.getFullYear();
+  cwViewMonth = t.getMonth();
   cwGoStep(1);
 }
 function closeConsultWidget(){
@@ -532,23 +539,35 @@ function cwCheckStep1(){
   document.getElementById('cwBtn1').disabled = !(name && phone);
 }
 
-/* mock available slots theo thứ trong tuần — thay bằng data thật từ Apps Script sau */
-var CW_SLOTS_BY_WEEKDAY = {
-  1: ['19:00–20:00','20:00–21:00'],
-  3: ['19:00–20:00','20:00–21:00','21:00–22:00'],
-  5: ['19:00–20:00','20:00–21:00'],
-};
+/* Giờ trống: 9h sáng – 9h tối (9:00–21:00), Thứ 2 đến Thứ 7 (nghỉ Chủ Nhật) */
+function cwPad2(n){ return (n<10?'0':'')+n; }
+var CW_SLOTS_BY_WEEKDAY = (function(){
+  var hours = [];
+  for(var h=9; h<21; h++){ hours.push(cwPad2(h)+':00–'+cwPad2(h+1)+':00'); }
+  var map = {};
+  for(var wd=1; wd<=6; wd++){ map[wd] = hours.slice(); } // 1=T2 ... 6=T7
+  return map;
+})();
 var cwSelectedDate = null, cwSelectedTime = null;
 var cwMonthNames = ['Tháng 1','Tháng 2','Tháng 3','Tháng 4','Tháng 5','Tháng 6','Tháng 7','Tháng 8','Tháng 9','Tháng 10','Tháng 11','Tháng 12'];
+var cwViewYear = null, cwViewMonth = null;
+
+function cwChangeMonth(dir){
+  cwViewMonth += dir;
+  if(cwViewMonth < 0){ cwViewMonth = 11; cwViewYear--; }
+  if(cwViewMonth > 11){ cwViewMonth = 0; cwViewYear++; }
+  cwRenderCalendar();
+}
 
 function cwRenderCalendar(){
   var today = new Date();
-  var y = today.getFullYear(), m = today.getMonth();
+  if(cwViewYear === null){ cwViewYear = today.getFullYear(); cwViewMonth = today.getMonth(); }
+  var y = cwViewYear, m = cwViewMonth;
   document.getElementById('cwCalTitle').textContent = cwMonthNames[m]+', '+y;
   var grid = document.getElementById('cwCalGrid');
   var startOffset = new Date(y,m,1).getDay();
   var daysInMonth = new Date(y,m+1,0).getDate();
-  var todayStart = new Date(y,today.getMonth(),today.getDate());
+  var todayStart = new Date(today.getFullYear(),today.getMonth(),today.getDate());
   var html = '';
   for(var i=0;i<startOffset;i++) html += '<div class="cw-day empty"></div>';
   for(var d=1; d<=daysInMonth; d++){
