@@ -467,6 +467,10 @@
         <input type="tel" id="cwPhone" placeholder="09xx xxx xxx" oninput="cwCheckStep1()">
       </div>
       <div class="cw-field">
+        <label>Email <span>*</span></label>
+        <input type="email" id="cwEmail" placeholder="email@example.com" oninput="cwCheckStep1()">
+      </div>
+      <div class="cw-field">
         <label>Quan tâm dịch vụ</label>
         <select id="cwService">
           <option value="Cố vấn 1-1">Cố vấn 1-1</option>
@@ -520,8 +524,14 @@ function openConsultWidget(){
   var t = new Date();
   cwViewYear = t.getFullYear();
   cwViewMonth = t.getMonth();
-  cwSlotsLoaded = false; // reset để luôn lấy data mới nhất
+  cwSlotsLoaded = false;
   cwRealSlots = {};
+  // Reset form
+  ['cwName','cwPhone','cwEmail','cwQuestion'].forEach(function(id){
+    var el = document.getElementById(id); if(el) el.value = '';
+  });
+  var s = document.getElementById('cwService'); if(s) s.selectedIndex = 0;
+  var b = document.getElementById('cwBtn1'); if(b) b.disabled = true;
   cwGoStep(1);
 }
 function closeConsultWidget(){
@@ -536,9 +546,11 @@ function cwGoStep(n){
   if(n===2) cwRenderCalendar();
 }
 function cwCheckStep1(){
-  var name = document.getElementById('cwName').value.trim();
+  var name  = document.getElementById('cwName').value.trim();
   var phone = document.getElementById('cwPhone').value.trim();
-  document.getElementById('cwBtn1').disabled = !(name && phone);
+  var email = document.getElementById('cwEmail').value.trim();
+  var validEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  document.getElementById('cwBtn1').disabled = !(name && phone && validEmail);
 }
 
 /* ─── CONSULT WIDGET STATE ─── */
@@ -563,9 +575,20 @@ function cwLoadSlots(callback) {
       if (res && res.data) {
         res.data.forEach(function(s){
           var d = String(s.date || s.scheduled_date || '').slice(0,10);
-          if (!d) return;
+          if (!d || d.length < 10) return;
+          // time_start có thể là "HH:mm" hoặc ISO datetime — lấy HH:mm
+          var rawTime = String(s.time_start || '');
+          var timeStr = '';
+          if (rawTime.indexOf('T') > -1 || rawTime.indexOf('1899') > -1) {
+            // ISO date string kiểu "1899-12-30T09:00:00Z" → lấy HH:mm theo ICT
+            var td = new Date(rawTime);
+            timeStr = cwPad2(td.getUTCHours() + 7 >= 24 ? td.getUTCHours() + 7 - 24 : td.getUTCHours() + 7) + ':' + cwPad2(td.getUTCMinutes());
+          } else {
+            timeStr = rawTime.slice(0,5);
+          }
+          if (!timeStr || timeStr === '00:00') return;
           if (!cwRealSlots[d]) cwRealSlots[d] = [];
-          cwRealSlots[d].push({ id: s.slot_id, time: String(s.time_start).slice(0,5) });
+          cwRealSlots[d].push({ id: s.slot_id, time: timeStr });
         });
         // Sắp xếp giờ trong từng ngày
         Object.keys(cwRealSlots).forEach(function(d){
@@ -656,6 +679,7 @@ function cwConfirm(){
 
   var name     = document.getElementById('cwName').value.trim();
   var phone    = document.getElementById('cwPhone').value.trim();
+  var email    = document.getElementById('cwEmail').value.trim();
   var service  = document.getElementById('cwService').value;
   var question = document.getElementById('cwQuestion').value.trim();
 
@@ -664,6 +688,7 @@ function cwConfirm(){
     slot_id : cwSelectedSlotId,
     name    : name,
     phone   : phone,
+    email   : email,
     service : service,
     question: question
   };
