@@ -57,10 +57,26 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
 .nav-brand { font-size: 16px; font-weight: 700; }
 .role-badge { background: #FFE9E4; color: var(--brand); font-size: 12px; font-weight: 600; padding: 2px 9px; border-radius: 100px; }
 .nav-right { display: flex; align-items: center; gap: 10px; }
-.nav-user { display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 500; }
+.nav-user { display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 500; cursor: pointer; padding: 4px 8px 4px 4px; border-radius: 100px; transition: background .15s; position: relative; }
+.nav-user:hover { background: var(--bg); }
 .avatar { width: 30px; height: 30px; border-radius: 50%; background: #D6CFBF; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; flex-shrink: 0; }
-.logout-btn { font-size: 12px; color: var(--muted); background: none; border: 1px solid var(--border); padding: 4px 10px; border-radius: 100px; cursor: pointer; transition: all .15s; }
-.logout-btn:hover { border-color: var(--brand); color: var(--brand); }
+.nav-user-chevron { font-size: 11px; color: var(--muted); margin-left: 2px; transition: transform .2s; }
+.nav-user.open .nav-user-chevron { transform: rotate(180deg); }
+.logout-btn { display: none; }
+
+/* User dropdown */
+.user-dropdown { position: absolute; top: calc(100% + 8px); right: 0; background: var(--white); border: 1px solid var(--border); border-radius: 14px; box-shadow: 0 8px 30px rgba(0,0,0,.12); min-width: 200px; padding: 6px; z-index: 999; opacity: 0; pointer-events: none; transform: translateY(-6px); transition: opacity .18s, transform .18s; }
+.nav-user.open .user-dropdown { opacity: 1; pointer-events: all; transform: translateY(0); }
+.user-dropdown-header { padding: 10px 12px 8px; border-bottom: 1px solid var(--border); margin-bottom: 4px; }
+.user-dropdown-name { font-size: 13px; font-weight: 700; color: var(--text); margin-bottom: 2px; }
+.user-dropdown-role { font-size: 11px; color: var(--muted); }
+.user-dropdown-item { display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-radius: 8px; font-size: 13px; font-weight: 500; color: var(--text); cursor: pointer; transition: background .15s; }
+.user-dropdown-item:hover { background: var(--bg); }
+.user-dropdown-item.danger { color: var(--brand); }
+.user-dropdown-item.danger:hover { background: var(--brand-light); }
+.user-dropdown-divider { height: 1px; background: var(--border); margin: 4px 0; }
+.user-dropdown-icon { font-size: 16px; width: 20px; text-align: center; }
+
 
 /* ── BODY LAYOUT: sidebar + main ── */
 .dash-body { display: flex; flex: 1; min-height: calc(100vh - 52px); }
@@ -225,7 +241,57 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
 .modal-field b { color: var(--muted); font-weight: 500; display: inline-block; min-width: 110px; }
 .modal-actions { display: flex; gap: 10px; padding: 0 24px 24px; }
 
-.skeleton { animation: shimmer 1.5s infinite; background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%); background-size: 200% 100%; border-radius: 6px; }
+/* ═══════════════════════════════════
+   ADVISEE VIEW
+═══════════════════════════════════ */
+.aee-booking-card { background:var(--white); border:1.5px solid var(--border); border-radius:16px; padding:20px; margin-bottom:20px; }
+.aee-advisor-row { display:flex; align-items:center; gap:14px; margin-bottom:16px; }
+.aee-advisor-info { flex:1; }
+.aee-advisor-name { font-size:16px; font-weight:700; color:var(--text); margin-bottom:2px; }
+.aee-advisor-title { font-size:13px; color:var(--muted); }
+.aee-pkg-row { display:flex; align-items:center; justify-content:space-between; }
+.aee-pkg-name { font-size:15px; font-weight:700; color:var(--text); margin-bottom:2px; }
+.aee-pkg-meta { font-size:12px; color:var(--muted); }
+.aee-progress-badge { background:var(--brand-light); color:var(--brand); font-size:13px; font-weight:700; padding:6px 14px; border-radius:100px; white-space:nowrap; }
+
+.aee-roadmap { background:var(--white); border:1.5px solid var(--border); border-radius:16px; overflow:hidden; }
+.aee-roadmap-header { padding:18px 20px 14px; border-bottom:1px solid var(--border); }
+.aee-roadmap-title { font-size:15px; font-weight:700; color:var(--text); margin-bottom:3px; display:flex; align-items:center; gap:8px; }
+.aee-roadmap-sub { font-size:12.5px; color:var(--muted); }
+
+.aee-session { border-top:1px solid var(--border); }
+.aee-session-row { display:flex; align-items:center; gap:14px; padding:16px 20px; cursor:default; }
+.aee-session.locked .aee-session-row { opacity:.55; }
+.aee-session-indicator { width:32px; height:32px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:14px; font-weight:700; flex-shrink:0; }
+.aee-indicator-done { background:var(--green-bg); color:var(--green); }
+.aee-indicator-feedback { background:#FFF7ED; color:#C2410C; border:2px solid #FDBA74; }
+.aee-indicator-upcoming { background:#DBEAFE; color:#1D4ED8; }
+.aee-indicator-locked { background:var(--bg); color:var(--border); border:2px solid var(--border); }
+.aee-session-label { flex:1; }
+.aee-session-name { font-size:14px; font-weight:600; color:var(--text); margin-bottom:2px; }
+.aee-session-time { font-size:12px; color:var(--muted); }
+.aee-session-badge-done { background:var(--green-bg); color:var(--green); font-size:12px; font-weight:600; padding:4px 12px; border-radius:100px; white-space:nowrap; }
+.aee-session-badge-feedback { background:#FFF7ED; color:#C2410C; font-size:12px; font-weight:600; padding:4px 12px; border-radius:100px; white-space:nowrap; display:flex; align-items:center; gap:6px; }
+.aee-session-badge-upcoming { background:#DBEAFE; color:#1D4ED8; font-size:12px; font-weight:600; padding:4px 12px; border-radius:100px; white-space:nowrap; }
+.aee-session-badge-locked { font-size:12px; color:var(--muted); }
+.aee-lock-reason { font-size:12px; color:var(--muted); padding:6px 20px 12px 66px; margin-top:-6px; }
+
+.aee-feedback-panel { background:#FFFBF5; border-top:1.5px solid #FED7AA; border-bottom:1.5px solid #FED7AA; padding:20px; }
+.aee-feedback-alert { display:flex; align-items:flex-start; gap:10px; background:#FFF7ED; border:1px solid #FDBA74; border-radius:10px; padding:12px 14px; margin-bottom:18px; font-size:13px; color:#92400E; line-height:1.6; }
+.aee-feedback-alert strong { color:#C2410C; }
+.aee-feedback-section-label { font-size:10.5px; font-weight:700; letter-spacing:.1em; text-transform:uppercase; color:var(--muted); margin-bottom:10px; }
+.aee-stars { display:flex; gap:6px; margin-bottom:18px; cursor:pointer; }
+.aee-star { font-size:32px; color:#D1D5DB; transition:color .15s; line-height:1; }
+.aee-star.active { color:#F59E0B; }
+.aee-star:hover, .aee-star.hover { color:#F59E0B; }
+.aee-feedback-textarea { width:100%; background:var(--white); border:1.5px solid var(--border); border-radius:10px; padding:12px 14px; font-size:13px; font-family:inherit; color:var(--text); resize:none; min-height:90px; outline:none; transition:border-color .15s; line-height:1.6; }
+.aee-feedback-textarea:focus { border-color:#F59E0B; }
+.aee-feedback-btn { width:100%; margin-top:14px; padding:13px; font-size:14px; font-weight:700; background:#C2410C; color:#fff; border:none; border-radius:10px; cursor:pointer; transition:opacity .15s; }
+.aee-feedback-btn:hover { opacity:.88; }
+.aee-feedback-btn:disabled { opacity:.45; cursor:not-allowed; }
+.aee-meet-link { display:inline-flex; align-items:center; gap:6px; margin-top:8px; font-size:13px; color:#1D4ED8; font-weight:600; text-decoration:none; }
+.aee-meet-link:hover { text-decoration:underline; }
+ background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%); background-size: 200% 100%; border-radius: 6px; }
 @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
 .skel-row { display: flex; gap: 12px; padding: 16px 24px; border-top: 1px solid var(--border); align-items: center; }
 </style>
@@ -290,11 +356,24 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
       <span class="role-badge" id="role-badge">Staff</span>
     </div>
     <div class="nav-right">
-      <div class="nav-user">
+      <div class="nav-user" id="user-menu-btn" onclick="toggleUserMenu()">
         <div class="avatar" id="user-avatar">KV</div>
         <span id="user-name">—</span>
+        <span class="nav-user-chevron">▾</span>
+        <div class="user-dropdown" id="user-dropdown">
+          <div class="user-dropdown-header">
+            <div class="user-dropdown-name" id="dropdown-name">—</div>
+            <div class="user-dropdown-role" id="dropdown-role">—</div>
+          </div>
+          <div class="user-dropdown-item" onclick="openChangePasswordModal();event.stopPropagation()">
+            <span class="user-dropdown-icon">🔑</span> Đổi mật khẩu
+          </div>
+          <div class="user-dropdown-divider"></div>
+          <div class="user-dropdown-item danger" onclick="doLogout();event.stopPropagation()">
+            <span class="user-dropdown-icon">↩</span> Đăng xuất
+          </div>
+        </div>
       </div>
-      <button class="logout-btn" onclick="doLogout()">Đăng xuất</button>
     </div>
   </div>
 
@@ -388,6 +467,8 @@ function doLogin() {
     document.getElementById('role-badge').textContent = u.role;
     document.getElementById('user-avatar').textContent = u.initials;
     document.getElementById('user-name').textContent = u.name;
+    document.getElementById('dropdown-name').textContent = u.name;
+    document.getElementById('dropdown-role').textContent = u.role + ' · LinkaJob';
     buildTabBar(u.role);
     loadDashboard(u.role);
   }
@@ -415,6 +496,60 @@ function doLogout() {
   currentUser = null;
   document.getElementById('dashboard-page').style.display = 'none';
   document.getElementById('login-page').style.display = 'flex';
+  closeUserMenu();
+}
+
+function toggleUserMenu() {
+  document.getElementById('user-menu-btn').classList.toggle('open');
+}
+function closeUserMenu() {
+  document.getElementById('user-menu-btn').classList.remove('open');
+}
+// Click ngoài dropdown thì đóng
+document.addEventListener('click', function(e) {
+  var btn = document.getElementById('user-menu-btn');
+  if (btn && !btn.contains(e.target)) closeUserMenu();
+});
+
+function openChangePasswordModal() {
+  closeUserMenu();
+  document.getElementById('modal-title').textContent = '🔑 Đổi mật khẩu';
+  document.getElementById('modal-body').innerHTML =
+    '<div class="modal-field"><div class="form-label">Mật khẩu hiện tại <span style="color:var(--brand)">*</span></div>' +
+    '<input class="form-input" type="password" id="cp-old" placeholder="Nhập mật khẩu hiện tại" style="margin-top:6px"></div>' +
+    '<div class="modal-field"><div class="form-label">Mật khẩu mới <span style="color:var(--brand)">*</span></div>' +
+    '<input class="form-input" type="password" id="cp-new" placeholder="Tối thiểu 6 ký tự" style="margin-top:6px"></div>' +
+    '<div class="modal-field"><div class="form-label">Xác nhận mật khẩu mới <span style="color:var(--brand)">*</span></div>' +
+    '<input class="form-input" type="password" id="cp-confirm" placeholder="Nhập lại mật khẩu mới" style="margin-top:6px"></div>' +
+    '<div id="cp-error" style="color:var(--brand);font-size:12.5px;margin-top:4px;display:none"></div>';
+  document.getElementById('modal-actions').innerHTML =
+    '<button class="btn-secondary" onclick="closeModal()" style="width:auto;padding:10px 20px">Huỷ</button>' +
+    '<button class="login-btn" onclick="submitChangePassword()" style="width:auto;padding:10px 24px">Đổi mật khẩu</button>';
+  document.getElementById('modal-overlay').classList.add('open');
+  setTimeout(function(){ var el = document.getElementById('cp-old'); if(el) el.focus(); }, 100);
+}
+
+function submitChangePassword() {
+  var oldPw = (document.getElementById('cp-old')||{}).value || '';
+  var newPw = (document.getElementById('cp-new')||{}).value || '';
+  var confirm = (document.getElementById('cp-confirm')||{}).value || '';
+  var errEl = document.getElementById('cp-error');
+
+  // Kiểm tra mật khẩu cũ khớp với tài khoản demo
+  var account = DEMO_ACCOUNTS.find(function(a){ return a.email === currentUser.email; });
+  if (account && oldPw !== account.password) {
+    errEl.textContent = 'Mật khẩu hiện tại không đúng.'; errEl.style.display = 'block'; return;
+  }
+  if (newPw.length < 6) {
+    errEl.textContent = 'Mật khẩu mới phải có ít nhất 6 ký tự.'; errEl.style.display = 'block'; return;
+  }
+  if (newPw !== confirm) {
+    errEl.textContent = 'Mật khẩu xác nhận không khớp.'; errEl.style.display = 'block'; return;
+  }
+  // Cập nhật trong demo accounts
+  if (account) account.password = newPw;
+  closeModal();
+  toast('Đổi mật khẩu thành công!', 'success');
 }
 
 // ════════════════════════════════════════════════════════════
@@ -924,17 +1059,38 @@ const MOCK = {
   ],
   advisees: [
     { id:'adv-ee1', name:'Trần Gia Hân', email:'han.tran@gmail.com', phone:'0911222333', contact:'zalo: 0911222333',
-      pkg:'Đặc Biệt', progress:'3/4', sessionsTotal:4, sessionsDone:3, paid:1499000, registeredAt:'2026-06-10', expiry:'2026-07-08',
+      pkg:'Đặc Biệt', bookingId:'LJ-20260628-7741', advisorTitle:'Brand Manager · Suntory PepsiCo Vietnam',
+      progress:'1/4', sessionsTotal:4, sessionsDone:1, paid:1499000, registeredAt:'2026-06-10', expiry:'2026-07-08',
       advisor:'Nguyễn Vũ Trí Kiên',
-      sessions:[{date:'2026-06-15',no:1,status:'Hoàn thành'},{date:'2026-06-22',no:2,status:'Hoàn thành'},{date:'2026-07-01',no:3,status:'Sắp tới'}] },
+      sessions:[
+        {no:1, date:'2026-06-24', timeStart:'20:00', timeEnd:'21:00', status:'done',     feedback:null, meetLink:'https://meet.google.com/abc-defg-hij'},
+        {no:2, date:'2026-07-03', timeStart:'19:00', timeEnd:'20:00', status:'feedback', feedback:null, meetLink:'https://meet.google.com/abc-defg-hij'},
+        {no:3, date:null, timeStart:null, timeEnd:null, status:'locked', lockedReason:'Hoàn thành feedback buổi 2 để mở khoá', feedback:null},
+        {no:4, date:null, timeStart:null, timeEnd:null, status:'locked', lockedReason:'Buổi 3 chưa hoàn thành', feedback:null},
+      ]
+    },
     { id:'adv-ee2', name:'Bùi Tuấn Anh', email:'anh.bui@gmail.com', phone:'0922333444', contact:'zalo: 0922333444',
-      pkg:'Cơ Bản', progress:'1/2', sessionsTotal:2, sessionsDone:1, paid:799000, registeredAt:'2026-06-20', expiry:'2026-07-04',
+      pkg:'Cơ Bản', bookingId:'LJ-20260620-5523', advisorTitle:'Brand Manager · Suntory PepsiCo Vietnam',
+      progress:'1/2', sessionsTotal:2, sessionsDone:1, paid:799000, registeredAt:'2026-06-20', expiry:'2026-07-04',
       advisor:'Nguyễn Vũ Trí Kiên',
-      sessions:[{date:'2026-06-26',no:1,status:'Hoàn thành'},{date:'2026-07-03',no:2,status:'Sắp tới'}] },
+      sessions:[
+        {no:1, date:'2026-06-26', timeStart:'19:00', timeEnd:'20:00', status:'done',     feedback:{rating:5,text:'Advisor giải thích rất rõ!'}, meetLink:''},
+        {no:2, date:'2026-07-03', timeStart:'20:00', timeEnd:'21:00', status:'upcoming', feedback:null, meetLink:'https://meet.google.com/xyz-uvwx-rst'},
+      ]
+    },
     { id:'adv-ee3', name:'Lê Văn Bình', email:'binh.le@gmail.com', phone:'0933444555', contact:'zalo: 0933444555',
-      pkg:'Chuyên Sâu', progress:'5/6', sessionsTotal:6, sessionsDone:5, paid:2199000, registeredAt:'2026-05-28', expiry:'2026-07-23',
+      pkg:'Chuyên Sâu', bookingId:'LJ-20260528-3310', advisorTitle:'Brand Strategist · Unilever',
+      progress:'5/6', sessionsTotal:6, sessionsDone:5, paid:2199000, registeredAt:'2026-05-28', expiry:'2026-07-23',
       advisor:'Phương Thảo',
-      sessions:[{date:'2026-06-02',no:1,status:'Hoàn thành'},{date:'2026-06-09',no:2,status:'Hoàn thành'},{date:'2026-06-16',no:3,status:'Hoàn thành'},{date:'2026-06-23',no:4,status:'Hoàn thành'},{date:'2026-06-30',no:5,status:'Hoàn thành'},{date:'2026-07-07',no:6,status:'Sắp tới'}] },
+      sessions:[
+        {no:1, date:'2026-06-02', timeStart:'19:00', timeEnd:'20:00', status:'done', feedback:{rating:5,text:'Rất hữu ích'}, meetLink:''},
+        {no:2, date:'2026-06-09', timeStart:'19:00', timeEnd:'20:00', status:'done', feedback:{rating:4,text:'Tốt'}, meetLink:''},
+        {no:3, date:'2026-06-16', timeStart:'19:00', timeEnd:'20:00', status:'done', feedback:{rating:5,text:'Xuất sắc'}, meetLink:''},
+        {no:4, date:'2026-06-23', timeStart:'19:00', timeEnd:'20:00', status:'done', feedback:{rating:4,text:'OK'}, meetLink:''},
+        {no:5, date:'2026-06-30', timeStart:'19:00', timeEnd:'20:00', status:'done', feedback:{rating:5,text:'Tuyệt vời'}, meetLink:''},
+        {no:6, date:'2026-07-07', timeStart:'19:00', timeEnd:'20:00', status:'upcoming', feedback:null, meetLink:'https://meet.google.com/lll-mmmm-nnn'},
+      ]
+    },
   ],
   courses: [
     { id:'c1', name:'Marketing Foundation K12', startDate:'2026-06-20', studentCount:18, sessionsDone:3, sessionsTotal:8, active:true,
@@ -1018,7 +1174,74 @@ function renderStaffListPage() {
   return html;
 }
 
-function openStaffDetail(i) {
+function openExtendModal(aeId) {
+  document.getElementById('modal-title').textContent = '📅 Gia hạn thời gian sử dụng';
+  document.getElementById('modal-body').innerHTML =
+    '<div style="text-align:center;padding:8px 0 16px">' +
+    '<div style="font-size:40px;margin-bottom:12px">⏱</div>' +
+    '<div style="font-size:15px;font-weight:700;color:var(--text);margin-bottom:6px">Cộng thêm 1 tháng sử dụng</div>' +
+    '<div style="font-size:13px;color:var(--muted);line-height:1.7;margin-bottom:16px">Gói của bạn sẽ được gia hạn thêm <strong>30 ngày</strong> kể từ ngày hết hạn hiện tại.</div>' +
+    '<div style="background:var(--brand-light);border:1.5px solid #FECACA;border-radius:12px;padding:14px 20px;display:inline-block">' +
+    '<div style="font-size:24px;font-weight:800;color:var(--brand)">100.000đ</div>' +
+    '<div style="font-size:12px;color:var(--muted);margin-top:2px">Thanh toán 1 lần</div>' +
+    '</div>' +
+    '</div>' +
+    '<div style="background:#F9FAFB;border-radius:10px;padding:12px 16px;font-size:13px;color:var(--muted);line-height:1.65">' +
+    'Sau khi chuyển khoản <strong style="color:var(--text)">100.000đ</strong> với nội dung <strong style="color:var(--brand)">GIA HAN ' + (currentUser.name||'').split(' ').pop().toUpperCase() + '</strong>, ' +
+    'gửi bill về <strong>contact@linkajob.vn</strong> hoặc inbox Facebook. Đội LinkaJob xác nhận trong <strong>2h</strong>.' +
+    '</div>';
+  document.getElementById('modal-actions').innerHTML =
+    '<button class="btn-secondary" onclick="closeModal()" style="width:auto;padding:10px 20px">Đóng</button>' +
+    '<button class="login-btn" onclick="toast(\'Đã ghi nhận! Vui lòng chuyển khoản và gửi bill xác nhận.\',\'success\');closeModal()" style="width:auto;padding:10px 24px">Xác nhận gia hạn</button>';
+  document.getElementById('modal-overlay').classList.add('open');
+}
+
+function openSwitchAdvisorModal(aeId) {
+  const activeAdvisors = MOCK.advisors.filter(function(a){ return a.active; });
+  const ae = MOCK.advisees.find(function(x){ return x.id === aeId; });
+  document.getElementById('modal-title').textContent = '🔄 Đổi sang Advisor khác';
+  let body =
+    '<div style="font-size:13px;color:var(--muted);line-height:1.7;margin-bottom:16px">' +
+    'Bạn có thể đổi Advisor <strong>1 lần</strong> trong suốt gói. Phí đổi Advisor: <strong style="color:var(--brand)">100.000đ</strong>. ' +
+    'Chọn Advisor mới bên dưới và đội LinkaJob sẽ liên hệ xác nhận trong 24h.' +
+    '</div>';
+  body += '<div style="display:flex;flex-direction:column;gap:10px">';
+  activeAdvisors.forEach(function(a) {
+    var isCurrent = ae && ae.advisor === a.name;
+    body += '<div style="display:flex;align-items:center;gap:12px;border:1.5px solid ' + (isCurrent?'#D1D5DB':'var(--border)') + ';border-radius:12px;padding:12px 16px;' + (isCurrent?'opacity:.45;cursor:not-allowed':'cursor:pointer;transition:border-color .15s') + '" ' +
+      (isCurrent ? '' : 'onmouseover="this.style.borderColor=\'var(--brand)\'" onmouseout="this.style.borderColor=\'var(--border)\'" onclick="confirmSwitchAdvisor(\'' + aeId + '\',\'' + a.name + '\')"') + '>' +
+      avatarCircle(a.name, 38) +
+      '<div style="flex:1"><div style="font-weight:700;font-size:13.5px">' + a.name + (isCurrent?' <span style="font-size:11px;color:var(--muted)">(Đang học)</span>':'') + '</div>' +
+      '<div style="font-size:12px;color:var(--muted)">' + a.title + '</div></div>' +
+      (isCurrent ? '' : '<div style="font-size:12px;color:var(--brand);font-weight:600">Chọn →</div>') +
+      '</div>';
+  });
+  body += '</div>';
+  document.getElementById('modal-body').innerHTML = body;
+  document.getElementById('modal-actions').innerHTML =
+    '<button class="login-btn" onclick="closeModal()" style="width:auto;padding:10px 24px">Đóng</button>';
+  document.getElementById('modal-overlay').classList.add('open');
+}
+
+function confirmSwitchAdvisor(aeId, newAdvisorName) {
+  closeModal();
+  setTimeout(function() {
+    document.getElementById('modal-title').textContent = 'Xác nhận đổi Advisor';
+    document.getElementById('modal-body').innerHTML =
+      '<div style="text-align:center;padding:8px 0 16px">' +
+      '<div style="font-size:36px;margin-bottom:10px">🔄</div>' +
+      '<div style="font-size:15px;font-weight:700;margin-bottom:6px">Đổi sang <span style="color:var(--brand)">' + newAdvisorName + '</span>?</div>' +
+      '<div style="font-size:13px;color:var(--muted);line-height:1.7">' +
+      'Phí: <strong style="color:var(--brand)">100.000đ</strong>. Chuyển khoản với nội dung ' +
+      '<strong style="color:var(--brand)">DOI ADVISOR ' + newAdvisorName.split(' ').pop().toUpperCase() + '</strong> và gửi bill về contact@linkajob.vn.' +
+      '</div></div>';
+    document.getElementById('modal-actions').innerHTML =
+      '<button class="btn-secondary" onclick="closeModal()" style="width:auto;padding:10px 20px">Huỷ</button>' +
+      '<button class="login-btn" onclick="toast(\'Đã ghi nhận! Vui lòng chuyển khoản và gửi bill.\',\'success\');closeModal()" style="width:auto;padding:10px 24px">Xác nhận</button>';
+    document.getElementById('modal-overlay').classList.add('open');
+  }, 150);
+}
+
   const s = MOCK.staffList[i];
   document.getElementById('modal-title').textContent = s.name;
   let html = '<div style="display:flex;align-items:center;gap:14px;margin-bottom:20px">' + avatarCircle(s.name,52);
@@ -1540,20 +1763,201 @@ function renderAdvisee(tab) {
   else c.innerHTML = renderNewBookingForm();
 }
 
+// State lưu star rating đang hover/chọn cho từng buổi
+var adviseeStarState = {}; // key: sessionNo, value: { selected, hover }
+
 function renderMyBookings() {
-  const mine = sheetData.bookings.filter(function(b){ return b.advisee_email === currentUser.email || b.advisee_name === currentUser.name; });
-  let html = '<div class="card"><div class="card-header"><div class="card-header-left">Booking của tôi</div></div>';
-  if (mine.length === 0) {
-    html += '<div class="empty-state"><div class="icon">📭</div>Bạn chưa có booking nào.</div>';
-  } else {
-    mine.forEach(function(b){
-      html += '<div class="session-item">' + avatarCircle(b.advisor_name) + '<div class="session-info"><div class="session-name">' + b.advisor_name + '</div><div class="session-meta">' + b.package_name + ' · ' + (b.sessions_used||0) + '/' + (b.sessions_total||0) + ' buổi đã dùng</div></div><div>' + statusBadge(b.status) + '</div>';
-      if (b.meet_link) html += '<a href="' + b.meet_link + '" target="_blank" class="detail-btn">Meet</a>';
-      html += '</div>';
-    });
+  // Tìm advisee hiện tại trong mock data
+  const ae = MOCK.advisees.find(function(x){ return x.name === currentUser.name || x.email === currentUser.email; });
+
+  if (!ae) {
+    return '<div class="card"><div class="empty-state"><div class="icon">📭</div>Bạn chưa có booking nào.<br><small style="color:var(--muted)">Nếu vừa đăng ký, vui lòng chờ đội LinkaJob xác nhận.</small></div></div>';
   }
+
+  const pkg = PACKAGES[ae.pkg] || {};
+  let html = '';
+
+  // ── Booking card ──
+  html += '<div class="aee-booking-card">';
+  html += '<div class="aee-advisor-row">';
+  html += avatarCircle(ae.advisor, 48);
+  html += '<div class="aee-advisor-info"><div class="aee-advisor-name">' + ae.advisor + '</div><div class="aee-advisor-title">' + (ae.advisorTitle||'Advisor · LinkaJob') + '</div></div>';
   html += '</div>';
+  html += '<div class="aee-pkg-row">';
+  html += '<div><div class="aee-pkg-name">Gói ' + ae.pkg + '</div><div class="aee-pkg-meta">' + (pkg.sessions||ae.sessionsTotal) + ' buổi · 45–60 phút/buổi · ' + (ae.bookingId||'') + '</div></div>';
+  html += '<div class="aee-progress-badge">Đã đặt ' + ae.sessionsDone + '/' + ae.sessionsTotal + '</div>';
+  html += '</div>';
+
+  // ── Expiry banner ──
+  var expiryDate = new Date(ae.expiry + 'T00:00:00');
+  var today = new Date(); today.setHours(0,0,0,0);
+  var daysLeft = Math.ceil((expiryDate - today) / 86400000);
+  var expiryLabel = expiryDate.getDate() + '/' + (expiryDate.getMonth()+1) + '/' + expiryDate.getFullYear();
+  var expiryColor = daysLeft <= 7 ? '#C2410C' : '#92400E';
+  html += '<div style="display:flex;align-items:center;gap:10px;background:#FFFBEB;border:1.5px solid #FDE68A;border-radius:10px;padding:12px 16px;margin-top:16px;font-size:13px;color:#92400E">';
+  html += '<span style="font-size:16px">⏱</span>';
+  html += '<span>Gói hết hạn vào <strong style="color:' + expiryColor + '">' + expiryLabel + '</strong> — còn ' + daysLeft + ' ngày</span>';
+  html += '</div>';
+
+  // ── 2 action buttons ──
+  html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px">';
+  html += '<div style="border:1.5px solid var(--border);border-radius:12px;padding:16px 18px;cursor:pointer;transition:border-color .15s" onmouseover="this.style.borderColor=\'var(--brand)\'" onmouseout="this.style.borderColor=\'var(--border)\'" onclick="openExtendModal(\'' + ae.id + '\')">';
+  html += '<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px"><span style="font-size:18px">📅</span><div style="font-size:14px;font-weight:700;color:var(--text)">Gia hạn thời gian</div></div>';
+  html += '<div style="font-size:12.5px;color:var(--muted);margin-bottom:8px">Cộng thêm 1 tháng sử dụng</div>';
+  html += '<div style="font-size:13px;font-weight:700;color:var(--brand)">100.000đ</div>';
+  html += '</div>';
+  html += '<div style="border:1.5px solid var(--border);border-radius:12px;padding:16px 18px;cursor:pointer;transition:border-color .15s" onmouseover="this.style.borderColor=\'var(--brand)\'" onmouseout="this.style.borderColor=\'var(--border)\'" onclick="openSwitchAdvisorModal(\'' + ae.id + '\')">';
+  html += '<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px"><span style="font-size:18px">🔄</span><div style="font-size:14px;font-weight:700;color:var(--text)">Meet advisor khác</div></div>';
+  html += '<div style="font-size:12.5px;color:var(--muted);margin-bottom:8px">Đổi sang advisor mới, 1 lần</div>';
+  html += '<div style="font-size:13px;font-weight:700;color:var(--brand)">100.000đ</div>';
+  html += '</div>';
+  html += '</div>';
+
+  html += '</div>'; // end aee-booking-card
+
+  // ── Lộ trình buổi ──
+  html += '<div class="aee-roadmap">';
+  html += '<div class="aee-roadmap-header">';
+  html += '<div class="aee-roadmap-title">☐ Lộ trình buổi</div>';
+  html += '<div class="aee-roadmap-sub">Hoàn thành từng buổi (bao gồm feedback) để mở khoá buổi tiếp theo</div>';
+  html += '</div>';
+
+  ae.sessions.forEach(function(s) {
+    var isFeedbackOpen = (s.status === 'feedback');
+    html += '<div class="aee-session' + (s.status === 'locked' ? ' locked' : '') + '">';
+
+    // Row chính
+    html += '<div class="aee-session-row">';
+
+    // Indicator
+    if (s.status === 'done') {
+      html += '<div class="aee-session-indicator aee-indicator-done">✓</div>';
+    } else if (s.status === 'feedback') {
+      html += '<div class="aee-session-indicator aee-indicator-feedback">' + s.no + '</div>';
+    } else if (s.status === 'upcoming') {
+      html += '<div class="aee-session-indicator aee-indicator-upcoming">→</div>';
+    } else {
+      html += '<div class="aee-session-indicator aee-indicator-locked">☐</div>';
+    }
+
+    // Label
+    html += '<div class="aee-session-label">';
+    html += '<div class="aee-session-name">Buổi ' + s.no + '</div>';
+    if (s.date) {
+      var d = new Date(s.date + 'T00:00:00');
+      var dow = ['CN','T2','T3','T4','T5','T6','T7'][d.getDay()];
+      html += '<div class="aee-session-time">' + dow + ', ' + d.getDate() + '/' + (d.getMonth()+1) + '/' + d.getFullYear() + ' · ' + s.timeStart + '–' + s.timeEnd + '</div>';
+    } else {
+      html += '<div class="aee-session-time" style="color:var(--muted)">Chưa chọn lịch</div>';
+    }
+    html += '</div>';
+
+    // Badge
+    if (s.status === 'done') {
+      html += '<span class="aee-session-badge-done">Hoàn thành</span>';
+    } else if (s.status === 'feedback') {
+      html += '<span class="aee-session-badge-feedback">Feedback sau meeting <span>☐</span></span>';
+    } else if (s.status === 'upcoming') {
+      html += '<span class="aee-session-badge-upcoming">Sắp tới</span>';
+      if (s.meetLink) html += '</div><div style="padding:0 20px 14px 66px"><a class="aee-meet-link" href="' + s.meetLink + '" target="_blank">🎥 Vào phòng Meet</a>';
+    } else {
+      html += '<span class="aee-session-badge-locked">Đã khoá</span>';
+    }
+
+    html += '</div>'; // end session-row
+
+    // Lock reason
+    if (s.status === 'locked' && s.lockedReason) {
+      html += '<div class="aee-lock-reason">☐ ' + s.lockedReason + '</div>';
+    }
+
+    // Feedback panel (cho buổi cần feedback)
+    if (s.status === 'feedback') {
+      if (!adviseeStarState[s.no]) adviseeStarState[s.no] = { selected: 0, hover: 0 };
+      var st = adviseeStarState[s.no];
+
+      html += '<div class="aee-feedback-panel">';
+      html += '<div class="aee-feedback-alert"><span>☐</span><div><strong>Buổi ' + s.no + ' đã kết thúc.</strong> Hoàn thành feedback để mở khoá buổi tiếp theo.</div></div>';
+
+      html += '<div class="aee-feedback-section-label">Đánh giá chất lượng buổi tư vấn</div>';
+      html += '<div class="aee-stars" id="stars-' + s.no + '">';
+      for (var star = 1; star <= 5; star++) {
+        var isActive = star <= (st.hover || st.selected);
+        html += '<span class="aee-star' + (isActive?' active':'') + '" ' +
+          'onmouseover="aeeHoverStar(' + s.no + ',' + star + ')" ' +
+          'onmouseout="aeeHoverStar(' + s.no + ',0)" ' +
+          'onclick="aeeSelectStar(' + s.no + ',' + star + ')">★</span>';
+      }
+      html += '</div>';
+
+      html += '<div class="aee-feedback-section-label">Ghi chú & góp ý cho Advisor</div>';
+      html += '<div style="font-size:12px;color:var(--muted);margin-bottom:8px">Nội dung feedback giúp advisor cải thiện cho các buổi sau. Sẽ được lưu lại để bạn review sau.</div>';
+      html += '<textarea class="aee-feedback-textarea" id="fbtext-' + s.no + '" placeholder="VD: Anh giải thích rất rõ, em muốn buổi sau thực hành nhiều hơn..."></textarea>';
+
+      html += '<button class="aee-feedback-btn" id="fbbtn-' + s.no + '" onclick="submitAdviseeFeedback(' + s.no + ',' + JSON.stringify(s).replace(/</g,'&lt;') + ')">Gửi feedback và mở khoá buổi ' + (s.no+1) + '</button>';
+      html += '</div>'; // end feedback-panel
+    }
+
+    html += '</div>'; // end aee-session
+  });
+
+  html += '</div>'; // end roadmap
   return html;
+}
+
+function aeeHoverStar(sessionNo, val) {
+  if (!adviseeStarState[sessionNo]) adviseeStarState[sessionNo] = { selected:0, hover:0 };
+  adviseeStarState[sessionNo].hover = val;
+  refreshStars(sessionNo);
+}
+
+function aeeSelectStar(sessionNo, val) {
+  if (!adviseeStarState[sessionNo]) adviseeStarState[sessionNo] = { selected:0, hover:0 };
+  adviseeStarState[sessionNo].selected = val;
+  refreshStars(sessionNo);
+  var btn = document.getElementById('fbbtn-' + sessionNo);
+  if (btn) btn.disabled = false;
+}
+
+function refreshStars(sessionNo) {
+  var st = adviseeStarState[sessionNo];
+  var container = document.getElementById('stars-' + sessionNo);
+  if (!container) return;
+  var stars = container.querySelectorAll('.aee-star');
+  stars.forEach(function(el, i) {
+    el.classList.toggle('active', i < (st.hover || st.selected));
+  });
+}
+
+function submitAdviseeFeedback(sessionNo, session) {
+  var rating = (adviseeStarState[sessionNo]||{}).selected || 0;
+  var text = (document.getElementById('fbtext-' + sessionNo)||{}).value || '';
+  var btn = document.getElementById('fbbtn-' + sessionNo);
+
+  if (!rating) { toast('Vui lòng chọn số sao trước khi gửi', 'error'); return; }
+
+  if (btn) { btn.innerHTML = '<span class="spinner"></span> Đang gửi...'; btn.disabled = true; }
+
+  // Lưu vào mock data và cập nhật trạng thái buổi
+  var ae = MOCK.advisees.find(function(x){ return x.name === currentUser.name; });
+  if (ae) {
+    var s = ae.sessions.find(function(x){ return x.no === sessionNo; });
+    if (s) {
+      s.status = 'done';
+      s.feedback = { rating: rating, text: text };
+      ae.sessionsDone = Math.min(ae.sessionsDone + 1, ae.sessionsTotal);
+    }
+    // Mở khoá buổi tiếp theo
+    var next = ae.sessions.find(function(x){ return x.no === sessionNo + 1 && x.status === 'locked'; });
+    if (next) next.status = 'upcoming';
+  }
+
+  setTimeout(function() {
+    toast('Đã gửi feedback buổi ' + sessionNo + '! Buổi ' + (sessionNo+1) + ' đã mở khoá 🎉', 'success');
+    adviseeStarState[sessionNo] = { selected:0, hover:0 };
+    renderAdvisee('my-bookings');
+    document.getElementById('main-content').innerHTML = renderMyBookings();
+  }, 800);
 }
 
 function submitBooking() {
