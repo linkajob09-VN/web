@@ -1242,6 +1242,7 @@ function confirmSwitchAdvisor(aeId, newAdvisorName) {
   }, 150);
 }
 
+function openStaffDetail(i) {
   const s = MOCK.staffList[i];
   document.getElementById('modal-title').textContent = s.name;
   let html = '<div style="display:flex;align-items:center;gap:14px;margin-bottom:20px">' + avatarCircle(s.name,52);
