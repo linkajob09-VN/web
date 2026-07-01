@@ -234,6 +234,11 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
 <script>
 const API = 'https://script.google.com/macros/s/AKfycbx7Bd9VvoyzfiiezQV9huoY2BKHH_Br1RAFIz00mjdyKeis-Zv-38a0gf_b-fMlul2C/exec';
 
+// Định danh dùng chung cho lịch trống "Tư vấn miễn phí" — PHẢI khớp với
+// CW_STAFF_IDENTITY trong index.html. Mọi nhân viên Staff đăng nhập đều
+// gửi/xem chung 1 lịch trống dưới định danh này (chưa tách lịch riêng từng Staff).
+const STAFF_SLOT_IDENTITY = 'LinkaJob Team';
+
 const DEMO_ACCOUNTS = [
   { email: 'kien@linkajob.vn',    password: '123456', role: 'Advisor', name: 'Nguyễn Vũ Trí Kiên', initials: 'KV' },
   { email: 'phuong@linkajob.vn',  password: '123456', role: 'Staff',   name: 'Phương Staff',        initials: 'PS' },
@@ -255,6 +260,14 @@ let selectedRole = 'Advisor';
 let weekOffset = 0;
 let selectedSlots = new Set();
 let sheetData = { bookings: [], slots: [] };
+
+// Định danh dùng để gửi/lọc lịch trống: Advisor dùng tên riêng của họ,
+// Staff dùng chung 1 định danh STAFF_SLOT_IDENTITY (vì widget tư vấn
+// miễn phí trên trang chủ chỉ biết tới định danh chung này).
+function scheduleIdentity() {
+  if (!currentUser) return '';
+  return currentUser.role === 'Staff' ? STAFF_SLOT_IDENTITY : currentUser.name;
+}
 
 function toast(msg, type) {
   type = type || '';
@@ -316,13 +329,14 @@ function doLogin() {
 
   btn.innerHTML = '<span class="spinner"></span>';
   btn.disabled = true;
-  apiGet('auth', { email: email, role: selectedRole }).then(function(res){
+  apiGet('login', { email: email, password: password }).then(function(res){
     btn.innerHTML = 'Đăng nhập';
     btn.disabled = false;
     if (res && res.success) {
-      finishLogin({ email: email, role: selectedRole, name: res.name || email, initials: mkInitials(res.name || email) });
+      finishLogin({ email: res.email || email, role: res.role || selectedRole, name: res.name || email, initials: mkInitials(res.name || email) });
     } else {
-      finishLogin(null);
+      errEl.textContent = (res && res.error) || 'Email hoặc mật khẩu không đúng';
+      errEl.style.display = 'block';
     }
   }).catch(function(){
     btn.innerHTML = 'Đăng nhập';
@@ -339,7 +353,7 @@ function doLogout() {
 
 const TAB_DEFS = {
   Advisor: [ {id:'overview',label:'Tổng quan'}, {id:'schedule',label:'Gửi lịch trống'}, {id:'booked',label:'Buổi đã book'} ],
-  Staff:   [ {id:'linkajob',label:'LinkaJob'}, {id:'advisor-mod',label:'Advisor'}, {id:'advisee-mod',label:'Advisee'}, {id:'course-mod',label:'Khoá học'} ],
+  Staff:   [ {id:'all-bookings',label:'Tất cả Booking'}, {id:'schedule',label:'Gửi lịch trống'}, {id:'new-booking',label:'Tạo booking mới'}, {id:'advisors',label:'Advisors'} ],
   Advisee: [ {id:'my-bookings',label:'Booking của tôi'}, {id:'new-booking',label:'Đặt lịch mới'} ]
 };
 
@@ -362,22 +376,21 @@ function switchTab(tabId, el) {
 function loadDashboard(role, tab) {
   tab = tab || TAB_DEFS[role][0].id;
   const content = document.getElementById('main-content');
-
-  // Module Staff dùng mock data, render ngay không cần gọi Sheet
-  if (role === 'Staff') { renderStaff(tab); return; }
-
   content.innerHTML = skeletonRows(3);
 
-  const advisorName = role === 'Advisor' ? currentUser.name : '';
+  const bookingsAdvisorFilter = role === 'Advisor' ? currentUser.name : '';
+  const slotsIdentity = (role === 'Advisor' || role === 'Staff') ? scheduleIdentity() : '';
+
   Promise.all([
-    apiGet('getBookings', { advisor: advisorName, role: role }).catch(function(){ return null; }),
-    apiGet('getSlots', { advisor: advisorName }).catch(function(){ return null; })
+    apiGet('getBookings', { advisor: bookingsAdvisorFilter, role: role }).catch(function(){ return null; }),
+    apiGet('getSlots', { advisor: slotsIdentity }).catch(function(){ return null; })
   ]).then(function(results){
     const bookRes = results[0], slotRes = results[1];
     if (bookRes && bookRes.data) sheetData.bookings = bookRes.data;
     if (slotRes && slotRes.data) sheetData.slots = slotRes.data;
 
     if (role === 'Advisor') renderAdvisor(tab);
+    else if (role === 'Staff') renderStaff(tab);
     else renderAdvisee(tab);
   });
 }
@@ -438,17 +451,21 @@ function renderSchedulePicker() {
   const monday = getMondayOfWeek(new Date(), weekOffset);
   const days = [];
   for (let i=0;i<7;i++) { const d = new Date(monday); d.setDate(monday.getDate()+i); days.push(d); }
+  const identity = scheduleIdentity();
   const bookedKeys = {};
   const savedKeys = {};
   sheetData.slots.forEach(function(s){
-    // sheet that dung advisor_name, date, time_start thay vi advisor/slot_key
     var key = slotKeyFromSheetRow(s);
-    if (s.advisor_name === currentUser.name && s.status === 'booked') bookedKeys[key] = true;
-    if (s.advisor_name === currentUser.name && s.status === 'available') savedKeys[key] = true;
+    if (s.advisor_name === identity && s.status === 'booked') bookedKeys[key] = true;
+    if (s.advisor_name === identity && s.status === 'available') savedKeys[key] = true;
   });
   const wLabel = fmtShort(days[0]) + ' – ' + fmtShort(days[6]);
+  const subtitle = currentUser.role === 'Staff'
+    ? 'Lịch tư vấn miễn phí (dùng chung cho cả đội Staff)'
+    : 'Lịch trống của bạn';
 
   let html = '<div class="card"><div class="card-header"><div class="card-header-left">Gửi lịch trống</div></div>';
+  html += '<div style="padding:0 24px;font-size:12px;color:var(--muted);margin-top:-8px;margin-bottom:4px;">' + subtitle + '</div>';
   html += '<div class="week-nav"><button onclick="changeWeek(-1)">‹</button><span class="week-label">' + wLabel + '</span><button onclick="changeWeek(1)">›</button></div>';
   html += '<div class="slot-grid">';
   days.forEach(function(d){ html += '<div class="slot-day-hdr">' + DAYS_VI[d.getDay()] + '<br><span style="font-weight:400;font-size:10px">' + d.getDate() + '/' + (d.getMonth()+1) + '</span></div>'; });
@@ -490,276 +507,29 @@ function renderBookedSessions() {
 
 function renderStaff(tab) {
   const c = document.getElementById('main-content');
-  if (tab === 'linkajob') c.innerHTML = renderLinkaJobModule();
-  else if (tab === 'advisor-mod') c.innerHTML = renderAdvisorModule();
-  else if (tab === 'advisee-mod') c.innerHTML = renderAdviseeModule();
-  else c.innerHTML = renderCourseModule();
+  if (tab === 'all-bookings') c.innerHTML = renderAllBookings();
+  else if (tab === 'schedule') c.innerHTML = renderSchedulePicker();
+  else if (tab === 'new-booking') c.innerHTML = renderNewBookingForm();
+  else c.innerHTML = renderAdvisorsList();
 }
 
-// ════════════════════════════════════════════════════════════
-//  MOCK DATA — dùng tạm trước khi nối Sheet thật cho module Staff
-// ════════════════════════════════════════════════════════════
-const MOCK = {
-  revenue: { today: 4180000, week: 18950000, month: 76400000, year: 612000000 },
-  reportSeries: [
-    {label:'T2', value: 8}, {label:'T3', value: 14}, {label:'T4', value: 11},
-    {label:'T5', value: 19}, {label:'T6', value: 23}, {label:'T7', value: 16}, {label:'CN', value: 9}
-  ],
-  retentionRate: 78,
-  newCustomerRate: 34,
-  meetings: [
-    { type: 'Cố vấn 1-1', advisor: 'Nguyễn Vũ Trí Kiên', advisee: 'Trần Gia Hân', date: '2026-07-01', time: '20:00', meet_link: 'https://meet.google.com/abc-defg-hij', booked_at: '2026-06-25 14:20', changed_at: '', session_no: '2/4', feedback_advisor: 'Advisee chuẩn bị tốt, tiến bộ rõ', feedback_advisee: 'Advisor giải thích dễ hiểu', question: 'Làm sao build portfolio Marketing?' },
-    { type: 'Tư vấn', advisor: 'Phương Staff', advisee: 'Bùi Tuấn Anh', date: '2026-07-03', time: '19:00', meet_link: 'https://meet.google.com/xyz-uvwx-rst', booked_at: '2026-06-26 09:10', changed_at: '2026-06-27 11:00', session_no: '1/2', feedback_advisor: '', feedback_advisee: '', question: 'Định hướng ngành Brand' },
-    { type: 'Khoá học', advisor: 'GV. Lê Minh Anh', advisee: 'Lớp Marketing K12', date: '2026-07-05', time: '18:30', meet_link: 'https://meet.google.com/lll-mmmm-nnn', booked_at: '2026-06-20 08:00', changed_at: '', session_no: '3/8', feedback_advisor: '', feedback_advisee: '', question: '' },
-  ],
-  products: [
-    { name: 'Trial', type: 'Gói cố vấn', price: 419000, sessions: 1, advisors: 'Tất cả advisor', active: true },
-    { name: 'Cơ Bản', type: 'Gói cố vấn', price: 799000, sessions: 2, advisors: 'Tất cả advisor', active: true },
-    { name: 'Đặc Biệt', type: 'Gói cố vấn', price: 1499000, sessions: 4, advisors: 'Tất cả advisor', active: true },
-    { name: 'Chuyên Sâu', type: 'Gói cố vấn', price: 2199000, sessions: 6, advisors: 'Tất cả advisor', active: true },
-    { name: 'Marketing Foundation', type: 'Khoá học', price: 2990000, sessions: 8, advisors: 'GV. Lê Minh Anh', active: true },
-  ],
-  advisors: [
-    { id:'adv1', name:'Nguyễn Vũ Trí Kiên', title:'Senior Marketing Manager', active:true, adviseeCount:3, sessionsDone:3, sessionsTotal:6,
-      email:'kien@linkajob.vn', phone:'0901234567', contact:'linkedin.com/in/kien', bio:'8 năm kinh nghiệm Marketing tại các tập đoàn FMCG.',
-      message:'Mình tin rằng career growth đến từ những bước đi rõ ràng — hãy để mình đồng hành cùng bạn.',
-      feedbacks:[{from:'Trần Gia Hân', text:'Advisor rất tận tâm và cho lời khuyên thực tế'}],
-      products:['Cơ Bản','Đặc Biệt'],
-      slots:['T2 19:00','T3 20:00','T5 19:00'],
-      advisees:[{name:'Trần Gia Hân', pkg:'Đặc Biệt', progress:'3/4'},{name:'Bùi Tuấn Anh', pkg:'Cơ Bản', progress:'1/2'}] },
-    { id:'adv2', name:'Phương Thảo', title:'Brand Strategist', active:true, adviseeCount:2, sessionsDone:5, sessionsTotal:8,
-      email:'phuong@linkajob.vn', phone:'0907654321', contact:'linkedin.com/in/phuong',
-      bio:'Chuyên gia Brand 6 năm, từng làm tại Unilever và các agency lớn.',
-      message:'Branding không chỉ là logo — đó là câu chuyện bạn kể mỗi ngày.',
-      feedbacks:[{from:'Lê Văn Bình', text:'Cách tiếp cận rất hệ thống, dễ áp dụng'}],
-      products:['Đặc Biệt','Chuyên Sâu'],
-      slots:['T4 18:00','T6 20:00'],
-      advisees:[{name:'Lê Văn Bình', pkg:'Chuyên Sâu', progress:'5/6'}] },
-    { id:'adv3', name:'Đặng Quốc Huy', title:'Finance Lead', active:false, adviseeCount:0, sessionsDone:12, sessionsTotal:12,
-      email:'huy@linkajob.vn', phone:'0912345678', contact:'linkedin.com/in/huy',
-      bio:'10 năm Finance, CFA Level 3.', message:'Tài chính cá nhân vững vàng là nền tảng của sự nghiệp bền vững.',
-      feedbacks:[], products:['Cơ Bản'], slots:[], advisees:[] },
-  ],
-  advisees: [
-    { id:'adv-ee1', name:'Trần Gia Hân', email:'han.tran@gmail.com', phone:'0911222333', contact:'zalo: 0911222333',
-      pkg:'Đặc Biệt', progress:'3/4', sessionsTotal:4, sessionsDone:3, paid:1499000, registeredAt:'2026-06-10', expiry:'2026-07-08',
-      advisor:'Nguyễn Vũ Trí Kiên',
-      sessions:[{date:'2026-06-15',no:1,status:'Hoàn thành'},{date:'2026-06-22',no:2,status:'Hoàn thành'},{date:'2026-07-01',no:3,status:'Sắp tới'}] },
-    { id:'adv-ee2', name:'Bùi Tuấn Anh', email:'anh.bui@gmail.com', phone:'0922333444', contact:'zalo: 0922333444',
-      pkg:'Cơ Bản', progress:'1/2', sessionsTotal:2, sessionsDone:1, paid:799000, registeredAt:'2026-06-20', expiry:'2026-07-04',
-      advisor:'Nguyễn Vũ Trí Kiên',
-      sessions:[{date:'2026-06-26',no:1,status:'Hoàn thành'},{date:'2026-07-03',no:2,status:'Sắp tới'}] },
-    { id:'adv-ee3', name:'Lê Văn Bình', email:'binh.le@gmail.com', phone:'0933444555', contact:'zalo: 0933444555',
-      pkg:'Chuyên Sâu', progress:'5/6', sessionsTotal:6, sessionsDone:5, paid:2199000, registeredAt:'2026-05-28', expiry:'2026-07-23',
-      advisor:'Phương Thảo',
-      sessions:[{date:'2026-06-02',no:1,status:'Hoàn thành'},{date:'2026-06-09',no:2,status:'Hoàn thành'},{date:'2026-06-16',no:3,status:'Hoàn thành'},{date:'2026-06-23',no:4,status:'Hoàn thành'},{date:'2026-06-30',no:5,status:'Hoàn thành'},{date:'2026-07-07',no:6,status:'Sắp tới'}] },
-  ],
-  courses: [
-    { id:'c1', name:'Marketing Foundation K12', startDate:'2026-06-20', studentCount:18, sessionsDone:3, sessionsTotal:8, active:true,
-      teacher:'GV. Lê Minh Anh', meetLink:'https://meet.google.com/lll-mmmm-nnn',
-      schedule:[{date:'2026-06-20',topic:'Giới thiệu Marketing căn bản'},{date:'2026-06-27',topic:'Customer Insight'},{date:'2026-07-04',topic:'Brand Positioning'}],
-      materials:['Slide buổi 1.pdf','Case study Vinamilk.pdf'],
-      students:['Trần Gia Hân','Bùi Tuấn Anh','+16 học viên khác'] },
-    { id:'c2', name:'Finance for Non-Finance K3', startDate:'2026-07-10', studentCount:12, sessionsDone:0, sessionsTotal:6, active:true,
-      teacher:'Đặng Quốc Huy', meetLink:'https://meet.google.com/fff-gggg-hhh',
-      schedule:[{date:'2026-07-10',topic:'Đọc hiểu báo cáo tài chính'}],
-      materials:[], students:['Lê Văn Bình','+11 học viên khác'] },
-  ],
-};
-
-function fmtMoney(n) { return (n||0).toLocaleString('vi-VN') + 'đ'; }
-
-// ════════════════════════════════════════════════════════════
-//  MODULE 1: LINKAJOB (trang mặc định khi Staff đăng nhập)
-// ════════════════════════════════════════════════════════════
-function renderLinkaJobModule() {
-  const maxVal = Math.max.apply(null, MOCK.reportSeries.map(function(d){ return d.value; }));
-  let chartBars = '';
-  MOCK.reportSeries.forEach(function(d){
-    const h = Math.round((d.value / maxVal) * 100);
-    chartBars += '<div style="display:flex;flex-direction:column;align-items:center;gap:6px;flex:1">' +
-      '<div style="font-size:11px;color:var(--muted);font-weight:600">' + d.value + '</div>' +
-      '<div style="width:100%;max-width:32px;height:' + h + 'px;background:var(--brand);border-radius:6px 6px 0 0;transition:height .3s"></div>' +
-      '<div style="font-size:11px;color:var(--muted)">' + d.label + '</div>' +
-    '</div>';
-  });
-
-  let html = '';
-
-  // Doanh thu
-  html += '<div class="stats-row" style="grid-template-columns:repeat(4,1fr)">';
-  html += '<div class="stat-cell"><div class="stat-num" style="font-size:24px">' + fmtMoney(MOCK.revenue.today) + '</div><div class="stat-label">Doanh thu hôm nay</div></div>';
-  html += '<div class="stat-cell"><div class="stat-num" style="font-size:24px">' + fmtMoney(MOCK.revenue.week) + '</div><div class="stat-label">Tuần này</div></div>';
-  html += '<div class="stat-cell"><div class="stat-num" style="font-size:24px">' + fmtMoney(MOCK.revenue.month) + '</div><div class="stat-label">Tháng này</div></div>';
-  html += '<div class="stat-cell"><div class="stat-num" style="font-size:24px">' + fmtMoney(MOCK.revenue.year) + '</div><div class="stat-label">Năm nay</div></div>';
+function renderAllBookings() {
+  const all = sheetData.bookings;
+  const counts = {pending_payment:0,confirmed:0,completed:0,cancelled:0};
+  all.forEach(function(b){ if (counts[b.status] !== undefined) counts[b.status]++; });
+  let html = '<div class="stats-row" style="grid-template-columns:repeat(4,1fr)">';
+  Object.keys(counts).forEach(function(s){ html += '<div class="stat-cell"><div class="stat-num">' + counts[s] + '</div><div class="stat-label">' + statusLabel(s) + '</div></div>'; });
   html += '</div>';
-
-  // Báo cáo hoạt động + retention/new customer
-  html += '<div class="card"><div class="card-header"><div class="card-header-left">Báo cáo hoạt động (buổi meeting / tuần)</div></div>';
-  html += '<div style="display:flex;gap:8px;align-items:flex-end;height:140px;padding:8px 24px 24px">' + chartBars + '</div>';
-  html += '</div>';
-
-  html += '<div class="stats-row">';
-  html += '<div class="stat-cell"><div class="stat-num">' + MOCK.retentionRate + '%</div><div class="stat-label">Tỷ lệ Retention</div><div class="stat-detail">Advisee tiếp tục mua gói mới sau khi hết hạn</div></div>';
-  html += '<div class="stat-cell"><div class="stat-num">' + MOCK.newCustomerRate + '%</div><div class="stat-label">Tỷ lệ KH mới</div><div class="stat-detail">Trên tổng booking trong tháng</div></div>';
-  html += '<div class="stat-cell"><div class="stat-num">' + MOCK.meetings.length + '</div><div class="stat-label">Lịch meeting sắp tới</div></div>';
-  html += '</div>';
-
-  // Lịch meeting
-  html += '<div class="card"><div class="card-header"><div class="card-header-left">Lịch meeting (cố vấn 1-1, tư vấn, khoá học)</div></div>';
-  html += '<table class="bookings-table"><thead><tr><th>LOẠI</th><th>ADVISOR</th><th>ADVISEE</th><th>NGÀY GIỜ</th><th>BUỔI</th><th></th></tr></thead><tbody>';
-  MOCK.meetings.forEach(function(m,i){
-    html += '<tr><td>' + m.type + '</td><td>' + m.advisor + '</td><td>' + m.advisee + '</td>';
-    html += '<td>' + fmtDateStr(m.date) + ' · ' + m.time + '</td><td>' + m.session_no + '</td>';
-    html += '<td><button class="update-btn" onclick="showMeetingDetail(' + i + ')">Chi tiết</button></td></tr>';
-  });
-  html += '</tbody></table></div>';
-
-  // Sản phẩm
-  html += '<div class="card"><div class="card-header"><div class="card-header-left">Sản phẩm</div><span style="font-size:12px;color:var(--muted)">Bấm vào giá để điều chỉnh</span></div>';
-  html += '<table class="bookings-table"><thead><tr><th>TÊN</th><th>LOẠI</th><th>GIÁ</th><th>SỐ BUỔI</th><th>ÁP DỤNG TRÊN</th><th>TRẠNG THÁI</th></tr></thead><tbody>';
-  MOCK.products.forEach(function(p,i){
-    html += '<tr><td><b>' + p.name + '</b></td><td>' + p.type + '</td>';
-    html += '<td><span class="update-btn" style="cursor:pointer" onclick="editProductPrice(' + i + ')">' + fmtMoney(p.price) + ' ✎</span></td>';
-    html += '<td>' + p.sessions + ' buổi</td><td>' + p.advisors + '</td>';
-    html += '<td>' + (p.active ? '<span class="badge badge-confirmed">Đang bán</span>' : '<span class="badge badge-cancelled">Tạm ngưng</span>') + '</td></tr>';
-  });
-  html += '</tbody></table></div>';
-
-  return html;
-}
-
-function fmtDateStr(s) { const d = new Date(s + 'T00:00:00'); return DAYS_VI[d.getDay()] + ' ' + d.getDate() + '/' + (d.getMonth()+1); }
-
-function showMeetingDetail(i) {
-  const m = MOCK.meetings[i];
-  document.getElementById('modal-title').textContent = 'Chi tiết buổi meeting';
-  let html = '<div class="modal-field"><b>Loại:</b> ' + m.type + '</div>';
-  html += '<div class="modal-field"><b>Advisor:</b> ' + m.advisor + '</div>';
-  html += '<div class="modal-field"><b>Advisee:</b> ' + m.advisee + '</div>';
-  html += '<div class="modal-field"><b>Ngày giờ:</b> ' + fmtDateStr(m.date) + ' · ' + m.time + '</div>';
-  html += '<div class="modal-field"><b>Buổi thứ:</b> ' + m.session_no + '</div>';
-  html += '<div class="modal-field"><b>Link meeting:</b> <a href="' + m.meet_link + '" target="_blank">' + m.meet_link + '</a></div>';
-  html += '<div class="modal-field"><b>Đăng ký lúc:</b> ' + m.booked_at + '</div>';
-  if (m.changed_at) html += '<div class="modal-field"><b>Đổi lịch lúc:</b> ' + m.changed_at + '</div>';
-  if (m.question) html += '<div class="modal-field"><b>Câu hỏi Advisee:</b> ' + m.question + '</div>';
-  if (m.feedback_advisor) html += '<div class="modal-field"><b>Feedback Advisor:</b> ' + m.feedback_advisor + '</div>';
-  if (m.feedback_advisee) html += '<div class="modal-field"><b>Feedback Advisee:</b> ' + m.feedback_advisee + '</div>';
-  document.getElementById('modal-body').innerHTML = html;
-  document.getElementById('modal-actions').innerHTML = '<button class="login-btn" onclick="closeModal()" style="width:auto;padding:10px 24px">Đóng</button>';
-  document.getElementById('modal-overlay').classList.add('open');
-}
-
-function editProductPrice(i) {
-  const p = MOCK.products[i];
-  document.getElementById('modal-title').textContent = 'Điều chỉnh đơn giá — ' + p.name;
-  document.getElementById('modal-body').innerHTML =
-    '<div class="modal-field"><div class="form-label">Giá hiện tại</div><input class="form-input" id="edit-price-input" type="number" value="' + p.price + '" style="margin-top:6px"></div>';
-  document.getElementById('modal-actions').innerHTML =
-    '<button class="btn-secondary" onclick="closeModal()" style="width:auto;padding:10px 20px">Huỷ</button>' +
-    '<button class="login-btn" style="width:auto;padding:10px 24px" onclick="saveProductPrice(' + i + ')">Lưu thay đổi</button>';
-  document.getElementById('modal-overlay').classList.add('open');
-}
-function saveProductPrice(i) {
-  const val = Number(document.getElementById('edit-price-input').value);
-  if (!val) { toast('Giá không hợp lệ', 'error'); return; }
-  MOCK.products[i].price = val;
-  toast('Đã cập nhật giá ' + MOCK.products[i].name, 'success');
-  closeModal();
-  loadDashboard('Staff','linkajob');
-}
-
-// ════════════════════════════════════════════════════════════
-//  MODULE 2: ADVISOR
-// ════════════════════════════════════════════════════════════
-function renderAdvisorModule() {
-  let html = '<div class="card"><div class="card-header"><div class="card-header-left">Advisor đang hoạt động</div>';
-  html += '<button class="submit-btn" style="padding:8px 16px;font-size:13px" onclick="toast(\'Form thêm Advisor mới (demo)\',\'success\')">+ Thêm Advisor mới</button></div>';
-
-  const active = MOCK.advisors.filter(function(a){ return a.active; });
-  if (active.length === 0) {
-    html += '<div class="empty-state"><div class="icon">👤</div>Chưa có advisor nào đang hoạt động</div>';
+  html += '<div class="card"><div class="card-header"><div class="card-header-left">Tất cả Booking</div><button class="refresh-btn" onclick="loadDashboard(\'Staff\',\'all-bookings\')">↻ Làm mới</button></div>';
+  if (all.length === 0) {
+    html += '<div class="empty-state"><div class="icon">📭</div>Chưa có booking nào trong Sheet</div>';
   } else {
-    html += '<div style="display:flex;gap:14px;overflow-x:auto;padding:18px 24px 24px">';
-    active.forEach(function(a){
-      html += '<div style="min-width:220px;border:1.5px solid var(--border);border-radius:14px;padding:18px;flex-shrink:0">';
-      html += '<div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">' + avatarCircle(a.name, 44) + '<div><div style="font-weight:700;font-size:14px">' + a.name + '</div><div style="font-size:12px;color:var(--muted)">' + a.title + '</div></div></div>';
-      html += '<div style="font-size:13px;color:var(--muted);margin-bottom:4px">Advisee đang meet: <b style="color:var(--text)">' + a.adviseeCount + '</b></div>';
-      html += '<div style="font-size:13px;color:var(--muted);margin-bottom:14px">Buổi hoàn thành: <b style="color:var(--text)">' + a.sessionsDone + '/' + a.sessionsTotal + '</b></div>';
-      html += '<button class="update-btn" style="width:100%" onclick="showAdvisorDetail(\'' + a.id + '\')">Xem chi tiết</button>';
-      html += '</div>';
-    });
-    html += '</div>';
-  }
-  html += '</div>';
-
-  const inactive = MOCK.advisors.filter(function(a){ return !a.active; });
-  if (inactive.length > 0) {
-    html += '<div class="card"><div class="card-header"><div class="card-header-left">Advisor không hoạt động</div></div>';
-    html += '<table class="bookings-table"><thead><tr><th>TÊN</th><th>CHỨC DANH</th><th></th></tr></thead><tbody>';
-    inactive.forEach(function(a){
-      html += '<tr><td>' + a.name + '</td><td>' + a.title + '</td><td><button class="update-btn" onclick="showAdvisorDetail(\'' + a.id + '\')">Chi tiết</button></td></tr>';
-    });
-    html += '</tbody></table></div>';
-  }
-
-  return html;
-}
-
-function showAdvisorDetail(id) {
-  const a = MOCK.advisors.find(function(x){ return x.id === id; });
-  if (!a) return;
-  document.getElementById('modal-title').textContent = a.name;
-  let html = '<div style="display:flex;align-items:center;gap:14px;margin-bottom:18px">' + avatarCircle(a.name,52) + '<div><div style="font-weight:700;font-size:16px">' + a.name + '</div><div style="font-size:13px;color:var(--muted)">' + a.title + '</div></div></div>';
-
-  html += '<div style="font-size:13px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin:18px 0 8px">Thông tin liên hệ</div>';
-  html += '<div class="modal-field"><b>Email:</b> ' + a.email + '</div>';
-  html += '<div class="modal-field"><b>SĐT:</b> ' + a.phone + '</div>';
-  html += '<div class="modal-field"><b>Liên hệ:</b> ' + a.contact + '</div>';
-
-  html += '<div style="font-size:13px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin:18px 0 8px">Thông tin public trên web</div>';
-  html += '<div class="modal-field"><b>Giới thiệu:</b> ' + a.bio + '</div>';
-  html += '<div class="modal-field"><b>Lời nhắn:</b> ' + a.message + '</div>';
-  if (a.feedbacks.length) {
-    html += '<div class="modal-field"><b>Feedback:</b><br>' + a.feedbacks.map(function(f){ return '"' + f.text + '" — ' + f.from; }).join('<br>') + '</div>';
-  }
-  html += '<div class="modal-field"><b>Sản phẩm:</b> ' + a.products.join(', ') + '</div>';
-
-  html += '<div style="font-size:13px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin:18px 0 8px">Lịch available</div>';
-  if (a.slots.length === 0) {
-    html += '<div class="modal-field" style="color:var(--muted)">Không có slot trống (trang đặt lịch đang tắt)</div>';
-  } else {
-    html += '<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px">' + a.slots.map(function(s){ return '<span class="badge badge-confirmed">' + s + '</span>'; }).join('') + '</div>';
-  }
-
-  html += '<div style="font-size:13px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin:18px 0 8px">Advisee đã meet</div>';
-  if (a.advisees.length === 0) {
-    html += '<div class="modal-field" style="color:var(--muted)">Chưa có advisee nào</div>';
-  } else {
-    a.advisees.forEach(function(ae){
-      html += '<div class="modal-field" style="display:flex;justify-content:space-between"><span>' + ae.name + ' · ' + ae.pkg + '</span><span style="font-weight:700">' + ae.progress + '</span></div>';
-    });
-  }
-
-  document.getElementById('modal-body').innerHTML = html;
-  document.getElementById('modal-actions').innerHTML = '<button class="login-btn" onclick="closeModal()" style="width:auto;padding:10px 24px">Đóng</button>';
-  document.getElementById('modal-overlay').classList.add('open');
-}
-
-// ════════════════════════════════════════════════════════════
-//  MODULE 3: ADVISEE
-// ════════════════════════════════════════════════════════════
-function renderAdviseeModule() {
-  let html = '<div class="card"><div class="card-header"><div class="card-header-left">Advisee đang hoạt động</div></div>';
-  if (MOCK.advisees.length === 0) {
-    html += '<div class="empty-state"><div class="icon">🙋</div>Chưa có advisee nào</div>';
-  } else {
-    html += '<table class="bookings-table"><thead><tr><th>ADVISEE</th><th>EMAIL / SĐT</th><th>GÓI</th><th>BUỔI HOÀN THÀNH</th><th></th></tr></thead><tbody>';
-    MOCK.advisees.forEach(function(ae){
-      html += '<tr><td><div style="display:flex;align-items:center;gap:10px">' + avatarCircle(ae.name,32) + '<b>' + ae.name + '</b></div></td>';
-      html += '<td><div style="font-size:13px">' + ae.email + '</div><div style="font-size:12px;color:var(--muted)">' + ae.phone + '</div></td>';
-      html += '<td>' + ae.pkg + '</td><td><b>' + ae.progress + '</b></td>';
-      html += '<td><button class="update-btn" onclick="showAdviseeDetail(\'' + ae.id + '\')">Chi tiết</button></td></tr>';
+    html += '<table class="bookings-table"><thead><tr><th>BOOKING ID</th><th>ADVISEE</th><th>ADVISOR</th><th>GÓI</th><th>TRẠNG THÁI</th><th></th></tr></thead><tbody>';
+    all.forEach(function(b){
+      html += '<tr><td style="font-size:12px;color:var(--muted)">' + (b.booking_id||'—') + '</td>';
+      html += '<td><b>' + (b.advisee_name||'—') + '</b><br><span style="font-size:12px;color:var(--muted)">' + (b.advisee_email||'') + '</span></td>';
+      html += '<td>' + (b.advisor_name||'—') + '</td><td>' + (b.package_name||'—') + '</td><td>' + statusBadge(b.status) + '</td>';
+      html += '<td>' + (b.status==='pending_payment' ? '<button class="update-btn green" onclick="confirmBooking(\'' + b.booking_id + '\')">✓ Xác nhận</button>' : '<button class="update-btn" onclick="showDetail(' + esc(b) + ')">Chi tiết</button>') + '</td></tr>';
     });
     html += '</tbody></table>';
   }
@@ -767,77 +537,30 @@ function renderAdviseeModule() {
   return html;
 }
 
-function showAdviseeDetail(id) {
-  const ae = MOCK.advisees.find(function(x){ return x.id === id; });
-  if (!ae) return;
-  document.getElementById('modal-title').textContent = ae.name;
-  let html = '<div style="display:flex;align-items:center;gap:14px;margin-bottom:18px">' + avatarCircle(ae.name,52) + '<div><div style="font-weight:700;font-size:16px">' + ae.name + '</div><div style="font-size:13px;color:var(--muted)">' + ae.email + '</div></div></div>';
-
-  html += '<div class="modal-field"><b>SĐT:</b> ' + ae.phone + '</div>';
-  html += '<div class="modal-field"><b>Liên hệ:</b> ' + ae.contact + '</div>';
-  html += '<div class="modal-field"><b>Gói meeting:</b> ' + ae.pkg + ' (' + ae.sessionsTotal + ' buổi)</div>';
-  html += '<div class="modal-field"><b>Giá trị thanh toán:</b> ' + fmtMoney(ae.paid) + '</div>';
-  html += '<div class="modal-field"><b>Thời gian đăng ký:</b> ' + ae.registeredAt + '</div>';
-  html += '<div class="modal-field"><b>Hạn dùng:</b> ' + ae.expiry + '</div>';
-  html += '<div class="modal-field"><b>Advisor:</b> ' + ae.advisor +
-    ' <button class="update-btn" style="margin-left:8px" onclick="toast(\'Mở form đổi Advisor (demo)\',\'success\')">Đổi Advisor</button></div>';
-
-  html += '<div style="font-size:13px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin:18px 0 8px">Các buổi meeting</div>';
-  ae.sessions.forEach(function(s){
-    const badge = s.status === 'Hoàn thành' ? '<span class="badge badge-completed">Hoàn thành</span>' : '<span class="badge badge-pending">Sắp tới</span>';
-    html += '<div class="modal-field" style="display:flex;justify-content:space-between"><span>Buổi ' + s.no + ' · ' + fmtDateStr(s.date) + '</span>' + badge + '</div>';
+function renderNewBookingForm() {
+  let opts = '';
+  Object.keys(PACKAGES).forEach(function(k){
+    const p = PACKAGES[k];
+    opts += '<option value="' + k + '">' + k + ' — ' + p.price.toLocaleString() + 'đ · ' + p.sessions + ' buổi</option>';
   });
-
-  document.getElementById('modal-body').innerHTML = html;
-  document.getElementById('modal-actions').innerHTML = '<button class="login-btn" onclick="closeModal()" style="width:auto;padding:10px 24px">Đóng</button>';
-  document.getElementById('modal-overlay').classList.add('open');
+  return '<div class="card"><div class="card-header"><div class="card-header-left">Tạo Booking mới</div></div>' +
+  '<div class="form-grid">' +
+  '<div><div class="form-label">Tên Advisee *</div><input class="form-input" id="f-advisee-name" placeholder="Nguyễn Văn A"></div>' +
+  '<div><div class="form-label">SĐT *</div><input class="form-input" id="f-advisee-phone" placeholder="0901234567"></div>' +
+  '<div><div class="form-label">Email Advisee *</div><input class="form-input" type="email" id="f-advisee-email" placeholder="email@gmail.com"></div>' +
+  '<div><div class="form-label">Năm / Cấp độ</div><input class="form-input" id="f-advisee-year" placeholder="Fresher / Năm 3..."></div>' +
+  '<div><div class="form-label">Ngành</div><input class="form-input" id="f-advisee-industry" placeholder="Marketing, Brand..."></div>' +
+  '<div><div class="form-label">Gói *</div><select class="form-select" id="f-package">' + opts + '</select></div>' +
+  '<div><div class="form-label">Advisor *</div><input class="form-input" id="f-advisor-name" placeholder="Tên advisor"></div>' +
+  '<div><div class="form-label">Email Advisor</div><input class="form-input" type="email" id="f-advisor-email" placeholder="advisor@linkajob.vn"></div>' +
+  '<div class="full"><div class="form-label">Mục tiêu</div><textarea class="form-textarea" id="f-goal" placeholder="Mô tả mục tiêu..."></textarea></div>' +
+  '</div>' +
+  '<div class="form-footer"><button class="submit-btn" id="submit-booking-btn" onclick="submitBooking()">Tạo Booking &amp; Gửi Email</button><span id="submit-msg" style="font-size:13px;color:var(--muted)"></span></div>' +
+  '</div>';
 }
 
-// ════════════════════════════════════════════════════════════
-//  MODULE 4: KHOÁ HỌC
-// ════════════════════════════════════════════════════════════
-function renderCourseModule() {
-  let html = '<div class="card"><div class="card-header"><div class="card-header-left">Khoá học đang hoạt động</div>';
-  html += '<button class="submit-btn" style="padding:8px 16px;font-size:13px" onclick="toast(\'Form thêm khoá học mới (demo)\',\'success\')">+ Thêm khoá học</button></div>';
-
-  if (MOCK.courses.length === 0) {
-    html += '<div class="empty-state"><div class="icon">📚</div>Chưa có khoá học nào</div>';
-  } else {
-    html += '<table class="bookings-table"><thead><tr><th>TÊN LỚP</th><th>KHAI GIẢNG</th><th>HỌC VIÊN</th><th>BUỔI HOÀN THÀNH</th><th></th></tr></thead><tbody>';
-    MOCK.courses.forEach(function(c){
-      html += '<tr><td><b>' + c.name + '</b></td><td>' + fmtDateStr(c.startDate) + '</td>';
-      html += '<td>' + c.studentCount + ' học viên</td><td><b>' + c.sessionsDone + '/' + c.sessionsTotal + '</b></td>';
-      html += '<td><button class="update-btn" onclick="showCourseDetail(\'' + c.id + '\')">Chi tiết</button></td></tr>';
-    });
-    html += '</tbody></table>';
-  }
-  html += '</div>';
-  return html;
-}
-
-function showCourseDetail(id) {
-  const c = MOCK.courses.find(function(x){ return x.id === id; });
-  if (!c) return;
-  document.getElementById('modal-title').textContent = c.name;
-  let html = '<div class="modal-field"><b>Giảng viên:</b> ' + c.teacher + '</div>';
-  html += '<div class="modal-field"><b>Link học:</b> <a href="' + c.meetLink + '" target="_blank">' + c.meetLink + '</a></div>';
-  html += '<div class="modal-field"><b>Học viên:</b> ' + c.students.join(', ') + '</div>';
-
-  html += '<div style="font-size:13px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin:18px 0 8px">Lịch học</div>';
-  c.schedule.forEach(function(s){
-    html += '<div class="modal-field" style="display:flex;justify-content:space-between"><span>' + fmtDateStr(s.date) + '</span><span>' + s.topic + '</span></div>';
-  });
-
-  html += '<div style="font-size:13px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin:18px 0 8px">Tài liệu</div>';
-  if (c.materials.length === 0) {
-    html += '<div class="modal-field" style="color:var(--muted)">Chưa có tài liệu</div>';
-  } else {
-    c.materials.forEach(function(m){ html += '<div class="modal-field">📄 ' + m + '</div>'; });
-  }
-
-  document.getElementById('modal-body').innerHTML = html;
-  document.getElementById('modal-actions').innerHTML = '<button class="login-btn" onclick="closeModal()" style="width:auto;padding:10px 24px">Đóng</button>';
-  document.getElementById('modal-overlay').classList.add('open');
+function renderAdvisorsList() {
+  return '<div class="card"><div class="card-header"><div class="card-header-left">Advisors</div><button class="refresh-btn" onclick="loadDashboard(\'Staff\',\'advisors\')">↻ Làm mới</button></div><div class="empty-state"><div class="icon">📊</div>Dữ liệu kéo từ tab Advisors trong Google Sheet.</div></div>';
 }
 
 function renderAdvisee(tab) {
@@ -917,11 +640,11 @@ function sendSlots() {
   if (selectedSlots.size === 0) { toast('Chưa chọn slot nào!', 'error'); return; }
   const btn = document.getElementById('slot-send-btn');
   btn.innerHTML = '<span class="spinner"></span> Đang gửi...'; btn.disabled = true;
-  apiPost({ action: 'addSlots', advisor: currentUser.name, advisor_email: currentUser.email, slots: Array.from(selectedSlots) }).then(function(res){
+  apiPost({ action: 'addSlots', advisor: scheduleIdentity(), advisor_email: currentUser.email, slots: Array.from(selectedSlots) }).then(function(res){
     if (res && res.success) {
       toast('Đã gửi ' + selectedSlots.size + ' slot!', 'success');
       selectedSlots.clear();
-      loadDashboard('Advisor','schedule');
+      loadDashboard(currentUser.role,'schedule');
     } else {
       toast('Lỗi: ' + (res && res.error), 'error');
       btn.innerHTML = 'Gửi lịch trống (' + selectedSlots.size + ' slot)'; btn.disabled = false;
@@ -932,7 +655,7 @@ function sendSlots() {
   });
 }
 
-function changeWeek(dir) { weekOffset += dir; loadDashboard('Advisor','schedule'); }
+function changeWeek(dir) { weekOffset += dir; loadDashboard(currentUser.role,'schedule'); }
 
 function showDetail(b) {
   document.getElementById('modal-title').textContent = 'Chi tiết Booking';
@@ -997,1023 +720,8 @@ function getMondayOfWeek(date, offset) {
 }
 function slotKey(date, time) { return date.getFullYear() + '-' + pad(date.getMonth()+1) + '-' + pad(date.getDate()) + '_' + time; }
 function slotKeyFromSheetRow(s) {
-  // Sheet that tra ve date dang "2026-07-01" va time_start dang "19:00"
   if (!s.date || !s.time_start) return '';
-  var d = String(s.date).slice(0,10); // phong khi date la ISO datetime
-  return d + '_' + s.time_start;
-}
-function fmtDate(d) { if (!d) return '—'; const dt = new Date(d); return DAYS_VI[dt.getDay()] + ' ' + dt.getDate() + '/' + (dt.getMonth()+1) + ' · ' + pad(dt.getHours()) + ':' + pad(dt.getMinutes()); }
-function fmtShort(d) { return d.getDate() + '/' + (d.getMonth()+1); }
-function pad(n) { return String(n).padStart(2,'0'); }
-function v(id) { const el = document.getElementById(id); return el ? el.value.trim() : ''; }
-function esc(obj) { return JSON.stringify(obj).replace(/"/g, '&quot;'); }
-function mkInitials(name) { return name.split(' ').filter(Boolean).map(function(w){ return w[0]; }).join('').slice(0,2).toUpperCase(); }
-
-document.getElementById('login-password').addEventListener('keydown', function(e){ if (e.key === 'Enter') doLogin(); });
-</script>
-</body>
-</html><!DOCTYPE html>
-<html lang="vi">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>LinkaJob Dashboard</title>
-<style>
-* { margin: 0; padding: 0; box-sizing: border-box; }
-:root {
-  --brand: #F4451A; --brand-light: #fff1ee;
-  --bg: #F7F6F3; --white: #fff;
-  --text: #111; --muted: #555; --border: #D8D5D0;
-  --green: #16a34a; --green-bg: #f0fdf4;
-  --radius-sm: 10px; --radius-md: 16px; --radius-lg: 20px;
-  --shadow: 0 1px 4px rgba(0,0,0,0.08), 0 0 0 1px rgba(0,0,0,0.06);
-}
-body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
-
-#toast { position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%); background: #111; color: #fff; padding: 12px 22px; border-radius: 100px; font-size: 14px; font-weight: 500; opacity: 0; pointer-events: none; z-index: 9999; transition: opacity .2s; white-space: nowrap; max-width: 90vw; text-align: center; }
-#toast.show { opacity: 1; } #toast.error { background: var(--brand); } #toast.success { background: var(--green); }
-
-.spinner { display: inline-block; width: 18px; height: 18px; border: 2.5px solid rgba(255,255,255,0.3); border-top-color: #fff; border-radius: 50%; animation: spin .7s linear infinite; vertical-align: middle; }
-@keyframes spin { to { transform: rotate(360deg); } }
-
-#login-page { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; padding: 40px 16px; }
-.logo-row { display: flex; align-items: center; gap: 14px; margin-bottom: 40px; }
-.logo-icon { width: 52px; height: 52px; background: var(--brand); border-radius: 14px; display: flex; align-items: center; justify-content: center; }
-.logo-icon svg { width: 26px; height: 26px; }
-.logo-name { font-size: 28px; font-weight: 700; letter-spacing: -.5px; }
-
-.login-card { background: var(--white); border-radius: var(--radius-lg); box-shadow: var(--shadow); padding: 40px 44px 44px; width: 100%; max-width: 520px; }
-.login-card h2 { font-size: 28px; font-weight: 700; margin-bottom: 6px; }
-.login-card .subtitle { font-size: 17px; color: var(--muted); margin-bottom: 32px; }
-
-.field-label { font-size: 15px; color: var(--muted); margin-bottom: 8px; }
-.field-group { margin-bottom: 20px; }
-.field-input { width: 100%; padding: 14px 18px; font-size: 16px; border: 1.5px solid var(--border); border-radius: var(--radius-sm); background: var(--white); color: var(--text); outline: none; transition: border-color .15s; }
-.field-input:focus { border-color: var(--brand); }
-
-.role-row { display: flex; gap: 10px; margin-bottom: 24px; }
-.role-btn { flex: 1; padding: 14px 0; font-size: 16px; font-weight: 500; border-radius: 100px; border: 1.5px solid var(--border); background: var(--white); color: var(--muted); cursor: pointer; transition: all .15s; }
-.role-btn.active { background: var(--brand); color: #fff; border-color: var(--brand); font-weight: 600; }
-.role-btn:hover:not(.active) { border-color: var(--brand); color: var(--brand); }
-
-.login-btn { width: 100%; padding: 16px; font-size: 17px; font-weight: 700; border-radius: var(--radius-sm); border: none; background: var(--brand); color: #fff; cursor: pointer; transition: opacity .15s; display: flex; align-items: center; justify-content: center; gap: 8px; }
-.login-btn:hover { opacity: .88; }
-.login-btn:disabled { opacity: .55; cursor: not-allowed; }
-.login-error { color: var(--brand); font-size: 13px; margin-top: 10px; text-align: center; display: none; }
-
-#dashboard-page { display: none; min-height: 100vh; }
-.navbar { background: var(--white); border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; padding: 0 28px; height: 58px; position: sticky; top: 0; z-index: 10; }
-.nav-left { display: flex; align-items: center; gap: 12px; }
-.nav-logo-icon { width: 34px; height: 34px; background: var(--brand); border-radius: 8px; display: flex; align-items: center; justify-content: center; }
-.nav-logo-icon svg { width: 18px; height: 18px; }
-.nav-brand { font-size: 17px; font-weight: 700; }
-.role-badge { background: #FFE9E4; color: var(--brand); font-size: 13px; font-weight: 600; padding: 3px 10px; border-radius: 100px; }
-.nav-right { display: flex; align-items: center; gap: 12px; }
-.nav-user { display: flex; align-items: center; gap: 10px; font-size: 15px; font-weight: 500; }
-.avatar { width: 34px; height: 34px; border-radius: 50%; background: #D6CFBF; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; flex-shrink: 0; }
-.logout-btn { font-size: 13px; color: var(--muted); background: none; border: 1px solid var(--border); padding: 5px 12px; border-radius: 100px; cursor: pointer; transition: all .15s; }
-.logout-btn:hover { border-color: var(--brand); color: var(--brand); }
-
-.tab-bar { background: var(--white); border-bottom: 1px solid var(--border); display: flex; padding: 0 28px; }
-.tab { display: flex; align-items: center; gap: 8px; padding: 14px 16px; font-size: 14px; font-weight: 500; color: var(--muted); cursor: pointer; border-bottom: 2px solid transparent; transition: all .15s; white-space: nowrap; }
-.tab.active { color: var(--text); border-bottom-color: var(--brand); font-weight: 600; }
-.tab:hover:not(.active) { color: var(--text); }
-
-.content { max-width: 920px; margin: 0 auto; padding: 32px 24px; }
-
-.stats-row { display: grid; grid-template-columns: repeat(3,1fr); margin-bottom: 24px; background: var(--white); border-radius: var(--radius-md); box-shadow: var(--shadow); overflow: hidden; }
-.stat-cell { padding: 24px 28px; }
-.stat-cell + .stat-cell { border-left: 1px solid var(--border); }
-.stat-num { font-size: 36px; font-weight: 800; line-height: 1; margin-bottom: 6px; }
-.stat-label { font-size: 14px; color: var(--muted); margin-bottom: 6px; }
-.stat-detail { font-size: 13px; color: var(--muted); line-height: 1.6; }
-.stat-detail .hl { color: var(--brand); font-weight: 600; }
-
-.card { background: var(--white); border-radius: var(--radius-md); box-shadow: var(--shadow); margin-bottom: 20px; overflow: hidden; }
-.card-header { display: flex; align-items: center; justify-content: space-between; padding: 18px 24px 14px; font-size: 15px; font-weight: 700; }
-.card-header-left { display: flex; align-items: center; gap: 8px; }
-
-.session-item { display: flex; align-items: center; gap: 14px; padding: 14px 24px; border-top: 1px solid var(--border); }
-.av-circle { width: 38px; height: 38px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; flex-shrink: 0; }
-.session-info { flex: 1; min-width: 0; }
-.session-name { font-size: 14px; font-weight: 600; margin-bottom: 2px; }
-.session-meta { font-size: 12px; color: var(--muted); }
-.session-time { text-align: right; font-size: 13px; color: var(--muted); line-height: 1.5; flex-shrink: 0; margin-right: 12px; }
-.session-time strong { display: block; font-size: 14px; color: var(--text); font-weight: 600; }
-
-.detail-btn { display: flex; align-items: center; gap: 6px; padding: 8px 14px; border: 1.5px solid var(--border); border-radius: var(--radius-sm); font-size: 13px; font-weight: 500; color: var(--text); background: var(--white); cursor: pointer; white-space: nowrap; transition: all .15s; text-decoration: none; }
-.detail-btn:hover { border-color: var(--brand); color: var(--brand); }
-.refresh-btn { padding: 6px 14px; font-size: 13px; font-weight: 500; border-radius: 100px; border: 1.5px solid var(--border); background: var(--white); cursor: pointer; color: var(--muted); transition: all .15s; }
-.refresh-btn:hover { border-color: var(--brand); color: var(--brand); }
-
-.advisee-table, .bookings-table { width: 100%; border-collapse: collapse; }
-.advisee-table th, .bookings-table th { padding: 10px 24px; font-size: 11px; font-weight: 700; color: var(--muted); letter-spacing: .06em; text-transform: uppercase; text-align: left; border-top: 1px solid var(--border); }
-.advisee-table td, .bookings-table td { padding: 14px 24px; font-size: 14px; border-top: 1px solid var(--border); vertical-align: middle; }
-.advisee-name { font-weight: 600; font-size: 14px; margin-bottom: 2px; }
-.advisee-sub { font-size: 12px; color: var(--muted); }
-.remaining { font-weight: 700; font-size: 14px; }
-.remaining.warn { color: var(--brand); }
-
-.badge { display: inline-block; padding: 3px 9px; border-radius: 100px; font-size: 12px; font-weight: 600; }
-.badge-pending { background: #FEF3C7; color: #92400E; }
-.badge-confirmed { background: var(--green-bg); color: var(--green); }
-.badge-completed { background: #EDE9FE; color: #6D28D9; }
-.badge-cancelled { background: #F3F4F6; color: #6B7280; }
-
-.tab-panel { display: none; } .tab-panel.active { display: block; }
-.empty-state { padding: 48px 24px; text-align: center; color: var(--muted); font-size: 14px; }
-.empty-state .icon { font-size: 32px; margin-bottom: 12px; }
-
-.week-nav { display: flex; align-items: center; gap: 12px; padding: 18px 24px 0; }
-.week-nav button { width: 32px; height: 32px; border-radius: 50%; border: 1.5px solid var(--border); background: var(--white); font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all .15s; }
-.week-nav button:hover { border-color: var(--brand); color: var(--brand); }
-.week-label { font-size: 14px; font-weight: 600; }
-.slot-grid { display: grid; grid-template-columns: repeat(7,1fr); gap: 5px; padding: 14px 24px 20px; }
-.slot-day-hdr { text-align: center; font-size: 12px; font-weight: 700; color: var(--muted); padding-bottom: 8px; text-transform: uppercase; }
-.slot-btn { padding: 7px 2px; border-radius: 7px; border: 1.5px solid var(--border); background: var(--white); font-size: 11px; cursor: pointer; text-align: center; transition: all .15s; color: var(--text); }
-.slot-btn:hover { border-color: var(--brand); color: var(--brand); }
-.slot-btn.selected { background: var(--brand); color: #fff; border-color: var(--brand); font-weight: 600; }
-.slot-btn.booked { background: #F3F4F6; color: #9CA3AF; border-color: #E5E7EB; cursor: not-allowed; }
-.slot-send-btn { margin: 0 24px 24px; padding: 12px; font-size: 15px; font-weight: 700; border-radius: var(--radius-sm); border: none; background: var(--brand); color: #fff; cursor: pointer; width: calc(100% - 48px); transition: opacity .15s; display: flex; align-items: center; justify-content: center; gap: 8px; }
-.slot-send-btn:hover { opacity: .88; }
-.slot-send-btn:disabled { opacity: .5; cursor: not-allowed; }
-.selected-count { padding: 0 24px 8px; font-size: 13px; color: var(--muted); }
-.selected-count span { color: var(--brand); font-weight: 700; }
-
-.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; padding: 24px; }
-.form-grid .full { grid-column: 1 / -1; }
-.form-label { font-size: 13px; color: var(--muted); margin-bottom: 6px; font-weight: 500; }
-.form-input, .form-select, .form-textarea { width: 100%; padding: 11px 14px; font-size: 14px; border: 1.5px solid var(--border); border-radius: var(--radius-sm); background: var(--white); color: var(--text); outline: none; transition: border-color .15s; font-family: inherit; }
-.form-input:focus, .form-select:focus { border-color: var(--brand); }
-.form-textarea { resize: vertical; min-height: 80px; }
-.form-textarea:focus { border-color: var(--brand); }
-.form-select { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23555' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 14px center; padding-right: 36px; }
-.form-footer { padding: 0 24px 24px; display: flex; gap: 12px; align-items: center; }
-.submit-btn { padding: 12px 28px; font-size: 15px; font-weight: 700; border-radius: var(--radius-sm); border: none; background: var(--brand); color: #fff; cursor: pointer; transition: opacity .15s; display: flex; align-items: center; gap: 8px; }
-.submit-btn:hover { opacity: .88; }
-.submit-btn:disabled { opacity: .5; cursor: not-allowed; }
-
-.update-btn { padding: 5px 12px; font-size: 12px; font-weight: 600; border-radius: 6px; border: 1.5px solid var(--border); background: var(--white); cursor: pointer; transition: all .15s; color: var(--text); }
-.update-btn:hover { border-color: var(--brand); color: var(--brand); }
-.update-btn.green { border-color: var(--green); color: var(--green); }
-.update-btn.green:hover { background: var(--green); color: #fff; }
-
-.modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.4); display: flex; align-items: center; justify-content: center; z-index: 100; opacity: 0; pointer-events: none; transition: opacity .2s; }
-.modal-overlay.open { opacity: 1; pointer-events: all; }
-.modal { background: var(--white); border-radius: var(--radius-lg); width: 100%; max-width: 480px; margin: 16px; box-shadow: 0 20px 60px rgba(0,0,0,.2); transform: translateY(16px); transition: transform .2s; }
-.modal-overlay.open .modal { transform: translateY(0); }
-.modal-header { padding: 20px 24px 16px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
-.modal-header h3 { font-size: 17px; font-weight: 700; }
-.modal-close { background: none; border: none; font-size: 20px; cursor: pointer; color: var(--muted); }
-.modal-body { padding: 20px 24px; }
-.modal-field { margin-bottom: 14px; font-size: 14px; }
-.modal-field b { color: var(--muted); font-weight: 500; display: inline-block; min-width: 110px; }
-.modal-actions { display: flex; gap: 10px; padding: 0 24px 24px; }
-
-.skeleton { animation: shimmer 1.5s infinite; background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%); background-size: 200% 100%; border-radius: 6px; }
-@keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
-.skel-row { display: flex; gap: 12px; padding: 16px 24px; border-top: 1px solid var(--border); align-items: center; }
-</style>
-</head>
-<body>
-
-<div id="toast"></div>
-
-<div class="modal-overlay" id="modal-overlay">
-  <div class="modal">
-    <div class="modal-header">
-      <h3 id="modal-title">Chi tiết</h3>
-      <button class="modal-close" onclick="closeModal()">&times;</button>
-    </div>
-    <div class="modal-body" id="modal-body"></div>
-    <div class="modal-actions" id="modal-actions"></div>
-  </div>
-</div>
-
-<div id="login-page">
-  <div class="logo-row">
-    <div class="logo-icon">
-      <svg viewBox="0 0 26 26" fill="none"><rect x="4" y="4" width="18" height="18" rx="3" stroke="white" stroke-width="2.2"/></svg>
-    </div>
-    <div class="logo-name">LinkaJob</div>
-  </div>
-
-  <div class="login-card">
-    <h2>Đăng nhập</h2>
-    <p class="subtitle">Chọn vai trò để truy cập dashboard phù hợp</p>
-
-    <div class="field-group">
-      <div class="field-label">Email</div>
-      <input class="field-input" type="email" id="login-email" placeholder="email@linkajob.vn" autocomplete="email">
-    </div>
-    <div class="field-group">
-      <div class="field-label">Mật khẩu</div>
-      <input class="field-input" type="password" id="login-password" placeholder="Mật khẩu" autocomplete="current-password">
-    </div>
-    <div class="field-group">
-      <div class="field-label">Vai trò</div>
-      <div class="role-row">
-        <button class="role-btn" onclick="selectRole('Staff',this)">Staff</button>
-        <button class="role-btn active" onclick="selectRole('Advisor',this)">Advisor</button>
-        <button class="role-btn" onclick="selectRole('Advisee',this)">Advisee</button>
-      </div>
-    </div>
-
-    <button class="login-btn" id="login-btn" onclick="doLogin()">Đăng nhập</button>
-    <div class="login-error" id="login-error">Email hoặc mật khẩu không đúng</div>
-  </div>
-</div>
-
-<div id="dashboard-page">
-  <nav class="navbar">
-    <div class="nav-left">
-      <div class="nav-logo-icon">
-        <svg viewBox="0 0 26 26" fill="none"><rect x="4" y="4" width="18" height="18" rx="3" stroke="white" stroke-width="2.2"/></svg>
-      </div>
-      <span class="nav-brand">LinkaJob</span>
-      <span class="role-badge" id="role-badge">Advisor</span>
-    </div>
-    <div class="nav-right">
-      <div class="nav-user">
-        <div class="avatar" id="user-avatar">KV</div>
-        <span id="user-name">—</span>
-      </div>
-      <button class="logout-btn" onclick="doLogout()">Đăng xuất</button>
-    </div>
-  </nav>
-  <div class="tab-bar" id="tab-bar"></div>
-  <div class="content" id="main-content"></div>
-</div>
-
-<script>
-const API = 'https://script.google.com/macros/s/AKfycbx7Bd9VvoyzfiiezQV9huoY2BKHH_Br1RAFIz00mjdyKeis-Zv-38a0gf_b-fMlul2C/exec';
-
-const DEMO_ACCOUNTS = [
-  { email: 'kien@linkajob.vn',    password: '123456', role: 'Advisor', name: 'Nguyễn Vũ Trí Kiên', initials: 'KV' },
-  { email: 'phuong@linkajob.vn',  password: '123456', role: 'Staff',   name: 'Phương Staff',        initials: 'PS' },
-  { email: 'advisee@linkajob.vn', password: '123456', role: 'Advisee', name: 'Trần Gia Hân',         initials: 'GH' },
-];
-
-const PACKAGES = {
-  'Trial':       { price: 419000,  sessions: 1, days: 3  },
-  'Cơ Bản':     { price: 799000,  sessions: 2, days: 14 },
-  'Đặc Biệt':   { price: 1499000, sessions: 4, days: 28 },
-  'Chuyên Sâu': { price: 2199000, sessions: 6, days: 56 },
-};
-
-const TIME_SLOTS = ['08:00','09:00','10:00','11:00','14:00','15:00','16:00','17:00','18:00','19:00','20:00','21:00'];
-const DAYS_VI = ['CN','T2','T3','T4','T5','T6','T7'];
-
-let currentUser = null;
-let selectedRole = 'Advisor';
-let weekOffset = 0;
-let selectedSlots = new Set();
-let sheetData = { bookings: [], slots: [] };
-
-function toast(msg, type) {
-  type = type || '';
-  const el = document.getElementById('toast');
-  el.textContent = msg;
-  el.className = 'show ' + type;
-  clearTimeout(el._t);
-  el._t = setTimeout(function(){ el.className = ''; }, 3500);
-}
-
-function apiGet(action, params) {
-  params = params || {};
-  const merged = Object.assign({action: action}, params);
-  const qs = new URLSearchParams(merged).toString();
-  return fetch(API + '?' + qs).then(function(r){ return r.json(); });
-}
-
-function apiPost(payload) {
-  return fetch(API, { method: 'POST', body: JSON.stringify(payload) }).then(function(r){ return r.json(); });
-}
-
-function selectRole(role, btn) {
-  selectedRole = role;
-  document.querySelectorAll('.role-btn').forEach(function(b){ b.classList.remove('active'); });
-  btn.classList.add('active');
-}
-
-function doLogin() {
-  const email = document.getElementById('login-email').value.trim();
-  const password = document.getElementById('login-password').value;
-  const errEl = document.getElementById('login-error');
-  const btn = document.getElementById('login-btn');
-  errEl.style.display = 'none';
-
-  if (!email || !password) {
-    errEl.textContent = 'Vui lòng điền đầy đủ thông tin';
-    errEl.style.display = 'block'; return;
-  }
-
-  let user = DEMO_ACCOUNTS.find(function(a){ return a.email === email && a.password === password && a.role === selectedRole; });
-
-  function finishLogin(u) {
-    if (!u) {
-      errEl.textContent = 'Email hoặc mật khẩu không đúng';
-      errEl.style.display = 'block';
-      return;
-    }
-    currentUser = u;
-    document.getElementById('login-page').style.display = 'none';
-    document.getElementById('dashboard-page').style.display = 'block';
-    document.getElementById('role-badge').textContent = u.role;
-    document.getElementById('user-avatar').textContent = u.initials;
-    document.getElementById('user-name').textContent = u.name;
-    buildTabBar(u.role);
-    loadDashboard(u.role);
-  }
-
-  if (user) { finishLogin(user); return; }
-
-  btn.innerHTML = '<span class="spinner"></span>';
-  btn.disabled = true;
-  apiGet('auth', { email: email, role: selectedRole }).then(function(res){
-    btn.innerHTML = 'Đăng nhập';
-    btn.disabled = false;
-    if (res && res.success) {
-      finishLogin({ email: email, role: selectedRole, name: res.name || email, initials: mkInitials(res.name || email) });
-    } else {
-      finishLogin(null);
-    }
-  }).catch(function(){
-    btn.innerHTML = 'Đăng nhập';
-    btn.disabled = false;
-    finishLogin(null);
-  });
-}
-
-function doLogout() {
-  currentUser = null;
-  document.getElementById('dashboard-page').style.display = 'none';
-  document.getElementById('login-page').style.display = 'flex';
-}
-
-const TAB_DEFS = {
-  Advisor: [ {id:'overview',label:'Tổng quan'}, {id:'schedule',label:'Gửi lịch trống'}, {id:'booked',label:'Buổi đã book'} ],
-  Staff:   [ {id:'linkajob',label:'LinkaJob'}, {id:'advisor-mod',label:'Advisor'}, {id:'advisee-mod',label:'Advisee'}, {id:'course-mod',label:'Khoá học'} ],
-  Advisee: [ {id:'my-bookings',label:'Booking của tôi'}, {id:'new-booking',label:'Đặt lịch mới'} ]
-};
-
-let activeTab = null;
-function buildTabBar(role) {
-  const tabs = TAB_DEFS[role] || [];
-  document.getElementById('tab-bar').innerHTML = tabs.map(function(t,i){
-    return '<div class="tab' + (i===0?' active':'') + '" data-tab="' + t.id + '" onclick="switchTab(\'' + t.id + '\',this)">' + t.label + '</div>';
-  }).join('');
-  activeTab = tabs[0] ? tabs[0].id : null;
-}
-
-function switchTab(tabId, el) {
-  document.querySelectorAll('#tab-bar .tab').forEach(function(t){ t.classList.remove('active'); });
-  el.classList.add('active');
-  activeTab = tabId;
-  loadDashboard(currentUser.role, tabId);
-}
-
-function loadDashboard(role, tab) {
-  tab = tab || TAB_DEFS[role][0].id;
-  const content = document.getElementById('main-content');
-
-  // Module Staff dùng mock data, render ngay không cần gọi Sheet
-  if (role === 'Staff') { renderStaff(tab); return; }
-
-  content.innerHTML = skeletonRows(3);
-
-  const advisorName = role === 'Advisor' ? currentUser.name : '';
-  Promise.all([
-    apiGet('getBookings', { advisor: advisorName, role: role }).catch(function(){ return null; }),
-    apiGet('getSlots', { advisor: advisorName }).catch(function(){ return null; })
-  ]).then(function(results){
-    const bookRes = results[0], slotRes = results[1];
-    if (bookRes && bookRes.data) sheetData.bookings = bookRes.data;
-    if (slotRes && slotRes.data) sheetData.slots = slotRes.data;
-
-    if (role === 'Advisor') renderAdvisor(tab);
-    else renderAdvisee(tab);
-  });
-}
-
-function renderAdvisor(tab) {
-  const c = document.getElementById('main-content');
-  if (tab === 'overview') c.innerHTML = renderAdvisorOverview();
-  else if (tab === 'schedule') c.innerHTML = renderSchedulePicker();
-  else c.innerHTML = renderBookedSessions();
-}
-
-function renderAdvisorOverview() {
-  const mine = sheetData.bookings.filter(function(b){ return b.advisor_name === currentUser.name && b.status === 'confirmed'; });
-  const seen = {};
-  const advisees = [];
-  mine.forEach(function(b){ if (!seen[b.advisee_name]) { seen[b.advisee_name] = true; advisees.push(b); } });
-  const completed = sheetData.bookings.filter(function(b){ return b.advisor_name === currentUser.name && b.status === 'completed'; }).length;
-  const slotNeeded = Math.max(0, advisees.length * 2 + 1);
-  const now = new Date();
-  const wStart = new Date(now); wStart.setDate(now.getDate() - now.getDay());
-  const wEnd = new Date(wStart); wEnd.setDate(wStart.getDate() + 7);
-  const thisWeek = mine.filter(function(b){ return b.session_date && new Date(b.session_date) >= wStart && new Date(b.session_date) < wEnd; });
-
-  let html = '<div class="stats-row">';
-  html += '<div class="stat-cell"><div class="stat-num">' + advisees.length + '</div><div class="stat-label">Advisee active</div></div>';
-  html += '<div class="stat-cell"><div class="stat-num">' + slotNeeded + '</div><div class="stat-label">Cần gửi lịch trống</div>';
-  html += '<div class="stat-detail"><span class="hl">' + advisees.length + '</span> advisee × 2 buổi/tuần + <span class="hl">1</span> backup = tối thiểu <span class="hl">' + (advisees.length*2) + '</span> slot, khuyến nghị <span class="hl">' + slotNeeded + '</span></div></div>';
-  html += '<div class="stat-cell"><div class="stat-num">' + completed + '</div><div class="stat-label">Tổng buổi hoàn thành</div></div>';
-  html += '</div>';
-
-  html += '<div class="card"><div class="card-header"><div class="card-header-left">Lịch đã book tuần này</div><button class="refresh-btn" onclick="loadDashboard(\'Advisor\',\'overview\')">↻ Làm mới</button></div>';
-  html += thisWeek.length === 0 ? '<div class="empty-state"><div class="icon">📭</div>Không có buổi nào tuần này</div>' : thisWeek.map(sessionItemHTML).join('');
-  html += '</div>';
-
-  html += '<div class="card"><div class="card-header"><div class="card-header-left">Advisee của bạn</div></div>';
-  if (advisees.length === 0) {
-    html += '<div class="empty-state"><div class="icon">👤</div>Chưa có advisee nào</div>';
-  } else {
-    html += '<table class="advisee-table"><thead><tr><th>ADVISEE</th><th>GÓI</th><th>CÒN LẠI</th><th>BUỔI GẦN NHẤT</th></tr></thead><tbody>';
-    advisees.forEach(function(b){
-      const rem = (b.sessions_total||0) - (b.sessions_used||0);
-      const warn = rem <= Math.ceil((b.sessions_total||1)/2);
-      const candidates = mine.filter(function(x){ return x.advisee_name === b.advisee_name && x.session_date; });
-      candidates.sort(function(a,c){ return new Date(a.session_date) - new Date(c.session_date); });
-      const nearest = candidates[0];
-      html += '<tr><td><div style="display:flex;align-items:center;gap:12px">' + avatarCircle(b.advisee_name) + '<div><div class="advisee-name">' + b.advisee_name + '</div><div class="advisee-sub">' + (b.advisee_industry||b.advisee_year||'') + '</div></div></div></td>';
-      html += '<td>' + (b.package_name||'—') + '</td>';
-      html += '<td><span class="remaining' + (warn?' warn':'') + '">' + rem + '/' + (b.sessions_total||0) + '</span></td>';
-      html += '<td>' + (nearest ? fmtDate(nearest.session_date) : '<span style="color:var(--muted)">—</span>') + '</td></tr>';
-    });
-    html += '</tbody></table>';
-  }
-  html += '</div>';
-  return html;
-}
-
-function renderSchedulePicker() {
-  const monday = getMondayOfWeek(new Date(), weekOffset);
-  const days = [];
-  for (let i=0;i<7;i++) { const d = new Date(monday); d.setDate(monday.getDate()+i); days.push(d); }
-  const bookedKeys = {};
-  const savedKeys = {};
-  sheetData.slots.forEach(function(s){
-    // sheet that dung advisor_name, date, time_start thay vi advisor/slot_key
-    var key = slotKeyFromSheetRow(s);
-    if (s.advisor_name === currentUser.name && s.status === 'booked') bookedKeys[key] = true;
-    if (s.advisor_name === currentUser.name && s.status === 'available') savedKeys[key] = true;
-  });
-  const wLabel = fmtShort(days[0]) + ' – ' + fmtShort(days[6]);
-
-  let html = '<div class="card"><div class="card-header"><div class="card-header-left">Gửi lịch trống</div></div>';
-  html += '<div class="week-nav"><button onclick="changeWeek(-1)">‹</button><span class="week-label">' + wLabel + '</span><button onclick="changeWeek(1)">›</button></div>';
-  html += '<div class="slot-grid">';
-  days.forEach(function(d){ html += '<div class="slot-day-hdr">' + DAYS_VI[d.getDay()] + '<br><span style="font-weight:400;font-size:10px">' + d.getDate() + '/' + (d.getMonth()+1) + '</span></div>'; });
-  TIME_SLOTS.forEach(function(t){
-    days.forEach(function(d){
-      const key = slotKey(d,t);
-      const isBooked = !!bookedKeys[key];
-      const isSel = selectedSlots.has(key) || !!savedKeys[key];
-      html += '<button class="slot-btn' + (isBooked?' booked':isSel?' selected':'') + '" data-key="' + key + '" ' + (isBooked?'disabled':'') + ' onclick="toggleSlot(this,\'' + key + '\')">' + t + '</button>';
-    });
-  });
-  html += '</div>';
-  html += '<div class="selected-count" id="sel-count">Đã chọn <span>' + selectedSlots.size + '</span> slot</div>';
-  html += '<button class="slot-send-btn" id="slot-send-btn" onclick="sendSlots()">Gửi lịch trống (' + selectedSlots.size + ' slot)</button>';
-  html += '</div>';
-  return html;
-}
-
-function renderBookedSessions() {
-  const mine = sheetData.bookings.filter(function(b){ return b.advisor_name === currentUser.name; });
-  let html = '<div class="card"><div class="card-header"><div class="card-header-left">Tất cả buổi đã book</div><button class="refresh-btn" onclick="loadDashboard(\'Advisor\',\'booked\')">↻ Làm mới</button></div>';
-  if (mine.length === 0) {
-    html += '<div class="empty-state"><div class="icon">📭</div>Chưa có buổi nào</div>';
-  } else {
-    html += '<table class="bookings-table"><thead><tr><th>ADVISEE</th><th>GÓI</th><th>NGÀY GIỜ</th><th>TRẠNG THÁI</th><th></th></tr></thead><tbody>';
-    mine.forEach(function(b){
-      html += '<tr><td><div style="display:flex;align-items:center;gap:10px">' + avatarCircle(b.advisee_name,30) + '<div><div style="font-weight:600">' + b.advisee_name + '</div><div style="font-size:12px;color:var(--muted)">' + (b.booking_id||'') + '</div></div></div></td>';
-      html += '<td>' + (b.package_name||'—') + '</td><td>' + (b.session_date?fmtDate(b.session_date):'—') + '</td><td>' + statusBadge(b.status) + '</td>';
-      html += '<td style="display:flex;gap:6px;align-items:center">';
-      html += b.status==='confirmed' ? '<button class="update-btn green" onclick="markComplete(\'' + b.booking_id + '\')">✓ Hoàn thành</button>' : '<button class="update-btn" onclick="showDetail(' + esc(b) + ')">Chi tiết</button>';
-      if (b.meet_link) html += '<a href="' + b.meet_link + '" target="_blank" class="detail-btn">Meet</a>';
-      html += '</td></tr>';
-    });
-    html += '</tbody></table>';
-  }
-  html += '</div>';
-  return html;
-}
-
-function renderStaff(tab) {
-  const c = document.getElementById('main-content');
-  if (tab === 'linkajob') c.innerHTML = renderLinkaJobModule();
-  else if (tab === 'advisor-mod') c.innerHTML = renderAdvisorModule();
-  else if (tab === 'advisee-mod') c.innerHTML = renderAdviseeModule();
-  else c.innerHTML = renderCourseModule();
-}
-
-// ════════════════════════════════════════════════════════════
-//  MOCK DATA — dùng tạm trước khi nối Sheet thật cho module Staff
-// ════════════════════════════════════════════════════════════
-const MOCK = {
-  revenue: { today: 4180000, week: 18950000, month: 76400000, year: 612000000 },
-  reportSeries: [
-    {label:'T2', value: 8}, {label:'T3', value: 14}, {label:'T4', value: 11},
-    {label:'T5', value: 19}, {label:'T6', value: 23}, {label:'T7', value: 16}, {label:'CN', value: 9}
-  ],
-  retentionRate: 78,
-  newCustomerRate: 34,
-  meetings: [
-    { type: 'Cố vấn 1-1', advisor: 'Nguyễn Vũ Trí Kiên', advisee: 'Trần Gia Hân', date: '2026-07-01', time: '20:00', meet_link: 'https://meet.google.com/abc-defg-hij', booked_at: '2026-06-25 14:20', changed_at: '', session_no: '2/4', feedback_advisor: 'Advisee chuẩn bị tốt, tiến bộ rõ', feedback_advisee: 'Advisor giải thích dễ hiểu', question: 'Làm sao build portfolio Marketing?' },
-    { type: 'Tư vấn', advisor: 'Phương Staff', advisee: 'Bùi Tuấn Anh', date: '2026-07-03', time: '19:00', meet_link: 'https://meet.google.com/xyz-uvwx-rst', booked_at: '2026-06-26 09:10', changed_at: '2026-06-27 11:00', session_no: '1/2', feedback_advisor: '', feedback_advisee: '', question: 'Định hướng ngành Brand' },
-    { type: 'Khoá học', advisor: 'GV. Lê Minh Anh', advisee: 'Lớp Marketing K12', date: '2026-07-05', time: '18:30', meet_link: 'https://meet.google.com/lll-mmmm-nnn', booked_at: '2026-06-20 08:00', changed_at: '', session_no: '3/8', feedback_advisor: '', feedback_advisee: '', question: '' },
-  ],
-  products: [
-    { name: 'Trial', type: 'Gói cố vấn', price: 419000, sessions: 1, advisors: 'Tất cả advisor', active: true },
-    { name: 'Cơ Bản', type: 'Gói cố vấn', price: 799000, sessions: 2, advisors: 'Tất cả advisor', active: true },
-    { name: 'Đặc Biệt', type: 'Gói cố vấn', price: 1499000, sessions: 4, advisors: 'Tất cả advisor', active: true },
-    { name: 'Chuyên Sâu', type: 'Gói cố vấn', price: 2199000, sessions: 6, advisors: 'Tất cả advisor', active: true },
-    { name: 'Marketing Foundation', type: 'Khoá học', price: 2990000, sessions: 8, advisors: 'GV. Lê Minh Anh', active: true },
-  ],
-  advisors: [
-    { id:'adv1', name:'Nguyễn Vũ Trí Kiên', title:'Senior Marketing Manager', active:true, adviseeCount:3, sessionsDone:3, sessionsTotal:6,
-      email:'kien@linkajob.vn', phone:'0901234567', contact:'linkedin.com/in/kien', bio:'8 năm kinh nghiệm Marketing tại các tập đoàn FMCG.',
-      message:'Mình tin rằng career growth đến từ những bước đi rõ ràng — hãy để mình đồng hành cùng bạn.',
-      feedbacks:[{from:'Trần Gia Hân', text:'Advisor rất tận tâm và cho lời khuyên thực tế'}],
-      products:['Cơ Bản','Đặc Biệt'],
-      slots:['T2 19:00','T3 20:00','T5 19:00'],
-      advisees:[{name:'Trần Gia Hân', pkg:'Đặc Biệt', progress:'3/4'},{name:'Bùi Tuấn Anh', pkg:'Cơ Bản', progress:'1/2'}] },
-    { id:'adv2', name:'Phương Thảo', title:'Brand Strategist', active:true, adviseeCount:2, sessionsDone:5, sessionsTotal:8,
-      email:'phuong@linkajob.vn', phone:'0907654321', contact:'linkedin.com/in/phuong',
-      bio:'Chuyên gia Brand 6 năm, từng làm tại Unilever và các agency lớn.',
-      message:'Branding không chỉ là logo — đó là câu chuyện bạn kể mỗi ngày.',
-      feedbacks:[{from:'Lê Văn Bình', text:'Cách tiếp cận rất hệ thống, dễ áp dụng'}],
-      products:['Đặc Biệt','Chuyên Sâu'],
-      slots:['T4 18:00','T6 20:00'],
-      advisees:[{name:'Lê Văn Bình', pkg:'Chuyên Sâu', progress:'5/6'}] },
-    { id:'adv3', name:'Đặng Quốc Huy', title:'Finance Lead', active:false, adviseeCount:0, sessionsDone:12, sessionsTotal:12,
-      email:'huy@linkajob.vn', phone:'0912345678', contact:'linkedin.com/in/huy',
-      bio:'10 năm Finance, CFA Level 3.', message:'Tài chính cá nhân vững vàng là nền tảng của sự nghiệp bền vững.',
-      feedbacks:[], products:['Cơ Bản'], slots:[], advisees:[] },
-  ],
-  advisees: [
-    { id:'adv-ee1', name:'Trần Gia Hân', email:'han.tran@gmail.com', phone:'0911222333', contact:'zalo: 0911222333',
-      pkg:'Đặc Biệt', progress:'3/4', sessionsTotal:4, sessionsDone:3, paid:1499000, registeredAt:'2026-06-10', expiry:'2026-07-08',
-      advisor:'Nguyễn Vũ Trí Kiên',
-      sessions:[{date:'2026-06-15',no:1,status:'Hoàn thành'},{date:'2026-06-22',no:2,status:'Hoàn thành'},{date:'2026-07-01',no:3,status:'Sắp tới'}] },
-    { id:'adv-ee2', name:'Bùi Tuấn Anh', email:'anh.bui@gmail.com', phone:'0922333444', contact:'zalo: 0922333444',
-      pkg:'Cơ Bản', progress:'1/2', sessionsTotal:2, sessionsDone:1, paid:799000, registeredAt:'2026-06-20', expiry:'2026-07-04',
-      advisor:'Nguyễn Vũ Trí Kiên',
-      sessions:[{date:'2026-06-26',no:1,status:'Hoàn thành'},{date:'2026-07-03',no:2,status:'Sắp tới'}] },
-    { id:'adv-ee3', name:'Lê Văn Bình', email:'binh.le@gmail.com', phone:'0933444555', contact:'zalo: 0933444555',
-      pkg:'Chuyên Sâu', progress:'5/6', sessionsTotal:6, sessionsDone:5, paid:2199000, registeredAt:'2026-05-28', expiry:'2026-07-23',
-      advisor:'Phương Thảo',
-      sessions:[{date:'2026-06-02',no:1,status:'Hoàn thành'},{date:'2026-06-09',no:2,status:'Hoàn thành'},{date:'2026-06-16',no:3,status:'Hoàn thành'},{date:'2026-06-23',no:4,status:'Hoàn thành'},{date:'2026-06-30',no:5,status:'Hoàn thành'},{date:'2026-07-07',no:6,status:'Sắp tới'}] },
-  ],
-  courses: [
-    { id:'c1', name:'Marketing Foundation K12', startDate:'2026-06-20', studentCount:18, sessionsDone:3, sessionsTotal:8, active:true,
-      teacher:'GV. Lê Minh Anh', meetLink:'https://meet.google.com/lll-mmmm-nnn',
-      schedule:[{date:'2026-06-20',topic:'Giới thiệu Marketing căn bản'},{date:'2026-06-27',topic:'Customer Insight'},{date:'2026-07-04',topic:'Brand Positioning'}],
-      materials:['Slide buổi 1.pdf','Case study Vinamilk.pdf'],
-      students:['Trần Gia Hân','Bùi Tuấn Anh','+16 học viên khác'] },
-    { id:'c2', name:'Finance for Non-Finance K3', startDate:'2026-07-10', studentCount:12, sessionsDone:0, sessionsTotal:6, active:true,
-      teacher:'Đặng Quốc Huy', meetLink:'https://meet.google.com/fff-gggg-hhh',
-      schedule:[{date:'2026-07-10',topic:'Đọc hiểu báo cáo tài chính'}],
-      materials:[], students:['Lê Văn Bình','+11 học viên khác'] },
-  ],
-};
-
-function fmtMoney(n) { return (n||0).toLocaleString('vi-VN') + 'đ'; }
-
-// ════════════════════════════════════════════════════════════
-//  MODULE 1: LINKAJOB (trang mặc định khi Staff đăng nhập)
-// ════════════════════════════════════════════════════════════
-function renderLinkaJobModule() {
-  const maxVal = Math.max.apply(null, MOCK.reportSeries.map(function(d){ return d.value; }));
-  let chartBars = '';
-  MOCK.reportSeries.forEach(function(d){
-    const h = Math.round((d.value / maxVal) * 100);
-    chartBars += '<div style="display:flex;flex-direction:column;align-items:center;gap:6px;flex:1">' +
-      '<div style="font-size:11px;color:var(--muted);font-weight:600">' + d.value + '</div>' +
-      '<div style="width:100%;max-width:32px;height:' + h + 'px;background:var(--brand);border-radius:6px 6px 0 0;transition:height .3s"></div>' +
-      '<div style="font-size:11px;color:var(--muted)">' + d.label + '</div>' +
-    '</div>';
-  });
-
-  let html = '';
-
-  // Doanh thu
-  html += '<div class="stats-row" style="grid-template-columns:repeat(4,1fr)">';
-  html += '<div class="stat-cell"><div class="stat-num" style="font-size:24px">' + fmtMoney(MOCK.revenue.today) + '</div><div class="stat-label">Doanh thu hôm nay</div></div>';
-  html += '<div class="stat-cell"><div class="stat-num" style="font-size:24px">' + fmtMoney(MOCK.revenue.week) + '</div><div class="stat-label">Tuần này</div></div>';
-  html += '<div class="stat-cell"><div class="stat-num" style="font-size:24px">' + fmtMoney(MOCK.revenue.month) + '</div><div class="stat-label">Tháng này</div></div>';
-  html += '<div class="stat-cell"><div class="stat-num" style="font-size:24px">' + fmtMoney(MOCK.revenue.year) + '</div><div class="stat-label">Năm nay</div></div>';
-  html += '</div>';
-
-  // Báo cáo hoạt động + retention/new customer
-  html += '<div class="card"><div class="card-header"><div class="card-header-left">Báo cáo hoạt động (buổi meeting / tuần)</div></div>';
-  html += '<div style="display:flex;gap:8px;align-items:flex-end;height:140px;padding:8px 24px 24px">' + chartBars + '</div>';
-  html += '</div>';
-
-  html += '<div class="stats-row">';
-  html += '<div class="stat-cell"><div class="stat-num">' + MOCK.retentionRate + '%</div><div class="stat-label">Tỷ lệ Retention</div><div class="stat-detail">Advisee tiếp tục mua gói mới sau khi hết hạn</div></div>';
-  html += '<div class="stat-cell"><div class="stat-num">' + MOCK.newCustomerRate + '%</div><div class="stat-label">Tỷ lệ KH mới</div><div class="stat-detail">Trên tổng booking trong tháng</div></div>';
-  html += '<div class="stat-cell"><div class="stat-num">' + MOCK.meetings.length + '</div><div class="stat-label">Lịch meeting sắp tới</div></div>';
-  html += '</div>';
-
-  // Lịch meeting
-  html += '<div class="card"><div class="card-header"><div class="card-header-left">Lịch meeting (cố vấn 1-1, tư vấn, khoá học)</div></div>';
-  html += '<table class="bookings-table"><thead><tr><th>LOẠI</th><th>ADVISOR</th><th>ADVISEE</th><th>NGÀY GIỜ</th><th>BUỔI</th><th></th></tr></thead><tbody>';
-  MOCK.meetings.forEach(function(m,i){
-    html += '<tr><td>' + m.type + '</td><td>' + m.advisor + '</td><td>' + m.advisee + '</td>';
-    html += '<td>' + fmtDateStr(m.date) + ' · ' + m.time + '</td><td>' + m.session_no + '</td>';
-    html += '<td><button class="update-btn" onclick="showMeetingDetail(' + i + ')">Chi tiết</button></td></tr>';
-  });
-  html += '</tbody></table></div>';
-
-  // Sản phẩm
-  html += '<div class="card"><div class="card-header"><div class="card-header-left">Sản phẩm</div><span style="font-size:12px;color:var(--muted)">Bấm vào giá để điều chỉnh</span></div>';
-  html += '<table class="bookings-table"><thead><tr><th>TÊN</th><th>LOẠI</th><th>GIÁ</th><th>SỐ BUỔI</th><th>ÁP DỤNG TRÊN</th><th>TRẠNG THÁI</th></tr></thead><tbody>';
-  MOCK.products.forEach(function(p,i){
-    html += '<tr><td><b>' + p.name + '</b></td><td>' + p.type + '</td>';
-    html += '<td><span class="update-btn" style="cursor:pointer" onclick="editProductPrice(' + i + ')">' + fmtMoney(p.price) + ' ✎</span></td>';
-    html += '<td>' + p.sessions + ' buổi</td><td>' + p.advisors + '</td>';
-    html += '<td>' + (p.active ? '<span class="badge badge-confirmed">Đang bán</span>' : '<span class="badge badge-cancelled">Tạm ngưng</span>') + '</td></tr>';
-  });
-  html += '</tbody></table></div>';
-
-  return html;
-}
-
-function fmtDateStr(s) { const d = new Date(s + 'T00:00:00'); return DAYS_VI[d.getDay()] + ' ' + d.getDate() + '/' + (d.getMonth()+1); }
-
-function showMeetingDetail(i) {
-  const m = MOCK.meetings[i];
-  document.getElementById('modal-title').textContent = 'Chi tiết buổi meeting';
-  let html = '<div class="modal-field"><b>Loại:</b> ' + m.type + '</div>';
-  html += '<div class="modal-field"><b>Advisor:</b> ' + m.advisor + '</div>';
-  html += '<div class="modal-field"><b>Advisee:</b> ' + m.advisee + '</div>';
-  html += '<div class="modal-field"><b>Ngày giờ:</b> ' + fmtDateStr(m.date) + ' · ' + m.time + '</div>';
-  html += '<div class="modal-field"><b>Buổi thứ:</b> ' + m.session_no + '</div>';
-  html += '<div class="modal-field"><b>Link meeting:</b> <a href="' + m.meet_link + '" target="_blank">' + m.meet_link + '</a></div>';
-  html += '<div class="modal-field"><b>Đăng ký lúc:</b> ' + m.booked_at + '</div>';
-  if (m.changed_at) html += '<div class="modal-field"><b>Đổi lịch lúc:</b> ' + m.changed_at + '</div>';
-  if (m.question) html += '<div class="modal-field"><b>Câu hỏi Advisee:</b> ' + m.question + '</div>';
-  if (m.feedback_advisor) html += '<div class="modal-field"><b>Feedback Advisor:</b> ' + m.feedback_advisor + '</div>';
-  if (m.feedback_advisee) html += '<div class="modal-field"><b>Feedback Advisee:</b> ' + m.feedback_advisee + '</div>';
-  document.getElementById('modal-body').innerHTML = html;
-  document.getElementById('modal-actions').innerHTML = '<button class="login-btn" onclick="closeModal()" style="width:auto;padding:10px 24px">Đóng</button>';
-  document.getElementById('modal-overlay').classList.add('open');
-}
-
-function editProductPrice(i) {
-  const p = MOCK.products[i];
-  document.getElementById('modal-title').textContent = 'Điều chỉnh đơn giá — ' + p.name;
-  document.getElementById('modal-body').innerHTML =
-    '<div class="modal-field"><div class="form-label">Giá hiện tại</div><input class="form-input" id="edit-price-input" type="number" value="' + p.price + '" style="margin-top:6px"></div>';
-  document.getElementById('modal-actions').innerHTML =
-    '<button class="btn-secondary" onclick="closeModal()" style="width:auto;padding:10px 20px">Huỷ</button>' +
-    '<button class="login-btn" style="width:auto;padding:10px 24px" onclick="saveProductPrice(' + i + ')">Lưu thay đổi</button>';
-  document.getElementById('modal-overlay').classList.add('open');
-}
-function saveProductPrice(i) {
-  const val = Number(document.getElementById('edit-price-input').value);
-  if (!val) { toast('Giá không hợp lệ', 'error'); return; }
-  MOCK.products[i].price = val;
-  toast('Đã cập nhật giá ' + MOCK.products[i].name, 'success');
-  closeModal();
-  loadDashboard('Staff','linkajob');
-}
-
-// ════════════════════════════════════════════════════════════
-//  MODULE 2: ADVISOR
-// ════════════════════════════════════════════════════════════
-function renderAdvisorModule() {
-  let html = '<div class="card"><div class="card-header"><div class="card-header-left">Advisor đang hoạt động</div>';
-  html += '<button class="submit-btn" style="padding:8px 16px;font-size:13px" onclick="toast(\'Form thêm Advisor mới (demo)\',\'success\')">+ Thêm Advisor mới</button></div>';
-
-  const active = MOCK.advisors.filter(function(a){ return a.active; });
-  if (active.length === 0) {
-    html += '<div class="empty-state"><div class="icon">👤</div>Chưa có advisor nào đang hoạt động</div>';
-  } else {
-    html += '<div style="display:flex;gap:14px;overflow-x:auto;padding:18px 24px 24px">';
-    active.forEach(function(a){
-      html += '<div style="min-width:220px;border:1.5px solid var(--border);border-radius:14px;padding:18px;flex-shrink:0">';
-      html += '<div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">' + avatarCircle(a.name, 44) + '<div><div style="font-weight:700;font-size:14px">' + a.name + '</div><div style="font-size:12px;color:var(--muted)">' + a.title + '</div></div></div>';
-      html += '<div style="font-size:13px;color:var(--muted);margin-bottom:4px">Advisee đang meet: <b style="color:var(--text)">' + a.adviseeCount + '</b></div>';
-      html += '<div style="font-size:13px;color:var(--muted);margin-bottom:14px">Buổi hoàn thành: <b style="color:var(--text)">' + a.sessionsDone + '/' + a.sessionsTotal + '</b></div>';
-      html += '<button class="update-btn" style="width:100%" onclick="showAdvisorDetail(\'' + a.id + '\')">Xem chi tiết</button>';
-      html += '</div>';
-    });
-    html += '</div>';
-  }
-  html += '</div>';
-
-  const inactive = MOCK.advisors.filter(function(a){ return !a.active; });
-  if (inactive.length > 0) {
-    html += '<div class="card"><div class="card-header"><div class="card-header-left">Advisor không hoạt động</div></div>';
-    html += '<table class="bookings-table"><thead><tr><th>TÊN</th><th>CHỨC DANH</th><th></th></tr></thead><tbody>';
-    inactive.forEach(function(a){
-      html += '<tr><td>' + a.name + '</td><td>' + a.title + '</td><td><button class="update-btn" onclick="showAdvisorDetail(\'' + a.id + '\')">Chi tiết</button></td></tr>';
-    });
-    html += '</tbody></table></div>';
-  }
-
-  return html;
-}
-
-function showAdvisorDetail(id) {
-  const a = MOCK.advisors.find(function(x){ return x.id === id; });
-  if (!a) return;
-  document.getElementById('modal-title').textContent = a.name;
-  let html = '<div style="display:flex;align-items:center;gap:14px;margin-bottom:18px">' + avatarCircle(a.name,52) + '<div><div style="font-weight:700;font-size:16px">' + a.name + '</div><div style="font-size:13px;color:var(--muted)">' + a.title + '</div></div></div>';
-
-  html += '<div style="font-size:13px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin:18px 0 8px">Thông tin liên hệ</div>';
-  html += '<div class="modal-field"><b>Email:</b> ' + a.email + '</div>';
-  html += '<div class="modal-field"><b>SĐT:</b> ' + a.phone + '</div>';
-  html += '<div class="modal-field"><b>Liên hệ:</b> ' + a.contact + '</div>';
-
-  html += '<div style="font-size:13px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin:18px 0 8px">Thông tin public trên web</div>';
-  html += '<div class="modal-field"><b>Giới thiệu:</b> ' + a.bio + '</div>';
-  html += '<div class="modal-field"><b>Lời nhắn:</b> ' + a.message + '</div>';
-  if (a.feedbacks.length) {
-    html += '<div class="modal-field"><b>Feedback:</b><br>' + a.feedbacks.map(function(f){ return '"' + f.text + '" — ' + f.from; }).join('<br>') + '</div>';
-  }
-  html += '<div class="modal-field"><b>Sản phẩm:</b> ' + a.products.join(', ') + '</div>';
-
-  html += '<div style="font-size:13px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin:18px 0 8px">Lịch available</div>';
-  if (a.slots.length === 0) {
-    html += '<div class="modal-field" style="color:var(--muted)">Không có slot trống (trang đặt lịch đang tắt)</div>';
-  } else {
-    html += '<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px">' + a.slots.map(function(s){ return '<span class="badge badge-confirmed">' + s + '</span>'; }).join('') + '</div>';
-  }
-
-  html += '<div style="font-size:13px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin:18px 0 8px">Advisee đã meet</div>';
-  if (a.advisees.length === 0) {
-    html += '<div class="modal-field" style="color:var(--muted)">Chưa có advisee nào</div>';
-  } else {
-    a.advisees.forEach(function(ae){
-      html += '<div class="modal-field" style="display:flex;justify-content:space-between"><span>' + ae.name + ' · ' + ae.pkg + '</span><span style="font-weight:700">' + ae.progress + '</span></div>';
-    });
-  }
-
-  document.getElementById('modal-body').innerHTML = html;
-  document.getElementById('modal-actions').innerHTML = '<button class="login-btn" onclick="closeModal()" style="width:auto;padding:10px 24px">Đóng</button>';
-  document.getElementById('modal-overlay').classList.add('open');
-}
-
-// ════════════════════════════════════════════════════════════
-//  MODULE 3: ADVISEE
-// ════════════════════════════════════════════════════════════
-function renderAdviseeModule() {
-  let html = '<div class="card"><div class="card-header"><div class="card-header-left">Advisee đang hoạt động</div></div>';
-  if (MOCK.advisees.length === 0) {
-    html += '<div class="empty-state"><div class="icon">🙋</div>Chưa có advisee nào</div>';
-  } else {
-    html += '<table class="bookings-table"><thead><tr><th>ADVISEE</th><th>EMAIL / SĐT</th><th>GÓI</th><th>BUỔI HOÀN THÀNH</th><th></th></tr></thead><tbody>';
-    MOCK.advisees.forEach(function(ae){
-      html += '<tr><td><div style="display:flex;align-items:center;gap:10px">' + avatarCircle(ae.name,32) + '<b>' + ae.name + '</b></div></td>';
-      html += '<td><div style="font-size:13px">' + ae.email + '</div><div style="font-size:12px;color:var(--muted)">' + ae.phone + '</div></td>';
-      html += '<td>' + ae.pkg + '</td><td><b>' + ae.progress + '</b></td>';
-      html += '<td><button class="update-btn" onclick="showAdviseeDetail(\'' + ae.id + '\')">Chi tiết</button></td></tr>';
-    });
-    html += '</tbody></table>';
-  }
-  html += '</div>';
-  return html;
-}
-
-function showAdviseeDetail(id) {
-  const ae = MOCK.advisees.find(function(x){ return x.id === id; });
-  if (!ae) return;
-  document.getElementById('modal-title').textContent = ae.name;
-  let html = '<div style="display:flex;align-items:center;gap:14px;margin-bottom:18px">' + avatarCircle(ae.name,52) + '<div><div style="font-weight:700;font-size:16px">' + ae.name + '</div><div style="font-size:13px;color:var(--muted)">' + ae.email + '</div></div></div>';
-
-  html += '<div class="modal-field"><b>SĐT:</b> ' + ae.phone + '</div>';
-  html += '<div class="modal-field"><b>Liên hệ:</b> ' + ae.contact + '</div>';
-  html += '<div class="modal-field"><b>Gói meeting:</b> ' + ae.pkg + ' (' + ae.sessionsTotal + ' buổi)</div>';
-  html += '<div class="modal-field"><b>Giá trị thanh toán:</b> ' + fmtMoney(ae.paid) + '</div>';
-  html += '<div class="modal-field"><b>Thời gian đăng ký:</b> ' + ae.registeredAt + '</div>';
-  html += '<div class="modal-field"><b>Hạn dùng:</b> ' + ae.expiry + '</div>';
-  html += '<div class="modal-field"><b>Advisor:</b> ' + ae.advisor +
-    ' <button class="update-btn" style="margin-left:8px" onclick="toast(\'Mở form đổi Advisor (demo)\',\'success\')">Đổi Advisor</button></div>';
-
-  html += '<div style="font-size:13px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin:18px 0 8px">Các buổi meeting</div>';
-  ae.sessions.forEach(function(s){
-    const badge = s.status === 'Hoàn thành' ? '<span class="badge badge-completed">Hoàn thành</span>' : '<span class="badge badge-pending">Sắp tới</span>';
-    html += '<div class="modal-field" style="display:flex;justify-content:space-between"><span>Buổi ' + s.no + ' · ' + fmtDateStr(s.date) + '</span>' + badge + '</div>';
-  });
-
-  document.getElementById('modal-body').innerHTML = html;
-  document.getElementById('modal-actions').innerHTML = '<button class="login-btn" onclick="closeModal()" style="width:auto;padding:10px 24px">Đóng</button>';
-  document.getElementById('modal-overlay').classList.add('open');
-}
-
-// ════════════════════════════════════════════════════════════
-//  MODULE 4: KHOÁ HỌC
-// ════════════════════════════════════════════════════════════
-function renderCourseModule() {
-  let html = '<div class="card"><div class="card-header"><div class="card-header-left">Khoá học đang hoạt động</div>';
-  html += '<button class="submit-btn" style="padding:8px 16px;font-size:13px" onclick="toast(\'Form thêm khoá học mới (demo)\',\'success\')">+ Thêm khoá học</button></div>';
-
-  if (MOCK.courses.length === 0) {
-    html += '<div class="empty-state"><div class="icon">📚</div>Chưa có khoá học nào</div>';
-  } else {
-    html += '<table class="bookings-table"><thead><tr><th>TÊN LỚP</th><th>KHAI GIẢNG</th><th>HỌC VIÊN</th><th>BUỔI HOÀN THÀNH</th><th></th></tr></thead><tbody>';
-    MOCK.courses.forEach(function(c){
-      html += '<tr><td><b>' + c.name + '</b></td><td>' + fmtDateStr(c.startDate) + '</td>';
-      html += '<td>' + c.studentCount + ' học viên</td><td><b>' + c.sessionsDone + '/' + c.sessionsTotal + '</b></td>';
-      html += '<td><button class="update-btn" onclick="showCourseDetail(\'' + c.id + '\')">Chi tiết</button></td></tr>';
-    });
-    html += '</tbody></table>';
-  }
-  html += '</div>';
-  return html;
-}
-
-function showCourseDetail(id) {
-  const c = MOCK.courses.find(function(x){ return x.id === id; });
-  if (!c) return;
-  document.getElementById('modal-title').textContent = c.name;
-  let html = '<div class="modal-field"><b>Giảng viên:</b> ' + c.teacher + '</div>';
-  html += '<div class="modal-field"><b>Link học:</b> <a href="' + c.meetLink + '" target="_blank">' + c.meetLink + '</a></div>';
-  html += '<div class="modal-field"><b>Học viên:</b> ' + c.students.join(', ') + '</div>';
-
-  html += '<div style="font-size:13px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin:18px 0 8px">Lịch học</div>';
-  c.schedule.forEach(function(s){
-    html += '<div class="modal-field" style="display:flex;justify-content:space-between"><span>' + fmtDateStr(s.date) + '</span><span>' + s.topic + '</span></div>';
-  });
-
-  html += '<div style="font-size:13px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin:18px 0 8px">Tài liệu</div>';
-  if (c.materials.length === 0) {
-    html += '<div class="modal-field" style="color:var(--muted)">Chưa có tài liệu</div>';
-  } else {
-    c.materials.forEach(function(m){ html += '<div class="modal-field">📄 ' + m + '</div>'; });
-  }
-
-  document.getElementById('modal-body').innerHTML = html;
-  document.getElementById('modal-actions').innerHTML = '<button class="login-btn" onclick="closeModal()" style="width:auto;padding:10px 24px">Đóng</button>';
-  document.getElementById('modal-overlay').classList.add('open');
-}
-
-function renderAdvisee(tab) {
-  const c = document.getElementById('main-content');
-  if (tab === 'my-bookings') c.innerHTML = renderMyBookings();
-  else c.innerHTML = renderNewBookingForm();
-}
-
-function renderMyBookings() {
-  const mine = sheetData.bookings.filter(function(b){ return b.advisee_email === currentUser.email || b.advisee_name === currentUser.name; });
-  let html = '<div class="card"><div class="card-header"><div class="card-header-left">Booking của tôi</div></div>';
-  if (mine.length === 0) {
-    html += '<div class="empty-state"><div class="icon">📭</div>Bạn chưa có booking nào.</div>';
-  } else {
-    mine.forEach(function(b){
-      html += '<div class="session-item">' + avatarCircle(b.advisor_name) + '<div class="session-info"><div class="session-name">' + b.advisor_name + '</div><div class="session-meta">' + b.package_name + ' · ' + (b.sessions_used||0) + '/' + (b.sessions_total||0) + ' buổi đã dùng</div></div><div>' + statusBadge(b.status) + '</div>';
-      if (b.meet_link) html += '<a href="' + b.meet_link + '" target="_blank" class="detail-btn">Meet</a>';
-      html += '</div>';
-    });
-  }
-  html += '</div>';
-  return html;
-}
-
-function submitBooking() {
-  const btn = document.getElementById('submit-booking-btn');
-  const msg = document.getElementById('submit-msg');
-  const data = {
-    advisee_name: v('f-advisee-name'), advisee_phone: v('f-advisee-phone'),
-    advisee_email: v('f-advisee-email'), advisee_year: v('f-advisee-year'),
-    advisee_industry: v('f-advisee-industry'), advisee_goal: v('f-goal'),
-    advisor_name: v('f-advisor-name'), advisor_email: v('f-advisor-email'),
-    package_name: document.getElementById('f-package').value
-  };
-  if (!data.advisee_name || !data.advisee_email || !data.advisor_name) { toast('Điền đầy đủ các trường bắt buộc (*)', 'error'); return; }
-  btn.innerHTML = '<span class="spinner"></span> Đang gửi...'; btn.disabled = true;
-  apiPost(data).then(function(res){
-    if (res && res.success) {
-      toast('Booking ' + res.booking_id + ' đã tạo!', 'success');
-      msg.textContent = 'ID: ' + res.booking_id;
-      msg.style.color = 'var(--green)';
-    } else {
-      toast('Lỗi: ' + (res && res.error), 'error');
-      msg.textContent = res && res.error;
-      msg.style.color = 'var(--brand)';
-    }
-    btn.innerHTML = 'Tạo Booking &amp; Gửi Email'; btn.disabled = false;
-  }).catch(function(e){
-    toast('Lỗi: ' + e.message, 'error');
-    msg.textContent = e.message; msg.style.color = 'var(--brand)';
-    btn.innerHTML = 'Tạo Booking &amp; Gửi Email'; btn.disabled = false;
-  });
-}
-
-function confirmBooking(id) {
-  apiPost({ action: 'updateStatus', booking_id: id, status: 'confirmed' }).then(function(res){
-    if (res && res.success) { toast('Đã xác nhận! Email & Meet link đã gửi.', 'success'); loadDashboard('Staff','all-bookings'); }
-    else toast('Vào Sheet, cột Status, đổi thành confirmed.', 'error');
-  }).catch(function(){ toast('Vào Sheet, cột Status, đổi thành confirmed.', 'error'); });
-}
-
-function markComplete(id) {
-  apiPost({ action: 'updateStatus', booking_id: id, status: 'completed' }).then(function(res){
-    if (res && res.success) { toast('Đã đánh dấu hoàn thành!', 'success'); loadDashboard('Advisor','booked'); }
-    else toast('Vào Sheet, cột Status, đổi thành completed.', 'error');
-  }).catch(function(){ toast('Vào Sheet, cột Status, đổi thành completed.', 'error'); });
-}
-
-function toggleSlot(btn, key) {
-  if (selectedSlots.has(key)) { selectedSlots.delete(key); btn.classList.remove('selected'); }
-  else { selectedSlots.add(key); btn.classList.add('selected'); }
-  document.getElementById('sel-count').innerHTML = 'Đã chọn <span>' + selectedSlots.size + '</span> slot';
-  document.getElementById('slot-send-btn').textContent = 'Gửi lịch trống (' + selectedSlots.size + ' slot)';
-}
-
-function sendSlots() {
-  if (selectedSlots.size === 0) { toast('Chưa chọn slot nào!', 'error'); return; }
-  const btn = document.getElementById('slot-send-btn');
-  btn.innerHTML = '<span class="spinner"></span> Đang gửi...'; btn.disabled = true;
-  apiPost({ action: 'addSlots', advisor: currentUser.name, advisor_email: currentUser.email, slots: Array.from(selectedSlots) }).then(function(res){
-    if (res && res.success) {
-      toast('Đã gửi ' + selectedSlots.size + ' slot!', 'success');
-      selectedSlots.clear();
-      loadDashboard('Advisor','schedule');
-    } else {
-      toast('Lỗi: ' + (res && res.error), 'error');
-      btn.innerHTML = 'Gửi lịch trống (' + selectedSlots.size + ' slot)'; btn.disabled = false;
-    }
-  }).catch(function(e){
-    toast('Lỗi: ' + e.message, 'error');
-    btn.innerHTML = 'Gửi lịch trống (' + selectedSlots.size + ' slot)'; btn.disabled = false;
-  });
-}
-
-function changeWeek(dir) { weekOffset += dir; loadDashboard('Advisor','schedule'); }
-
-function showDetail(b) {
-  document.getElementById('modal-title').textContent = 'Chi tiết Booking';
-  let html = '<div class="modal-field"><b>Booking ID:</b> ' + (b.booking_id||'—') + '</div>';
-  html += '<div class="modal-field"><b>Advisee:</b> ' + (b.advisee_name||'—') + ' · ' + (b.advisee_email||'') + '</div>';
-  html += '<div class="modal-field"><b>Advisor:</b> ' + (b.advisor_name||'—') + '</div>';
-  html += '<div class="modal-field"><b>Gói:</b> ' + (b.package_name||'—') + ' · ' + (b.sessions_total||0) + ' buổi</div>';
-  html += '<div class="modal-field"><b>Đã dùng:</b> ' + (b.sessions_used||0) + '/' + (b.sessions_total||0) + '</div>';
-  html += '<div class="modal-field"><b>Trạng thái:</b> ' + statusBadge(b.status) + '</div>';
-  if (b.meet_link) html += '<div class="modal-field"><b>Meet:</b> <a href="' + b.meet_link + '" target="_blank">' + b.meet_link + '</a></div>';
-  if (b.notes) html += '<div class="modal-field"><b>Ghi chú:</b> ' + b.notes + '</div>';
-  document.getElementById('modal-body').innerHTML = html;
-  document.getElementById('modal-actions').innerHTML = '<button class="login-btn" onclick="closeModal()" style="width:auto;padding:10px 24px">Đóng</button>';
-  document.getElementById('modal-overlay').classList.add('open');
-}
-function closeModal() { document.getElementById('modal-overlay').classList.remove('open'); }
-document.getElementById('modal-overlay').addEventListener('click', function(e){ if (e.target.id === 'modal-overlay') closeModal(); });
-
-const AV_COLORS = [['#D0E8FF','#2475B0'],['#FFD6D0','#C0392B'],['#D0F0E8','#1A7A5E'],['#EDE9FE','#6D28D9'],['#FEF3C7','#92400E'],['#FCE7F3','#9D174D']];
-const colorCache = {};
-function avatarCircle(name, size) {
-  size = size || 38;
-  if (!name) name = '?';
-  if (!colorCache[name]) colorCache[name] = AV_COLORS[name.charCodeAt(0) % AV_COLORS.length];
-  const c = colorCache[name];
-  const ini = name.split(' ').filter(Boolean).map(function(w){ return w[0]; }).join('').slice(0,2).toUpperCase();
-  return '<div class="av-circle" style="width:' + size + 'px;height:' + size + 'px;background:' + c[0] + ';color:' + c[1] + ';font-size:' + (size*0.33) + 'px;flex-shrink:0">' + ini + '</div>';
-}
-
-function statusBadge(s) {
-  const map = {pending_payment:'badge-pending',confirmed:'badge-confirmed',completed:'badge-completed',cancelled:'badge-cancelled'};
-  const lbl = {pending_payment:'Chờ thanh toán',confirmed:'Đã xác nhận',completed:'Hoàn thành',cancelled:'Đã hủy'};
-  return '<span class="badge ' + (map[s]||'badge-pending') + '">' + (lbl[s]||s||'—') + '</span>';
-}
-function statusLabel(s) { return {pending_payment:'Chờ thanh toán',confirmed:'Đã xác nhận',completed:'Hoàn thành',cancelled:'Đã hủy'}[s] || s; }
-
-function sessionItemHTML(b) {
-  let html = '<div class="session-item">' + avatarCircle(b.advisee_name) + '<div class="session-info"><div class="session-name">' + b.advisee_name + '</div><div class="session-meta">' + (b.package_name||'') + ' · Buổi ' + (b.sessions_used||0) + '/' + (b.sessions_total||0) + '</div></div>';
-  html += '<div class="session-time"><strong>' + (b.session_date?fmtDate(b.session_date):'—') + '</strong>' + (b.session_time||'') + '</div>';
-  html += '<button class="detail-btn" onclick="showDetail(' + esc(b) + ')">Chi tiết</button>';
-  if (b.meet_link) html += '<a href="' + b.meet_link + '" target="_blank" class="detail-btn">Meet</a>';
-  html += '</div>';
-  return html;
-}
-
-function skeletonRows(n) {
-  let s = '<div class="card">';
-  for (let i=0;i<n;i++) {
-    s += '<div class="skel-row"><div class="skeleton" style="width:38px;height:38px;border-radius:50%;flex-shrink:0"></div><div style="flex:1"><div class="skeleton" style="height:14px;width:55%;margin-bottom:8px;border-radius:4px"></div><div class="skeleton" style="height:12px;width:38%;border-radius:4px"></div></div></div>';
-  }
-  s += '</div>';
-  return s;
-}
-
-function getMondayOfWeek(date, offset) {
-  offset = offset || 0;
-  const d = new Date(date);
-  const day = d.getDay();
-  d.setDate(d.getDate() - day + (day===0?-6:1) + offset*7);
-  d.setHours(0,0,0,0);
-  return d;
-}
-function slotKey(date, time) { return date.getFullYear() + '-' + pad(date.getMonth()+1) + '-' + pad(date.getDate()) + '_' + time; }
-function slotKeyFromSheetRow(s) {
-  // Sheet that tra ve date dang "2026-07-01" va time_start dang "19:00"
-  if (!s.date || !s.time_start) return '';
-  var d = String(s.date).slice(0,10); // phong khi date la ISO datetime
+  var d = String(s.date).slice(0,10);
   return d + '_' + s.time_start;
 }
 function fmtDate(d) { if (!d) return '—'; const dt = new Date(d); return DAYS_VI[dt.getDay()] + ' ' + dt.getDate() + '/' + (dt.getMonth()+1) + ' · ' + pad(dt.getHours()) + ':' + pad(dt.getMinutes()); }
