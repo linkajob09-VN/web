@@ -520,6 +520,8 @@ function openConsultWidget(){
   var t = new Date();
   cwViewYear = t.getFullYear();
   cwViewMonth = t.getMonth();
+  cwSlotsLoaded = false; // reset để luôn lấy data mới nhất
+  cwRealSlots = {};
   cwGoStep(1);
 }
 function closeConsultWidget(){
@@ -539,18 +541,45 @@ function cwCheckStep1(){
   document.getElementById('cwBtn1').disabled = !(name && phone);
 }
 
-/* Giờ trống: 9h sáng – 9h tối (9:00–21:00), Thứ 2 đến Thứ 7 (nghỉ Chủ Nhật) */
-function cwPad2(n){ return (n<10?'0':'')+n; }
-var CW_SLOTS_BY_WEEKDAY = (function(){
-  var hours = [];
-  for(var h=9; h<21; h++){ hours.push(cwPad2(h)+':00–'+cwPad2(h+1)+':00'); }
-  var map = {};
-  for(var wd=1; wd<=6; wd++){ map[wd] = hours.slice(); } // 1=T2 ... 6=T7
-  return map;
-})();
-var cwSelectedDate = null, cwSelectedTime = null;
+/* ─── CONSULT WIDGET STATE ─── */
+var CW_WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbx7Bd9VvoyzfiiezQV9huoY2BKHH_Br1RAFIz00mjdyKeis-Zv-38a0gf_b-fMlul2C/exec';
+var CW_STAFF_IDENTITY = 'LinkaJob Team'; // phải khớp với STAFF_SLOT_IDENTITY trong dashboard.html
+
+// Slots lấy từ Sheet: { 'YYYY-MM-DD': [ {id, time_start}, ... ] }
+var cwRealSlots = {};
+var cwSlotsLoaded = false;
+var cwSelectedDate = null, cwSelectedTime = null, cwSelectedSlotId = null;
 var cwMonthNames = ['Tháng 1','Tháng 2','Tháng 3','Tháng 4','Tháng 5','Tháng 6','Tháng 7','Tháng 8','Tháng 9','Tháng 10','Tháng 11','Tháng 12'];
 var cwViewYear = null, cwViewMonth = null;
+function cwPad2(n){ return (n<10?'0':'')+n; }
+
+// Load slots từ AvailableSlots (advisor_name = 'LinkaJob Team', status = 'available')
+function cwLoadSlots(callback) {
+  if (cwSlotsLoaded) { if(callback) callback(); return; }
+  fetch(CW_WEBAPP_URL + '?action=getSlots&advisor=' + encodeURIComponent(CW_STAFF_IDENTITY) + '&only_available=1')
+    .then(function(r){ return r.json(); })
+    .then(function(res){
+      cwRealSlots = {};
+      if (res && res.data) {
+        res.data.forEach(function(s){
+          var d = String(s.date || s.scheduled_date || '').slice(0,10);
+          if (!d) return;
+          if (!cwRealSlots[d]) cwRealSlots[d] = [];
+          cwRealSlots[d].push({ id: s.slot_id, time: String(s.time_start).slice(0,5) });
+        });
+        // Sắp xếp giờ trong từng ngày
+        Object.keys(cwRealSlots).forEach(function(d){
+          cwRealSlots[d].sort(function(a,b){ return a.time.localeCompare(b.time); });
+        });
+      }
+      cwSlotsLoaded = true;
+      if(callback) callback();
+    })
+    .catch(function(){
+      cwSlotsLoaded = true;
+      if(callback) callback();
+    });
+}
 
 function cwChangeMonth(dir){
   cwViewMonth += dir;
@@ -563,8 +592,20 @@ function cwRenderCalendar(){
   var today = new Date();
   if(cwViewYear === null){ cwViewYear = today.getFullYear(); cwViewMonth = today.getMonth(); }
   var y = cwViewYear, m = cwViewMonth;
-  document.getElementById('cwCalTitle').textContent = cwMonthNames[m]+', '+y;
+
+  var calTitle = document.getElementById('cwCalTitle');
   var grid = document.getElementById('cwCalGrid');
+  if(!calTitle || !grid) return;
+
+  calTitle.textContent = cwMonthNames[m]+', '+y;
+
+  // Nếu chưa load xong → show loading
+  if(!cwSlotsLoaded){
+    grid.innerHTML = '<div style="grid-column:1/-1;padding:24px;text-align:center;color:rgba(240,240,240,0.4);font-size:13px;">Đang tải lịch trống...</div>';
+    cwLoadSlots(function(){ cwRenderCalendar(); });
+    return;
+  }
+
   var startOffset = new Date(y,m,1).getDay();
   var daysInMonth = new Date(y,m+1,0).getDate();
   var todayStart = new Date(today.getFullYear(),today.getMonth(),today.getDate());
@@ -572,93 +613,91 @@ function cwRenderCalendar(){
   for(var i=0;i<startOffset;i++) html += '<div class="cw-day empty"></div>';
   for(var d=1; d<=daysInMonth; d++){
     var dateObj = new Date(y,m,d);
-    var wd = dateObj.getDay();
+    var dateKey = y+'-'+cwPad2(m+1)+'-'+cwPad2(d);
     var isPast = dateObj < todayStart;
-    var hasSlots = !isPast && CW_SLOTS_BY_WEEKDAY[wd];
+    var slots = cwRealSlots[dateKey];
+    var hasSlots = !isPast && slots && slots.length > 0;
     var cls = 'cw-day'+(isPast?' past':(hasSlots?' has-slots':' no-slots'));
-    html += '<div class="'+cls+'"'+(hasSlots?(' onclick="cwSelectDay(this,'+y+','+m+','+d+')"'):'')+'>'+d+'</div>';
+    html += '<div class="'+cls+'"'+(hasSlots?' onclick="cwSelectDay(this,\''+dateKey+'\','+y+','+m+','+d+')"':'')+'>'+d+'</div>';
   }
   grid.innerHTML = html;
   document.getElementById('cwTsLabel').textContent = 'Chọn ngày có chấm cam để xem giờ trống';
   document.getElementById('cwTsSlots').innerHTML = '';
-  cwSelectedDate = null; cwSelectedTime = null;
+  cwSelectedDate = null; cwSelectedTime = null; cwSelectedSlotId = null;
   document.getElementById('cwBtn2').disabled = true;
 }
-function cwSelectDay(el,y,m,d){
-  document.querySelectorAll('.cw-day').forEach(function(x){x.classList.remove('selected');});
+
+function cwSelectDay(el, dateKey, y, m, d){
+  document.querySelectorAll('.cw-day').forEach(function(x){ x.classList.remove('selected'); });
   el.classList.add('selected');
-  var dateObj = new Date(y,m,d);
-  cwSelectedDate = dateObj;
-  cwSelectedTime = null;
-  var slots = CW_SLOTS_BY_WEEKDAY[dateObj.getDay()] || [];
-  document.getElementById('cwTsLabel').textContent = 'Giờ trống — '+d+'/'+(m+1)+'/'+y;
+  cwSelectedDate = new Date(y,m,d);
+  cwSelectedTime = null; cwSelectedSlotId = null;
+  var slots = cwRealSlots[dateKey] || [];
+  document.getElementById('cwTsLabel').textContent = 'Giờ trống — ' + d+'/'+(m+1)+'/'+y;
   var html = '';
   slots.forEach(function(s){
-    html += '<button class="cw-ts-slot" onclick="cwSelectTime(this,\''+s+'\')">'+s+'</button>';
+    html += '<button class="cw-ts-slot" onclick="cwSelectTime(this,\''+s.time+'\',\''+s.id+'\')">'+s.time+'</button>';
   });
-  document.getElementById('cwTsSlots').innerHTML = html;
+  document.getElementById('cwTsSlots').innerHTML = html || '<span style="color:rgba(240,240,240,0.4);font-size:13px;">Không còn slot trống ngày này.</span>';
   document.getElementById('cwBtn2').disabled = true;
 }
-function cwSelectTime(el,t){
-  document.querySelectorAll('.cw-ts-slot').forEach(function(x){x.classList.remove('on');});
+
+function cwSelectTime(el, t, slotId){
+  document.querySelectorAll('.cw-ts-slot').forEach(function(x){ x.classList.remove('on'); });
   el.classList.add('on');
   cwSelectedTime = t;
+  cwSelectedSlotId = slotId;
   document.getElementById('cwBtn2').disabled = false;
 }
 function cwConfirm(){
   var btn = document.getElementById('cwBtn2');
-  if(btn.disabled && btn.dataset.sending) return; // chặn double-click khi đang gửi
+  if(btn.dataset.sending) return;
+  if(!cwSelectedSlotId){ alert('Vui lòng chọn giờ.'); return; }
 
-  var name    = document.getElementById('cwName').value.trim();
-  var phone   = document.getElementById('cwPhone').value.trim();
-  var service = document.getElementById('cwService').value;
-  var question= document.getElementById('cwQuestion').value.trim();
-  var d = cwSelectedDate;
-  var dateStr = d.getDate()+'/'+(d.getMonth()+1)+'/'+d.getFullYear();
-
-  var goalParts = ['Quan tâm: '+service];
-  if(question) goalParts.push('Câu hỏi: '+question);
-  goalParts.push('Khung giờ mong muốn: '+dateStr+' · '+cwSelectedTime+' (qua Google Meet)');
+  var name     = document.getElementById('cwName').value.trim();
+  var phone    = document.getElementById('cwPhone').value.trim();
+  var service  = document.getElementById('cwService').value;
+  var question = document.getElementById('cwQuestion').value.trim();
 
   var payload = {
-    action          : 'registerAdvisee',
-    advisee_name    : name,
-    advisee_phone   : phone,
-    advisee_email   : '',
-    advisee_year    : '',
-    advisee_industry: service,
-    advisee_goal    : goalParts.join(' | '),
-    package_name    : 'Tư vấn miễn phí'
+    action  : 'bookFreeConsult',
+    slot_id : cwSelectedSlotId,
+    name    : name,
+    phone   : phone,
+    service : service,
+    question: question
   };
 
   btn.dataset.sending = '1';
   btn.disabled = true;
-  btn.textContent = 'Đang gửi...';
+  btn.textContent = 'Đang đặt lịch...';
 
   fetch(CW_WEBAPP_URL, {
     method : 'POST',
-    // text/plain để tránh CORS preflight; backend vẫn JSON.parse bình thường
     headers: { 'Content-Type': 'text/plain;charset=utf-8' },
     body   : JSON.stringify(payload)
   })
-  .then(function(res){ return res.json(); })
+  .then(function(r){ return r.json(); })
   .then(function(data){
-    if(!data.success) throw new Error(data.error || 'Lỗi không xác định từ server');
+    if(!data.success) throw new Error(data.error || 'Lỗi không xác định');
+    var d = cwSelectedDate;
+    var dateStr = d.getDate()+'/'+(d.getMonth()+1)+'/'+d.getFullYear();
     document.getElementById('cwSuccessDetail').innerHTML =
-      'Cảm ơn <strong>'+name+'</strong>! Lịch tư vấn của bạn:<br><strong>'+dateStr+' · '+cwSelectedTime+'</strong><br><br>'+
-      'Mã đăng ký: <strong>'+data.booking_id+'</strong><br>'+
-      'Link Google Meet sẽ được gửi qua Zalo/SMS trước giờ hẹn.';
+      'Cảm ơn <strong>'+name+'</strong>! Lịch tư vấn của bạn đã được xác nhận:<br>' +
+      '<strong>'+dateStr+' · '+cwSelectedTime+'</strong><br><br>' +
+      'Link Google Meet sẽ được gửi qua Zalo/SMS (<strong>'+phone+'</strong>) trước giờ hẹn.';
     cwGoStep(3);
     btn.dataset.sending = '';
     btn.disabled = false;
     btn.textContent = 'Xác nhận đặt lịch';
+    cwSlotsLoaded = false;
   })
   .catch(function(err){
     btn.dataset.sending = '';
     btn.disabled = false;
     btn.textContent = 'Xác nhận đặt lịch';
     document.getElementById('cwTsLabel').innerHTML =
-      '<span style="color:#fc5229">⚠ Gửi thất bại: '+err.message+'. Vui lòng thử lại.</span>';
+      '<span style="color:#fc5229">⚠ '+err.message+'. Vui lòng thử lại hoặc liên hệ contact@linkajob.vn</span>';
   });
 }
 </script>
