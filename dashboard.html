@@ -252,7 +252,14 @@ const PACKAGES = {
   'Chuyên Sâu': { price: 2199000, sessions: 6, days: 56 },
 };
 
-const TIME_SLOTS = ['08:00','09:00','10:00','11:00','14:00','15:00','16:00','17:00','18:00','19:00','20:00','21:00'];
+const TIME_SLOTS = (function(){
+  var slots = [];
+  for(var h=9; h<=21; h++){
+    slots.push((h<10?'0':'')+h+':00');
+    if(h < 21) slots.push((h<10?'0':'')+h+':30');
+  }
+  return slots; // 09:00, 09:30, 10:00 ... 20:30, 21:00
+})();
 const DAYS_VI = ['CN','T2','T3','T4','T5','T6','T7'];
 
 let currentUser = null;
@@ -353,7 +360,7 @@ function doLogout() {
 
 const TAB_DEFS = {
   Advisor: [ {id:'overview',label:'Tổng quan'}, {id:'schedule',label:'Gửi lịch trống'}, {id:'booked',label:'Buổi đã book'} ],
-  Staff:   [ {id:'all-bookings',label:'Tất cả Booking'}, {id:'schedule',label:'Gửi lịch trống'}, {id:'new-booking',label:'Tạo booking mới'}, {id:'advisors',label:'Advisors'} ],
+  Staff:   [ {id:'all-bookings',label:'Tất cả Booking'}, {id:'consult-sessions',label:'Lịch tư vấn'}, {id:'schedule',label:'Gửi lịch trống'}, {id:'new-booking',label:'Tạo booking mới'}, {id:'advisors',label:'Advisors'} ],
   Advisee: [ {id:'my-bookings',label:'Booking của tôi'}, {id:'new-booking',label:'Đặt lịch mới'} ]
 };
 
@@ -370,7 +377,18 @@ function switchTab(tabId, el) {
   document.querySelectorAll('#tab-bar .tab').forEach(function(t){ t.classList.remove('active'); });
   el.classList.add('active');
   activeTab = tabId;
+  clearAutoRefresh();
   loadDashboard(currentUser.role, tabId);
+  // Tự động làm mới mỗi 60s khi đang xem tab Lịch tư vấn
+  if (tabId === 'consult-sessions') {
+    window._autoRefresh = setInterval(function(){
+      if (activeTab === 'consult-sessions') renderConsultSessions(document.getElementById('main-content'));
+    }, 60000);
+  }
+}
+
+function clearAutoRefresh() {
+  if (window._autoRefresh) { clearInterval(window._autoRefresh); window._autoRefresh = null; }
 }
 
 function loadDashboard(role, tab) {
@@ -508,9 +526,66 @@ function renderBookedSessions() {
 function renderStaff(tab) {
   const c = document.getElementById('main-content');
   if (tab === 'all-bookings') c.innerHTML = renderAllBookings();
+  else if (tab === 'consult-sessions') renderConsultSessions(c);
   else if (tab === 'schedule') c.innerHTML = renderSchedulePicker();
   else if (tab === 'new-booking') c.innerHTML = renderNewBookingForm();
   else c.innerHTML = renderAdvisorsList();
+}
+
+function renderConsultSessions(container) {
+  container.innerHTML = skeletonRows(3);
+  apiGet('getSessions', { advisor: STAFF_SLOT_IDENTITY }).then(function(res){
+    var sessions = (res && res.data) ? res.data : [];
+    // Sắp xếp: sắp tới trước
+    sessions.sort(function(a,b){
+      var da = String(a.scheduled_date||'') + String(a.scheduled_time||'');
+      var db = String(b.scheduled_date||'') + String(b.scheduled_time||'');
+      return da.localeCompare(db);
+    });
+    var now = new Date();
+    var upcoming = sessions.filter(function(s){ return s.status !== 'completed' && s.status !== 'cancelled'; });
+    var past     = sessions.filter(function(s){ return s.status === 'completed' || s.status === 'cancelled'; });
+
+    var html = '<div class="stats-row" style="grid-template-columns:repeat(3,1fr);margin-bottom:20px">';
+    html += '<div class="stat-cell"><div class="stat-num">' + upcoming.length + '</div><div class="stat-label">Sắp diễn ra</div></div>';
+    html += '<div class="stat-cell"><div class="stat-num">' + past.length + '</div><div class="stat-label">Đã hoàn thành</div></div>';
+    html += '<div class="stat-cell"><div class="stat-num">' + sessions.length + '</div><div class="stat-label">Tổng buổi</div></div>';
+    html += '</div>';
+
+    html += '<div class="card"><div class="card-header"><div class="card-header-left">Lịch tư vấn miễn phí</div><button class="refresh-btn" onclick="renderConsultSessions(document.getElementById(\'main-content\'))">↻ Làm mới</button></div>';
+
+    if (sessions.length === 0) {
+      html += '<div class="empty-state"><div class="icon">📅</div>Chưa có buổi tư vấn nào. Gửi lịch trống để khách đặt lịch.</div></div>';
+    } else {
+      html += '<table class="bookings-table"><thead><tr><th>KHÁCH HÀNG</th><th>NGÀY · GIỜ</th><th>DỊCH VỤ / GHI CHÚ</th><th>TRẠNG THÁI</th><th></th></tr></thead><tbody>';
+      sessions.forEach(function(s){
+        var dateStr = s.scheduled_date ? String(s.scheduled_date).slice(0,10) : '—';
+        var timeStr = s.scheduled_time ? String(s.scheduled_time).slice(0,5) : '—';
+        var notes   = String(s.notes||'').replace(/Tên: [^|]+\|?\s*/,''); // bỏ "Tên: ..." vì đã hiện cột riêng
+        var name    = String(s.advisee_name||'—');
+        // Trích SĐT từ notes nếu có
+        var phoneMatch = String(s.notes||'').match(/SĐT: ([^|]+)/);
+        var phone   = phoneMatch ? phoneMatch[1].trim() : '';
+        var statusCls = s.status === 'scheduled' ? 'badge-confirmed' : s.status === 'completed' ? 'badge-completed' : 'badge-pending';
+        var statusLbl = s.status === 'scheduled' ? 'Đã lên lịch' : s.status === 'completed' ? 'Hoàn thành' : (s.status||'—');
+
+        html += '<tr>';
+        html += '<td><div style="font-weight:600">' + name + '</div>' + (phone?'<div style="font-size:12px;color:var(--muted)">'+phone+'</div>':'') + '</td>';
+        html += '<td><b>' + dateStr + '</b><br><span style="color:var(--muted)">' + timeStr + ' · 20 phút</span></td>';
+        html += '<td style="font-size:12px;color:var(--muted);max-width:220px;white-space:normal">' + (notes||'—') + '</td>';
+        html += '<td><span class="badge ' + statusCls + '">' + statusLbl + '</span></td>';
+        html += '<td style="display:flex;gap:6px">';
+        if (s.meet_link) html += '<a href="' + s.meet_link + '" target="_blank" class="detail-btn">Meet</a>';
+        if (s.status === 'scheduled') html += '<button class="update-btn green" onclick="markSessionDone(\'' + s.session_id + '\')">✓ Xong</button>';
+        html += '</td>';
+        html += '</tr>';
+      });
+      html += '</tbody></table></div>';
+    }
+    container.innerHTML = html;
+  }).catch(function(){
+    container.innerHTML = '<div class="card"><div class="empty-state"><div class="icon">⚠️</div>Không tải được dữ liệu. Kiểm tra kết nối.</div></div>';
+  });
 }
 
 function renderAllBookings() {
@@ -613,6 +688,13 @@ function submitBooking() {
     msg.textContent = e.message; msg.style.color = 'var(--brand)';
     btn.innerHTML = 'Tạo Booking &amp; Gửi Email'; btn.disabled = false;
   });
+}
+
+function markSessionDone(sessionId) {
+  apiPost({ action: 'updateSession', session_id: sessionId, status: 'completed' }).then(function(res){
+    if (res && res.success) { toast('Đã đánh dấu hoàn thành!', 'success'); renderConsultSessions(document.getElementById('main-content')); }
+    else toast('Lỗi: ' + (res && res.error), 'error');
+  }).catch(function(){ toast('Không kết nối được server.', 'error'); });
 }
 
 function confirmBooking(id) {
