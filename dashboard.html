@@ -22,101 +22,63 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
 .spinner { display: inline-block; width: 18px; height: 18px; border: 2.5px solid rgba(255,255,255,0.3); border-top-color: #fff; border-radius: 50%; animation: spin .7s linear infinite; vertical-align: middle; }
 @keyframes spin { to { transform: rotate(360deg); } }
 
+/* ── LOGIN ── */
 #login-page { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; padding: 40px 16px; }
 .logo-row { display: flex; align-items: center; gap: 14px; margin-bottom: 40px; }
 .logo-icon { width: 52px; height: 52px; background: var(--brand); border-radius: 14px; display: flex; align-items: center; justify-content: center; }
-.logo-icon svg { width: 26px; height: 26px; }
 .logo-name { font-size: 28px; font-weight: 700; letter-spacing: -.5px; }
-
 .login-card { background: var(--white); border-radius: var(--radius-lg); box-shadow: var(--shadow); padding: 40px 44px 44px; width: 100%; max-width: 520px; }
 .login-card h2 { font-size: 28px; font-weight: 700; margin-bottom: 6px; }
 .login-card .subtitle { font-size: 17px; color: var(--muted); margin-bottom: 32px; }
-
 .field-label { font-size: 15px; color: var(--muted); margin-bottom: 8px; }
 .field-group { margin-bottom: 20px; }
 .field-input { width: 100%; padding: 14px 18px; font-size: 16px; border: 1.5px solid var(--border); border-radius: var(--radius-sm); background: var(--white); color: var(--text); outline: none; transition: border-color .15s; }
 .field-input:focus { border-color: var(--brand); }
-
 .role-row { display: flex; gap: 10px; margin-bottom: 24px; }
 .role-btn { flex: 1; padding: 14px 0; font-size: 16px; font-weight: 500; border-radius: 100px; border: 1.5px solid var(--border); background: var(--white); color: var(--muted); cursor: pointer; transition: all .15s; }
 .role-btn.active { background: var(--brand); color: #fff; border-color: var(--brand); font-weight: 600; }
 .role-btn:hover:not(.active) { border-color: var(--brand); color: var(--brand); }
-
 .login-btn { width: 100%; padding: 16px; font-size: 17px; font-weight: 700; border-radius: var(--radius-sm); border: none; background: var(--brand); color: #fff; cursor: pointer; transition: opacity .15s; display: flex; align-items: center; justify-content: center; gap: 8px; }
 .login-btn:hover { opacity: .88; }
 .login-btn:disabled { opacity: .55; cursor: not-allowed; }
 .login-error { color: var(--brand); font-size: 13px; margin-top: 10px; text-align: center; display: none; }
 
+/* ── DASHBOARD ── */
 #dashboard-page { display: none; min-height: 100vh; flex-direction: column; }
-
-/* ── TOPBAR (slim) ── */
 .topbar { background: var(--white); border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; padding: 0 20px; height: 52px; position: sticky; top: 0; z-index: 20; flex-shrink: 0; }
 .topbar-left { display: flex; align-items: center; gap: 10px; }
 .nav-logo-icon { width: 30px; height: 30px; background: var(--brand); border-radius: 7px; display: flex; align-items: center; justify-content: center; }
-.nav-logo-icon svg { width: 16px; height: 16px; }
 .nav-brand { font-size: 16px; font-weight: 700; }
 .role-badge { background: #FFE9E4; color: var(--brand); font-size: 12px; font-weight: 600; padding: 2px 9px; border-radius: 100px; }
 .nav-right { display: flex; align-items: center; gap: 10px; }
-.nav-user { display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 500; cursor: pointer; padding: 4px 8px 4px 4px; border-radius: 100px; transition: background .15s; position: relative; }
-.nav-user:hover { background: var(--bg); }
+.nav-user { display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 500; }
 .avatar { width: 30px; height: 30px; border-radius: 50%; background: #D6CFBF; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; flex-shrink: 0; }
-.nav-user-chevron { font-size: 11px; color: var(--muted); margin-left: 2px; transition: transform .2s; }
-.nav-user.open .nav-user-chevron { transform: rotate(180deg); }
-.logout-btn { display: none; }
-
-/* User dropdown */
-.user-dropdown { position: absolute; top: calc(100% + 8px); right: 0; background: var(--white); border: 1px solid var(--border); border-radius: 14px; box-shadow: 0 8px 30px rgba(0,0,0,.12); min-width: 200px; padding: 6px; z-index: 999; opacity: 0; pointer-events: none; transform: translateY(-6px); transition: opacity .18s, transform .18s; }
-.nav-user.open .user-dropdown { opacity: 1; pointer-events: all; transform: translateY(0); }
-.user-dropdown-header { padding: 10px 12px 8px; border-bottom: 1px solid var(--border); margin-bottom: 4px; }
-.user-dropdown-name { font-size: 13px; font-weight: 700; color: var(--text); margin-bottom: 2px; }
-.user-dropdown-role { font-size: 11px; color: var(--muted); }
-.user-dropdown-item { display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-radius: 8px; font-size: 13px; font-weight: 500; color: var(--text); cursor: pointer; transition: background .15s; }
-.user-dropdown-item:hover { background: var(--bg); }
-.user-dropdown-item.danger { color: var(--brand); }
-.user-dropdown-item.danger:hover { background: var(--brand-light); }
-.user-dropdown-divider { height: 1px; background: var(--border); margin: 4px 0; }
-.user-dropdown-icon { font-size: 16px; width: 20px; text-align: center; }
-
-
-/* ── BODY LAYOUT: sidebar + main ── */
+.logout-btn { font-size: 12px; color: var(--muted); background: none; border: 1px solid var(--border); padding: 4px 10px; border-radius: 100px; cursor: pointer; transition: all .15s; }
+.logout-btn:hover { border-color: var(--brand); color: var(--brand); }
 .dash-body { display: flex; flex: 1; min-height: calc(100vh - 52px); }
 
 /* ── SIDEBAR ── */
 .sidebar { width: 220px; flex-shrink: 0; background: var(--white); border-right: 1px solid var(--border); padding: 16px 0; display: flex; flex-direction: column; position: sticky; top: 52px; height: calc(100vh - 52px); overflow-y: auto; }
-
-/* Nav group (accordion) */
-.nav-group { }
 .nav-group-header { display: flex; align-items: center; justify-content: space-between; padding: 10px 18px; font-size: 13px; font-weight: 700; color: var(--text); cursor: pointer; border-radius: 8px; margin: 0 8px; transition: background .15s; user-select: none; }
 .nav-group-header:hover { background: var(--bg); }
 .nav-group-header.open { color: var(--brand); }
 .nav-group-header .nav-icon { font-size: 15px; margin-right: 8px; }
 .nav-group-header .chevron { font-size: 10px; color: var(--muted); transition: transform .2s; }
 .nav-group-header.open .chevron { transform: rotate(180deg); }
-
-/* Submenu items */
 .nav-sub { display: none; padding: 2px 0 6px 0; }
 .nav-sub.open { display: block; }
-.nav-item { display: flex; align-items: center; gap: 8px; padding: 8px 18px 8px 42px; font-size: 13px; color: var(--muted); cursor: pointer; border-radius: 8px; margin: 0 8px; transition: all .15s; }
+.nav-item { display: flex; align-items: center; gap: 8px; padding: 8px 18px 8px 42px; font-size: 13px; color: var(--muted); cursor: pointer; border-radius: 8px; margin: 0 8px; transition: all .15s; position: relative; }
 .nav-item:hover { background: var(--bg); color: var(--text); }
 .nav-item.active { background: var(--brand-light); color: var(--brand); font-weight: 600; }
+.nav-item .badge-dot { position: absolute; left: 28px; top: 50%; transform: translateY(-50%); width: 7px; height: 7px; border-radius: 50%; background: var(--brand); display: none; }
+.nav-item.has-new .badge-dot { display: block; }
 .nav-item::before { content: ''; width: 5px; height: 5px; border-radius: 50%; background: currentColor; flex-shrink: 0; margin-left: -13px; }
 
-/* For Advisor/Advisee single-level nav */
-.nav-single { display: flex; align-items: center; gap: 8px; padding: 10px 18px; font-size: 13px; font-weight: 600; color: var(--muted); cursor: pointer; border-radius: 8px; margin: 0 8px; transition: all .15s; }
-.nav-single:hover { background: var(--bg); color: var(--text); }
-.nav-single.active { background: var(--brand-light); color: var(--brand); }
-.nav-single .nav-icon { font-size: 15px; }
-
-/* ── MAIN CONTENT ── */
+/* ── MAIN ── */
 .main-area { flex: 1; overflow-y: auto; }
-.content { max-width: 920px; margin: 0 auto; padding: 28px 24px; }
+.content { max-width: 960px; margin: 0 auto; padding: 28px 24px; }
 
-/* Legacy tab-bar (hidden for Staff, shown for Advisor/Advisee if needed) */
-.tab-bar { display: none; }
-.tab { display: none; }
-.tab.active { }
-.tab:hover:not(.active) { }
-
+/* ── STATS ── */
 .stats-row { display: grid; grid-template-columns: repeat(3,1fr); margin-bottom: 24px; background: var(--white); border-radius: var(--radius-md); box-shadow: var(--shadow); overflow: hidden; }
 .stat-cell { padding: 24px 28px; }
 .stat-cell + .stat-cell { border-left: 1px solid var(--border); }
@@ -125,181 +87,127 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
 .stat-detail { font-size: 13px; color: var(--muted); line-height: 1.6; }
 .stat-detail .hl { color: var(--brand); font-weight: 600; }
 
+/* ── CARD ── */
 .card { background: var(--white); border-radius: var(--radius-md); box-shadow: var(--shadow); margin-bottom: 20px; overflow: hidden; }
 .card-header { display: flex; align-items: center; justify-content: space-between; padding: 18px 24px 14px; font-size: 15px; font-weight: 700; }
 .card-header-left { display: flex; align-items: center; gap: 8px; }
 
-.session-item { display: flex; align-items: center; gap: 14px; padding: 14px 24px; border-top: 1px solid var(--border); }
-.av-circle { width: 38px; height: 38px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; flex-shrink: 0; }
-.session-info { flex: 1; min-width: 0; }
-.session-name { font-size: 14px; font-weight: 600; margin-bottom: 2px; }
-.session-meta { font-size: 12px; color: var(--muted); }
-.session-time { text-align: right; font-size: 13px; color: var(--muted); line-height: 1.5; flex-shrink: 0; margin-right: 12px; }
-.session-time strong { display: block; font-size: 14px; color: var(--text); font-weight: 600; }
+/* ── TABLE ── */
+.data-table { width: 100%; border-collapse: collapse; }
+.data-table th { padding: 10px 20px; font-size: 11px; font-weight: 700; color: var(--muted); letter-spacing: .06em; text-transform: uppercase; text-align: left; border-top: 1px solid var(--border); }
+.data-table td { padding: 13px 20px; font-size: 13px; border-top: 1px solid var(--border); vertical-align: middle; }
+.data-table tr:hover td { background: #FAFAF8; }
 
-.detail-btn { display: flex; align-items: center; gap: 6px; padding: 8px 14px; border: 1.5px solid var(--border); border-radius: var(--radius-sm); font-size: 13px; font-weight: 500; color: var(--text); background: var(--white); cursor: pointer; white-space: nowrap; transition: all .15s; text-decoration: none; }
-.detail-btn:hover { border-color: var(--brand); color: var(--brand); }
-.refresh-btn { padding: 6px 14px; font-size: 13px; font-weight: 500; border-radius: 100px; border: 1.5px solid var(--border); background: var(--white); cursor: pointer; color: var(--muted); transition: all .15s; }
-.refresh-btn:hover { border-color: var(--brand); color: var(--brand); }
-
-.advisee-table, .bookings-table { width: 100%; border-collapse: collapse; }
-.advisee-table th, .bookings-table th { padding: 10px 24px; font-size: 11px; font-weight: 700; color: var(--muted); letter-spacing: .06em; text-transform: uppercase; text-align: left; border-top: 1px solid var(--border); }
-.advisee-table td, .bookings-table td { padding: 14px 24px; font-size: 14px; border-top: 1px solid var(--border); vertical-align: middle; }
-.advisee-name { font-weight: 600; font-size: 14px; margin-bottom: 2px; }
-.advisee-sub { font-size: 12px; color: var(--muted); }
-.remaining { font-weight: 700; font-size: 14px; }
-.remaining.warn { color: var(--brand); }
-
-.badge { display: inline-block; padding: 3px 9px; border-radius: 100px; font-size: 12px; font-weight: 600; }
+/* ── BADGES ── */
+.badge { display: inline-block; padding: 3px 9px; border-radius: 100px; font-size: 11px; font-weight: 600; }
+.badge-new { background: #DBEAFE; color: #1D4ED8; }
+.badge-contacted { background: #FEF3C7; color: #92400E; }
+.badge-scheduled { background: #D1FAE5; color: #065F46; }
+.badge-done { background: #EDE9FE; color: #6D28D9; }
 .badge-pending { background: #FEF3C7; color: #92400E; }
 .badge-confirmed { background: var(--green-bg); color: var(--green); }
 .badge-completed { background: #EDE9FE; color: #6D28D9; }
 .badge-cancelled { background: #F3F4F6; color: #6B7280; }
 
-.tab-panel { display: none; } .tab-panel.active { display: block; }
-.empty-state { padding: 48px 24px; text-align: center; color: var(--muted); font-size: 14px; }
-.empty-state .icon { font-size: 32px; margin-bottom: 12px; }
+/* ── BUTTONS ── */
+.btn { display: inline-flex; align-items: center; gap: 6px; padding: 7px 14px; border-radius: var(--radius-sm); font-size: 13px; font-weight: 600; cursor: pointer; transition: all .15s; border: none; }
+.btn-primary { background: var(--brand); color: #fff; }
+.btn-primary:hover { opacity: .88; }
+.btn-primary:disabled { opacity: .45; cursor: not-allowed; }
+.btn-ghost { background: transparent; border: 1.5px solid var(--border); color: var(--text); }
+.btn-ghost:hover { border-color: var(--brand); color: var(--brand); }
+.btn-green { background: transparent; border: 1.5px solid var(--green); color: var(--green); }
+.btn-green:hover { background: var(--green); color: #fff; }
+.btn-sm { padding: 5px 10px; font-size: 12px; }
+.refresh-btn { padding: 6px 14px; font-size: 13px; font-weight: 500; border-radius: 100px; border: 1.5px solid var(--border); background: var(--white); cursor: pointer; color: var(--muted); transition: all .15s; }
+.refresh-btn:hover { border-color: var(--brand); color: var(--brand); }
 
-.week-nav { display: flex; align-items: center; gap: 12px; padding: 18px 24px 0; }
-.week-nav button { width: 32px; height: 32px; border-radius: 50%; border: 1.5px solid var(--border); background: var(--white); font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all .15s; }
-.week-nav button:hover { border-color: var(--brand); color: var(--brand); }
-.week-label { font-size: 14px; font-weight: 600; }
-.slot-grid { display: grid; grid-template-columns: repeat(7,1fr); gap: 5px; padding: 14px 24px 20px; }
-
-/* Month Calendar (Amelia-style) */
-.cal-nav { display: flex; align-items: center; justify-content: space-between; padding: 18px 24px 0; }
-.cal-nav-left { display: flex; align-items: center; gap: 12px; }
-.cal-nav button { width: 32px; height: 32px; border-radius: 50%; border: 1.5px solid var(--border); background: var(--white); font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all .15s; }
-.cal-nav button:hover { border-color: var(--brand); color: var(--brand); }
-.cal-nav-label { font-size: 16px; font-weight: 700; min-width: 140px; text-align: center; }
-.cal-today-btn { padding: 6px 14px; font-size: 13px; font-weight: 500; border-radius: 100px; border: 1.5px solid var(--border); background: var(--white); cursor: pointer; color: var(--muted); transition: all .15s; }
-.cal-today-btn:hover { border-color: var(--brand); color: var(--brand); }
-.cal-grid { display: grid; grid-template-columns: repeat(7,1fr); border-top: 1px solid var(--border); border-left: 1px solid var(--border); margin: 16px 24px 24px; border-radius: 10px; overflow: hidden; }
-.cal-weekday-hdr { text-align: center; font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; padding: 10px 0; background: var(--bg); border-right: 1px solid var(--border); border-bottom: 1px solid var(--border); }
-.cal-cell { min-height: 86px; border-right: 1px solid var(--border); border-bottom: 1px solid var(--border); padding: 8px; cursor: pointer; transition: background .15s; position: relative; display: flex; flex-direction: column; gap: 6px; }
-.cal-cell:hover { background: var(--brand-light); }
-.cal-cell.other-month { background: #FAFAF8; }
-.cal-cell.other-month .cal-daynum { color: #C9C5BC; }
-.cal-cell.today { background: #FFF5F0; }
-.cal-cell.today .cal-daynum { color: var(--brand); font-weight: 800; }
-.cal-daynum { font-size: 13px; font-weight: 600; color: var(--text); }
-.cal-badges { display: flex; flex-direction: column; gap: 3px; }
-.cal-badge { font-size: 10.5px; font-weight: 700; padding: 2px 7px; border-radius: 100px; display: inline-flex; align-items: center; gap: 4px; width: fit-content; }
-.cal-badge.slot { background: var(--green-bg); color: var(--green); }
-.cal-badge.meeting { background: #DBEAFE; color: #1D4ED8; }
-.cal-badge.mixed { background: var(--brand-light); color: var(--brand); }
-.cal-add { position: absolute; top: 6px; right: 6px; font-size: 16px; color: var(--border); opacity: 0; transition: opacity .15s; }
-.cal-cell:hover .cal-add { opacity: 1; color: var(--brand); }
-
-/* Day detail modal — time chips */
-.day-time-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; margin-top: 12px; }
-.day-time-chip { padding: 9px 4px; border-radius: 8px; border: 1.5px solid var(--border); background: var(--white); font-size: 13px; cursor: pointer; text-align: center; transition: all .15s; color: var(--text); }
-.day-time-chip:hover { border-color: var(--brand); color: var(--brand); }
-.day-time-chip.selected { background: var(--brand); color: #fff; border-color: var(--brand); font-weight: 600; }
-.day-time-chip.booked { background: #F3F4F6; color: #9CA3AF; border-color: #E5E7EB; cursor: not-allowed; }
-.day-meeting-item { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-top: 1px solid var(--border); }
-.day-meeting-item:first-child { border-top: none; }
-
-.slot-day-hdr { text-align: center; font-size: 12px; font-weight: 700; color: var(--muted); padding-bottom: 8px; text-transform: uppercase; }
-.slot-btn { padding: 7px 2px; border-radius: 7px; border: 1.5px solid var(--border); background: var(--white); font-size: 11px; cursor: pointer; text-align: center; transition: all .15s; color: var(--text); }
-.slot-btn:hover { border-color: var(--brand); color: var(--brand); }
-.slot-btn.selected { background: var(--brand); color: #fff; border-color: var(--brand); font-weight: 600; }
-.slot-btn.booked { background: #F3F4F6; color: #9CA3AF; border-color: #E5E7EB; cursor: not-allowed; }
-.slot-send-btn { margin: 0 24px 24px; padding: 12px; font-size: 15px; font-weight: 700; border-radius: var(--radius-sm); border: none; background: var(--brand); color: #fff; cursor: pointer; width: calc(100% - 48px); transition: opacity .15s; display: flex; align-items: center; justify-content: center; gap: 8px; }
-.slot-send-btn:hover { opacity: .88; }
-.slot-send-btn:disabled { opacity: .5; cursor: not-allowed; }
-.selected-count { padding: 0 24px 8px; font-size: 13px; color: var(--muted); }
-.selected-count span { color: var(--brand); font-weight: 700; }
-
-.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; padding: 24px; }
-.form-grid .full { grid-column: 1 / -1; }
-.form-label { font-size: 13px; color: var(--muted); margin-bottom: 6px; font-weight: 500; }
-.form-input, .form-select, .form-textarea { width: 100%; padding: 11px 14px; font-size: 14px; border: 1.5px solid var(--border); border-radius: var(--radius-sm); background: var(--white); color: var(--text); outline: none; transition: border-color .15s; font-family: inherit; }
-.form-input:focus, .form-select:focus { border-color: var(--brand); }
-.form-textarea { resize: vertical; min-height: 80px; }
-.form-textarea:focus { border-color: var(--brand); }
-.form-select { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23555' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 14px center; padding-right: 36px; }
-.form-footer { padding: 0 24px 24px; display: flex; gap: 12px; align-items: center; }
-.submit-btn { padding: 12px 28px; font-size: 15px; font-weight: 700; border-radius: var(--radius-sm); border: none; background: var(--brand); color: #fff; cursor: pointer; transition: opacity .15s; display: flex; align-items: center; gap: 8px; }
-.submit-btn:hover { opacity: .88; }
-.submit-btn:disabled { opacity: .5; cursor: not-allowed; }
-
-.update-btn { padding: 5px 12px; font-size: 12px; font-weight: 600; border-radius: 6px; border: 1.5px solid var(--border); background: var(--white); cursor: pointer; transition: all .15s; color: var(--text); }
-.update-btn:hover { border-color: var(--brand); color: var(--brand); }
-.update-btn.green { border-color: var(--green); color: var(--green); }
-.update-btn.green:hover { background: var(--green); color: #fff; }
-
+/* ── MODAL ── */
 .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.4); display: flex; align-items: center; justify-content: center; z-index: 100; opacity: 0; pointer-events: none; transition: opacity .2s; }
 .modal-overlay.open { opacity: 1; pointer-events: all; }
-.modal { background: var(--white); border-radius: var(--radius-lg); width: 100%; max-width: 480px; margin: 16px; box-shadow: 0 20px 60px rgba(0,0,0,.2); transform: translateY(16px); transition: transform .2s; }
+.modal { background: var(--white); border-radius: var(--radius-lg); width: 100%; max-width: 520px; margin: 16px; box-shadow: 0 20px 60px rgba(0,0,0,.2); transform: translateY(16px); transition: transform .2s; max-height: 90vh; overflow-y: auto; }
 .modal-overlay.open .modal { transform: translateY(0); }
-.modal-header { padding: 20px 24px 16px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+.modal-header { padding: 20px 24px 16px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; background: var(--white); z-index: 2; }
 .modal-header h3 { font-size: 17px; font-weight: 700; }
 .modal-close { background: none; border: none; font-size: 20px; cursor: pointer; color: var(--muted); }
 .modal-body { padding: 20px 24px; }
-.modal-field { margin-bottom: 14px; font-size: 14px; }
-.modal-field b { color: var(--muted); font-weight: 500; display: inline-block; min-width: 110px; }
-.modal-actions { display: flex; gap: 10px; padding: 0 24px 24px; }
+.modal-actions { display: flex; gap: 10px; padding: 0 24px 24px; flex-wrap: wrap; }
+.modal-field { margin-bottom: 12px; font-size: 14px; line-height: 1.6; }
+.modal-field b { color: var(--muted); font-weight: 500; display: inline-block; min-width: 120px; }
 
-/* ═══════════════════════════════════
-   ADVISEE VIEW
-═══════════════════════════════════ */
-.aee-booking-card { background:var(--white); border:1.5px solid var(--border); border-radius:16px; padding:20px; margin-bottom:20px; }
-.aee-advisor-row { display:flex; align-items:center; gap:14px; margin-bottom:16px; }
-.aee-advisor-info { flex:1; }
-.aee-advisor-name { font-size:16px; font-weight:700; color:var(--text); margin-bottom:2px; }
-.aee-advisor-title { font-size:13px; color:var(--muted); }
-.aee-pkg-row { display:flex; align-items:center; justify-content:space-between; }
-.aee-pkg-name { font-size:15px; font-weight:700; color:var(--text); margin-bottom:2px; }
-.aee-pkg-meta { font-size:12px; color:var(--muted); }
-.aee-progress-badge { background:var(--brand-light); color:var(--brand); font-size:13px; font-weight:700; padding:6px 14px; border-radius:100px; white-space:nowrap; }
+/* ── FORM ── */
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; padding: 20px 24px; }
+.form-grid .full { grid-column: 1 / -1; }
+.form-label { font-size: 12px; color: var(--muted); margin-bottom: 5px; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; }
+.form-input, .form-select, .form-textarea { width: 100%; padding: 10px 13px; font-size: 14px; border: 1.5px solid var(--border); border-radius: var(--radius-sm); background: var(--white); color: var(--text); outline: none; transition: border-color .15s; font-family: inherit; }
+.form-input:focus, .form-select:focus, .form-textarea:focus { border-color: var(--brand); }
+.form-textarea { resize: vertical; min-height: 70px; }
+.form-select { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23555' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 13px center; padding-right: 36px; }
+.form-footer { padding: 4px 24px 24px; display: flex; gap: 12px; align-items: center; }
 
-.aee-roadmap { background:var(--white); border:1.5px solid var(--border); border-radius:16px; overflow:hidden; }
-.aee-roadmap-header { padding:18px 20px 14px; border-bottom:1px solid var(--border); }
-.aee-roadmap-title { font-size:15px; font-weight:700; color:var(--text); margin-bottom:3px; display:flex; align-items:center; gap:8px; }
-.aee-roadmap-sub { font-size:12.5px; color:var(--muted); }
+/* ── FILTERS ── */
+.filter-row { display: flex; gap: 8px; flex-wrap: wrap; padding: 12px 20px; border-bottom: 1px solid var(--border); }
+.filter-chip { padding: 5px 13px; border-radius: 100px; font-size: 12px; font-weight: 600; border: 1.5px solid var(--border); background: var(--white); color: var(--muted); cursor: pointer; transition: all .15s; }
+.filter-chip:hover { border-color: var(--brand); color: var(--brand); }
+.filter-chip.on { background: var(--brand); color: #fff; border-color: var(--brand); }
 
-.aee-session { border-top:1px solid var(--border); }
-.aee-session-row { display:flex; align-items:center; gap:14px; padding:16px 20px; cursor:default; }
-.aee-session.locked .aee-session-row { opacity:.55; }
-.aee-session-indicator { width:32px; height:32px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:14px; font-weight:700; flex-shrink:0; }
-.aee-indicator-done { background:var(--green-bg); color:var(--green); }
-.aee-indicator-feedback { background:#FFF7ED; color:#C2410C; border:2px solid #FDBA74; }
-.aee-indicator-upcoming { background:#DBEAFE; color:#1D4ED8; }
-.aee-indicator-locked { background:var(--bg); color:var(--border); border:2px solid var(--border); }
-.aee-session-label { flex:1; }
-.aee-session-name { font-size:14px; font-weight:600; color:var(--text); margin-bottom:2px; }
-.aee-session-time { font-size:12px; color:var(--muted); }
-.aee-session-badge-done { background:var(--green-bg); color:var(--green); font-size:12px; font-weight:600; padding:4px 12px; border-radius:100px; white-space:nowrap; }
-.aee-session-badge-feedback { background:#FFF7ED; color:#C2410C; font-size:12px; font-weight:600; padding:4px 12px; border-radius:100px; white-space:nowrap; display:flex; align-items:center; gap:6px; }
-.aee-session-badge-upcoming { background:#DBEAFE; color:#1D4ED8; font-size:12px; font-weight:600; padding:4px 12px; border-radius:100px; white-space:nowrap; }
-.aee-session-badge-locked { font-size:12px; color:var(--muted); }
-.aee-lock-reason { font-size:12px; color:var(--muted); padding:6px 20px 12px 66px; margin-top:-6px; }
+/* ── CONSULT REQUEST CARD ── */
+.cr-card { border-top: 1px solid var(--border); padding: 16px 20px; display: flex; gap: 14px; align-items: flex-start; transition: background .15s; }
+.cr-card:hover { background: #FAFAF8; }
+.cr-body { flex: 1; min-width: 0; }
+.cr-name { font-weight: 700; font-size: 14px; margin-bottom: 3px; }
+.cr-meta { font-size: 12px; color: var(--muted); margin-bottom: 5px; }
+.cr-question { font-size: 13px; color: var(--text); background: var(--bg); padding: 8px 12px; border-radius: 8px; margin-top: 6px; line-height: 1.55; }
+.cr-actions { display: flex; flex-direction: column; gap: 6px; align-items: flex-end; flex-shrink: 0; }
+.cr-slot { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; font-weight: 600; color: var(--green); background: var(--green-bg); padding: 4px 10px; border-radius: 100px; margin-top: 6px; }
 
-.aee-feedback-panel { background:#FFFBF5; border-top:1.5px solid #FED7AA; border-bottom:1.5px solid #FED7AA; padding:20px; }
-.aee-feedback-alert { display:flex; align-items:flex-start; gap:10px; background:#FFF7ED; border:1px solid #FDBA74; border-radius:10px; padding:12px 14px; margin-bottom:18px; font-size:13px; color:#92400E; line-height:1.6; }
-.aee-feedback-alert strong { color:#C2410C; }
-.aee-feedback-section-label { font-size:10.5px; font-weight:700; letter-spacing:.1em; text-transform:uppercase; color:var(--muted); margin-bottom:10px; }
-.aee-stars { display:flex; gap:6px; margin-bottom:18px; cursor:pointer; }
-.aee-star { font-size:32px; color:#D1D5DB; transition:color .15s; line-height:1; }
-.aee-star.active { color:#F59E0B; }
-.aee-star:hover, .aee-star.hover { color:#F59E0B; }
-.aee-feedback-textarea { width:100%; background:var(--white); border:1.5px solid var(--border); border-radius:10px; padding:12px 14px; font-size:13px; font-family:inherit; color:var(--text); resize:none; min-height:90px; outline:none; transition:border-color .15s; line-height:1.6; }
-.aee-feedback-textarea:focus { border-color:#F59E0B; }
-.aee-feedback-btn { width:100%; margin-top:14px; padding:13px; font-size:14px; font-weight:700; background:#C2410C; color:#fff; border:none; border-radius:10px; cursor:pointer; transition:opacity .15s; }
-.aee-feedback-btn:hover { opacity:.88; }
-.aee-feedback-btn:disabled { opacity:.45; cursor:not-allowed; }
-.aee-meet-link { display:inline-flex; align-items:center; gap:6px; margin-top:8px; font-size:13px; color:#1D4ED8; font-weight:600; text-decoration:none; }
-.aee-meet-link:hover { text-decoration:underline; }
- background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%); background-size: 200% 100%; border-radius: 6px; }
+/* ── SLOT PICKER (add slot modal) ── */
+.slot-picker-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 7px; margin-top: 12px; }
+.slot-chip { padding: 9px 6px; border-radius: 8px; border: 1.5px solid var(--border); background: var(--white); font-size: 12px; font-weight: 600; cursor: pointer; text-align: center; transition: all .15s; color: var(--text); }
+.slot-chip:hover { border-color: var(--brand); color: var(--brand); }
+.slot-chip.sel { background: var(--brand); color: #fff; border-color: var(--brand); }
+
+/* ── MISC ── */
+.page-header { margin-bottom: 24px; }
+.page-header h1 { font-size: 22px; font-weight: 800; margin-bottom: 4px; }
+.page-header p { font-size: 13px; color: var(--muted); }
+.empty-state { padding: 48px 24px; text-align: center; color: var(--muted); font-size: 14px; }
+.empty-state .icon { font-size: 32px; margin-bottom: 12px; }
+.skeleton { animation: shimmer 1.5s infinite; background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%); background-size: 200% 100%; border-radius: 6px; }
 @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
 .skel-row { display: flex; gap: 12px; padding: 16px 24px; border-top: 1px solid var(--border); align-items: center; }
+/* bar chart */
+.bar-chart { display: flex; gap: 8px; align-items: flex-end; height: 120px; padding: 0 28px 28px; }
+.bar-wrap { display: flex; flex-direction: column; align-items: center; gap: 5px; flex: 1; }
+.bar-val { font-size: 11px; color: var(--muted); font-weight: 600; }
+.bar { width: 100%; max-width: 36px; border-radius: 5px 5px 0 0; background: var(--brand); }
+.bar-lbl { font-size: 11px; color: var(--muted); }
+
+/* Cal month (Amelia-style) */
+.DAYS_VI_FULL { }
+.cal-nav { display: flex; align-items: center; justify-content: space-between; padding: 18px 24px 0; }
+.cal-nav-label { font-size: 16px; font-weight: 700; min-width: 140px; text-align: center; }
+.cal-nav button { width: 32px; height: 32px; border-radius: 50%; border: 1.5px solid var(--border); background: var(--white); font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all .15s; }
+.cal-nav button:hover { border-color: var(--brand); color: var(--brand); }
+.cal-today-btn { padding: 6px 14px; font-size: 13px; font-weight: 500; border-radius: 100px; border: 1.5px solid var(--border); background: var(--white); cursor: pointer; color: var(--muted); transition: all .15s; }
+.cal-today-btn:hover { border-color: var(--brand); color: var(--brand); }
+.cal-grid { display: grid; grid-template-columns: repeat(7,1fr); border-top: 1px solid var(--border); border-left: 1px solid var(--border); margin: 14px 24px 24px; border-radius: 10px; overflow: hidden; }
+.cal-weekday-hdr { text-align: center; font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; padding: 10px 0; background: var(--bg); border-right: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+.cal-cell { min-height: 78px; border-right: 1px solid var(--border); border-bottom: 1px solid var(--border); padding: 7px 8px; cursor: pointer; transition: background .12s; display: flex; flex-direction: column; gap: 4px; }
+.cal-cell:hover { background: var(--brand-light); }
+.cal-cell.other-month .cal-daynum { color: #C9C5BC; }
+.cal-cell.today { background: #FFF5F0; }
+.cal-cell.today .cal-daynum { color: var(--brand); font-weight: 800; }
+.cal-daynum { font-size: 12px; font-weight: 600; }
+.cal-badge { font-size: 10px; font-weight: 700; padding: 2px 6px; border-radius: 100px; display: inline-flex; align-items: center; gap: 3px; width: fit-content; }
+.cal-badge.slot { background: var(--green-bg); color: var(--green); }
+.cal-badge.cr { background: #DBEAFE; color: #1D4ED8; }
 </style>
 </head>
 <body>
-
 <div id="toast"></div>
 
+<!-- MODAL -->
 <div class="modal-overlay" id="modal-overlay">
   <div class="modal">
     <div class="modal-header">
@@ -311,6 +219,7 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
   </div>
 </div>
 
+<!-- LOGIN -->
 <div id="login-page">
   <div class="logo-row">
     <div class="logo-icon">
@@ -318,35 +227,32 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
     </div>
     <div class="logo-name">LinkaJob</div>
   </div>
-
   <div class="login-card">
     <h2>Đăng nhập</h2>
-    <p class="subtitle">Chọn vai trò để truy cập dashboard phù hợp</p>
-
+    <p class="subtitle">Dashboard nội bộ LinkaJob</p>
     <div class="field-group">
       <div class="field-label">Email</div>
       <input class="field-input" type="email" id="login-email" placeholder="email@linkajob.vn" autocomplete="email">
     </div>
     <div class="field-group">
       <div class="field-label">Mật khẩu</div>
-      <input class="field-input" type="password" id="login-password" placeholder="Mật khẩu" autocomplete="current-password">
+      <input class="field-input" type="password" id="login-password" placeholder="Mật khẩu">
     </div>
     <div class="field-group">
       <div class="field-label">Vai trò</div>
       <div class="role-row">
-        <button class="role-btn" onclick="selectRole('Staff',this)">Staff</button>
-        <button class="role-btn active" onclick="selectRole('Advisor',this)">Advisor</button>
+        <button class="role-btn active" onclick="selectRole('Staff',this)">Staff</button>
+        <button class="role-btn" onclick="selectRole('Advisor',this)">Advisor</button>
         <button class="role-btn" onclick="selectRole('Advisee',this)">Advisee</button>
       </div>
     </div>
-
     <button class="login-btn" id="login-btn" onclick="doLogin()">Đăng nhập</button>
-    <div class="login-error" id="login-error">Email hoặc mật khẩu không đúng</div>
+    <div class="login-error" id="login-error"></div>
   </div>
 </div>
 
+<!-- DASHBOARD -->
 <div id="dashboard-page">
-  <!-- TOPBAR -->
   <div class="topbar">
     <div class="topbar-left">
       <div class="nav-logo-icon">
@@ -356,1760 +262,1143 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
       <span class="role-badge" id="role-badge">Staff</span>
     </div>
     <div class="nav-right">
-      <div class="nav-user" id="user-menu-btn" onclick="toggleUserMenu()">
-        <div class="avatar" id="user-avatar">KV</div>
+      <div class="nav-user">
+        <div class="avatar" id="user-avatar">?</div>
         <span id="user-name">—</span>
-        <span class="nav-user-chevron">▾</span>
-        <div class="user-dropdown" id="user-dropdown">
-          <div class="user-dropdown-header">
-            <div class="user-dropdown-name" id="dropdown-name">—</div>
-            <div class="user-dropdown-role" id="dropdown-role">—</div>
-          </div>
-          <div class="user-dropdown-item" onclick="openChangePasswordModal();event.stopPropagation()">
-            <span class="user-dropdown-icon">🔑</span> Đổi mật khẩu
-          </div>
-          <div class="user-dropdown-divider"></div>
-          <div class="user-dropdown-item danger" onclick="doLogout();event.stopPropagation()">
-            <span class="user-dropdown-icon">↩</span> Đăng xuất
-          </div>
-        </div>
       </div>
+      <button class="logout-btn" onclick="doLogout()">Đăng xuất</button>
     </div>
   </div>
-
-  <!-- BODY -->
   <div class="dash-body">
     <nav class="sidebar" id="sidebar"></nav>
     <div class="main-area">
-      <div class="content" id="main-content"></div>
+      <div class="content" id="main-content">
+        <div style="padding:48px;text-align:center;color:var(--muted)">Đang tải...</div>
+      </div>
     </div>
   </div>
-
-  <!-- Legacy tab-bar (ẩn, vẫn giữ để không lỗi JS cũ) -->
-  <div class="tab-bar" id="tab-bar" style="display:none"></div>
 </div>
 
-
 <script>
+// ═══════════════════════════════════════════════════
+//  CONFIG
+// ═══════════════════════════════════════════════════
 const API = 'https://script.google.com/macros/s/AKfycbx7Bd9VvoyzfiiezQV9huoY2BKHH_Br1RAFIz00mjdyKeis-Zv-38a0gf_b-fMlul2C/exec';
 
 const DEMO_ACCOUNTS = [
-  { email: 'kien@linkajob.vn',    password: '123456', role: 'Advisor', name: 'Nguyễn Vũ Trí Kiên', initials: 'KV' },
-  { email: 'phuong@linkajob.vn',  password: '123456', role: 'Staff',   name: 'Phương Staff',        initials: 'PS' },
-  { email: 'advisee@linkajob.vn', password: '123456', role: 'Advisee', name: 'Trần Gia Hân',         initials: 'GH' },
+  { email:'sale@linkajob.vn',     password:'lj2025', role:'Staff',   name:'Phương Sale',          initials:'PS' },
+  { email:'kien@linkajob.vn',     password:'lj2025', role:'Advisor', name:'Nguyễn Vũ Trí Kiên',   initials:'KV' },
+  { email:'advisee@linkajob.vn',  password:'lj2025', role:'Advisee', name:'Trần Gia Hân',          initials:'GH' },
 ];
 
-const PACKAGES = {
-  'Trial':       { price: 419000,  sessions: 1, days: 3  },
-  'Cơ Bản':     { price: 799000,  sessions: 2, days: 14 },
-  'Đặc Biệt':   { price: 1499000, sessions: 4, days: 28 },
-  'Chuyên Sâu': { price: 2199000, sessions: 6, days: 56 },
-};
-
-const TIME_SLOTS = ['08:00','09:00','10:00','11:00','14:00','15:00','16:00','17:00','18:00','19:00','20:00','21:00'];
+const SALE_TIME_SLOTS = ['08:00','09:00','10:00','11:00','14:00','15:00','16:00','17:00','19:00','20:00','21:00'];
 const DAYS_VI = ['CN','T2','T3','T4','T5','T6','T7'];
+const DAYS_VI_FULL = ['T2','T3','T4','T5','T6','T7','CN'];
+const MONTH_NAMES = ['Tháng 1','Tháng 2','Tháng 3','Tháng 4','Tháng 5','Tháng 6','Tháng 7','Tháng 8','Tháng 9','Tháng 10','Tháng 11','Tháng 12'];
 
+// ═══════════════════════════════════════════════════
+//  STATE
+// ═══════════════════════════════════════════════════
 let currentUser = null;
-let selectedRole = 'Advisor';
-let weekOffset = 0;
+let selectedRole = 'Staff';
+let activeNavId = null;
+let openGroupId = null;
+let calMonthOffset = 0;
 let selectedSlots = new Set();
-let sheetData = { bookings: [], slots: [] };
+let dashData = {}; // cache từ apiGet('dashboard')
+let crFilter = 'all'; // filter ConsultRequests
 
-function toast(msg, type) {
-  type = type || '';
-  const el = document.getElementById('toast');
-  el.textContent = msg;
-  el.className = 'show ' + type;
-  clearTimeout(el._t);
-  el._t = setTimeout(function(){ el.className = ''; }, 3500);
-}
-
+// ═══════════════════════════════════════════════════
+//  API HELPERS
+// ═══════════════════════════════════════════════════
 function apiGet(action, params) {
-  params = params || {};
-  const merged = Object.assign({action: action}, params);
-  const qs = new URLSearchParams(merged).toString();
-  return fetch(API + '?' + qs).then(function(r){ return r.json(); });
+  const qs = new URLSearchParams(Object.assign({ action }, params || {})).toString();
+  return fetch(API + '?' + qs).then(r => r.json());
 }
-
 function apiPost(payload) {
-  return fetch(API, { method: 'POST', body: JSON.stringify(payload) }).then(function(r){ return r.json(); });
+  return fetch(API, {
+    method: 'POST',
+    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+    body: JSON.stringify(payload)
+  }).then(r => r.json());
 }
 
+// Load fresh dashboard data from Sheet
+function loadDashData() {
+  return apiGet('dashboard').then(res => {
+    if (res.success) {
+      dashData = res.data;
+      // Parse packages thành array
+      if (res.data.packages) {
+        dashData.pkgArr = Object.values(res.data.packages);
+      }
+      // Count new ConsultRequests for badge
+      updateCRBadge();
+    }
+    return dashData;
+  }).catch(() => dashData);
+}
+
+// Convert sheet rows (array) → array of objects using headers
+function toObjects(sheet) {
+  if (!sheet || !sheet.headers || !sheet.rows) return [];
+  return sheet.rows.map(row => {
+    const obj = {};
+    sheet.headers.forEach((h, i) => { obj[h] = row[i]; });
+    return obj;
+  });
+}
+
+// ═══════════════════════════════════════════════════
+//  AUTH
+// ═══════════════════════════════════════════════════
 function selectRole(role, btn) {
   selectedRole = role;
-  document.querySelectorAll('.role-btn').forEach(function(b){ b.classList.remove('active'); });
+  document.querySelectorAll('.role-btn').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
 }
 
 function doLogin() {
   const email = document.getElementById('login-email').value.trim();
-  const password = document.getElementById('login-password').value;
+  const pass = document.getElementById('login-password').value;
   const errEl = document.getElementById('login-error');
   const btn = document.getElementById('login-btn');
   errEl.style.display = 'none';
 
-  if (!email || !password) {
-    errEl.textContent = 'Vui lòng điền đầy đủ thông tin';
+  if (!email || !pass) {
+    errEl.textContent = 'Vui lòng điền đầy đủ';
     errEl.style.display = 'block'; return;
   }
 
-  let user = DEMO_ACCOUNTS.find(function(a){ return a.email === email && a.password === password && a.role === selectedRole; });
-
-  function finishLogin(u) {
-    if (!u) {
-      errEl.textContent = 'Email hoặc mật khẩu không đúng';
-      errEl.style.display = 'block';
-      return;
-    }
-    currentUser = u;
-    document.getElementById('login-page').style.display = 'none';
-    document.getElementById('dashboard-page').style.display = 'block';
-    document.getElementById('role-badge').textContent = u.role;
-    document.getElementById('user-avatar').textContent = u.initials;
-    document.getElementById('user-name').textContent = u.name;
-    document.getElementById('dropdown-name').textContent = u.name;
-    document.getElementById('dropdown-role').textContent = u.role + ' · LinkaJob';
-    buildTabBar(u.role);
-    loadDashboard(u.role);
-  }
-
-  if (user) { finishLogin(user); return; }
+  const demo = DEMO_ACCOUNTS.find(a => a.email === email && a.password === pass && a.role === selectedRole);
+  if (demo) { finishLogin(demo); return; }
 
   btn.innerHTML = '<span class="spinner"></span>';
   btn.disabled = true;
-  apiGet('auth', { email: email, role: selectedRole }).then(function(res){
-    btn.innerHTML = 'Đăng nhập';
-    btn.disabled = false;
-    if (res && res.success) {
-      finishLogin({ email: email, role: selectedRole, name: res.name || email, initials: mkInitials(res.name || email) });
-    } else {
-      finishLogin(null);
+  // Fallback: any staff with correct domain can log in (demo)
+  setTimeout(() => {
+    btn.innerHTML = 'Đăng nhập'; btn.disabled = false;
+    errEl.textContent = 'Email hoặc mật khẩu không đúng';
+    errEl.style.display = 'block';
+  }, 1000);
+}
+
+function finishLogin(u) {
+  currentUser = u;
+  document.getElementById('login-page').style.display = 'none';
+  const dp = document.getElementById('dashboard-page');
+  dp.style.display = 'flex';
+  dp.style.flexDirection = 'column';
+  document.getElementById('role-badge').textContent = u.role;
+  document.getElementById('user-avatar').textContent = u.initials;
+  document.getElementById('user-name').textContent = u.name;
+  buildSidebar(u.role);
+  // Load real data on login
+  loadDashData().then(() => {
+    const first = SIDEBAR_DEF[u.role]?.[0];
+    if (first) {
+      if (first.children?.length) navTo(first.children[0].id);
+      else navTo(first.id);
     }
-  }).catch(function(){
-    btn.innerHTML = 'Đăng nhập';
-    btn.disabled = false;
-    finishLogin(null);
   });
 }
 
 function doLogout() {
   currentUser = null;
+  dashData = {};
   document.getElementById('dashboard-page').style.display = 'none';
   document.getElementById('login-page').style.display = 'flex';
-  closeUserMenu();
 }
 
-function toggleUserMenu() {
-  document.getElementById('user-menu-btn').classList.toggle('open');
-}
-function closeUserMenu() {
-  document.getElementById('user-menu-btn').classList.remove('open');
-}
-// Click ngoài dropdown thì đóng
-document.addEventListener('click', function(e) {
-  var btn = document.getElementById('user-menu-btn');
-  if (btn && !btn.contains(e.target)) closeUserMenu();
-});
-
-function openChangePasswordModal() {
-  closeUserMenu();
-  document.getElementById('modal-title').textContent = '🔑 Đổi mật khẩu';
-  document.getElementById('modal-body').innerHTML =
-    '<div class="modal-field"><div class="form-label">Mật khẩu hiện tại <span style="color:var(--brand)">*</span></div>' +
-    '<input class="form-input" type="password" id="cp-old" placeholder="Nhập mật khẩu hiện tại" style="margin-top:6px"></div>' +
-    '<div class="modal-field"><div class="form-label">Mật khẩu mới <span style="color:var(--brand)">*</span></div>' +
-    '<input class="form-input" type="password" id="cp-new" placeholder="Tối thiểu 6 ký tự" style="margin-top:6px"></div>' +
-    '<div class="modal-field"><div class="form-label">Xác nhận mật khẩu mới <span style="color:var(--brand)">*</span></div>' +
-    '<input class="form-input" type="password" id="cp-confirm" placeholder="Nhập lại mật khẩu mới" style="margin-top:6px"></div>' +
-    '<div id="cp-error" style="color:var(--brand);font-size:12.5px;margin-top:4px;display:none"></div>';
-  document.getElementById('modal-actions').innerHTML =
-    '<button class="btn-secondary" onclick="closeModal()" style="width:auto;padding:10px 20px">Huỷ</button>' +
-    '<button class="login-btn" onclick="submitChangePassword()" style="width:auto;padding:10px 24px">Đổi mật khẩu</button>';
-  document.getElementById('modal-overlay').classList.add('open');
-  setTimeout(function(){ var el = document.getElementById('cp-old'); if(el) el.focus(); }, 100);
-}
-
-function submitChangePassword() {
-  var oldPw = (document.getElementById('cp-old')||{}).value || '';
-  var newPw = (document.getElementById('cp-new')||{}).value || '';
-  var confirm = (document.getElementById('cp-confirm')||{}).value || '';
-  var errEl = document.getElementById('cp-error');
-
-  // Kiểm tra mật khẩu cũ khớp với tài khoản demo
-  var account = DEMO_ACCOUNTS.find(function(a){ return a.email === currentUser.email; });
-  if (account && oldPw !== account.password) {
-    errEl.textContent = 'Mật khẩu hiện tại không đúng.'; errEl.style.display = 'block'; return;
-  }
-  if (newPw.length < 6) {
-    errEl.textContent = 'Mật khẩu mới phải có ít nhất 6 ký tự.'; errEl.style.display = 'block'; return;
-  }
-  if (newPw !== confirm) {
-    errEl.textContent = 'Mật khẩu xác nhận không khớp.'; errEl.style.display = 'block'; return;
-  }
-  // Cập nhật trong demo accounts
-  if (account) account.password = newPw;
-  closeModal();
-  toast('Đổi mật khẩu thành công!', 'success');
-}
-
-// ════════════════════════════════════════════════════════════
-//  SIDEBAR NAVIGATION CONFIG
-// ════════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════
+//  SIDEBAR DEFINITION
+// ═══════════════════════════════════════════════════
 const SIDEBAR_DEF = {
   Staff: [
     { id: 'lj', icon: '🏢', label: 'LinkaJob', children: [
       { id: 'lj-revenue',  label: 'Doanh thu' },
       { id: 'lj-report',   label: 'Báo cáo vận hành' },
-      { id: 'lj-meetings', label: 'Lịch meeting' },
-      { id: 'lj-products', label: 'Sản phẩm' },
+      { id: 'lj-calendar', label: 'Lịch meeting' },
     ]},
-    { id: 'stf', icon: '👔', label: 'Staff', children: [
-      { id: 'stf-list',     label: 'Danh sách nhân viên' },
-      { id: 'stf-schedule', label: 'Lịch tư vấn (Sale)' },
+    { id: 'cr', icon: '📩', label: 'Tư vấn miễn phí', children: [
+      { id: 'cr-list', label: 'Yêu cầu đăng ký' },
+      { id: 'cr-slots', label: 'Lịch trống (Sale)' },
+    ]},
+    { id: 'bk', icon: '📋', label: 'Bookings', children: [
+      { id: 'bk-list',    label: 'Tất cả booking' },
+      { id: 'bk-payment', label: 'Xác nhận thanh toán' },
+      { id: 'bk-sessions',label: 'Sessions' },
     ]},
     { id: 'adv', icon: '🎓', label: 'Advisor', children: [
-      { id: 'adv-list',   label: 'Danh sách' },
-      { id: 'adv-new',    label: 'Thêm mới' },
+      { id: 'adv-list', label: 'Danh sách' },
     ]},
     { id: 'aee', icon: '🙋', label: 'Advisee', children: [
-      { id: 'aee-list',   label: 'Danh sách' },
-    ]},
-    { id: 'crs', icon: '📚', label: 'Khoá học', children: [
-      { id: 'crs-list',   label: 'Danh sách' },
-      { id: 'crs-new',    label: 'Thêm mới' },
+      { id: 'aee-list', label: 'Danh sách' },
     ]},
   ],
   Advisor: [
     { id: 'adv-ov', icon: '📊', label: 'Tổng quan', children: [] },
-    { id: 'adv-sc', icon: '📅', label: 'Gửi lịch trống', children: [] },
+    { id: 'adv-sc', icon: '📅', label: 'Lịch trống của tôi', children: [] },
     { id: 'adv-bk', icon: '✅', label: 'Buổi đã book', children: [] },
   ],
   Advisee: [
     { id: 'aee-my', icon: '📋', label: 'Booking của tôi', children: [] },
-    { id: 'aee-nb', icon: '➕', label: 'Đặt lịch mới', children: [] },
   ],
 };
 
-// Map sidebar id → render function / legacy tab id
-const ROUTE_MAP = {
-  // Staff routes
-  'lj-revenue':    { fn: function(){ renderStaff('lj-revenue'); } },
-  'lj-report':     { fn: function(){ renderStaff('lj-report'); } },
-  'lj-meetings':   { fn: function(){ renderStaff('linkajob-calendar'); } },
-  'lj-products':   { fn: function(){ renderStaff('lj-products'); } },
-  'stf-list':      { fn: function(){ renderStaff('stf-list'); } },
-  'stf-schedule':  { fn: function(){ renderStaff('stf-schedule'); } },
-  'adv-list':      { fn: function(){ renderStaff('advisor-mod'); } },
-  'adv-new':       { fn: function(){ renderStaff('adv-new'); } },
-  'aee-list':      { fn: function(){ renderStaff('advisee-mod'); } },
-  'crs-list':      { fn: function(){ renderStaff('course-mod'); } },
-  'crs-new':       { fn: function(){ renderStaff('course-mod'); } },
-  // Advisor routes
-  'adv-ov':      { legacy: 'overview' },
-  'adv-sc':      { legacy: 'schedule' },
-  'adv-bk':      { legacy: 'booked' },
-  // Advisee routes
-  'aee-my':      { legacy: 'my-bookings' },
-  'aee-nb':      { legacy: 'new-booking' },
+const ROUTE_FN = {
+  'lj-revenue':  () => renderRevenuePage(),
+  'lj-report':   () => renderReportPage(),
+  'lj-calendar': () => renderCalendarPage(),
+  'cr-list':     () => renderCRList(),
+  'cr-slots':    () => renderCRSlots(),
+  'bk-list':     () => renderBookingsList(),
+  'bk-payment':  () => renderPaymentQueue(),
+  'bk-sessions': () => renderSessionsList(),
+  'adv-list':    () => renderAdvisorList(),
+  'aee-list':    () => renderAdviseeList(),
+  'adv-ov':      () => renderAdvisorOverview(),
+  'adv-sc':      () => renderAdvisorSlots(),
+  'adv-bk':      () => renderAdvisorBooked(),
+  'aee-my':      () => renderAdviseeBookings(),
 };
-
-let activeNavId = null;
-let openGroupId = null;
 
 function buildSidebar(role) {
   const defs = SIDEBAR_DEF[role] || [];
-  const sidebar = document.getElementById('sidebar');
   let html = '';
-
-  defs.forEach(function(group) {
-    if (group.children && group.children.length > 0) {
-      // Accordion group
-      html += '<div class="nav-group" id="ng-' + group.id + '">';
-      html += '<div class="nav-group-header" id="ngh-' + group.id + '" onclick="toggleNavGroup(\'' + group.id + '\')">';
-      html += '<span><span class="nav-icon">' + group.icon + '</span>' + group.label + '</span>';
-      html += '<span class="chevron">▼</span>';
-      html += '</div>';
-      html += '<div class="nav-sub" id="ns-' + group.id + '">';
-      group.children.forEach(function(child) {
-        html += '<div class="nav-item" id="ni-' + child.id + '" onclick="navTo(\'' + child.id + '\')">' + child.label + '</div>';
+  defs.forEach(g => {
+    if (g.children?.length) {
+      html += `<div class="nav-group" id="ng-${g.id}">
+        <div class="nav-group-header" id="ngh-${g.id}" onclick="toggleNavGroup('${g.id}')">
+          <span><span class="nav-icon">${g.icon}</span>${g.label}</span>
+          <span class="chevron">▼</span>
+        </div>
+        <div class="nav-sub" id="ns-${g.id}">`;
+      g.children.forEach(c => {
+        html += `<div class="nav-item" id="ni-${c.id}" onclick="navTo('${c.id}')">
+          <span class="badge-dot"></span>${c.label}</div>`;
       });
       html += '</div></div>';
     } else {
-      // Single item (no children)
-      html += '<div class="nav-single" id="ni-' + group.id + '" onclick="navTo(\'' + group.id + '\')">';
-      html += '<span class="nav-icon">' + group.icon + '</span>' + group.label;
-      html += '</div>';
+      html += `<div class="nav-item" id="ni-${g.id}" onclick="navTo('${g.id}')" style="padding-left:18px">
+        <span class="badge-dot"></span><span class="nav-icon">${g.icon}</span>${g.label}</div>`;
     }
   });
-
-  sidebar.innerHTML = html;
-
-  // Mặc định mở group đầu tiên và chọn item đầu tiên
-  const firstGroup = defs[0];
-  if (firstGroup) {
-    if (firstGroup.children && firstGroup.children.length > 0) {
-      openNavGroup(firstGroup.id);
-      navTo(firstGroup.children[0].id);
-    } else {
-      navTo(firstGroup.id);
-    }
-  }
+  document.getElementById('sidebar').innerHTML = html;
+  // Open first group
+  if (defs[0]?.children?.length) openNavGroup(defs[0].id);
 }
 
-function toggleNavGroup(groupId) {
-  if (openGroupId === groupId) {
-    closeNavGroup(groupId);
-    openGroupId = null;
-  } else {
-    if (openGroupId) closeNavGroup(openGroupId);
-    openNavGroup(groupId);
-    openGroupId = groupId;
-  }
+function toggleNavGroup(id) {
+  if (openGroupId === id) { closeNavGroup(id); openGroupId = null; }
+  else { if (openGroupId) closeNavGroup(openGroupId); openNavGroup(id); }
 }
-
-function openNavGroup(groupId) {
-  const hdr = document.getElementById('ngh-' + groupId);
-  const sub = document.getElementById('ns-' + groupId);
-  if (hdr) hdr.classList.add('open');
-  if (sub) sub.classList.add('open');
-  openGroupId = groupId;
+function openNavGroup(id) {
+  document.getElementById('ngh-'+id)?.classList.add('open');
+  document.getElementById('ns-'+id)?.classList.add('open');
+  openGroupId = id;
 }
-
-function closeNavGroup(groupId) {
-  const hdr = document.getElementById('ngh-' + groupId);
-  const sub = document.getElementById('ns-' + groupId);
-  if (hdr) hdr.classList.remove('open');
-  if (sub) sub.classList.remove('open');
+function closeNavGroup(id) {
+  document.getElementById('ngh-'+id)?.classList.remove('open');
+  document.getElementById('ns-'+id)?.classList.remove('open');
 }
-
 function navTo(id) {
-  // Bỏ active item cũ
-  if (activeNavId) {
-    const old = document.getElementById('ni-' + activeNavId);
-    if (old) old.classList.remove('active');
-  }
-  // Set active item mới
-  const el = document.getElementById('ni-' + id);
-  if (el) el.classList.add('active');
+  if (activeNavId) document.getElementById('ni-'+activeNavId)?.classList.remove('active');
+  document.getElementById('ni-'+id)?.classList.add('active');
   activeNavId = id;
-
-  // Render content
-  const route = ROUTE_MAP[id];
-  if (!route) return;
-  if (route.fn) { route.fn(); return; }
-  if (route.legacy) { loadLegacyTab(route.legacy); }
+  const fn = ROUTE_FN[id];
+  if (fn) fn();
 }
 
-// ════════════════════════════════════════════════════════════
-//  LOAD CONTENT
-// ════════════════════════════════════════════════════════════
-// Legacy: dùng cho Advisor/Advisee (vẫn kéo từ Sheet)
-function loadLegacyTab(tab) {
-  const role = currentUser.role;
-  const content = document.getElementById('main-content');
-  content.innerHTML = skeletonRows(3);
-
-  const advisorName = role === 'Advisor' ? currentUser.name : '';
-  Promise.all([
-    apiGet('getBookings', { advisor: advisorName, role: role }).catch(function(){ return null; }),
-    apiGet('getSlots', { advisor: advisorName }).catch(function(){ return null; })
-  ]).then(function(results){
-    const bookRes = results[0], slotRes = results[1];
-    if (bookRes && bookRes.data) sheetData.bookings = bookRes.data;
-    if (slotRes && slotRes.data) sheetData.slots = slotRes.data;
-    if (role === 'Advisor') renderAdvisor(tab);
-    else renderAdvisee(tab);
-  });
+function updateCRBadge() {
+  const crs = toObjects(dashData.consultRequests || {});
+  const newCount = crs.filter(r => r.status === 'new').length;
+  const el = document.querySelector('#ni-cr-list .badge-dot');
+  if (el) el.style.display = newCount > 0 ? 'block' : 'none';
 }
 
-// Entry point sau khi login
-function loadDashboard(role, legacyTab) {
-  // Nếu gọi từ code cũ (changeCalMonth, sendSlots...) với legacyTab
-  if (legacyTab) {
-    if (role === 'Staff') { renderStaff(legacyTab); return; }
-    loadLegacyTab(legacyTab); return;
-  }
-  buildSidebar(role);
+// ═══════════════════════════════════════════════════
+//  HELPERS
+// ═══════════════════════════════════════════════════
+function toast(msg, type='') {
+  const el = document.getElementById('toast');
+  el.textContent = msg; el.className = 'show ' + type;
+  clearTimeout(el._t);
+  el._t = setTimeout(() => el.className = '', 3500);
 }
-
-// Giữ lại để không lỗi các hàm cũ gọi switchTab/buildTabBar
-function buildTabBar(role) { buildSidebar(role); }
-function switchTab(tabId) { navTo(tabId); }
-let activeTab = null; // compat
-
-
-function renderAdvisor(tab) {
-  const c = document.getElementById('main-content');
-  if (tab === 'overview') c.innerHTML = renderAdvisorOverview();
-  else if (tab === 'schedule') c.innerHTML = renderSchedulePicker();
-  else c.innerHTML = renderBookedSessions();
+function skel(n=3) {
+  return '<div class="card">' + Array(n).fill(0).map(() =>
+    '<div class="skel-row"><div class="skeleton" style="width:36px;height:36px;border-radius:50%;flex-shrink:0"></div><div style="flex:1"><div class="skeleton" style="height:13px;width:50%;margin-bottom:8px;border-radius:4px"></div><div class="skeleton" style="height:11px;width:35%;border-radius:4px"></div></div></div>'
+  ).join('') + '</div>';
 }
-
-function renderAdvisorOverview() {
-  const mine = sheetData.bookings.filter(function(b){ return b.advisor_name === currentUser.name && b.status === 'confirmed'; });
-  const seen = {};
-  const advisees = [];
-  mine.forEach(function(b){ if (!seen[b.advisee_name]) { seen[b.advisee_name] = true; advisees.push(b); } });
-  const completed = sheetData.bookings.filter(function(b){ return b.advisor_name === currentUser.name && b.status === 'completed'; }).length;
-  const slotNeeded = Math.max(0, advisees.length * 2 + 1);
-  const now = new Date();
-  const wStart = new Date(now); wStart.setDate(now.getDate() - now.getDay());
-  const wEnd = new Date(wStart); wEnd.setDate(wStart.getDate() + 7);
-  const thisWeek = mine.filter(function(b){ return b.session_date && new Date(b.session_date) >= wStart && new Date(b.session_date) < wEnd; });
-
-  let html = '<div class="stats-row">';
-  html += '<div class="stat-cell"><div class="stat-num">' + advisees.length + '</div><div class="stat-label">Advisee active</div></div>';
-  html += '<div class="stat-cell"><div class="stat-num">' + slotNeeded + '</div><div class="stat-label">Cần gửi lịch trống</div>';
-  html += '<div class="stat-detail"><span class="hl">' + advisees.length + '</span> advisee × 2 buổi/tuần + <span class="hl">1</span> backup = tối thiểu <span class="hl">' + (advisees.length*2) + '</span> slot, khuyến nghị <span class="hl">' + slotNeeded + '</span></div></div>';
-  html += '<div class="stat-cell"><div class="stat-num">' + completed + '</div><div class="stat-label">Tổng buổi hoàn thành</div></div>';
-  html += '</div>';
-
-  html += '<div class="card"><div class="card-header"><div class="card-header-left">Lịch đã book tuần này</div><button class="refresh-btn" onclick="loadDashboard(\'Advisor\',\'overview\')">↻ Làm mới</button></div>';
-  html += thisWeek.length === 0 ? '<div class="empty-state"><div class="icon">📭</div>Không có buổi nào tuần này</div>' : thisWeek.map(sessionItemHTML).join('');
-  html += '</div>';
-
-  html += '<div class="card"><div class="card-header"><div class="card-header-left">Advisee của bạn</div></div>';
-  if (advisees.length === 0) {
-    html += '<div class="empty-state"><div class="icon">👤</div>Chưa có advisee nào</div>';
-  } else {
-    html += '<table class="advisee-table"><thead><tr><th>ADVISEE</th><th>GÓI</th><th>CÒN LẠI</th><th>BUỔI GẦN NHẤT</th></tr></thead><tbody>';
-    advisees.forEach(function(b){
-      const rem = (b.sessions_total||0) - (b.sessions_used||0);
-      const warn = rem <= Math.ceil((b.sessions_total||1)/2);
-      const candidates = mine.filter(function(x){ return x.advisee_name === b.advisee_name && x.session_date; });
-      candidates.sort(function(a,c){ return new Date(a.session_date) - new Date(c.session_date); });
-      const nearest = candidates[0];
-      html += '<tr><td><div style="display:flex;align-items:center;gap:12px">' + avatarCircle(b.advisee_name) + '<div><div class="advisee-name">' + b.advisee_name + '</div><div class="advisee-sub">' + (b.advisee_industry||b.advisee_year||'') + '</div></div></div></td>';
-      html += '<td>' + (b.package_name||'—') + '</td>';
-      html += '<td><span class="remaining' + (warn?' warn':'') + '">' + rem + '/' + (b.sessions_total||0) + '</span></td>';
-      html += '<td>' + (nearest ? fmtDate(nearest.session_date) : '<span style="color:var(--muted)">—</span>') + '</td></tr>';
-    });
-    html += '</tbody></table>';
-  }
-  html += '</div>';
-  return html;
+function ph(title, sub='') {
+  return `<div class="page-header"><h1>${title}</h1>${sub ? `<p>${sub}</p>` : ''}</div>`;
 }
+function fmtMoney(n) { return Number(n||0).toLocaleString('vi-VN') + 'đ'; }
+function fmtDate(s) {
+  if (!s) return '—';
+  const d = new Date(String(s).length <= 10 ? s+'T00:00:00' : s);
+  if (isNaN(d)) return String(s);
+  return `${DAYS_VI[d.getDay()]} ${d.getDate()}/${d.getMonth()+1}/${d.getFullYear()}`;
+}
+function fmtDateTime(s) {
+  if (!s) return '—';
+  const d = new Date(String(s).length <= 10 ? s+'T00:00:00' : s);
+  if (isNaN(d)) return String(s);
+  return `${d.getDate()}/${d.getMonth()+1} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+function pad(n) { return String(n).padStart(2,'0'); }
+function ymd(d) { return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`; }
 
-// ════════════════════════════════════════════════════════════
-//  MONTH CALENDAR (kiểu Amelia) — dùng chung cho Advisor + Staff
-// ════════════════════════════════════════════════════════════
-let calMonthOffset = 0; // số tháng lệch so với tháng hiện tại
+const AV_COLORS=[['#D0E8FF','#2475B0'],['#FFD6D0','#C0392B'],['#D0F0E8','#1A7A5E'],['#EDE9FE','#6D28D9'],['#FEF3C7','#92400E'],['#FCE7F3','#9D174D']];
+const colorCache = {};
+function av(name, size=36) {
+  if (!name) name = '?';
+  if (!colorCache[name]) colorCache[name] = AV_COLORS[name.charCodeAt(0) % AV_COLORS.length];
+  const [bg, fg] = colorCache[name];
+  const ini = name.split(' ').filter(Boolean).map(w=>w[0]).join('').slice(0,2).toUpperCase();
+  return `<div style="width:${size}px;height:${size}px;border-radius:50%;background:${bg};color:${fg};display:flex;align-items:center;justify-content:center;font-size:${size*0.33}px;font-weight:700;flex-shrink:0">${ini}</div>`;
+}
+function statusBadge(s) {
+  const map = {
+    pending_payment:'badge-pending', confirmed:'badge-confirmed',
+    completed:'badge-completed', cancelled:'badge-cancelled',
+    new:'badge-new', contacted:'badge-contacted',
+    scheduled:'badge-scheduled', done:'badge-done',
+    unscheduled:'badge-pending',
+  };
+  const lbl = {
+    pending_payment:'Chờ TT', confirmed:'Đã xác nhận', completed:'Hoàn thành', cancelled:'Đã hủy',
+    new:'Mới', contacted:'Đã liên hệ', scheduled:'Đã xếp lịch', done:'Hoàn tất',
+    unscheduled:'Chưa có lịch',
+  };
+  return `<span class="badge ${map[s]||'badge-pending'}">${lbl[s]||s||'—'}</span>`;
+}
+function closeModal() { document.getElementById('modal-overlay').classList.remove('open'); }
+document.getElementById('modal-overlay').addEventListener('click', e => { if (e.target.id==='modal-overlay') closeModal(); });
 
-function getCalendarMatrix(monthOffset) {
+// ═══════════════════════════════════════════════════
+//  CALENDAR HELPERS
+// ═══════════════════════════════════════════════════
+function getCalMatrix(offset) {
   const base = new Date();
-  base.setDate(1);
-  base.setMonth(base.getMonth() + monthOffset);
+  base.setDate(1); base.setMonth(base.getMonth() + offset);
   const year = base.getFullYear(), month = base.getMonth();
-
-  const firstOfMonth = new Date(year, month, 1);
-  const startDay = firstOfMonth.getDay(); // 0=CN
-  const gridStart = new Date(firstOfMonth);
-  gridStart.setDate(gridStart.getDate() - (startDay === 0 ? 6 : startDay - 1)); // bắt đầu từ T2
-
+  const first = new Date(year, month, 1);
+  const startDay = first.getDay();
+  const gridStart = new Date(first);
+  gridStart.setDate(gridStart.getDate() - (startDay===0?6:startDay-1));
   const weeks = [];
-  let cursor = new Date(gridStart);
-  for (let w = 0; w < 6; w++) {
+  const cursor = new Date(gridStart);
+  for (let w=0;w<6;w++) {
     const week = [];
-    for (let d = 0; d < 7; d++) {
-      week.push(new Date(cursor));
-      cursor.setDate(cursor.getDate() + 1);
-    }
+    for (let d=0;d<7;d++) { week.push(new Date(cursor)); cursor.setDate(cursor.getDate()+1); }
     weeks.push(week);
   }
   return { year, month, weeks };
 }
 
-function ymd(d) { return d.getFullYear() + '-' + pad(d.getMonth()+1) + '-' + pad(d.getDate()); }
-function isSameDate(a,b) { return ymd(a) === ymd(b); }
-
-function renderMonthCalendar(opts) {
-  // opts: { title, onCellClick(dateStr), countFn(dateStr) -> {slot, meeting} }
-  const { year, month, weeks } = getCalendarMatrix(calMonthOffset);
-  const monthLabel = ['Tháng 1','Tháng 2','Tháng 3','Tháng 4','Tháng 5','Tháng 6','Tháng 7','Tháng 8','Tháng 9','Tháng 10','Tháng 11','Tháng 12'][month] + ' ' + year;
+function renderCalGrid(opts) {
+  // opts: {title, monthOffset, onCellClick(dateStr), countFn(dateStr)->{a,b}}
+  const { year, month, weeks } = getCalMatrix(opts.monthOffset);
   const today = new Date();
-
-  let html = '<div class="card"><div class="card-header"><div class="card-header-left">' + opts.title + '</div></div>';
-  html += '<div class="cal-nav"><div class="cal-nav-left"><button onclick="changeCalMonth(-1)">‹</button><span class="cal-nav-label">' + monthLabel + '</span><button onclick="changeCalMonth(1)">›</button></div>';
-  html += '<button class="cal-today-btn" onclick="goToCalToday()">Hôm nay</button></div>';
-
-  html += '<div class="cal-grid">';
-  DAYS_VI_FULL.forEach(function(d){ html += '<div class="cal-weekday-hdr">' + d + '</div>'; });
-
-  weeks.forEach(function(week){
-    week.forEach(function(d){
-      const dateStr = ymd(d);
+  let html = `<div class="card"><div class="card-header"><div class="card-header-left">${opts.title}</div>
+    <button class="refresh-btn" onclick="${opts.refreshFn||''}()">↻ Làm mới</button></div>
+    <div class="cal-nav">
+      <div style="display:flex;align-items:center;gap:8px">
+        <button onclick="${opts.prevFn}()">‹</button>
+        <span class="cal-nav-label">${MONTH_NAMES[month]} ${year}</span>
+        <button onclick="${opts.nextFn}()">›</button>
+      </div>
+      <button class="cal-today-btn" onclick="${opts.todayFn}()">Hôm nay</button>
+    </div>
+    <div class="cal-grid">`;
+  DAYS_VI_FULL.forEach(d => html += `<div class="cal-weekday-hdr">${d}</div>`);
+  weeks.forEach(week => {
+    week.forEach(d => {
+      const ds = ymd(d);
       const isOther = d.getMonth() !== month;
-      const isToday = isSameDate(d, today);
-      const counts = opts.countFn(dateStr);
-
-      let cls = 'cal-cell' + (isOther?' other-month':'') + (isToday?' today':'');
-      html += '<div class="' + cls + '" onclick="' + opts.onCellClick + '(\'' + dateStr + '\')">';
-      html += '<div class="cal-daynum">' + d.getDate() + '</div>';
-      html += '<div class="cal-add">+</div>';
-      html += '<div class="cal-badges">';
-      if (counts.slot > 0) html += '<span class="cal-badge slot">' + counts.slot + ' slot trống</span>';
-      if (counts.meeting > 0) html += '<span class="cal-badge meeting">' + counts.meeting + ' buổi</span>';
-      html += '</div></div>';
+      const isToday = ymd(d)===ymd(today);
+      const counts = opts.countFn(ds);
+      html += `<div class="cal-cell${isOther?' other-month':''}${isToday?' today':''}" onclick="${opts.onCellClick}('${ds}')">
+        <div class="cal-daynum">${d.getDate()}</div>`;
+      if (counts.a > 0) html += `<span class="cal-badge slot">${counts.a} trống</span>`;
+      if (counts.b > 0) html += `<span class="cal-badge cr">${counts.b} yêu cầu</span>`;
+      html += '</div>';
     });
   });
   html += '</div></div>';
   return html;
 }
 
-function changeCalMonth(dir) {
-  calMonthOffset += dir;
-  if (currentUser.role === 'Advisor') loadDashboard('Advisor','schedule');
-  else loadDashboard('Staff','linkajob-calendar');
-}
-function goToCalToday() {
-  calMonthOffset = 0;
-  if (currentUser.role === 'Advisor') loadDashboard('Advisor','schedule');
-  else loadDashboard('Staff','linkajob-calendar');
-}
+// ═══════════════════════════════════════════════════
+//  STAFF PAGES
+// ═══════════════════════════════════════════════════
 
-const DAYS_VI_FULL = ['T2','T3','T4','T5','T6','T7','CN'];
-// Lưu ý: getCalendarMatrix() build tuần bắt đầu từ Thứ 2, nên header tương ứng T2→CN
-
-
-// ── Advisor: lịch trống dạng tháng ──
-function renderSchedulePicker() {
-  const slotsByDate = {};
-  sheetData.slots.forEach(function(s){
-    if (s.advisor_name !== currentUser.name) return;
-    const d = String(s.date).slice(0,10);
-    if (!slotsByDate[d]) slotsByDate[d] = { available: 0, booked: 0 };
-    if (s.status === 'booked') slotsByDate[d].booked++;
-    else slotsByDate[d].available++;
-  });
-  // gộp cả slot vừa chọn nhưng chưa gửi
-  selectedSlots.forEach(function(key){
-    const d = key.split('_')[0];
-    if (!slotsByDate[d]) slotsByDate[d] = { available: 0, booked: 0 };
-    slotsByDate[d].available++;
-  });
-
-  window._advisorSlotsByDate = slotsByDate; // dùng lại trong modal ngày
-
-  return renderMonthCalendar({
-    title: 'Gửi lịch trống',
-    onCellClick: 'openAdvisorDayModal',
-    countFn: function(dateStr) {
-      const x = slotsByDate[dateStr];
-      return { slot: x ? x.available : 0, meeting: x ? x.booked : 0 };
-    }
-  });
-}
-
-function openAdvisorDayModal(dateStr) {
-  const dateObj = new Date(dateStr + 'T00:00:00');
-  const dow = DAYS_VI[dateObj.getDay()];
-  document.getElementById('modal-title').textContent = dow + ' ' + dateObj.getDate() + '/' + (dateObj.getMonth()+1) + ' — Chọn giờ trống';
-
-  const bookedTimes = {};
-  const savedTimes = {};
-  sheetData.slots.forEach(function(s){
-    if (s.advisor_name !== currentUser.name) return;
-    if (String(s.date).slice(0,10) !== dateStr) return;
-    if (s.status === 'booked') bookedTimes[s.time_start] = true;
-    if (s.status === 'available') savedTimes[s.time_start] = true;
-  });
-
-  let html = '<div class="day-time-grid" id="day-time-grid">';
-  TIME_SLOTS.forEach(function(t){
-    const key = dateStr + '_' + t;
-    const isBooked = !!bookedTimes[t];
-    const isSel = selectedSlots.has(key) || !!savedTimes[t];
-    html += '<button class="day-time-chip' + (isBooked?' booked':isSel?' selected':'') + '" data-key="' + key + '" ' + (isBooked?'disabled':'') + ' onclick="toggleDaySlot(this,\'' + key + '\')">' + t + '</button>';
-  });
-  html += '</div>';
-
-  document.getElementById('modal-body').innerHTML = html;
-  document.getElementById('modal-actions').innerHTML =
-    '<button class="btn-secondary" onclick="closeModal()" style="width:auto;padding:10px 20px">Đóng</button>' +
-    '<button class="login-btn" id="day-send-btn" style="width:auto;padding:10px 24px" onclick="sendSlots()">Gửi lịch trống đã chọn</button>';
-  document.getElementById('modal-overlay').classList.add('open');
-}
-
-function toggleDaySlot(btn, key) {
-  if (selectedSlots.has(key)) { selectedSlots.delete(key); btn.classList.remove('selected'); }
-  else { selectedSlots.add(key); btn.classList.add('selected'); }
-}
-
-
-// ── Staff: lịch meeting dạng tháng (trong module LinkaJob) ──
-function renderMeetingCalendar() {
-  const meetingsByDate = {};
-  MOCK.meetings.forEach(function(m){
-    if (!meetingsByDate[m.date]) meetingsByDate[m.date] = [];
-    meetingsByDate[m.date].push(m);
-  });
-  window._meetingsByDate = meetingsByDate;
-
-  let html = renderMonthCalendar({
-    title: 'Lịch meeting',
-    onCellClick: 'openStaffDayModal',
-    countFn: function(dateStr) {
-      return { slot: 0, meeting: (meetingsByDate[dateStr]||[]).length };
-    }
-  });
-  return html;
-}
-
-function openStaffDayModal(dateStr) {
-  const dateObj = new Date(dateStr + 'T00:00:00');
-  const dow = DAYS_VI[dateObj.getDay()];
-  document.getElementById('modal-title').textContent = dow + ' ' + dateObj.getDate() + '/' + (dateObj.getMonth()+1);
-
-  const list = window._meetingsByDate[dateStr] || [];
-  let html = '';
-  if (list.length === 0) {
-    html = '<div class="empty-state" style="padding:24px 0"><div class="icon">📭</div>Không có buổi meeting nào ngày này</div>';
-  } else {
-    list.forEach(function(m){
-      const idx = MOCK.meetings.indexOf(m);
-      html += '<div class="day-meeting-item">' + avatarCircle(m.advisee,34) +
-        '<div style="flex:1"><div style="font-weight:600;font-size:14px">' + m.advisee + ' · ' + m.type + '</div><div style="font-size:12px;color:var(--muted)">' + m.advisor + ' · ' + m.time + '</div></div>' +
-        '<button class="update-btn" onclick="closeModal();showMeetingDetail(' + idx + ')">Chi tiết</button></div>';
-    });
-  }
-  document.getElementById('modal-body').innerHTML = html;
-  document.getElementById('modal-actions').innerHTML = '<button class="login-btn" onclick="closeModal()" style="width:auto;padding:10px 24px">Đóng</button>';
-  document.getElementById('modal-overlay').classList.add('open');
-}
-
-function renderBookedSessions() {
-  const mine = sheetData.bookings.filter(function(b){ return b.advisor_name === currentUser.name; });
-  let html = '<div class="card"><div class="card-header"><div class="card-header-left">Tất cả buổi đã book</div><button class="refresh-btn" onclick="loadDashboard(\'Advisor\',\'booked\')">↻ Làm mới</button></div>';
-  if (mine.length === 0) {
-    html += '<div class="empty-state"><div class="icon">📭</div>Chưa có buổi nào</div>';
-  } else {
-    html += '<table class="bookings-table"><thead><tr><th>ADVISEE</th><th>GÓI</th><th>NGÀY GIỜ</th><th>TRẠNG THÁI</th><th></th></tr></thead><tbody>';
-    mine.forEach(function(b){
-      html += '<tr><td><div style="display:flex;align-items:center;gap:10px">' + avatarCircle(b.advisee_name,30) + '<div><div style="font-weight:600">' + b.advisee_name + '</div><div style="font-size:12px;color:var(--muted)">' + (b.booking_id||'') + '</div></div></div></td>';
-      html += '<td>' + (b.package_name||'—') + '</td><td>' + (b.session_date?fmtDate(b.session_date):'—') + '</td><td>' + statusBadge(b.status) + '</td>';
-      html += '<td style="display:flex;gap:6px;align-items:center">';
-      html += b.status==='confirmed' ? '<button class="update-btn green" onclick="markComplete(\'' + b.booking_id + '\')">✓ Hoàn thành</button>' : '<button class="update-btn" onclick="showDetail(' + esc(b) + ')">Chi tiết</button>';
-      if (b.meet_link) html += '<a href="' + b.meet_link + '" target="_blank" class="detail-btn">Meet</a>';
-      html += '</td></tr>';
-    });
-    html += '</tbody></table>';
-  }
-  html += '</div>';
-  return html;
-}
-
-function renderStaff(tab) {
-  const c = document.getElementById('main-content');
-  if      (tab === 'lj-revenue')        c.innerHTML = renderRevenuePage();
-  else if (tab === 'lj-report')         c.innerHTML = renderReportPage();
-  else if (tab === 'linkajob-calendar' || tab === 'lj-meetings') c.innerHTML = renderMeetingCalendar();
-  else if (tab === 'lj-products')       c.innerHTML = renderProductsPage();
-  else if (tab === 'stf-list')          c.innerHTML = renderStaffListPage();
-  else if (tab === 'stf-schedule')      c.innerHTML = renderStaffSchedulePage();
-  else if (tab === 'advisor-mod')       c.innerHTML = renderAdvisorModule();
-  else if (tab === 'adv-new')           c.innerHTML = renderAdvisorNewForm();
-  else if (tab === 'advisee-mod')       c.innerHTML = renderAdviseeModule();
-  else if (tab === 'course-mod')        c.innerHTML = renderCourseModule();
-  else c.innerHTML = renderRevenuePage();
-}
-
-// ════════════════════════════════════════════════════════════
-//  MOCK DATA — dùng tạm trước khi nối Sheet thật cho module Staff
-// ════════════════════════════════════════════════════════════
-const MOCK = {
-  revenue: { today: 4180000, week: 18950000, month: 76400000, year: 612000000 },
-  reportSeries: [
-    {label:'T2', value: 8}, {label:'T3', value: 14}, {label:'T4', value: 11},
-    {label:'T5', value: 19}, {label:'T6', value: 23}, {label:'T7', value: 16}, {label:'CN', value: 9}
-  ],
-  retentionRate: 78,
-  newCustomerRate: 34,
-  meetings: [
-    { type: 'Cố vấn 1-1', advisor: 'Nguyễn Vũ Trí Kiên', advisee: 'Trần Gia Hân', date: '2026-07-01', time: '20:00', meet_link: 'https://meet.google.com/abc-defg-hij', booked_at: '2026-06-25 14:20', changed_at: '', session_no: '2/4', feedback_advisor: 'Advisee chuẩn bị tốt, tiến bộ rõ', feedback_advisee: 'Advisor giải thích dễ hiểu', question: 'Làm sao build portfolio Marketing?' },
-    { type: 'Tư vấn', advisor: 'Phương Staff', advisee: 'Bùi Tuấn Anh', date: '2026-07-03', time: '19:00', meet_link: 'https://meet.google.com/xyz-uvwx-rst', booked_at: '2026-06-26 09:10', changed_at: '2026-06-27 11:00', session_no: '1/2', feedback_advisor: '', feedback_advisee: '', question: 'Định hướng ngành Brand' },
-    { type: 'Khoá học', advisor: 'GV. Lê Minh Anh', advisee: 'Lớp Marketing K12', date: '2026-07-05', time: '18:30', meet_link: 'https://meet.google.com/lll-mmmm-nnn', booked_at: '2026-06-20 08:00', changed_at: '', session_no: '3/8', feedback_advisor: '', feedback_advisee: '', question: '' },
-  ],
-  products: [
-    { name: 'Trial', type: 'Gói cố vấn', price: 419000, sessions: 1, advisors: 'Tất cả advisor', active: true },
-    { name: 'Cơ Bản', type: 'Gói cố vấn', price: 799000, sessions: 2, advisors: 'Tất cả advisor', active: true },
-    { name: 'Đặc Biệt', type: 'Gói cố vấn', price: 1499000, sessions: 4, advisors: 'Tất cả advisor', active: true },
-    { name: 'Chuyên Sâu', type: 'Gói cố vấn', price: 2199000, sessions: 6, advisors: 'Tất cả advisor', active: true },
-    { name: 'Marketing Foundation', type: 'Khoá học', price: 2990000, sessions: 8, advisors: 'GV. Lê Minh Anh', active: true },
-  ],
-  advisors: [
-    { id:'adv1', name:'Nguyễn Vũ Trí Kiên', title:'Senior Marketing Manager', active:true, adviseeCount:3, sessionsDone:3, sessionsTotal:6,
-      email:'kien@linkajob.vn', phone:'0901234567', contact:'linkedin.com/in/kien', bio:'8 năm kinh nghiệm Marketing tại các tập đoàn FMCG.',
-      message:'Mình tin rằng career growth đến từ những bước đi rõ ràng — hãy để mình đồng hành cùng bạn.',
-      feedbacks:[{from:'Trần Gia Hân', text:'Advisor rất tận tâm và cho lời khuyên thực tế'}],
-      products:['Cơ Bản','Đặc Biệt'],
-      slots:['T2 19:00','T3 20:00','T5 19:00'],
-      advisees:[{name:'Trần Gia Hân', pkg:'Đặc Biệt', progress:'3/4'},{name:'Bùi Tuấn Anh', pkg:'Cơ Bản', progress:'1/2'}] },
-    { id:'adv2', name:'Phương Thảo', title:'Brand Strategist', active:true, adviseeCount:2, sessionsDone:5, sessionsTotal:8,
-      email:'phuong@linkajob.vn', phone:'0907654321', contact:'linkedin.com/in/phuong',
-      bio:'Chuyên gia Brand 6 năm, từng làm tại Unilever và các agency lớn.',
-      message:'Branding không chỉ là logo — đó là câu chuyện bạn kể mỗi ngày.',
-      feedbacks:[{from:'Lê Văn Bình', text:'Cách tiếp cận rất hệ thống, dễ áp dụng'}],
-      products:['Đặc Biệt','Chuyên Sâu'],
-      slots:['T4 18:00','T6 20:00'],
-      advisees:[{name:'Lê Văn Bình', pkg:'Chuyên Sâu', progress:'5/6'}] },
-    { id:'adv3', name:'Đặng Quốc Huy', title:'Finance Lead', active:false, adviseeCount:0, sessionsDone:12, sessionsTotal:12,
-      email:'huy@linkajob.vn', phone:'0912345678', contact:'linkedin.com/in/huy',
-      bio:'10 năm Finance, CFA Level 3.', message:'Tài chính cá nhân vững vàng là nền tảng của sự nghiệp bền vững.',
-      feedbacks:[], products:['Cơ Bản'], slots:[], advisees:[] },
-  ],
-  advisees: [
-    { id:'adv-ee1', name:'Trần Gia Hân', email:'han.tran@gmail.com', phone:'0911222333', contact:'zalo: 0911222333',
-      pkg:'Đặc Biệt', bookingId:'LJ-20260628-7741', advisorTitle:'Brand Manager · Suntory PepsiCo Vietnam',
-      progress:'1/4', sessionsTotal:4, sessionsDone:1, paid:1499000, registeredAt:'2026-06-10', expiry:'2026-07-08',
-      advisor:'Nguyễn Vũ Trí Kiên',
-      sessions:[
-        {no:1, date:'2026-06-24', timeStart:'20:00', timeEnd:'21:00', status:'done',     feedback:null, meetLink:'https://meet.google.com/abc-defg-hij'},
-        {no:2, date:'2026-07-03', timeStart:'19:00', timeEnd:'20:00', status:'feedback', feedback:null, meetLink:'https://meet.google.com/abc-defg-hij'},
-        {no:3, date:null, timeStart:null, timeEnd:null, status:'locked', lockedReason:'Hoàn thành feedback buổi 2 để mở khoá', feedback:null},
-        {no:4, date:null, timeStart:null, timeEnd:null, status:'locked', lockedReason:'Buổi 3 chưa hoàn thành', feedback:null},
-      ]
-    },
-    { id:'adv-ee2', name:'Bùi Tuấn Anh', email:'anh.bui@gmail.com', phone:'0922333444', contact:'zalo: 0922333444',
-      pkg:'Cơ Bản', bookingId:'LJ-20260620-5523', advisorTitle:'Brand Manager · Suntory PepsiCo Vietnam',
-      progress:'1/2', sessionsTotal:2, sessionsDone:1, paid:799000, registeredAt:'2026-06-20', expiry:'2026-07-04',
-      advisor:'Nguyễn Vũ Trí Kiên',
-      sessions:[
-        {no:1, date:'2026-06-26', timeStart:'19:00', timeEnd:'20:00', status:'done',     feedback:{rating:5,text:'Advisor giải thích rất rõ!'}, meetLink:''},
-        {no:2, date:'2026-07-03', timeStart:'20:00', timeEnd:'21:00', status:'upcoming', feedback:null, meetLink:'https://meet.google.com/xyz-uvwx-rst'},
-      ]
-    },
-    { id:'adv-ee3', name:'Lê Văn Bình', email:'binh.le@gmail.com', phone:'0933444555', contact:'zalo: 0933444555',
-      pkg:'Chuyên Sâu', bookingId:'LJ-20260528-3310', advisorTitle:'Brand Strategist · Unilever',
-      progress:'5/6', sessionsTotal:6, sessionsDone:5, paid:2199000, registeredAt:'2026-05-28', expiry:'2026-07-23',
-      advisor:'Phương Thảo',
-      sessions:[
-        {no:1, date:'2026-06-02', timeStart:'19:00', timeEnd:'20:00', status:'done', feedback:{rating:5,text:'Rất hữu ích'}, meetLink:''},
-        {no:2, date:'2026-06-09', timeStart:'19:00', timeEnd:'20:00', status:'done', feedback:{rating:4,text:'Tốt'}, meetLink:''},
-        {no:3, date:'2026-06-16', timeStart:'19:00', timeEnd:'20:00', status:'done', feedback:{rating:5,text:'Xuất sắc'}, meetLink:''},
-        {no:4, date:'2026-06-23', timeStart:'19:00', timeEnd:'20:00', status:'done', feedback:{rating:4,text:'OK'}, meetLink:''},
-        {no:5, date:'2026-06-30', timeStart:'19:00', timeEnd:'20:00', status:'done', feedback:{rating:5,text:'Tuyệt vời'}, meetLink:''},
-        {no:6, date:'2026-07-07', timeStart:'19:00', timeEnd:'20:00', status:'upcoming', feedback:null, meetLink:'https://meet.google.com/lll-mmmm-nnn'},
-      ]
-    },
-  ],
-  courses: [
-    { id:'c1', name:'Marketing Foundation K12', startDate:'2026-06-20', studentCount:18, sessionsDone:3, sessionsTotal:8, active:true,
-      teacher:'GV. Lê Minh Anh', meetLink:'https://meet.google.com/lll-mmmm-nnn',
-      schedule:[{date:'2026-06-20',topic:'Giới thiệu Marketing căn bản'},{date:'2026-06-27',topic:'Customer Insight'},{date:'2026-07-04',topic:'Brand Positioning'}],
-      materials:['Slide buổi 1.pdf','Case study Vinamilk.pdf'],
-      students:['Trần Gia Hân','Bùi Tuấn Anh','+16 học viên khác'] },
-    { id:'c2', name:'Finance for Non-Finance K3', startDate:'2026-07-10', studentCount:12, sessionsDone:0, sessionsTotal:6, active:true,
-      teacher:'Đặng Quốc Huy', meetLink:'https://meet.google.com/fff-gggg-hhh',
-      schedule:[{date:'2026-07-10',topic:'Đọc hiểu báo cáo tài chính'}],
-      materials:[], students:['Lê Văn Bình','+11 học viên khác'] },
-  ],
-  staffList: [
-    { id:'s1', name:'Nguyễn Phương Thảo', role:'Sale', email:'phuong@linkajob.vn', phone:'0901111222',
-      joinDate:'2025-09-01', active:true, note:'Sale chính, phụ trách tư vấn KH mới' },
-    { id:'s2', name:'Trần Minh Khoa', role:'Sale', email:'khoa@linkajob.vn', phone:'0902222333',
-      joinDate:'2025-11-15', active:true, note:'Sale hỗ trợ, phụ trách KH cũ' },
-    { id:'s3', name:'Lê Thị Bảo Châu', role:'Operations', email:'chau@linkajob.vn', phone:'0903333444',
-      joinDate:'2026-01-10', active:true, note:'Quản lý vận hành & lịch meeting' },
-    { id:'s4', name:'Đinh Văn Thành', role:'Marketing', email:'thanh@linkajob.vn', phone:'0904444555',
-      joinDate:'2026-03-01', active:true, note:'Quản lý content & social media' },
-    { id:'s5', name:'Ngô Bích Ngọc', role:'Sale', email:'ngoc@linkajob.vn', phone:'0905555666',
-      joinDate:'2026-05-01', active:false, note:'Tạm nghỉ' },
-  ],
-  saleSlots: [
-    { staff:'Nguyễn Phương Thảo', date:'2026-07-02', time:'10:00', status:'available', client:'', note:'Tư vấn gói cố vấn' },
-    { staff:'Nguyễn Phương Thảo', date:'2026-07-02', time:'14:00', status:'booked', client:'KH: Nguyễn Thị Mai', note:'Tư vấn gói cố vấn' },
-    { staff:'Trần Minh Khoa', date:'2026-07-03', time:'09:00', status:'available', client:'', note:'Tư vấn khoá học' },
-    { staff:'Trần Minh Khoa', date:'2026-07-03', time:'15:00', status:'booked', client:'KH: Phạm Văn Long', note:'Tư vấn gói cố vấn' },
-    { staff:'Nguyễn Phương Thảo', date:'2026-07-04', time:'11:00', status:'available', client:'', note:'Tư vấn gói cố vấn' },
-  ],
-};
-
-function fmtMoney(n) { return (n||0).toLocaleString('vi-VN') + 'đ'; }
-
-// ════════════════════════════════════════════════════════════
-//  MODULE STAFF — DANH SÁCH NHÂN VIÊN
-// ════════════════════════════════════════════════════════════
-const ROLE_COLORS = {
-  'Sale':        ['#DBEAFE','#1D4ED8'],
-  'Operations':  ['#D1FAE5','#065F46'],
-  'Marketing':   ['#EDE9FE','#6D28D9'],
-  'Admin':       ['#FEF3C7','#92400E'],
-};
-function roleBadge(role) {
-  const c = ROLE_COLORS[role] || ['#F3F4F6','#374151'];
-  return '<span style="background:' + c[0] + ';color:' + c[1] + ';font-size:11px;font-weight:700;padding:2px 8px;border-radius:100px">' + role + '</span>';
-}
-
-function renderStaffListPage() {
-  let html = pageHeader('Nhân viên', 'Quản lý nhân sự LinkaJob');
-
-  // KPI nhanh
-  const active = MOCK.staffList.filter(function(s){ return s.active; });
-  const saleCount = active.filter(function(s){ return s.role === 'Sale'; }).length;
-  html += '<div class="stats-row" style="grid-template-columns:repeat(3,1fr);margin-bottom:20px">';
-  html += '<div class="stat-cell"><div class="stat-num">' + active.length + '</div><div class="stat-label">Nhân viên đang hoạt động</div></div>';
-  html += '<div class="stat-cell"><div class="stat-num">' + saleCount + '</div><div class="stat-label">Sale đang hoạt động</div></div>';
-  html += '<div class="stat-cell"><div class="stat-num">' + (MOCK.staffList.length - active.length) + '</div><div class="stat-label">Tạm nghỉ / Nghỉ việc</div></div>';
-  html += '</div>';
-
-  // Bảng danh sách
-  html += '<div class="card">';
-  html += '<div class="card-header"><div class="card-header-left">Danh sách nhân viên</div>';
-  html += '<button class="submit-btn" style="padding:8px 16px;font-size:13px" onclick="openAddStaffModal()">+ Thêm nhân viên</button>';
-  html += '</div>';
-  html += '<table class="bookings-table"><thead><tr><th>HỌ TÊN</th><th>VỊ TRÍ</th><th>EMAIL / SĐT</th><th>NGÀY VÀO</th><th>TRẠNG THÁI</th><th></th></tr></thead><tbody>';
-  MOCK.staffList.forEach(function(s, i){
-    html += '<tr>';
-    html += '<td><div style="display:flex;align-items:center;gap:10px">' + avatarCircle(s.name,32) + '<div><div style="font-weight:600">' + s.name + '</div><div style="font-size:12px;color:var(--muted)">' + s.note + '</div></div></div></td>';
-    html += '<td>' + roleBadge(s.role) + '</td>';
-    html += '<td><div style="font-size:13px">' + s.email + '</div><div style="font-size:12px;color:var(--muted)">' + s.phone + '</div></td>';
-    html += '<td style="font-size:13px">' + s.joinDate + '</td>';
-    html += '<td>' + (s.active ? '<span class="badge badge-confirmed">Đang làm</span>' : '<span class="badge badge-cancelled">Tạm nghỉ</span>') + '</td>';
-    html += '<td style="display:flex;gap:6px">';
-    html += '<button class="update-btn" onclick="openStaffDetail(' + i + ')">Chi tiết</button>';
-    if (s.role === 'Sale') html += '<button class="update-btn" style="border-color:#6D28D9;color:#6D28D9" onclick="navTo(\'stf-schedule\')">📅 Lịch</button>';
-    html += '</td></tr>';
-  });
-  html += '</tbody></table></div>';
-  return html;
-}
-
-function openExtendModal(aeId) {
-  document.getElementById('modal-title').textContent = '📅 Gia hạn thời gian sử dụng';
-  document.getElementById('modal-body').innerHTML =
-    '<div style="text-align:center;padding:8px 0 16px">' +
-    '<div style="font-size:40px;margin-bottom:12px">⏱</div>' +
-    '<div style="font-size:15px;font-weight:700;color:var(--text);margin-bottom:6px">Cộng thêm 1 tháng sử dụng</div>' +
-    '<div style="font-size:13px;color:var(--muted);line-height:1.7;margin-bottom:16px">Gói của bạn sẽ được gia hạn thêm <strong>30 ngày</strong> kể từ ngày hết hạn hiện tại.</div>' +
-    '<div style="background:var(--brand-light);border:1.5px solid #FECACA;border-radius:12px;padding:14px 20px;display:inline-block">' +
-    '<div style="font-size:24px;font-weight:800;color:var(--brand)">100.000đ</div>' +
-    '<div style="font-size:12px;color:var(--muted);margin-top:2px">Thanh toán 1 lần</div>' +
-    '</div>' +
-    '</div>' +
-    '<div style="background:#F9FAFB;border-radius:10px;padding:12px 16px;font-size:13px;color:var(--muted);line-height:1.65">' +
-    'Sau khi chuyển khoản <strong style="color:var(--text)">100.000đ</strong> với nội dung <strong style="color:var(--brand)">GIA HAN ' + (currentUser.name||'').split(' ').pop().toUpperCase() + '</strong>, ' +
-    'gửi bill về <strong>contact@linkajob.vn</strong> hoặc inbox Facebook. Đội LinkaJob xác nhận trong <strong>2h</strong>.' +
-    '</div>';
-  document.getElementById('modal-actions').innerHTML =
-    '<button class="btn-secondary" onclick="closeModal()" style="width:auto;padding:10px 20px">Đóng</button>' +
-    '<button class="login-btn" onclick="toast(\'Đã ghi nhận! Vui lòng chuyển khoản và gửi bill xác nhận.\',\'success\');closeModal()" style="width:auto;padding:10px 24px">Xác nhận gia hạn</button>';
-  document.getElementById('modal-overlay').classList.add('open');
-}
-
-function openSwitchAdvisorModal(aeId) {
-  const activeAdvisors = MOCK.advisors.filter(function(a){ return a.active; });
-  const ae = MOCK.advisees.find(function(x){ return x.id === aeId; });
-  document.getElementById('modal-title').textContent = '🔄 Đổi sang Advisor khác';
-  let body =
-    '<div style="font-size:13px;color:var(--muted);line-height:1.7;margin-bottom:16px">' +
-    'Bạn có thể đổi Advisor <strong>1 lần</strong> trong suốt gói. Phí đổi Advisor: <strong style="color:var(--brand)">100.000đ</strong>. ' +
-    'Chọn Advisor mới bên dưới và đội LinkaJob sẽ liên hệ xác nhận trong 24h.' +
-    '</div>';
-  body += '<div style="display:flex;flex-direction:column;gap:10px">';
-  activeAdvisors.forEach(function(a) {
-    var isCurrent = ae && ae.advisor === a.name;
-    body += '<div style="display:flex;align-items:center;gap:12px;border:1.5px solid ' + (isCurrent?'#D1D5DB':'var(--border)') + ';border-radius:12px;padding:12px 16px;' + (isCurrent?'opacity:.45;cursor:not-allowed':'cursor:pointer;transition:border-color .15s') + '" ' +
-      (isCurrent ? '' : 'onmouseover="this.style.borderColor=\'var(--brand)\'" onmouseout="this.style.borderColor=\'var(--border)\'" onclick="confirmSwitchAdvisor(\'' + aeId + '\',\'' + a.name + '\')"') + '>' +
-      avatarCircle(a.name, 38) +
-      '<div style="flex:1"><div style="font-weight:700;font-size:13.5px">' + a.name + (isCurrent?' <span style="font-size:11px;color:var(--muted)">(Đang học)</span>':'') + '</div>' +
-      '<div style="font-size:12px;color:var(--muted)">' + a.title + '</div></div>' +
-      (isCurrent ? '' : '<div style="font-size:12px;color:var(--brand);font-weight:600">Chọn →</div>') +
-      '</div>';
-  });
-  body += '</div>';
-  document.getElementById('modal-body').innerHTML = body;
-  document.getElementById('modal-actions').innerHTML =
-    '<button class="login-btn" onclick="closeModal()" style="width:auto;padding:10px 24px">Đóng</button>';
-  document.getElementById('modal-overlay').classList.add('open');
-}
-
-function confirmSwitchAdvisor(aeId, newAdvisorName) {
-  closeModal();
-  setTimeout(function() {
-    document.getElementById('modal-title').textContent = 'Xác nhận đổi Advisor';
-    document.getElementById('modal-body').innerHTML =
-      '<div style="text-align:center;padding:8px 0 16px">' +
-      '<div style="font-size:36px;margin-bottom:10px">🔄</div>' +
-      '<div style="font-size:15px;font-weight:700;margin-bottom:6px">Đổi sang <span style="color:var(--brand)">' + newAdvisorName + '</span>?</div>' +
-      '<div style="font-size:13px;color:var(--muted);line-height:1.7">' +
-      'Phí: <strong style="color:var(--brand)">100.000đ</strong>. Chuyển khoản với nội dung ' +
-      '<strong style="color:var(--brand)">DOI ADVISOR ' + newAdvisorName.split(' ').pop().toUpperCase() + '</strong> và gửi bill về contact@linkajob.vn.' +
-      '</div></div>';
-    document.getElementById('modal-actions').innerHTML =
-      '<button class="btn-secondary" onclick="closeModal()" style="width:auto;padding:10px 20px">Huỷ</button>' +
-      '<button class="login-btn" onclick="toast(\'Đã ghi nhận! Vui lòng chuyển khoản và gửi bill.\',\'success\');closeModal()" style="width:auto;padding:10px 24px">Xác nhận</button>';
-    document.getElementById('modal-overlay').classList.add('open');
-  }, 150);
-}
-
-function openStaffDetail(i) {
-  const s = MOCK.staffList[i];
-  document.getElementById('modal-title').textContent = s.name;
-  let html = '<div style="display:flex;align-items:center;gap:14px;margin-bottom:20px">' + avatarCircle(s.name,52);
-  html += '<div><div style="font-weight:700;font-size:16px">' + s.name + '</div><div style="margin-top:4px">' + roleBadge(s.role) + '</div></div></div>';
-  html += '<div class="modal-field"><b>Email:</b> ' + s.email + '</div>';
-  html += '<div class="modal-field"><b>SĐT:</b> ' + s.phone + '</div>';
-  html += '<div class="modal-field"><b>Ngày vào:</b> ' + s.joinDate + '</div>';
-  html += '<div class="modal-field"><b>Ghi chú:</b> ' + s.note + '</div>';
-  html += '<div class="modal-field"><b>Trạng thái:</b> ' + (s.active ? '<span class="badge badge-confirmed">Đang làm</span>' : '<span class="badge badge-cancelled">Tạm nghỉ</span>') + '</div>';
-  if (s.role === 'Sale') {
-    const mySlots = MOCK.saleSlots.filter(function(sl){ return sl.staff === s.name; });
-    html += '<div style="font-size:13px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin:18px 0 8px">Lịch tư vấn gần nhất</div>';
-    if (mySlots.length === 0) {
-      html += '<div style="color:var(--muted);font-size:13px">Chưa có lịch nào</div>';
-    } else {
-      mySlots.forEach(function(sl){
-        const badge = sl.status === 'booked' ? '<span class="badge badge-pending">Đã đặt</span>' : '<span class="badge badge-confirmed">Trống</span>';
-        html += '<div class="modal-field" style="display:flex;justify-content:space-between;align-items:center"><span>' + fmtDateStr(sl.date) + ' · ' + sl.time + (sl.client ? ' · ' + sl.client : '') + '</span>' + badge + '</div>';
-      });
-    }
-  }
-  document.getElementById('modal-body').innerHTML = html;
-  document.getElementById('modal-actions').innerHTML =
-    '<button class="btn-secondary" onclick="closeModal()" style="width:auto;padding:10px 20px">Đóng</button>' +
-    '<button class="login-btn" onclick="toast(\'Đã lưu thay đổi\',\'success\');closeModal()" style="width:auto;padding:10px 24px">Lưu</button>';
-  document.getElementById('modal-overlay').classList.add('open');
-}
-
-function openAddStaffModal() {
-  document.getElementById('modal-title').textContent = 'Thêm nhân viên mới';
-  document.getElementById('modal-body').innerHTML =
-    '<div class="modal-field"><div class="form-label">Họ và tên *</div><input class="form-input" id="ns-name" placeholder="Nguyễn Văn A" style="margin-top:6px"></div>' +
-    '<div class="modal-field"><div class="form-label">Email *</div><input class="form-input" id="ns-email" type="email" placeholder="email@linkajob.vn" style="margin-top:6px"></div>' +
-    '<div class="modal-field"><div class="form-label">SĐT</div><input class="form-input" id="ns-phone" placeholder="0901234567" style="margin-top:6px"></div>' +
-    '<div class="modal-field"><div class="form-label">Vị trí *</div><select class="form-select" id="ns-role" style="margin-top:6px"><option>Sale</option><option>Operations</option><option>Marketing</option><option>Admin</option></select></div>' +
-    '<div class="modal-field"><div class="form-label">Ghi chú</div><input class="form-input" id="ns-note" placeholder="Mô tả công việc..." style="margin-top:6px"></div>';
-  document.getElementById('modal-actions').innerHTML =
-    '<button class="btn-secondary" onclick="closeModal()" style="width:auto;padding:10px 20px">Huỷ</button>' +
-    '<button class="login-btn" onclick="saveNewStaff()" style="width:auto;padding:10px 24px">Thêm nhân viên</button>';
-  document.getElementById('modal-overlay').classList.add('open');
-}
-
-function saveNewStaff() {
-  const name = document.getElementById('ns-name').value.trim();
-  const email = document.getElementById('ns-email').value.trim();
-  if (!name || !email) { toast('Vui lòng điền họ tên và email', 'error'); return; }
-  MOCK.staffList.push({
-    id: 's' + Date.now(), name: name,
-    role: document.getElementById('ns-role').value,
-    email: email,
-    phone: document.getElementById('ns-phone').value.trim(),
-    joinDate: new Date().toISOString().slice(0,10),
-    active: true,
-    note: document.getElementById('ns-note').value.trim(),
-  });
-  toast('Đã thêm ' + name, 'success');
-  closeModal();
-  navTo('stf-list');
-}
-
-// ════════════════════════════════════════════════════════════
-//  MODULE STAFF — LỊCH TƯ VẤN (SALE)
-// ════════════════════════════════════════════════════════════
-let selectedSaleSlots = new Set();
-
-function renderStaffSchedulePage() {
-  const saleStaff = MOCK.staffList.filter(function(s){ return s.role === 'Sale' && s.active; });
-
-  let html = pageHeader('Lịch tư vấn miễn phí (Sale)', 'Sale chọn giờ trống để KH đặt lịch tư vấn 1-1');
-
-  // Chọn nhân viên Sale
-  html += '<div class="card"><div class="card-header"><div class="card-header-left">Chọn Sale để xem / thêm lịch</div></div>';
-  html += '<div style="display:flex;gap:10px;flex-wrap:wrap;padding:12px 24px 20px">';
-  saleStaff.forEach(function(s){
-    const myCount = MOCK.saleSlots.filter(function(sl){ return sl.staff === s.name && sl.status === 'available'; }).length;
-    html += '<div style="border:2px solid var(--border);border-radius:12px;padding:14px 18px;cursor:pointer;min-width:160px;transition:all .15s" ' +
-      'onmouseover="this.style.borderColor=\'var(--brand)\'" onmouseout="this.style.borderColor=\'var(--border)\'">' +
-      '<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">' + avatarCircle(s.name,30) +
-      '<div style="font-weight:700;font-size:13px">' + s.name + '</div></div>' +
-      '<div style="font-size:12px;color:var(--muted)">' + myCount + ' slot trống</div>' +
-      '<button class="update-btn" style="margin-top:10px;width:100%" onclick="openSaleScheduleModal(\'' + s.name + '\')">📅 Thêm lịch trống</button>' +
-      '</div>';
-  });
-  html += '</div></div>';
-
-  // Bảng tất cả lịch tư vấn
-  html += '<div class="card"><div class="card-header"><div class="card-header-left">Tất cả lịch tư vấn</div></div>';
-  if (MOCK.saleSlots.length === 0) {
-    html += '<div class="empty-state"><div class="icon">📭</div>Chưa có lịch nào</div>';
-  } else {
-    html += '<table class="bookings-table"><thead><tr><th>SALE</th><th>NGÀY</th><th>GIỜ</th><th>KHÁCH HÀNG</th><th>GHI CHÚ</th><th>TRẠNG THÁI</th><th></th></tr></thead><tbody>';
-    MOCK.saleSlots.forEach(function(sl, i){
-      html += '<tr>';
-      html += '<td><b>' + sl.staff + '</b></td>';
-      html += '<td>' + fmtDateStr(sl.date) + '</td>';
-      html += '<td>' + sl.time + '</td>';
-      html += '<td>' + (sl.client || '<span style="color:var(--muted)">—</span>') + '</td>';
-      html += '<td style="font-size:12px;color:var(--muted)">' + sl.note + '</td>';
-      html += '<td>' + (sl.status === 'booked'
-        ? '<span class="badge badge-pending">Đã đặt</span>'
-        : '<span class="badge badge-confirmed">Trống</span>') + '</td>';
-      html += '<td>' + (sl.status === 'available'
-        ? '<button class="update-btn" onclick="deleteSaleSlot(' + i + ')">Xoá</button>'
-        : '<button class="update-btn" onclick="openSaleBookingDetail(' + i + ')">Chi tiết</button>') + '</td>';
-      html += '</tr>';
-    });
-    html += '</tbody></table>';
-  }
-  html += '</div>';
-  return html;
-}
-
-function openSaleScheduleModal(staffName) {
-  selectedSaleSlots.clear();
-  document.getElementById('modal-title').textContent = '📅 Thêm lịch trống — ' + staffName;
-
-  const base = new Date();
-  const days = [];
-  for (let i=0;i<7;i++) { const d = new Date(base); d.setDate(base.getDate()+i); days.push(d); }
-
-  const existingKeys = {};
-  MOCK.saleSlots.forEach(function(sl){
-    if (sl.staff === staffName) existingKeys[sl.date + '_' + sl.time] = sl.status;
-  });
-
-  let html = '<div style="font-size:13px;color:var(--muted);margin-bottom:12px">Chọn các khung giờ trống cho <b>' + staffName + '</b> trong 7 ngày tới. Mỗi buổi 30 phút tư vấn miễn phí.</div>';
-  html += '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px" id="sale-slot-grid">';
-  days.forEach(function(d){
-    const dateStr = ymd(d);
-    const dow = DAYS_VI[d.getDay()];
-    ['09:00','10:00','11:00','14:00','15:00','16:00','17:00','19:00','20:00'].forEach(function(t){
-      const key = dateStr + '_' + t;
-      const exist = existingKeys[key];
-      let cls = 'day-time-chip';
-      let disabled = '';
-      let label = dow + ' ' + d.getDate() + '/' + (d.getMonth()+1) + '<br><b>' + t + '</b>';
-      if (exist === 'booked') { cls += ' booked'; disabled = 'disabled'; label += '<br><span style="font-size:9px">Đã đặt</span>'; }
-      else if (exist === 'available') { cls += ' selected'; label += '<br><span style="font-size:9px">Đã có</span>'; }
-      html += '<button class="' + cls + '" data-key="' + key + '" ' + disabled + ' onclick="toggleSaleSlot(this,\'' + key + '\')" style="padding:8px 4px;font-size:11px;line-height:1.4">' + label + '</button>';
-    });
-  });
-  html += '</div>';
-  html += '<div style="font-size:12px;color:var(--muted);margin-top:12px">Đã chọn: <span id="sale-sel-count" style="color:var(--brand);font-weight:700">0</span> slot</div>';
-
-  document.getElementById('modal-body').innerHTML = html;
-  document.getElementById('modal-actions').innerHTML =
-    '<button class="btn-secondary" onclick="closeModal()" style="width:auto;padding:10px 20px">Huỷ</button>' +
-    '<button class="login-btn" id="sale-send-btn" onclick="saveSaleSlots(\'' + staffName + '\')" style="width:auto;padding:10px 24px">Lưu lịch trống</button>';
-  document.getElementById('modal-overlay').classList.add('open');
-}
-
-function toggleSaleSlot(btn, key) {
-  if (btn.classList.contains('booked')) return;
-  if (selectedSaleSlots.has(key)) { selectedSaleSlots.delete(key); btn.classList.remove('selected'); }
-  else { selectedSaleSlots.add(key); btn.classList.add('selected'); }
-  const el = document.getElementById('sale-sel-count');
-  if (el) el.textContent = selectedSaleSlots.size;
-}
-
-function saveSaleSlots(staffName) {
-  if (selectedSaleSlots.size === 0) { toast('Chưa chọn giờ nào!', 'error'); return; }
-  selectedSaleSlots.forEach(function(key){
-    // Kiểm tra chưa tồn tại
-    const exists = MOCK.saleSlots.some(function(sl){ return sl.staff === staffName && sl.date + '_' + sl.time === key; });
-    if (!exists) {
-      const parts = key.split('_');
-      MOCK.saleSlots.push({ staff: staffName, date: parts[0], time: parts[1], status: 'available', client: '', note: 'Tư vấn miễn phí' });
-    }
-  });
-  toast('Đã lưu ' + selectedSaleSlots.size + ' slot cho ' + staffName, 'success');
-  selectedSaleSlots.clear();
-  closeModal();
-  navTo('stf-schedule');
-}
-
-function deleteSaleSlot(i) {
-  MOCK.saleSlots.splice(i, 1);
-  toast('Đã xoá slot', 'success');
-  navTo('stf-schedule');
-}
-
-function openSaleBookingDetail(i) {
-  const sl = MOCK.saleSlots[i];
-  document.getElementById('modal-title').textContent = 'Chi tiết buổi tư vấn';
-  let html = '<div class="modal-field"><b>Sale:</b> ' + sl.staff + '</div>';
-  html += '<div class="modal-field"><b>Ngày giờ:</b> ' + fmtDateStr(sl.date) + ' · ' + sl.time + '</div>';
-  html += '<div class="modal-field"><b>Khách hàng:</b> ' + (sl.client || '—') + '</div>';
-  html += '<div class="modal-field"><b>Ghi chú:</b> ' + sl.note + '</div>';
-  html += '<div class="modal-field"><b>Trạng thái:</b> <span class="badge badge-pending">Đã đặt</span></div>';
-  document.getElementById('modal-body').innerHTML = html;
-  document.getElementById('modal-actions').innerHTML = '<button class="login-btn" onclick="closeModal()" style="width:auto;padding:10px 24px">Đóng</button>';
-  document.getElementById('modal-overlay').classList.add('open');
-}
-
-// ════════════════════════════════════════════════════════════
-//  LINKAJOB — 4 TRANG RIÊNG
-// ════════════════════════════════════════════════════════════
-function pageHeader(title, sub) {
-  return '<div style="margin-bottom:24px"><h1 style="font-size:20px;font-weight:800;margin-bottom:4px">' + title + '</h1><div style="font-size:13px;color:var(--muted)">' + (sub||'') + '</div></div>';
-}
-
-// ── 1. DOANH THU ──
+// ── DOANH THU ──
 function renderRevenuePage() {
-  let html = pageHeader('Doanh thu', 'Tổng quan doanh thu theo thời gian');
-
-  // 4 ô KPI
-  html += '<div class="stats-row" style="grid-template-columns:repeat(4,1fr);margin-bottom:20px">';
-  html += '<div class="stat-cell"><div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">HÔM NAY</div><div class="stat-num" style="font-size:22px">' + fmtMoney(MOCK.revenue.today) + '</div></div>';
-  html += '<div class="stat-cell"><div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">TUẦN NÀY</div><div class="stat-num" style="font-size:22px">' + fmtMoney(MOCK.revenue.week) + '</div></div>';
-  html += '<div class="stat-cell"><div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">THÁNG NÀY</div><div class="stat-num" style="font-size:22px">' + fmtMoney(MOCK.revenue.month) + '</div></div>';
-  html += '<div class="stat-cell"><div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">NĂM NAY</div><div class="stat-num" style="font-size:22px">' + fmtMoney(MOCK.revenue.year) + '</div></div>';
-  html += '</div>';
-
-  // Biểu đồ doanh thu theo tuần
-  const maxVal = Math.max.apply(null, MOCK.reportSeries.map(function(d){ return d.value; }));
-  html += '<div class="card"><div class="card-header"><div class="card-header-left">Doanh thu theo ngày trong tuần (buổi đã bán)</div></div>';
-  html += '<div style="display:flex;gap:10px;align-items:flex-end;height:160px;padding:12px 28px 28px">';
-  MOCK.reportSeries.forEach(function(d){
-    const h = Math.round((d.value / maxVal) * 120);
-    html += '<div style="display:flex;flex-direction:column;align-items:center;gap:6px;flex:1">';
-    html += '<div style="font-size:11px;color:var(--muted);font-weight:600">' + d.value + '</div>';
-    html += '<div style="width:100%;max-width:36px;height:' + h + 'px;background:var(--brand);border-radius:6px 6px 0 0"></div>';
-    html += '<div style="font-size:11px;color:var(--muted)">' + d.label + '</div>';
-    html += '</div>';
-  });
-  html += '</div></div>';
-
-  // Bảng chi tiết giao dịch
-  html += '<div class="card"><div class="card-header"><div class="card-header-left">Giao dịch gần nhất</div></div>';
-  html += '<table class="bookings-table"><thead><tr><th>ADVISEE</th><th>GÓI</th><th>GIÁ TRỊ</th><th>NGÀY</th><th>TRẠNG THÁI</th></tr></thead><tbody>';
-  MOCK.advisees.forEach(function(ae){
-    html += '<tr><td><b>' + ae.name + '</b></td><td>' + ae.pkg + '</td><td><b>' + fmtMoney(ae.paid) + '</b></td><td>' + ae.registeredAt + '</td><td><span class="badge badge-confirmed">Đã thanh toán</span></td></tr>';
-  });
-  html += '</tbody></table></div>';
-  return html;
-}
-
-// ── 2. BÁO CÁO VẬN HÀNH ──
-function renderReportPage() {
-  let html = pageHeader('Báo cáo vận hành', 'Theo tuần · Tháng · Năm');
-
-  html += '<div class="stats-row" style="margin-bottom:20px">';
-  html += '<div class="stat-cell"><div class="stat-num">' + MOCK.retentionRate + '%</div><div class="stat-label">Tỷ lệ Retention</div><div class="stat-detail">Advisee mua lại gói sau khi hết hạn</div></div>';
-  html += '<div class="stat-cell"><div class="stat-num">' + MOCK.newCustomerRate + '%</div><div class="stat-label">Tỷ lệ KH mới</div><div class="stat-detail">Trên tổng booking trong tháng</div></div>';
-  html += '<div class="stat-cell"><div class="stat-num">' + MOCK.advisees.length + '</div><div class="stat-label">Advisee đang active</div><div class="stat-detail">Có ít nhất 1 buổi còn lại</div></div>';
-  html += '</div>';
-
-  // Biểu đồ số buổi hoàn thành theo advisor
-  html += '<div class="card"><div class="card-header"><div class="card-header-left">Buổi hoàn thành theo Advisor</div></div>';
-  html += '<div style="padding:16px 28px 28px;display:flex;flex-direction:column;gap:14px">';
-  MOCK.advisors.forEach(function(a){
-    const pct = a.sessionsTotal > 0 ? Math.round(a.sessionsDone/a.sessionsTotal*100) : 0;
-    html += '<div><div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:6px"><span><b>' + a.name + '</b> · ' + a.title + '</span><span style="color:var(--muted)">' + a.sessionsDone + '/' + a.sessionsTotal + ' buổi</span></div>';
-    html += '<div style="height:8px;background:var(--bg);border-radius:100px;overflow:hidden"><div style="height:100%;width:' + pct + '%;background:var(--brand);border-radius:100px;transition:width .4s"></div></div></div>';
-  });
-  html += '</div></div>';
-
-  // Tỷ lệ gói bán
-  html += '<div class="card"><div class="card-header"><div class="card-header-left">Tỷ lệ gói được mua</div></div>';
-  const pkgCount = {};
-  MOCK.advisees.forEach(function(ae){ pkgCount[ae.pkg] = (pkgCount[ae.pkg]||0) + 1; });
-  const total = MOCK.advisees.length || 1;
-  html += '<div style="padding:16px 28px 28px;display:flex;flex-direction:column;gap:12px">';
-  Object.keys(pkgCount).forEach(function(pkg){
-    const pct = Math.round(pkgCount[pkg]/total*100);
-    html += '<div><div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:6px"><span><b>' + pkg + '</b></span><span style="color:var(--muted)">' + pkgCount[pkg] + ' đơn · ' + pct + '%</span></div>';
-    html += '<div style="height:8px;background:var(--bg);border-radius:100px;overflow:hidden"><div style="height:100%;width:' + pct + '%;background:#6D28D9;border-radius:100px"></div></div></div>';
-  });
-  html += '</div></div>';
-  return html;
-}
-
-// ── 3. SẢN PHẨM ──
-function renderProductsPage() {
-  let html = pageHeader('Sản phẩm', 'Điều chỉnh giá và cấu hình gói meeting, khoá học');
-  html += '<div class="card"><div class="card-header"><div class="card-header-left">Danh sách sản phẩm</div><span style="font-size:12px;color:var(--muted)">Bấm ✎ để điều chỉnh giá</span></div>';
-  html += '<table class="bookings-table"><thead><tr><th>TÊN</th><th>LOẠI</th><th>GIÁ</th><th>SỐ BUỔI</th><th>ÁP DỤNG TRÊN</th><th>TRẠNG THÁI</th></tr></thead><tbody>';
-  MOCK.products.forEach(function(p,i){
-    html += '<tr><td><b>' + p.name + '</b></td><td>' + p.type + '</td>';
-    html += '<td><button class="update-btn" onclick="editProductPrice(' + i + ')">' + fmtMoney(p.price) + ' ✎</button></td>';
-    html += '<td>' + p.sessions + ' buổi</td><td>' + p.advisors + '</td>';
-    html += '<td>' + (p.active ? '<span class="badge badge-confirmed">Đang bán</span>' : '<span class="badge badge-cancelled">Tạm ngưng</span>') + '</td></tr>';
-  });
-  html += '</tbody></table></div>';
-  return html;
-}
-
-function renderAdvisorNewForm() {
-  return pageHeader('Thêm Advisor mới','') +
-    '<div class="card"><div class="card-header"><div class="card-header-left">Thông tin Advisor mới</div></div>' +
-    '<div class="form-grid">' +
-    '<div><div class="form-label">Họ và tên *</div><input class="form-input" placeholder="Nguyễn Văn A"></div>' +
-    '<div><div class="form-label">Email *</div><input class="form-input" type="email" placeholder="email@gmail.com"></div>' +
-    '<div><div class="form-label">SĐT *</div><input class="form-input" placeholder="0901234567"></div>' +
-    '<div><div class="form-label">Chức danh *</div><input class="form-input" placeholder="Senior Marketing Manager"></div>' +
-    '<div><div class="form-label">Chuyên môn *</div><input class="form-input" placeholder="Marketing, Brand, Finance..."></div>' +
-    '<div><div class="form-label">Kinh nghiệm</div><input class="form-input" placeholder="5 năm"></div>' +
-    '<div class="full"><div class="form-label">Giới thiệu</div><textarea class="form-textarea" placeholder="Mô tả ngắn về advisor..."></textarea></div>' +
-    '</div>' +
-    '<div class="form-footer"><button class="submit-btn" onclick="toast(\'Đã thêm Advisor mới!\',\'success\')">Thêm Advisor</button></div>' +
-    '</div>';
-}
-
-function fmtDateStr(s) { const d = new Date(s + 'T00:00:00'); return DAYS_VI[d.getDay()] + ' ' + d.getDate() + '/' + (d.getMonth()+1); }
-
-function showMeetingDetail(i) {
-  const m = MOCK.meetings[i];
-  document.getElementById('modal-title').textContent = 'Chi tiết buổi meeting';
-  let html = '<div class="modal-field"><b>Loại:</b> ' + m.type + '</div>';
-  html += '<div class="modal-field"><b>Advisor:</b> ' + m.advisor + '</div>';
-  html += '<div class="modal-field"><b>Advisee:</b> ' + m.advisee + '</div>';
-  html += '<div class="modal-field"><b>Ngày giờ:</b> ' + fmtDateStr(m.date) + ' · ' + m.time + '</div>';
-  html += '<div class="modal-field"><b>Buổi thứ:</b> ' + m.session_no + '</div>';
-  html += '<div class="modal-field"><b>Link meeting:</b> <a href="' + m.meet_link + '" target="_blank">' + m.meet_link + '</a></div>';
-  html += '<div class="modal-field"><b>Đăng ký lúc:</b> ' + m.booked_at + '</div>';
-  if (m.changed_at) html += '<div class="modal-field"><b>Đổi lịch lúc:</b> ' + m.changed_at + '</div>';
-  if (m.question) html += '<div class="modal-field"><b>Câu hỏi Advisee:</b> ' + m.question + '</div>';
-  if (m.feedback_advisor) html += '<div class="modal-field"><b>Feedback Advisor:</b> ' + m.feedback_advisor + '</div>';
-  if (m.feedback_advisee) html += '<div class="modal-field"><b>Feedback Advisee:</b> ' + m.feedback_advisee + '</div>';
-  document.getElementById('modal-body').innerHTML = html;
-  document.getElementById('modal-actions').innerHTML = '<button class="login-btn" onclick="closeModal()" style="width:auto;padding:10px 24px">Đóng</button>';
-  document.getElementById('modal-overlay').classList.add('open');
-}
-
-function editProductPrice(i) {
-  const p = MOCK.products[i];
-  document.getElementById('modal-title').textContent = 'Điều chỉnh giá — ' + p.name;
-  document.getElementById('modal-body').innerHTML =
-    '<div class="modal-field"><div class="form-label">Giá mới (VNĐ)</div><input class="form-input" id="edit-price-input" type="number" value="' + p.price + '" style="margin-top:6px"></div>';
-  document.getElementById('modal-actions').innerHTML =
-    '<button class="btn-secondary" onclick="closeModal()" style="width:auto;padding:10px 20px">Huỷ</button>' +
-    '<button class="login-btn" style="width:auto;padding:10px 24px" onclick="saveProductPrice(' + i + ')">Lưu thay đổi</button>';
-  document.getElementById('modal-overlay').classList.add('open');
-}
-function saveProductPrice(i) {
-  const val = Number(document.getElementById('edit-price-input').value);
-  if (!val) { toast('Giá không hợp lệ', 'error'); return; }
-  MOCK.products[i].price = val;
-  toast('Đã cập nhật giá ' + MOCK.products[i].name, 'success');
-  closeModal();
-  navTo('lj-products');
-}
-
-
-// ════════════════════════════════════════════════════════════
-//  MODULE 2: ADVISOR
-// ════════════════════════════════════════════════════════════
-function renderAdvisorModule() {
-  let html = '<div class="card"><div class="card-header"><div class="card-header-left">Advisor đang hoạt động</div>';
-  html += '<button class="submit-btn" style="padding:8px 16px;font-size:13px" onclick="toast(\'Form thêm Advisor mới (demo)\',\'success\')">+ Thêm Advisor mới</button></div>';
-
-  const active = MOCK.advisors.filter(function(a){ return a.active; });
-  if (active.length === 0) {
-    html += '<div class="empty-state"><div class="icon">👤</div>Chưa có advisor nào đang hoạt động</div>';
-  } else {
-    html += '<div style="display:flex;gap:14px;overflow-x:auto;padding:18px 24px 24px">';
-    active.forEach(function(a){
-      html += '<div style="min-width:220px;border:1.5px solid var(--border);border-radius:14px;padding:18px;flex-shrink:0">';
-      html += '<div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">' + avatarCircle(a.name, 44) + '<div><div style="font-weight:700;font-size:14px">' + a.name + '</div><div style="font-size:12px;color:var(--muted)">' + a.title + '</div></div></div>';
-      html += '<div style="font-size:13px;color:var(--muted);margin-bottom:4px">Advisee đang meet: <b style="color:var(--text)">' + a.adviseeCount + '</b></div>';
-      html += '<div style="font-size:13px;color:var(--muted);margin-bottom:14px">Buổi hoàn thành: <b style="color:var(--text)">' + a.sessionsDone + '/' + a.sessionsTotal + '</b></div>';
-      html += '<button class="update-btn" style="width:100%" onclick="showAdvisorDetail(\'' + a.id + '\')">Xem chi tiết</button>';
-      html += '</div>';
-    });
-    html += '</div>';
-  }
-  html += '</div>';
-
-  const inactive = MOCK.advisors.filter(function(a){ return !a.active; });
-  if (inactive.length > 0) {
-    html += '<div class="card"><div class="card-header"><div class="card-header-left">Advisor không hoạt động</div></div>';
-    html += '<table class="bookings-table"><thead><tr><th>TÊN</th><th>CHỨC DANH</th><th></th></tr></thead><tbody>';
-    inactive.forEach(function(a){
-      html += '<tr><td>' + a.name + '</td><td>' + a.title + '</td><td><button class="update-btn" onclick="showAdvisorDetail(\'' + a.id + '\')">Chi tiết</button></td></tr>';
-    });
-    html += '</tbody></table></div>';
-  }
-
-  return html;
-}
-
-function showAdvisorDetail(id) {
-  const a = MOCK.advisors.find(function(x){ return x.id === id; });
-  if (!a) return;
-  document.getElementById('modal-title').textContent = a.name;
-  let html = '<div style="display:flex;align-items:center;gap:14px;margin-bottom:18px">' + avatarCircle(a.name,52) + '<div><div style="font-weight:700;font-size:16px">' + a.name + '</div><div style="font-size:13px;color:var(--muted)">' + a.title + '</div></div></div>';
-
-  html += '<div style="font-size:13px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin:18px 0 8px">Thông tin liên hệ</div>';
-  html += '<div class="modal-field"><b>Email:</b> ' + a.email + '</div>';
-  html += '<div class="modal-field"><b>SĐT:</b> ' + a.phone + '</div>';
-  html += '<div class="modal-field"><b>Liên hệ:</b> ' + a.contact + '</div>';
-
-  html += '<div style="font-size:13px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin:18px 0 8px">Thông tin public trên web</div>';
-  html += '<div class="modal-field"><b>Giới thiệu:</b> ' + a.bio + '</div>';
-  html += '<div class="modal-field"><b>Lời nhắn:</b> ' + a.message + '</div>';
-  if (a.feedbacks.length) {
-    html += '<div class="modal-field"><b>Feedback:</b><br>' + a.feedbacks.map(function(f){ return '"' + f.text + '" — ' + f.from; }).join('<br>') + '</div>';
-  }
-  html += '<div class="modal-field"><b>Sản phẩm:</b> ' + a.products.join(', ') + '</div>';
-
-  html += '<div style="font-size:13px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin:18px 0 8px">Lịch available</div>';
-  if (a.slots.length === 0) {
-    html += '<div class="modal-field" style="color:var(--muted)">Không có slot trống (trang đặt lịch đang tắt)</div>';
-  } else {
-    html += '<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px">' + a.slots.map(function(s){ return '<span class="badge badge-confirmed">' + s + '</span>'; }).join('') + '</div>';
-  }
-
-  html += '<div style="font-size:13px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin:18px 0 8px">Advisee đã meet</div>';
-  if (a.advisees.length === 0) {
-    html += '<div class="modal-field" style="color:var(--muted)">Chưa có advisee nào</div>';
-  } else {
-    a.advisees.forEach(function(ae){
-      html += '<div class="modal-field" style="display:flex;justify-content:space-between"><span>' + ae.name + ' · ' + ae.pkg + '</span><span style="font-weight:700">' + ae.progress + '</span></div>';
-    });
-  }
-
-  document.getElementById('modal-body').innerHTML = html;
-  document.getElementById('modal-actions').innerHTML = '<button class="login-btn" onclick="closeModal()" style="width:auto;padding:10px 24px">Đóng</button>';
-  document.getElementById('modal-overlay').classList.add('open');
-}
-
-// ════════════════════════════════════════════════════════════
-//  MODULE 3: ADVISEE
-// ════════════════════════════════════════════════════════════
-function renderAdviseeModule() {
-  let html = '<div class="card"><div class="card-header"><div class="card-header-left">Advisee đang hoạt động</div></div>';
-  if (MOCK.advisees.length === 0) {
-    html += '<div class="empty-state"><div class="icon">🙋</div>Chưa có advisee nào</div>';
-  } else {
-    html += '<table class="bookings-table"><thead><tr><th>ADVISEE</th><th>EMAIL / SĐT</th><th>GÓI</th><th>BUỔI HOÀN THÀNH</th><th></th></tr></thead><tbody>';
-    MOCK.advisees.forEach(function(ae){
-      html += '<tr><td><div style="display:flex;align-items:center;gap:10px">' + avatarCircle(ae.name,32) + '<b>' + ae.name + '</b></div></td>';
-      html += '<td><div style="font-size:13px">' + ae.email + '</div><div style="font-size:12px;color:var(--muted)">' + ae.phone + '</div></td>';
-      html += '<td>' + ae.pkg + '</td><td><b>' + ae.progress + '</b></td>';
-      html += '<td><button class="update-btn" onclick="showAdviseeDetail(\'' + ae.id + '\')">Chi tiết</button></td></tr>';
-    });
-    html += '</tbody></table>';
-  }
-  html += '</div>';
-  return html;
-}
-
-function showAdviseeDetail(id) {
-  const ae = MOCK.advisees.find(function(x){ return x.id === id; });
-  if (!ae) return;
-  document.getElementById('modal-title').textContent = ae.name;
-  let html = '<div style="display:flex;align-items:center;gap:14px;margin-bottom:18px">' + avatarCircle(ae.name,52) + '<div><div style="font-weight:700;font-size:16px">' + ae.name + '</div><div style="font-size:13px;color:var(--muted)">' + ae.email + '</div></div></div>';
-
-  html += '<div class="modal-field"><b>SĐT:</b> ' + ae.phone + '</div>';
-  html += '<div class="modal-field"><b>Liên hệ:</b> ' + ae.contact + '</div>';
-  html += '<div class="modal-field"><b>Gói meeting:</b> ' + ae.pkg + ' (' + ae.sessionsTotal + ' buổi)</div>';
-  html += '<div class="modal-field"><b>Giá trị thanh toán:</b> ' + fmtMoney(ae.paid) + '</div>';
-  html += '<div class="modal-field"><b>Thời gian đăng ký:</b> ' + ae.registeredAt + '</div>';
-  html += '<div class="modal-field"><b>Hạn dùng:</b> ' + ae.expiry + '</div>';
-  html += '<div class="modal-field"><b>Advisor:</b> ' + ae.advisor +
-    ' <button class="update-btn" style="margin-left:8px" onclick="toast(\'Mở form đổi Advisor (demo)\',\'success\')">Đổi Advisor</button></div>';
-
-  html += '<div style="font-size:13px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin:18px 0 8px">Các buổi meeting</div>';
-  ae.sessions.forEach(function(s){
-    const badge = s.status === 'Hoàn thành' ? '<span class="badge badge-completed">Hoàn thành</span>' : '<span class="badge badge-pending">Sắp tới</span>';
-    html += '<div class="modal-field" style="display:flex;justify-content:space-between"><span>Buổi ' + s.no + ' · ' + fmtDateStr(s.date) + '</span>' + badge + '</div>';
-  });
-
-  document.getElementById('modal-body').innerHTML = html;
-  document.getElementById('modal-actions').innerHTML = '<button class="login-btn" onclick="closeModal()" style="width:auto;padding:10px 24px">Đóng</button>';
-  document.getElementById('modal-overlay').classList.add('open');
-}
-
-// ════════════════════════════════════════════════════════════
-//  MODULE 4: KHOÁ HỌC
-// ════════════════════════════════════════════════════════════
-function renderCourseModule() {
-  let html = '<div class="card"><div class="card-header"><div class="card-header-left">Khoá học đang hoạt động</div>';
-  html += '<button class="submit-btn" style="padding:8px 16px;font-size:13px" onclick="toast(\'Form thêm khoá học mới (demo)\',\'success\')">+ Thêm khoá học</button></div>';
-
-  if (MOCK.courses.length === 0) {
-    html += '<div class="empty-state"><div class="icon">📚</div>Chưa có khoá học nào</div>';
-  } else {
-    html += '<table class="bookings-table"><thead><tr><th>TÊN LỚP</th><th>KHAI GIẢNG</th><th>HỌC VIÊN</th><th>BUỔI HOÀN THÀNH</th><th></th></tr></thead><tbody>';
-    MOCK.courses.forEach(function(c){
-      html += '<tr><td><b>' + c.name + '</b></td><td>' + fmtDateStr(c.startDate) + '</td>';
-      html += '<td>' + c.studentCount + ' học viên</td><td><b>' + c.sessionsDone + '/' + c.sessionsTotal + '</b></td>';
-      html += '<td><button class="update-btn" onclick="showCourseDetail(\'' + c.id + '\')">Chi tiết</button></td></tr>';
-    });
-    html += '</tbody></table>';
-  }
-  html += '</div>';
-  return html;
-}
-
-function showCourseDetail(id) {
-  const c = MOCK.courses.find(function(x){ return x.id === id; });
-  if (!c) return;
-  document.getElementById('modal-title').textContent = c.name;
-  let html = '<div class="modal-field"><b>Giảng viên:</b> ' + c.teacher + '</div>';
-  html += '<div class="modal-field"><b>Link học:</b> <a href="' + c.meetLink + '" target="_blank">' + c.meetLink + '</a></div>';
-  html += '<div class="modal-field"><b>Học viên:</b> ' + c.students.join(', ') + '</div>';
-
-  html += '<div style="font-size:13px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin:18px 0 8px">Lịch học</div>';
-  c.schedule.forEach(function(s){
-    html += '<div class="modal-field" style="display:flex;justify-content:space-between"><span>' + fmtDateStr(s.date) + '</span><span>' + s.topic + '</span></div>';
-  });
-
-  html += '<div style="font-size:13px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin:18px 0 8px">Tài liệu</div>';
-  if (c.materials.length === 0) {
-    html += '<div class="modal-field" style="color:var(--muted)">Chưa có tài liệu</div>';
-  } else {
-    c.materials.forEach(function(m){ html += '<div class="modal-field">📄 ' + m + '</div>'; });
-  }
-
-  document.getElementById('modal-body').innerHTML = html;
-  document.getElementById('modal-actions').innerHTML = '<button class="login-btn" onclick="closeModal()" style="width:auto;padding:10px 24px">Đóng</button>';
-  document.getElementById('modal-overlay').classList.add('open');
-}
-
-function renderAdvisee(tab) {
   const c = document.getElementById('main-content');
-  if (tab === 'my-bookings') c.innerHTML = renderMyBookings();
-  else c.innerHTML = renderNewBookingForm();
-}
+  c.innerHTML = ph('Doanh thu', 'Dữ liệu từ Google Sheet · Payment tab') + skel(4);
+  const payments = toObjects(dashData.payment||{});
+  const bookings = toObjects(dashData.bookings||{});
+  const pkg = dashData.pkgArr || [];
 
-// State lưu star rating đang hover/chọn cho từng buổi
-var adviseeStarState = {}; // key: sessionNo, value: { selected, hover }
+  // Tính tổng từ Payment đã confirmed
+  const confirmed = payments.filter(p => p.confirmed_at);
+  const total = confirmed.reduce((s, p) => s + Number(p.amount||0), 0);
 
-function renderMyBookings() {
-  // Tìm advisee hiện tại trong mock data
-  const ae = MOCK.advisees.find(function(x){ return x.name === currentUser.name || x.email === currentUser.email; });
+  // Group theo gói
+  const pkgCount = {};
+  bookings.forEach(b => { if (b.package_name) pkgCount[b.package_name] = (pkgCount[b.package_name]||0)+1; });
 
-  if (!ae) {
-    return '<div class="card"><div class="empty-state"><div class="icon">📭</div>Bạn chưa có booking nào.<br><small style="color:var(--muted)">Nếu vừa đăng ký, vui lòng chờ đội LinkaJob xác nhận.</small></div></div>';
+  let html = ph('Doanh thu', `Từ ${confirmed.length} giao dịch đã xác nhận`);
+
+  html += `<div class="stats-row" style="grid-template-columns:repeat(3,1fr);margin-bottom:20px">
+    <div class="stat-cell"><div class="stat-num">${fmtMoney(total)}</div><div class="stat-label">Tổng đã xác nhận</div></div>
+    <div class="stat-cell"><div class="stat-num">${confirmed.length}</div><div class="stat-label">Giao dịch</div></div>
+    <div class="stat-cell"><div class="stat-num">${bookings.filter(b=>b.status==='pending_payment').length}</div><div class="stat-label">Chờ xác nhận TT</div></div>
+  </div>`;
+
+  // Biểu đồ phân bổ gói
+  html += '<div class="card"><div class="card-header"><div class="card-header-left">Phân bổ gói đã bán</div></div>';
+  if (Object.keys(pkgCount).length === 0) {
+    html += '<div class="empty-state"><div class="icon">📊</div>Chưa có dữ liệu</div>';
+  } else {
+    const maxV = Math.max(...Object.values(pkgCount));
+    html += '<div class="bar-chart">';
+    Object.entries(pkgCount).forEach(([name, count]) => {
+      const h = Math.round(count/maxV*100);
+      html += `<div class="bar-wrap"><div class="bar-val">${count}</div><div class="bar" style="height:${h}px"></div><div class="bar-lbl">${name}</div></div>`;
+    });
+    html += '</div></div>';
   }
 
-  const pkg = PACKAGES[ae.pkg] || {};
+  // Bảng giao dịch gần nhất
+  html += '<div class="card"><div class="card-header"><div class="card-header-left">Giao dịch gần nhất</div></div>';
+  html += '<table class="data-table"><thead><tr><th>BOOKING ID</th><th>SỐ TIỀN</th><th>NỘI DUNG CK</th><th>XÁC NHẬN BỞI</th><th>NGÀY</th><th>TRẠNG THÁI</th></tr></thead><tbody>';
+  if (payments.length === 0) {
+    html += '<tr><td colspan="6"><div class="empty-state"><div class="icon">📭</div>Chưa có giao dịch nào</div></td></tr>';
+  } else {
+    payments.slice().reverse().slice(0,20).forEach(p => {
+      const confirmed = !!p.confirmed_at;
+      html += `<tr>
+        <td><code style="font-size:12px">${p.booking_id||'—'}</code></td>
+        <td><b>${fmtMoney(p.amount)}</b></td>
+        <td style="font-size:12px">${p.transfer_content||'—'}</td>
+        <td style="font-size:12px">${p.confirmed_by||'—'}</td>
+        <td style="font-size:12px">${fmtDateTime(p.confirmed_at||p.payment_id)}</td>
+        <td>${confirmed?statusBadge('confirmed'):statusBadge('pending_payment')}</td>
+      </tr>`;
+    });
+  }
+  html += '</tbody></table></div>';
+  c.innerHTML = html;
+}
+
+// ── BÁO CÁO VẬN HÀNH ──
+function renderReportPage() {
+  const c = document.getElementById('main-content');
+  const bookings = toObjects(dashData.bookings||{});
+  const sessions = toObjects(dashData.sessions||{});
+  const advisors = toObjects(dashData.advisors||{});
+
+  const confirmed = bookings.filter(b => b.status==='confirmed' || b.status==='completed');
+  const totalSessions = sessions.length;
+  const doneSessions = sessions.filter(s => s.status==='completed').length;
+
+  let html = ph('Báo cáo vận hành', 'Dữ liệu thật từ Google Sheet');
+
+  html += `<div class="stats-row" style="margin-bottom:20px">
+    <div class="stat-cell"><div class="stat-num">${confirmed.length}</div><div class="stat-label">Booking active</div></div>
+    <div class="stat-cell"><div class="stat-num">${doneSessions}/${totalSessions}</div><div class="stat-label">Sessions hoàn thành</div></div>
+    <div class="stat-cell"><div class="stat-num">${advisors.filter(a=>a.is_active!=false&&a.is_active!='FALSE').length}</div><div class="stat-label">Advisor đang hoạt động</div></div>
+  </div>`;
+
+  // Sessions theo advisor
+  const byAdvisor = {};
+  sessions.forEach(s => {
+    if (!s.advisor_name) return;
+    if (!byAdvisor[s.advisor_name]) byAdvisor[s.advisor_name] = { done:0, total:0 };
+    byAdvisor[s.advisor_name].total++;
+    if (s.status==='completed') byAdvisor[s.advisor_name].done++;
+  });
+
+  html += '<div class="card"><div class="card-header"><div class="card-header-left">Tiến độ sessions theo Advisor</div></div><div style="padding:16px 28px 24px;display:flex;flex-direction:column;gap:14px">';
+  if (Object.keys(byAdvisor).length === 0) {
+    html += '<div style="color:var(--muted);font-size:13px">Chưa có dữ liệu sessions</div>';
+  }
+  Object.entries(byAdvisor).forEach(([name, v]) => {
+    const pct = v.total ? Math.round(v.done/v.total*100) : 0;
+    html += `<div><div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:6px"><span><b>${name}</b></span><span style="color:var(--muted)">${v.done}/${v.total} buổi</span></div>
+      <div style="height:8px;background:var(--bg);border-radius:100px;overflow:hidden"><div style="height:100%;width:${pct}%;background:var(--brand);border-radius:100px"></div></div></div>`;
+  });
+  html += '</div></div>';
+
+  // Bookings theo gói
+  const byPkg = {};
+  bookings.forEach(b => { if (b.package_name) byPkg[b.package_name] = (byPkg[b.package_name]||0)+1; });
+  html += '<div class="card"><div class="card-header"><div class="card-header-left">Booking theo gói</div></div><div style="padding:16px 28px 24px;display:flex;flex-direction:column;gap:12px">';
+  const total = bookings.length || 1;
+  Object.entries(byPkg).forEach(([pkg, count]) => {
+    const pct = Math.round(count/total*100);
+    html += `<div><div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:6px"><b>${pkg}</b><span style="color:var(--muted)">${count} đơn · ${pct}%</span></div>
+      <div style="height:8px;background:var(--bg);border-radius:100px;overflow:hidden"><div style="height:100%;width:${pct}%;background:#6D28D9;border-radius:100px"></div></div></div>`;
+  });
+  html += '</div></div>';
+  c.innerHTML = html;
+}
+
+// ── LỊCH MEETING (calendar) ──
+let calPage = 'lj-calendar';
+function renderCalendarPage() {
+  const c = document.getElementById('main-content');
+  const slots = toObjects(dashData.availableSlots||{});
+  const crs = toObjects(dashData.consultRequests||{});
+  const slotByDate = {};
+  slots.forEach(s => {
+    const d = String(s.date||'').slice(0,10);
+    if (!slotByDate[d]) slotByDate[d] = 0;
+    if (s.status==='free') slotByDate[d]++;
+  });
+  const crByDate = {};
+  crs.forEach(r => {
+    const d = String(r.slot_date||'').slice(0,10);
+    if (!d) return;
+    if (!crByDate[d]) crByDate[d] = 0;
+    crByDate[d]++;
+  });
+
+  c.innerHTML = ph('Lịch meeting & slot tư vấn') + renderCalGrid({
+    title: 'Tổng quan theo tháng',
+    monthOffset: calMonthOffset,
+    onCellClick: 'openCalDayDetail',
+    countFn: ds => ({ a: slotByDate[ds]||0, b: crByDate[ds]||0 }),
+    prevFn: 'calPrev', nextFn: 'calNext', todayFn: 'calToday',
+    refreshFn: 'renderCalendarPage',
+  });
+}
+window.calPrev = () => { calMonthOffset--; renderCalendarPage(); };
+window.calNext = () => { calMonthOffset++; renderCalendarPage(); };
+window.calToday = () => { calMonthOffset=0; renderCalendarPage(); };
+window.openCalDayDetail = (ds) => {
+  const slots = toObjects(dashData.availableSlots||{}).filter(s => String(s.date||'').slice(0,10)===ds);
+  const crs = toObjects(dashData.consultRequests||{}).filter(r => String(r.slot_date||'').slice(0,10)===ds);
+  const d = new Date(ds+'T00:00:00');
+  document.getElementById('modal-title').textContent = `${DAYS_VI[d.getDay()]} ${d.getDate()}/${d.getMonth()+1}/${d.getFullYear()}`;
   let html = '';
-
-  // ── Booking card ──
-  html += '<div class="aee-booking-card">';
-  html += '<div class="aee-advisor-row">';
-  html += avatarCircle(ae.advisor, 48);
-  html += '<div class="aee-advisor-info"><div class="aee-advisor-name">' + ae.advisor + '</div><div class="aee-advisor-title">' + (ae.advisorTitle||'Advisor · LinkaJob') + '</div></div>';
-  html += '</div>';
-  html += '<div class="aee-pkg-row">';
-  html += '<div><div class="aee-pkg-name">Gói ' + ae.pkg + '</div><div class="aee-pkg-meta">' + (pkg.sessions||ae.sessionsTotal) + ' buổi · 45–60 phút/buổi · ' + (ae.bookingId||'') + '</div></div>';
-  html += '<div class="aee-progress-badge">Đã đặt ' + ae.sessionsDone + '/' + ae.sessionsTotal + '</div>';
-  html += '</div>';
-
-  // ── Expiry banner ──
-  var expiryDate = new Date(ae.expiry + 'T00:00:00');
-  var today = new Date(); today.setHours(0,0,0,0);
-  var daysLeft = Math.ceil((expiryDate - today) / 86400000);
-  var expiryLabel = expiryDate.getDate() + '/' + (expiryDate.getMonth()+1) + '/' + expiryDate.getFullYear();
-  var expiryColor = daysLeft <= 7 ? '#C2410C' : '#92400E';
-  html += '<div style="display:flex;align-items:center;gap:10px;background:#FFFBEB;border:1.5px solid #FDE68A;border-radius:10px;padding:12px 16px;margin-top:16px;font-size:13px;color:#92400E">';
-  html += '<span style="font-size:16px">⏱</span>';
-  html += '<span>Gói hết hạn vào <strong style="color:' + expiryColor + '">' + expiryLabel + '</strong> — còn ' + daysLeft + ' ngày</span>';
-  html += '</div>';
-
-  // ── 2 action buttons ──
-  html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px">';
-  html += '<div style="border:1.5px solid var(--border);border-radius:12px;padding:16px 18px;cursor:pointer;transition:border-color .15s" onmouseover="this.style.borderColor=\'var(--brand)\'" onmouseout="this.style.borderColor=\'var(--border)\'" onclick="openExtendModal(\'' + ae.id + '\')">';
-  html += '<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px"><span style="font-size:18px">📅</span><div style="font-size:14px;font-weight:700;color:var(--text)">Gia hạn thời gian</div></div>';
-  html += '<div style="font-size:12.5px;color:var(--muted);margin-bottom:8px">Cộng thêm 1 tháng sử dụng</div>';
-  html += '<div style="font-size:13px;font-weight:700;color:var(--brand)">100.000đ</div>';
-  html += '</div>';
-  html += '<div style="border:1.5px solid var(--border);border-radius:12px;padding:16px 18px;cursor:pointer;transition:border-color .15s" onmouseover="this.style.borderColor=\'var(--brand)\'" onmouseout="this.style.borderColor=\'var(--border)\'" onclick="openSwitchAdvisorModal(\'' + ae.id + '\')">';
-  html += '<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px"><span style="font-size:18px">🔄</span><div style="font-size:14px;font-weight:700;color:var(--text)">Meet advisor khác</div></div>';
-  html += '<div style="font-size:12.5px;color:var(--muted);margin-bottom:8px">Đổi sang advisor mới, 1 lần</div>';
-  html += '<div style="font-size:13px;font-weight:700;color:var(--brand)">100.000đ</div>';
-  html += '</div>';
-  html += '</div>';
-
-  html += '</div>'; // end aee-booking-card
-
-  // ── Lộ trình buổi ──
-  html += '<div class="aee-roadmap">';
-  html += '<div class="aee-roadmap-header">';
-  html += '<div class="aee-roadmap-title">☐ Lộ trình buổi</div>';
-  html += '<div class="aee-roadmap-sub">Hoàn thành từng buổi (bao gồm feedback) để mở khoá buổi tiếp theo</div>';
-  html += '</div>';
-
-  ae.sessions.forEach(function(s) {
-    var isFeedbackOpen = (s.status === 'feedback');
-    html += '<div class="aee-session' + (s.status === 'locked' ? ' locked' : '') + '">';
-
-    // Row chính
-    html += '<div class="aee-session-row">';
-
-    // Indicator
-    if (s.status === 'done') {
-      html += '<div class="aee-session-indicator aee-indicator-done">✓</div>';
-    } else if (s.status === 'feedback') {
-      html += '<div class="aee-session-indicator aee-indicator-feedback">' + s.no + '</div>';
-    } else if (s.status === 'upcoming') {
-      html += '<div class="aee-session-indicator aee-indicator-upcoming">→</div>';
-    } else {
-      html += '<div class="aee-session-indicator aee-indicator-locked">☐</div>';
-    }
-
-    // Label
-    html += '<div class="aee-session-label">';
-    html += '<div class="aee-session-name">Buổi ' + s.no + '</div>';
-    if (s.date) {
-      var d = new Date(s.date + 'T00:00:00');
-      var dow = ['CN','T2','T3','T4','T5','T6','T7'][d.getDay()];
-      html += '<div class="aee-session-time">' + dow + ', ' + d.getDate() + '/' + (d.getMonth()+1) + '/' + d.getFullYear() + ' · ' + s.timeStart + '–' + s.timeEnd + '</div>';
-    } else {
-      html += '<div class="aee-session-time" style="color:var(--muted)">Chưa chọn lịch</div>';
-    }
-    html += '</div>';
-
-    // Badge
-    if (s.status === 'done') {
-      html += '<span class="aee-session-badge-done">Hoàn thành</span>';
-    } else if (s.status === 'feedback') {
-      html += '<span class="aee-session-badge-feedback">Feedback sau meeting <span>☐</span></span>';
-    } else if (s.status === 'upcoming') {
-      html += '<span class="aee-session-badge-upcoming">Sắp tới</span>';
-      if (s.meetLink) html += '</div><div style="padding:0 20px 14px 66px"><a class="aee-meet-link" href="' + s.meetLink + '" target="_blank">🎥 Vào phòng Meet</a>';
-    } else {
-      html += '<span class="aee-session-badge-locked">Đã khoá</span>';
-    }
-
-    html += '</div>'; // end session-row
-
-    // Lock reason
-    if (s.status === 'locked' && s.lockedReason) {
-      html += '<div class="aee-lock-reason">☐ ' + s.lockedReason + '</div>';
-    }
-
-    // Feedback panel (cho buổi cần feedback)
-    if (s.status === 'feedback') {
-      if (!adviseeStarState[s.no]) adviseeStarState[s.no] = { selected: 0, hover: 0 };
-      var st = adviseeStarState[s.no];
-
-      html += '<div class="aee-feedback-panel">';
-      html += '<div class="aee-feedback-alert"><span>☐</span><div><strong>Buổi ' + s.no + ' đã kết thúc.</strong> Hoàn thành feedback để mở khoá buổi tiếp theo.</div></div>';
-
-      html += '<div class="aee-feedback-section-label">Đánh giá chất lượng buổi tư vấn</div>';
-      html += '<div class="aee-stars" id="stars-' + s.no + '">';
-      for (var star = 1; star <= 5; star++) {
-        var isActive = star <= (st.hover || st.selected);
-        html += '<span class="aee-star' + (isActive?' active':'') + '" ' +
-          'onmouseover="aeeHoverStar(' + s.no + ',' + star + ')" ' +
-          'onmouseout="aeeHoverStar(' + s.no + ',0)" ' +
-          'onclick="aeeSelectStar(' + s.no + ',' + star + ')">★</span>';
-      }
-      html += '</div>';
-
-      html += '<div class="aee-feedback-section-label">Ghi chú & góp ý cho Advisor</div>';
-      html += '<div style="font-size:12px;color:var(--muted);margin-bottom:8px">Nội dung feedback giúp advisor cải thiện cho các buổi sau. Sẽ được lưu lại để bạn review sau.</div>';
-      html += '<textarea class="aee-feedback-textarea" id="fbtext-' + s.no + '" placeholder="VD: Anh giải thích rất rõ, em muốn buổi sau thực hành nhiều hơn..."></textarea>';
-
-      html += '<button class="aee-feedback-btn" id="fbbtn-' + s.no + '" onclick="submitAdviseeFeedback(' + s.no + ',' + JSON.stringify(s).replace(/</g,'&lt;') + ')">Gửi feedback và mở khoá buổi ' + (s.no+1) + '</button>';
-      html += '</div>'; // end feedback-panel
-    }
-
-    html += '</div>'; // end aee-session
-  });
-
-  html += '</div>'; // end roadmap
-  return html;
-}
-
-function aeeHoverStar(sessionNo, val) {
-  if (!adviseeStarState[sessionNo]) adviseeStarState[sessionNo] = { selected:0, hover:0 };
-  adviseeStarState[sessionNo].hover = val;
-  refreshStars(sessionNo);
-}
-
-function aeeSelectStar(sessionNo, val) {
-  if (!adviseeStarState[sessionNo]) adviseeStarState[sessionNo] = { selected:0, hover:0 };
-  adviseeStarState[sessionNo].selected = val;
-  refreshStars(sessionNo);
-  var btn = document.getElementById('fbbtn-' + sessionNo);
-  if (btn) btn.disabled = false;
-}
-
-function refreshStars(sessionNo) {
-  var st = adviseeStarState[sessionNo];
-  var container = document.getElementById('stars-' + sessionNo);
-  if (!container) return;
-  var stars = container.querySelectorAll('.aee-star');
-  stars.forEach(function(el, i) {
-    el.classList.toggle('active', i < (st.hover || st.selected));
-  });
-}
-
-function submitAdviseeFeedback(sessionNo, session) {
-  var rating = (adviseeStarState[sessionNo]||{}).selected || 0;
-  var text = (document.getElementById('fbtext-' + sessionNo)||{}).value || '';
-  var btn = document.getElementById('fbbtn-' + sessionNo);
-
-  if (!rating) { toast('Vui lòng chọn số sao trước khi gửi', 'error'); return; }
-
-  if (btn) { btn.innerHTML = '<span class="spinner"></span> Đang gửi...'; btn.disabled = true; }
-
-  // Lưu vào mock data và cập nhật trạng thái buổi
-  var ae = MOCK.advisees.find(function(x){ return x.name === currentUser.name; });
-  if (ae) {
-    var s = ae.sessions.find(function(x){ return x.no === sessionNo; });
-    if (s) {
-      s.status = 'done';
-      s.feedback = { rating: rating, text: text };
-      ae.sessionsDone = Math.min(ae.sessionsDone + 1, ae.sessionsTotal);
-    }
-    // Mở khoá buổi tiếp theo
-    var next = ae.sessions.find(function(x){ return x.no === sessionNo + 1 && x.status === 'locked'; });
-    if (next) next.status = 'upcoming';
+  if (slots.length) {
+    html += `<div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">Slots trống</div>`;
+    slots.forEach(s => html += `<div style="display:flex;justify-content:space-between;font-size:13px;padding:6px 0;border-bottom:1px solid var(--border)"><span>${s.time_start} – ${s.time_end}</span>${statusBadge(s.status)}</div>`);
   }
-
-  setTimeout(function() {
-    toast('Đã gửi feedback buổi ' + sessionNo + '! Buổi ' + (sessionNo+1) + ' đã mở khoá 🎉', 'success');
-    adviseeStarState[sessionNo] = { selected:0, hover:0 };
-    renderAdvisee('my-bookings');
-    document.getElementById('main-content').innerHTML = renderMyBookings();
-  }, 800);
-}
-
-function submitBooking() {
-  const btn = document.getElementById('submit-booking-btn');
-  const msg = document.getElementById('submit-msg');
-  const data = {
-    advisee_name: v('f-advisee-name'), advisee_phone: v('f-advisee-phone'),
-    advisee_email: v('f-advisee-email'), advisee_year: v('f-advisee-year'),
-    advisee_industry: v('f-advisee-industry'), advisee_goal: v('f-goal'),
-    advisor_name: v('f-advisor-name'), advisor_email: v('f-advisor-email'),
-    package_name: document.getElementById('f-package').value
-  };
-  if (!data.advisee_name || !data.advisee_email || !data.advisor_name) { toast('Điền đầy đủ các trường bắt buộc (*)', 'error'); return; }
-  btn.innerHTML = '<span class="spinner"></span> Đang gửi...'; btn.disabled = true;
-  apiPost(data).then(function(res){
-    if (res && res.success) {
-      toast('Booking ' + res.booking_id + ' đã tạo!', 'success');
-      msg.textContent = 'ID: ' + res.booking_id;
-      msg.style.color = 'var(--green)';
-    } else {
-      toast('Lỗi: ' + (res && res.error), 'error');
-      msg.textContent = res && res.error;
-      msg.style.color = 'var(--brand)';
-    }
-    btn.innerHTML = 'Tạo Booking &amp; Gửi Email'; btn.disabled = false;
-  }).catch(function(e){
-    toast('Lỗi: ' + e.message, 'error');
-    msg.textContent = e.message; msg.style.color = 'var(--brand)';
-    btn.innerHTML = 'Tạo Booking &amp; Gửi Email'; btn.disabled = false;
-  });
-}
-
-function confirmBooking(id) {
-  apiPost({ action: 'updateStatus', booking_id: id, status: 'confirmed' }).then(function(res){
-    if (res && res.success) { toast('Đã xác nhận! Email & Meet link đã gửi.', 'success'); loadDashboard('Staff','all-bookings'); }
-    else toast('Vào Sheet, cột Status, đổi thành confirmed.', 'error');
-  }).catch(function(){ toast('Vào Sheet, cột Status, đổi thành confirmed.', 'error'); });
-}
-
-function markComplete(id) {
-  apiPost({ action: 'updateStatus', booking_id: id, status: 'completed' }).then(function(res){
-    if (res && res.success) { toast('Đã đánh dấu hoàn thành!', 'success'); loadDashboard('Advisor','booked'); }
-    else toast('Vào Sheet, cột Status, đổi thành completed.', 'error');
-  }).catch(function(){ toast('Vào Sheet, cột Status, đổi thành completed.', 'error'); });
-}
-
-function toggleSlot(btn, key) {
-  if (selectedSlots.has(key)) { selectedSlots.delete(key); btn.classList.remove('selected'); }
-  else { selectedSlots.add(key); btn.classList.add('selected'); }
-  document.getElementById('sel-count').innerHTML = 'Đã chọn <span>' + selectedSlots.size + '</span> slot';
-  document.getElementById('slot-send-btn').textContent = 'Gửi lịch trống (' + selectedSlots.size + ' slot)';
-}
-
-function sendSlots() {
-  if (selectedSlots.size === 0) { toast('Chưa chọn giờ nào!', 'error'); return; }
-  const btn = document.getElementById('day-send-btn');
-  if (btn) { btn.innerHTML = '<span class="spinner"></span> Đang gửi...'; btn.disabled = true; }
-  apiPost({ action: 'addSlots', advisor: currentUser.name, advisor_email: currentUser.email, slots: Array.from(selectedSlots) }).then(function(res){
-    if (res && res.success) {
-      toast('Đã gửi ' + selectedSlots.size + ' slot!', 'success');
-      selectedSlots.clear();
-      closeModal();
-      loadDashboard('Advisor','schedule');
-    } else {
-      toast('Lỗi: ' + (res && res.error), 'error');
-      if (btn) { btn.innerHTML = 'Gửi lịch trống đã chọn'; btn.disabled = false; }
-    }
-  }).catch(function(e){
-    toast('Lỗi: ' + e.message, 'error');
-    if (btn) { btn.innerHTML = 'Gửi lịch trống đã chọn'; btn.disabled = false; }
-  });
-}
-
-function changeWeek(dir) { weekOffset += dir; loadDashboard('Advisor','schedule'); }
-
-function showDetail(b) {
-  document.getElementById('modal-title').textContent = 'Chi tiết Booking';
-  let html = '<div class="modal-field"><b>Booking ID:</b> ' + (b.booking_id||'—') + '</div>';
-  html += '<div class="modal-field"><b>Advisee:</b> ' + (b.advisee_name||'—') + ' · ' + (b.advisee_email||'') + '</div>';
-  html += '<div class="modal-field"><b>Advisor:</b> ' + (b.advisor_name||'—') + '</div>';
-  html += '<div class="modal-field"><b>Gói:</b> ' + (b.package_name||'—') + ' · ' + (b.sessions_total||0) + ' buổi</div>';
-  html += '<div class="modal-field"><b>Đã dùng:</b> ' + (b.sessions_used||0) + '/' + (b.sessions_total||0) + '</div>';
-  html += '<div class="modal-field"><b>Trạng thái:</b> ' + statusBadge(b.status) + '</div>';
-  if (b.meet_link) html += '<div class="modal-field"><b>Meet:</b> <a href="' + b.meet_link + '" target="_blank">' + b.meet_link + '</a></div>';
-  if (b.notes) html += '<div class="modal-field"><b>Ghi chú:</b> ' + b.notes + '</div>';
+  if (crs.length) {
+    html += `<div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin:16px 0 8px">Yêu cầu tư vấn ngày này</div>`;
+    crs.forEach(r => html += `<div style="font-size:13px;padding:6px 0;border-bottom:1px solid var(--border)"><b>${r.advisee_name}</b> · ${r.slot_time||'—'} · ${statusBadge(r.status)}</div>`);
+  }
+  if (!slots.length && !crs.length) html = '<div class="empty-state" style="padding:24px 0"><div class="icon">📭</div>Không có gì ngày này</div>';
   document.getElementById('modal-body').innerHTML = html;
-  document.getElementById('modal-actions').innerHTML = '<button class="login-btn" onclick="closeModal()" style="width:auto;padding:10px 24px">Đóng</button>';
+  document.getElementById('modal-actions').innerHTML = '<button class="btn btn-primary" onclick="closeModal()">Đóng</button>';
   document.getElementById('modal-overlay').classList.add('open');
-}
-function closeModal() { document.getElementById('modal-overlay').classList.remove('open'); }
-document.getElementById('modal-overlay').addEventListener('click', function(e){ if (e.target.id === 'modal-overlay') closeModal(); });
+};
 
-const AV_COLORS = [['#D0E8FF','#2475B0'],['#FFD6D0','#C0392B'],['#D0F0E8','#1A7A5E'],['#EDE9FE','#6D28D9'],['#FEF3C7','#92400E'],['#FCE7F3','#9D174D']];
-const colorCache = {};
-function avatarCircle(name, size) {
-  size = size || 38;
-  if (!name) name = '?';
-  if (!colorCache[name]) colorCache[name] = AV_COLORS[name.charCodeAt(0) % AV_COLORS.length];
-  const c = colorCache[name];
-  const ini = name.split(' ').filter(Boolean).map(function(w){ return w[0]; }).join('').slice(0,2).toUpperCase();
-  return '<div class="av-circle" style="width:' + size + 'px;height:' + size + 'px;background:' + c[0] + ';color:' + c[1] + ';font-size:' + (size*0.33) + 'px;flex-shrink:0">' + ini + '</div>';
-}
+// ═══════════════════════════════════════════════════
+//  CONSULT REQUESTS (Tư vấn miễn phí)
+// ═══════════════════════════════════════════════════
+function renderCRList() {
+  const c = document.getElementById('main-content');
+  const crs = toObjects(dashData.consultRequests||{});
+  const filtered = crFilter==='all' ? crs : crs.filter(r => r.status===crFilter);
 
-function statusBadge(s) {
-  const map = {pending_payment:'badge-pending',confirmed:'badge-confirmed',completed:'badge-completed',cancelled:'badge-cancelled'};
-  const lbl = {pending_payment:'Chờ thanh toán',confirmed:'Đã xác nhận',completed:'Hoàn thành',cancelled:'Đã hủy'};
-  return '<span class="badge ' + (map[s]||'badge-pending') + '">' + (lbl[s]||s||'—') + '</span>';
-}
-function statusLabel(s) { return {pending_payment:'Chờ thanh toán',confirmed:'Đã xác nhận',completed:'Hoàn thành',cancelled:'Đã hủy'}[s] || s; }
+  const counts = { all:crs.length, new:crs.filter(r=>r.status==='new').length, contacted:crs.filter(r=>r.status==='contacted').length, scheduled:crs.filter(r=>r.status==='scheduled').length, done:crs.filter(r=>r.status==='done').length };
 
-function sessionItemHTML(b) {
-  let html = '<div class="session-item">' + avatarCircle(b.advisee_name) + '<div class="session-info"><div class="session-name">' + b.advisee_name + '</div><div class="session-meta">' + (b.package_name||'') + ' · Buổi ' + (b.sessions_used||0) + '/' + (b.sessions_total||0) + '</div></div>';
-  html += '<div class="session-time"><strong>' + (b.session_date?fmtDate(b.session_date):'—') + '</strong>' + (b.session_time||'') + '</div>';
-  html += '<button class="detail-btn" onclick="showDetail(' + esc(b) + ')">Chi tiết</button>';
-  if (b.meet_link) html += '<a href="' + b.meet_link + '" target="_blank" class="detail-btn">Meet</a>';
-  html += '</div>';
-  return html;
-}
+  let html = ph('Yêu cầu đăng ký tư vấn', 'Từ widget "Đăng ký tư vấn" trên website');
+  html += `<div class="card">
+    <div class="card-header">
+      <div class="card-header-left">Danh sách yêu cầu</div>
+      <button class="refresh-btn" onclick="refreshCR()">↻ Làm mới</button>
+    </div>
+    <div class="filter-row">
+      <button class="filter-chip ${crFilter==='all'?'on':''}" onclick="setCRFilter('all')">Tất cả (${counts.all})</button>
+      <button class="filter-chip ${crFilter==='new'?'on':''}" onclick="setCRFilter('new')">🔵 Mới (${counts.new})</button>
+      <button class="filter-chip ${crFilter==='contacted'?'on':''}" onclick="setCRFilter('contacted')">📞 Đã liên hệ (${counts.contacted})</button>
+      <button class="filter-chip ${crFilter==='scheduled'?'on':''}" onclick="setCRFilter('scheduled')">📅 Đã xếp lịch (${counts.scheduled})</button>
+      <button class="filter-chip ${crFilter==='done'?'on':''}" onclick="setCRFilter('done')">✅ Hoàn tất (${counts.done})</button>
+    </div>`;
 
-function skeletonRows(n) {
-  let s = '<div class="card">';
-  for (let i=0;i<n;i++) {
-    s += '<div class="skel-row"><div class="skeleton" style="width:38px;height:38px;border-radius:50%;flex-shrink:0"></div><div style="flex:1"><div class="skeleton" style="height:14px;width:55%;margin-bottom:8px;border-radius:4px"></div><div class="skeleton" style="height:12px;width:38%;border-radius:4px"></div></div></div>';
+  if (filtered.length === 0) {
+    html += '<div class="empty-state"><div class="icon">📭</div>Không có yêu cầu nào</div>';
+  } else {
+    filtered.slice().reverse().forEach((r, idx) => {
+      const ri = crs.indexOf(r); // real index in full list
+      html += `<div class="cr-card">
+        ${av(r.advisee_name, 40)}
+        <div class="cr-body">
+          <div class="cr-name">${r.advisee_name||'—'}</div>
+          <div class="cr-meta">📱 ${r.advisee_phone||'—'} · Quan tâm: <b>${r.service_interest||'—'}</b> · ${fmtDateTime(r.created_at)}</div>
+          ${r.question ? `<div class="cr-question">"${r.question}"</div>` : ''}
+          ${r.slot_date ? `<div class="cr-slot">📅 ${r.slot_date} · ${r.slot_time||''}</div>` : ''}
+        </div>
+        <div class="cr-actions">
+          ${statusBadge(r.status)}
+          <button class="btn btn-sm btn-ghost" onclick="openCRDetail(${ri})">Chi tiết</button>
+        </div>
+      </div>`;
+    });
   }
-  s += '</div>';
-  return s;
+  html += '</div>';
+  c.innerHTML = html;
 }
 
-function getMondayOfWeek(date, offset) {
-  offset = offset || 0;
-  const d = new Date(date);
-  const day = d.getDay();
-  d.setDate(d.getDate() - day + (day===0?-6:1) + offset*7);
-  d.setHours(0,0,0,0);
-  return d;
-}
-function slotKey(date, time) { return date.getFullYear() + '-' + pad(date.getMonth()+1) + '-' + pad(date.getDate()) + '_' + time; }
-function slotKeyFromSheetRow(s) {
-  // Sheet that tra ve date dang "2026-07-01" va time_start dang "19:00"
-  if (!s.date || !s.time_start) return '';
-  var d = String(s.date).slice(0,10); // phong khi date la ISO datetime
-  return d + '_' + s.time_start;
-}
-function fmtDate(d) { if (!d) return '—'; const dt = new Date(d); return DAYS_VI[dt.getDay()] + ' ' + dt.getDate() + '/' + (dt.getMonth()+1) + ' · ' + pad(dt.getHours()) + ':' + pad(dt.getMinutes()); }
-function fmtShort(d) { return d.getDate() + '/' + (d.getMonth()+1); }
-function pad(n) { return String(n).padStart(2,'0'); }
-function v(id) { const el = document.getElementById(id); return el ? el.value.trim() : ''; }
-function esc(obj) { return JSON.stringify(obj).replace(/"/g, '&quot;'); }
-function mkInitials(name) { return name.split(' ').filter(Boolean).map(function(w){ return w[0]; }).join('').slice(0,2).toUpperCase(); }
+window.setCRFilter = (f) => { crFilter=f; renderCRList(); };
+window.refreshCR = () => { loadDashData().then(renderCRList); };
 
-document.getElementById('login-password').addEventListener('keydown', function(e){ if (e.key === 'Enter') doLogin(); });
+window.openCRDetail = (idx) => {
+  const crs = toObjects(dashData.consultRequests||{});
+  const r = crs[idx];
+  if (!r) return;
+  document.getElementById('modal-title').textContent = r.advisee_name || 'Chi tiết yêu cầu';
+  let html = `
+    <div class="modal-field"><b>Mã yêu cầu:</b> <code>${r.request_id||'—'}</code></div>
+    <div class="modal-field"><b>Họ tên:</b> ${r.advisee_name||'—'}</div>
+    <div class="modal-field"><b>SĐT (Zalo):</b> <a href="https://zalo.me/${(r.advisee_phone||'').replace(/\D/g,'')}" target="_blank">${r.advisee_phone||'—'}</a></div>
+    <div class="modal-field"><b>Dịch vụ:</b> ${r.service_interest||'—'}</div>
+    <div class="modal-field"><b>Câu hỏi:</b> ${r.question||'Không có'}</div>
+    <div class="modal-field"><b>Slot đã chọn:</b> ${r.slot_date||'—'} ${r.slot_time||''}</div>
+    <div class="modal-field"><b>Trạng thái:</b> ${statusBadge(r.status)}</div>
+    <div class="modal-field"><b>Ghi chú:</b> <span id="cr-note-display">${r.notes||'—'}</span></div>
+    <div style="margin-top:14px"><div class="form-label">Đổi trạng thái</div>
+      <select class="form-select" id="cr-status-sel" style="margin-top:6px">
+        <option value="new" ${r.status==='new'?'selected':''}>Mới</option>
+        <option value="contacted" ${r.status==='contacted'?'selected':''}>Đã liên hệ</option>
+        <option value="scheduled" ${r.status==='scheduled'?'selected':''}>Đã xếp lịch</option>
+        <option value="done" ${r.status==='done'?'selected':''}>Hoàn tất</option>
+      </select>
+    </div>
+    <div style="margin-top:10px"><div class="form-label">Ghi chú nội bộ</div>
+      <textarea class="form-textarea" id="cr-note-inp" style="margin-top:6px" placeholder="Ghi chú cho đội...">${r.notes||''}</textarea>
+    </div>`;
+  document.getElementById('modal-body').innerHTML = html;
+  document.getElementById('modal-actions').innerHTML = `
+    <button class="btn btn-ghost" onclick="closeModal()">Đóng</button>
+    <button class="btn btn-primary" id="cr-save-btn" onclick="saveCRStatus('${r.request_id}', ${idx})">Lưu thay đổi</button>`;
+  document.getElementById('modal-overlay').classList.add('open');
+};
+
+window.saveCRStatus = async (requestId, idx) => {
+  const newStatus = document.getElementById('cr-status-sel').value;
+  const btn = document.getElementById('cr-save-btn');
+  btn.innerHTML = '<span class="spinner"></span>'; btn.disabled = true;
+  try {
+    const res = await apiPost({ type:'admin_action', action:'update_status', sheet_name:'ConsultRequests', row_id:requestId, new_status:newStatus });
+    if (res.success) {
+      // Update local cache
+      const crs = toObjects(dashData.consultRequests||{});
+      if (crs[idx]) crs[idx].status = newStatus;
+      toast('Đã cập nhật trạng thái', 'success');
+      closeModal();
+      renderCRList();
+      updateCRBadge();
+    } else throw new Error(res.error);
+  } catch(e) {
+    toast('Lỗi: ' + e.message, 'error');
+    btn.innerHTML = 'Lưu thay đổi'; btn.disabled = false;
+  }
+};
+
+// ── LỊCH TRỐNG SALE ──
+function renderCRSlots() {
+  const c = document.getElementById('main-content');
+  const slots = toObjects(dashData.availableSlots||{});
+
+  // Group by date
+  const byDate = {};
+  slots.forEach(s => {
+    const d = String(s.date||'').slice(0,10);
+    if (!byDate[d]) byDate[d] = [];
+    byDate[d].push(s);
+  });
+
+  let html = ph('Lịch trống tư vấn (Sale)', 'Slot này hiện trên widget "Đăng ký tư vấn" cho khách chọn');
+
+  html += `<div class="card"><div class="card-header"><div class="card-header-left">Slot trống hiện tại</div>
+    <div style="display:flex;gap:8px">
+      <button class="refresh-btn" onclick="refreshSlots()">↻ Làm mới</button>
+      <button class="btn btn-primary btn-sm" onclick="openAddSlotModal()">+ Thêm slot</button>
+    </div>
+  </div>`;
+
+  if (slots.length === 0) {
+    html += '<div class="empty-state"><div class="icon">📅</div>Chưa có slot nào. Thêm slot để khách có thể đặt lịch tư vấn miễn phí.</div>';
+  } else {
+    html += '<table class="data-table"><thead><tr><th>NGÀY</th><th>GIỜ BẮT ĐẦU</th><th>GIỜ KẾT THÚC</th><th>TRẠNG THÁI</th><th>YÊU CẦU</th><th></th></tr></thead><tbody>';
+    Object.entries(byDate).sort().forEach(([date, slotList]) => {
+      slotList.forEach(s => {
+        const crLinked = toObjects(dashData.consultRequests||{}).find(r => r.slot_id === s.slot_id);
+        html += `<tr>
+          <td><b>${fmtDate(date)}</b> <span style="font-size:11px;color:var(--muted)">${s.day_of_week||''}</span></td>
+          <td>${s.time_start||'—'}</td>
+          <td>${s.time_end||'—'}</td>
+          <td>${statusBadge(s.status==='free'?'confirmed':s.status==='booked'?'pending_payment':'cancelled')}</td>
+          <td>${crLinked ? `<span style="font-size:12px;font-weight:600">${crLinked.advisee_name}</span>` : '<span style="color:var(--muted);font-size:12px">—</span>'}</td>
+          <td>${s.status==='free' ? `<button class="btn btn-sm btn-ghost" onclick="deleteSlot('${s.slot_id}')">Xoá</button>` : ''}</td>
+        </tr>`;
+      });
+    });
+    html += '</tbody></table>';
+  }
+  html += '</div>';
+  c.innerHTML = html;
+}
+
+window.refreshSlots = () => { loadDashData().then(renderCRSlots); };
+window.deleteSlot = async (slotId) => {
+  if (!confirm('Xoá slot này?')) return;
+  try {
+    const res = await apiPost({ type:'admin_action', action:'delete_slot', slot_id:slotId });
+    if (res.success) { toast('Đã xoá slot', 'success'); await loadDashData(); renderCRSlots(); }
+    else throw new Error(res.error);
+  } catch(e) { toast('Lỗi: '+e.message, 'error'); }
+};
+
+window.openAddSlotModal = () => {
+  const today = new Date();
+  const todayStr = ymd(today);
+  document.getElementById('modal-title').textContent = '+ Thêm slot tư vấn mới';
+  document.getElementById('modal-body').innerHTML = `
+    <div class="modal-field"><div class="form-label">Ngày *</div>
+      <input class="form-input" type="date" id="ns-date" value="${todayStr}" min="${todayStr}" style="margin-top:6px">
+    </div>
+    <div class="modal-field" style="margin-top:12px"><div class="form-label">Giờ bắt đầu</div>
+      <div class="slot-picker-grid" id="slot-time-picker">
+        ${SALE_TIME_SLOTS.map(t => `<button class="slot-chip" onclick="toggleSlotChip(this,'${t}')">${t}</button>`).join('')}
+      </div>
+    </div>
+    <div style="font-size:12px;color:var(--muted);margin-top:8px">Mỗi slot mặc định 30 phút. Đã chọn: <span id="slot-chip-count" style="color:var(--brand);font-weight:700">0</span> slot</div>`;
+  document.getElementById('modal-actions').innerHTML = `
+    <button class="btn btn-ghost" onclick="closeModal()">Huỷ</button>
+    <button class="btn btn-primary" id="add-slot-btn" onclick="saveNewSlots()">Thêm slot</button>`;
+  document.getElementById('modal-overlay').classList.add('open');
+};
+let pickedTimes = new Set();
+window.toggleSlotChip = (btn, t) => {
+  if (pickedTimes.has(t)) { pickedTimes.delete(t); btn.classList.remove('sel'); }
+  else { pickedTimes.add(t); btn.classList.add('sel'); }
+  document.getElementById('slot-chip-count').textContent = pickedTimes.size;
+};
+window.saveNewSlots = async () => {
+  const date = document.getElementById('ns-date').value;
+  if (!date) { toast('Chọn ngày!', 'error'); return; }
+  if (pickedTimes.size === 0) { toast('Chọn ít nhất 1 khung giờ!', 'error'); return; }
+  const btn = document.getElementById('add-slot-btn');
+  btn.innerHTML = '<span class="spinner"></span>'; btn.disabled = true;
+  const times = Array.from(pickedTimes);
+  try {
+    for (const t of times) {
+      const [h, m] = t.split(':').map(Number);
+      const endH = h + (m >= 30 ? 1 : 0);
+      const endM = m >= 30 ? 0 : 30;
+      await apiPost({ type:'admin_action', action:'add_slot', date, time_start:t, time_end:`${pad(endH)}:${pad(endM)}` });
+    }
+    toast(`Đã thêm ${times.length} slot`, 'success');
+    pickedTimes.clear();
+    closeModal();
+    await loadDashData();
+    renderCRSlots();
+  } catch(e) { toast('Lỗi: '+e.message, 'error'); btn.innerHTML='Thêm slot'; btn.disabled=false; }
+};
+
+// ═══════════════════════════════════════════════════
+//  BOOKINGS
+// ═══════════════════════════════════════════════════
+function renderBookingsList() {
+  const c = document.getElementById('main-content');
+  const bookings = toObjects(dashData.bookings||{});
+
+  let html = ph('Tất cả Bookings', `${bookings.length} booking trong hệ thống`);
+  html += `<div class="card"><div class="card-header">
+    <div class="card-header-left">Danh sách booking</div>
+    <button class="refresh-btn" onclick="loadDashData().then(renderBookingsList)">↻ Làm mới</button>
+  </div>`;
+
+  if (bookings.length === 0) {
+    html += '<div class="empty-state"><div class="icon">📭</div>Chưa có booking nào</div>';
+  } else {
+    html += '<table class="data-table"><thead><tr><th>BOOKING ID</th><th>ADVISEE</th><th>ADVISOR</th><th>GÓI</th><th>NGÀY TẠO</th><th>TRẠNG THÁI</th><th></th></tr></thead><tbody>';
+    bookings.slice().reverse().forEach((b, i) => {
+      html += `<tr>
+        <td><code style="font-size:11px">${b.booking_id||'—'}</code></td>
+        <td>
+          <div style="display:flex;align-items:center;gap:8px">${av(b.advisee_name,28)}
+            <div><div style="font-weight:600;font-size:13px">${b.advisee_name||'—'}</div>
+            <div style="font-size:11px;color:var(--muted)">${b.advisee_email||''}</div></div>
+          </div>
+        </td>
+        <td style="font-size:13px">${b.advisor_name||'—'}</td>
+        <td><span class="badge badge-new">${b.package_name||'—'}</span></td>
+        <td style="font-size:12px;color:var(--muted)">${fmtDateTime(b.created_at)}</td>
+        <td>${statusBadge(b.status)}</td>
+        <td><button class="btn btn-sm btn-ghost" onclick="openBookingDetail(${bookings.indexOf(b)})">Chi tiết</button></td>
+      </tr>`;
+    });
+    html += '</tbody></table>';
+  }
+  html += '</div>';
+  c.innerHTML = html;
+}
+
+window.openBookingDetail = (idx) => {
+  const bookings = toObjects(dashData.bookings||{});
+  const b = bookings[idx];
+  if (!b) return;
+  document.getElementById('modal-title').textContent = b.booking_id || 'Chi tiết Booking';
+  let html = `
+    <div class="modal-field"><b>Booking ID:</b> <code>${b.booking_id}</code></div>
+    <div class="modal-field"><b>Advisee:</b> ${b.advisee_name} · ${b.advisee_phone||''}</div>
+    <div class="modal-field"><b>Email:</b> ${b.advisee_email||'—'}</div>
+    <div class="modal-field"><b>Advisor:</b> ${b.advisor_name||'—'}</div>
+    <div class="modal-field"><b>Gói:</b> ${b.package_name||'—'} · ${b.sessions_total||0} buổi</div>
+    <div class="modal-field"><b>Đã dùng:</b> ${b.sessions_used||0}/${b.sessions_total||0}</div>
+    <div class="modal-field"><b>Giá:</b> ${fmtMoney(b.package_price)}</div>
+    <div class="modal-field"><b>Hết hạn:</b> ${fmtDate(b.expiry_date)}</div>
+    <div class="modal-field"><b>Trạng thái:</b> ${statusBadge(b.status)}</div>
+    <div class="modal-field"><b>Mục tiêu:</b> ${b.advisee_goal||'—'}</div>
+    ${b.meet_link ? `<div class="modal-field"><b>Meet link:</b> <a href="${b.meet_link}" target="_blank">${b.meet_link}</a></div>` : ''}`;
+  document.getElementById('modal-body').innerHTML = html;
+  const acts = [];
+  if (b.status === 'pending_payment') {
+    acts.push(`<button class="btn btn-green" onclick="confirmPayment('${b.booking_id}')">✓ Xác nhận thanh toán</button>`);
+  }
+  acts.push('<button class="btn btn-ghost" onclick="closeModal()">Đóng</button>');
+  document.getElementById('modal-actions').innerHTML = acts.join('');
+  document.getElementById('modal-overlay').classList.add('open');
+};
+
+// ── PAYMENT QUEUE ──
+function renderPaymentQueue() {
+  const c = document.getElementById('main-content');
+  const payments = toObjects(dashData.payment||{});
+  const bookings = toObjects(dashData.bookings||{});
+  const pending = payments.filter(p => !p.confirmed_at && !p.confirmed_by);
+
+  let html = ph('Xác nhận thanh toán', `${pending.length} booking chờ xác nhận`);
+  html += `<div class="card"><div class="card-header">
+    <div class="card-header-left">Chờ xác nhận${pending.length>0?` <span class="badge badge-new" style="font-size:11px">${pending.length}</span>`:''}</div>
+    <button class="refresh-btn" onclick="loadDashData().then(renderPaymentQueue)">↻ Làm mới</button>
+  </div>`;
+
+  if (pending.length === 0) {
+    html += '<div class="empty-state"><div class="icon">✅</div>Không có booking nào đang chờ xác nhận</div>';
+  } else {
+    pending.forEach(p => {
+      const bk = bookings.find(b => b.booking_id === p.booking_id);
+      html += `<div style="border-top:1px solid var(--border);padding:16px 20px;display:flex;gap:16px;align-items:center">
+        <div style="flex:1">
+          <div style="font-weight:700;font-size:14px;margin-bottom:4px">${bk?.advisee_name||p.booking_id}</div>
+          <div style="font-size:12px;color:var(--muted);margin-bottom:4px">${bk?.package_name||'—'} · ${bk?.advisee_phone||''} · ${bk?.advisee_email||''}</div>
+          <div style="display:flex;align-items:center;gap:8px">
+            <code style="font-size:12px;background:var(--bg);padding:4px 8px;border-radius:6px">${p.transfer_content||'—'}</code>
+            <span style="font-size:13px;font-weight:700;color:var(--brand)">${fmtMoney(p.amount)}</span>
+          </div>
+        </div>
+        <button class="btn btn-green" onclick="confirmPayment('${p.booking_id}')">✓ Xác nhận</button>
+      </div>`;
+    });
+  }
+
+  // Already confirmed
+  const confirmed = payments.filter(p => p.confirmed_at || p.confirmed_by);
+  if (confirmed.length > 0) {
+    html += `<div style="border-top:2px solid var(--border);padding:14px 20px 0"><div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:12px">Đã xác nhận (${confirmed.length})</div>`;
+    confirmed.slice().reverse().slice(0,10).forEach(p => {
+      html += `<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border);font-size:13px">
+        <span><b>${p.booking_id}</b> · ${fmtMoney(p.amount)}</span>
+        <span style="color:var(--muted);font-size:12px">${p.confirmed_by||'—'} · ${fmtDateTime(p.confirmed_at)}</span>
+      </div>`;
+    });
+    html += '</div>';
+  }
+  html += '</div>';
+  c.innerHTML = html;
+}
+
+window.confirmPayment = async (bookingId) => {
+  const btn = document.querySelector(`[onclick="confirmPayment('${bookingId}')"]`);
+  if (btn) { btn.innerHTML = '<span class="spinner"></span>'; btn.disabled = true; }
+  try {
+    const res = await apiPost({ type:'admin_action', action:'confirm_payment', booking_id:bookingId, confirmed_by:currentUser?.name||'sale' });
+    if (res.success) {
+      toast('✓ Đã xác nhận! Email & Meet link đang được gửi.', 'success');
+      closeModal();
+      await loadDashData();
+      renderPaymentQueue();
+    } else throw new Error(res.error);
+  } catch(e) {
+    toast('Lỗi: '+e.message, 'error');
+    if (btn) { btn.innerHTML='✓ Xác nhận'; btn.disabled=false; }
+  }
+};
+
+// ── SESSIONS ──
+function renderSessionsList() {
+  const c = document.getElementById('main-content');
+  const sessions = toObjects(dashData.sessions||{});
+
+  let html = ph('Sessions', `${sessions.length} buổi trong hệ thống`);
+  html += `<div class="card"><div class="card-header">
+    <div class="card-header-left">Tất cả sessions</div>
+    <button class="refresh-btn" onclick="loadDashData().then(renderSessionsList)">↻ Làm mới</button>
+  </div><table class="data-table"><thead><tr><th>SESSION ID</th><th>ADVISEE</th><th>ADVISOR</th><th>BUỔI</th><th>NGÀY GIỜ</th><th>TRẠNG THÁI</th><th></th></tr></thead><tbody>`;
+
+  if (sessions.length === 0) {
+    html += '<tr><td colspan="7"><div class="empty-state"><div class="icon">📭</div>Chưa có session nào</div></td></tr>';
+  } else {
+    sessions.slice().reverse().forEach(s => {
+      html += `<tr>
+        <td><code style="font-size:11px">${s.session_id||'—'}</code></td>
+        <td style="font-size:13px;font-weight:600">${s.advisee_name||'—'}</td>
+        <td style="font-size:13px">${s.advisor_name||'—'}</td>
+        <td style="text-align:center"><b>#${s.session_number||'?'}</b></td>
+        <td style="font-size:12px">${s.scheduled_date ? fmtDate(s.scheduled_date)+' '+s.scheduled_time : '<span style="color:var(--muted)">Chưa có lịch</span>'}</td>
+        <td>${statusBadge(s.status)}</td>
+        <td>${s.status==='unscheduled' ? `<button class="btn btn-sm btn-ghost" onclick="openScheduleModal('${s.session_id}')">Xếp lịch</button>` : s.meet_link ? `<a href="${s.meet_link}" target="_blank" class="btn btn-sm btn-ghost">Meet</a>` : ''}</td>
+      </tr>`;
+    });
+  }
+  html += '</tbody></table></div>';
+  c.innerHTML = html;
+}
+
+window.openScheduleModal = (sessionId) => {
+  const td = new Date(); td.setDate(td.getDate()+1);
+  document.getElementById('modal-title').textContent = 'Xếp lịch buổi · ' + sessionId;
+  document.getElementById('modal-body').innerHTML = `
+    <div class="modal-field"><div class="form-label">Ngày *</div>
+      <input class="form-input" type="date" id="sch-date" value="${ymd(td)}" style="margin-top:6px"></div>
+    <div class="modal-field" style="margin-top:12px"><div class="form-label">Giờ *</div>
+      <input class="form-input" type="time" id="sch-time" value="19:00" style="margin-top:6px"></div>
+    <div class="modal-field" style="margin-top:12px"><div class="form-label">Meet link</div>
+      <input class="form-input" id="sch-meet" placeholder="https://meet.google.com/..." style="margin-top:6px"></div>`;
+  document.getElementById('modal-actions').innerHTML = `
+    <button class="btn btn-ghost" onclick="closeModal()">Huỷ</button>
+    <button class="btn btn-primary" id="sch-btn" onclick="saveSchedule('${sessionId}')">Lưu lịch</button>`;
+  document.getElementById('modal-overlay').classList.add('open');
+};
+window.saveSchedule = async (sessionId) => {
+  const date = document.getElementById('sch-date').value;
+  const time = document.getElementById('sch-time').value;
+  const meet = document.getElementById('sch-meet').value.trim();
+  if (!date||!time) { toast('Điền đủ ngày và giờ', 'error'); return; }
+  const btn = document.getElementById('sch-btn');
+  btn.innerHTML = '<span class="spinner"></span>'; btn.disabled = true;
+  try {
+    const res = await apiPost({ type:'admin_action', action:'schedule_session', session_id:sessionId, scheduled_date:date, scheduled_time:time, meet_link:meet });
+    if (res.success) { toast('Đã xếp lịch!', 'success'); closeModal(); await loadDashData(); renderSessionsList(); }
+    else throw new Error(res.error);
+  } catch(e) { toast('Lỗi: '+e.message, 'error'); btn.innerHTML='Lưu lịch'; btn.disabled=false; }
+};
+
+// ═══════════════════════════════════════════════════
+//  ADVISOR / ADVISEE (Staff view — từ Sheet)
+// ═══════════════════════════════════════════════════
+function renderAdvisorList() {
+  const c = document.getElementById('main-content');
+  const advisors = toObjects(dashData.advisors||{});
+
+  let html = ph('Advisor', `${advisors.length} advisor trong hệ thống`);
+  html += `<div class="card"><div class="card-header">
+    <div class="card-header-left">Danh sách Advisor</div>
+    <button class="refresh-btn" onclick="loadDashData().then(renderAdvisorList)">↻ Làm mới</button>
+  </div><table class="data-table"><thead><tr><th>ADVISOR</th><th>VỊ TRÍ</th><th>CÔNG TY</th><th>NGÀNH</th><th>EMAIL</th><th>TRẠNG THÁI</th></tr></thead><tbody>`;
+
+  if (advisors.length === 0) {
+    html += '<tr><td colspan="6"><div class="empty-state"><div class="icon">🎓</div>Chưa có advisor nào</div></td></tr>';
+  } else {
+    advisors.forEach(a => {
+      const active = a.is_active !== false && a.is_active !== 'FALSE' && a.is_active !== 0;
+      html += `<tr>
+        <td><div style="display:flex;align-items:center;gap:8px">${av(a.name,32)}
+          <div><div style="font-weight:700;font-size:13px">${a.name||'—'}</div>
+          <div style="font-size:11px;color:var(--muted)">${a.initials||''}</div></div></div></td>
+        <td style="font-size:13px">${a.role||'—'}</td>
+        <td style="font-size:13px">${a.company||'—'}</td>
+        <td style="font-size:12px;color:var(--muted)">${a.industry||'—'}</td>
+        <td style="font-size:12px">${a.email||'—'}</td>
+        <td>${active ? statusBadge('confirmed') : statusBadge('cancelled')}</td>
+      </tr>`;
+    });
+  }
+  html += '</tbody></table></div>';
+  c.innerHTML = html;
+}
+
+function renderAdviseeList() {
+  const c = document.getElementById('main-content');
+  const bookings = toObjects(dashData.bookings||{});
+
+  // unique advisees from bookings
+  const seen = {};
+  const advisees = [];
+  bookings.forEach(b => {
+    if (!seen[b.advisee_email||b.advisee_name]) {
+      seen[b.advisee_email||b.advisee_name] = true;
+      advisees.push(b);
+    }
+  });
+
+  let html = ph('Advisee', `${advisees.length} advisee đã đăng ký`);
+  html += `<div class="card"><div class="card-header">
+    <div class="card-header-left">Danh sách Advisee</div>
+    <button class="refresh-btn" onclick="loadDashData().then(renderAdviseeList)">↻ Làm mới</button>
+  </div><table class="data-table"><thead><tr><th>ADVISEE</th><th>LIÊN HỆ</th><th>GÓI</th><th>ADVISOR</th><th>HẾT HẠN</th><th>TRẠNG THÁI</th></tr></thead><tbody>`;
+
+  if (advisees.length === 0) {
+    html += '<tr><td colspan="6"><div class="empty-state"><div class="icon">🙋</div>Chưa có advisee nào</div></td></tr>';
+  } else {
+    advisees.forEach(b => {
+      html += `<tr>
+        <td><div style="display:flex;align-items:center;gap:8px">${av(b.advisee_name,32)}
+          <div><div style="font-weight:700;font-size:13px">${b.advisee_name||'—'}</div>
+          <div style="font-size:11px;color:var(--muted)">${b.advisee_year||b.advisee_industry||''}</div></div></div></td>
+        <td style="font-size:12px">${b.advisee_phone||''}<br>${b.advisee_email||''}</td>
+        <td><span class="badge badge-new">${b.package_name||'—'}</span> <span style="font-size:11px;color:var(--muted)">${b.sessions_used||0}/${b.sessions_total||0}</span></td>
+        <td style="font-size:13px">${b.advisor_name||'—'}</td>
+        <td style="font-size:12px;color:var(--muted)">${fmtDate(b.expiry_date)}</td>
+        <td>${statusBadge(b.status)}</td>
+      </tr>`;
+    });
+  }
+  html += '</tbody></table></div>';
+  c.innerHTML = html;
+}
+
+// ═══════════════════════════════════════════════════
+//  ADVISOR DASHBOARD (Advisor role)
+// ═══════════════════════════════════════════════════
+function renderAdvisorOverview() {
+  const c = document.getElementById('main-content');
+  const bookings = toObjects(dashData.bookings||{}).filter(b => b.advisor_name === currentUser.name);
+  const sessions = toObjects(dashData.sessions||{}).filter(s => s.advisor_name === currentUser.name);
+  const active = bookings.filter(b => b.status==='confirmed');
+  const done = sessions.filter(s => s.status==='completed').length;
+
+  let html = ph(`Xin chào, ${currentUser.name.split(' ').pop()} 👋`);
+  html += `<div class="stats-row" style="margin-bottom:24px">
+    <div class="stat-cell"><div class="stat-num">${active.length}</div><div class="stat-label">Advisee đang hoạt động</div></div>
+    <div class="stat-cell"><div class="stat-num">${done}</div><div class="stat-label">Buổi đã hoàn thành</div></div>
+    <div class="stat-cell"><div class="stat-num">${sessions.filter(s=>s.status==='unscheduled').length}</div><div class="stat-label">Buổi chưa có lịch</div></div>
+  </div>`;
+
+  html += '<div class="card"><div class="card-header"><div class="card-header-left">Advisee của bạn</div></div>';
+  if (active.length === 0) {
+    html += '<div class="empty-state"><div class="icon">👤</div>Chưa có advisee nào</div>';
+  } else {
+    html += '<table class="data-table"><thead><tr><th>ADVISEE</th><th>GÓI</th><th>TIẾN ĐỘ</th><th>HẾT HẠN</th></tr></thead><tbody>';
+    active.forEach(b => {
+      const rem = (b.sessions_total||0) - (b.sessions_used||0);
+      html += `<tr>
+        <td><div style="display:flex;align-items:center;gap:8px">${av(b.advisee_name,30)}<div><b>${b.advisee_name}</b><div style="font-size:11px;color:var(--muted)">${b.advisee_phone||''}</div></div></div></td>
+        <td>${b.package_name||'—'}</td>
+        <td><span style="font-weight:700;${rem<=1?'color:var(--brand)':''}">${b.sessions_used||0}/${b.sessions_total||0} buổi</span></td>
+        <td style="font-size:12px;color:var(--muted)">${fmtDate(b.expiry_date)}</td>
+      </tr>`;
+    });
+    html += '</tbody></table>';
+  }
+  html += '</div>';
+  c.innerHTML = html;
+}
+
+function renderAdvisorSlots() {
+  // Advisor chỉ xem slot của mình (trong AvailableSlots)
+  const c = document.getElementById('main-content');
+  const slots = toObjects(dashData.availableSlots||{}).filter(s => s.advisor_name === currentUser.name || !s.advisor_name);
+
+  let html = ph('Lịch trống của tôi', 'Lịch trống do đội Sale nhập — bạn tự đặt lịch qua Google Calendar');
+  html += `<div class="card"><div class="card-header"><div class="card-header-left">Slot đang hiển thị</div></div>`;
+  if (slots.length === 0) {
+    html += '<div class="empty-state"><div class="icon">📅</div>Chưa có slot nào. Liên hệ Sale để thêm lịch trống.</div>';
+  } else {
+    html += '<table class="data-table"><thead><tr><th>NGÀY</th><th>GIỜ</th><th>TRẠNG THÁI</th><th>BOOKING</th></tr></thead><tbody>';
+    slots.forEach(s => {
+      html += `<tr>
+        <td>${fmtDate(String(s.date||'').slice(0,10))} <span style="color:var(--muted);font-size:11px">${s.day_of_week||''}</span></td>
+        <td>${s.time_start||'—'} – ${s.time_end||'—'}</td>
+        <td>${statusBadge(s.status==='free'?'confirmed':'pending_payment')}</td>
+        <td style="font-size:12px;color:var(--muted)">${s.booking_id||'—'}</td>
+      </tr>`;
+    });
+    html += '</tbody></table>';
+  }
+  html += '</div>';
+  c.innerHTML = html;
+}
+
+function renderAdvisorBooked() {
+  const c = document.getElementById('main-content');
+  const sessions = toObjects(dashData.sessions||{}).filter(s => s.advisor_name === currentUser.name);
+
+  let html = ph('Buổi đã book', `${sessions.length} sessions với bạn`);
+  html += `<div class="card"><div class="card-header"><div class="card-header-left">Sessions của bạn</div>
+    <button class="refresh-btn" onclick="loadDashData().then(renderAdvisorBooked)">↻ Làm mới</button>
+  </div>`;
+  if (sessions.length === 0) {
+    html += '<div class="empty-state"><div class="icon">📭</div>Chưa có session nào</div>';
+  } else {
+    html += '<table class="data-table"><thead><tr><th>ADVISEE</th><th>BUỔI</th><th>NGÀY GIỜ</th><th>MEET</th><th>TRẠNG THÁI</th></tr></thead><tbody>';
+    sessions.forEach(s => {
+      html += `<tr>
+        <td><b>${s.advisee_name||'—'}</b></td>
+        <td style="text-align:center">#${s.session_number}</td>
+        <td style="font-size:12px">${s.scheduled_date ? fmtDate(s.scheduled_date)+' '+s.scheduled_time : '<span style="color:var(--muted)">Chưa có lịch</span>'}</td>
+        <td>${s.meet_link ? `<a href="${s.meet_link}" target="_blank" class="btn btn-sm btn-ghost">Meet</a>` : '—'}</td>
+        <td>${statusBadge(s.status)}</td>
+      </tr>`;
+    });
+    html += '</tbody></table>';
+  }
+  html += '</div>';
+  c.innerHTML = html;
+}
+
+// ═══════════════════════════════════════════════════
+//  ADVISEE DASHBOARD
+// ═══════════════════════════════════════════════════
+function renderAdviseeBookings() {
+  const c = document.getElementById('main-content');
+  const bookings = toObjects(dashData.bookings||{}).filter(b => b.advisee_email === currentUser.email || b.advisee_name === currentUser.name);
+  const sessions = toObjects(dashData.sessions||{}).filter(s => s.advisee_name === currentUser.name);
+
+  let html = ph(`Xin chào, ${currentUser.name.split(' ').pop()} 👋`, 'Booking và tiến độ của bạn');
+  if (bookings.length === 0) {
+    html += `<div class="card"><div class="empty-state"><div class="icon">📭</div>Bạn chưa có booking nào.<br><a href="advisor.html" style="color:var(--brand);font-weight:600">→ Xem Advisor và đặt lịch</a></div></div>`;
+  } else {
+    bookings.forEach(b => {
+      const mySessions = sessions.filter(s => s.booking_id === b.booking_id);
+      html += `<div class="card"><div class="card-header">
+        <div>${av(b.advisor_name,32)}</div>
+        <div style="flex:1;margin-left:10px"><div style="font-weight:700">${b.advisor_name||'—'}</div><div style="font-size:12px;color:var(--muted)">${b.package_name||'—'} · ${b.sessions_used||0}/${b.sessions_total||0} buổi</div></div>
+        ${statusBadge(b.status)}
+      </div>`;
+      mySessions.forEach(s => {
+        html += `<div style="border-top:1px solid var(--border);padding:12px 20px;display:flex;align-items:center;justify-content:space-between">
+          <div><div style="font-weight:600;font-size:13px">Buổi #${s.session_number}</div>
+            <div style="font-size:12px;color:var(--muted)">${s.scheduled_date ? fmtDate(s.scheduled_date)+' '+s.scheduled_time : 'Chưa có lịch'}</div></div>
+          <div style="display:flex;gap:8px;align-items:center">
+            ${statusBadge(s.status)}
+            ${s.meet_link ? `<a href="${s.meet_link}" target="_blank" class="btn btn-sm btn-primary">Vào Meet</a>` : ''}
+          </div>
+        </div>`;
+      });
+      html += '</div>';
+    });
+  }
+  c.innerHTML = html;
+}
+
+// ═══════════════════════════════════════════════════
+//  INIT
+// ═══════════════════════════════════════════════════
+document.getElementById('login-password').addEventListener('keydown', e => { if (e.key==='Enter') doLogin(); });
+document.getElementById('login-page').style.display = 'flex';
 </script>
 </body>
 </html>
