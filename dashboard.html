@@ -752,6 +752,7 @@ function navTo(id) {
   const el = document.getElementById('ni-' + id);
   if (el) el.classList.add('active');
   activeNavId = id;
+  _staffDetailId = null; // rời khỏi trang chi tiết nhân viên
 
   // Render content
   const route = ROUTE_MAP[id];
@@ -1319,6 +1320,29 @@ const MOCK = {
     { staff:'Trần Minh Khoa', date:'2026-07-03', time:'15:00', status:'booked', client:'KH: Phạm Văn Long', note:'Tư vấn gói cố vấn' },
     { staff:'Nguyễn Phương Thảo', date:'2026-07-04', time:'11:00', status:'available', client:'', note:'Tư vấn gói cố vấn' },
   ],
+  // Nhật ký & thông tin chi tiết từng lượt tư vấn (đồng bộ cấu trúc với Google Sheet đang dùng)
+  consultations: [
+    { id:'cv1', staff:'Trần Minh Khoa', name:'Phạm Văn Long', phone:'0909111222', email:'long.pham@gmail.com',
+      source:'Website', consultAbout:'Gói Cố vấn', date:'2026-07-03', time:'15:00', meetLink:'https://meet.google.com/xyz-uvwx-rst',
+      status:'Đã chốt lịch', result:'', nextStep:'', nextStepDeadline:'',
+      profile:{education:'', experience:'', desire:'', barrier:'', followUp:''},
+      log:[ {time:'29/06/2026 10:05', text:'Khách đăng ký tư vấn qua website, tự chọn slot 15:00 ngày 3/7.'} ] },
+    { id:'cv2', staff:'Trần Minh Khoa', name:'Nguyễn Thị Hoa', phone:'0912345678', email:'hoa.nguyen@gmail.com',
+      source:'Facebook Ads', consultAbout:'Khoá học Marketing', date:null, time:null, meetLink:'',
+      status:'Chưa liên hệ', result:'', nextStep:'Gọi điện xác nhận nhu cầu trước khi mời đặt lịch', nextStepDeadline:'2026-07-15',
+      profile:{education:'Đại học Kinh tế TP.HCM', experience:'Chưa có kinh nghiệm Marketing', desire:'Muốn học nền tảng Marketing để chuyển ngành', barrier:'Đang đi làm full-time, ít thời gian ban ngày', followUp:''},
+      log:[ {time:'10/07/2026 09:12', text:'Khách để lại thông tin qua Form quảng cáo Facebook, chưa đặt lịch meeting.'} ] },
+    { id:'cv3', staff:'Nguyễn Phương Thảo', name:'Nguyễn Thị Mai', phone:'0933444555', email:'mai.nguyen@gmail.com',
+      source:'Email', consultAbout:'Gói Cố vấn', date:'2026-07-02', time:'14:00', meetLink:'https://meet.google.com/abc-defg-hij',
+      status:'Đã chốt lịch', result:'', nextStep:'', nextStepDeadline:'',
+      profile:{education:'', experience:'', desire:'', barrier:'', followUp:''},
+      log:[ {time:'27/06/2026 16:40', text:'Khách chủ động email hỏi về gói cố vấn, đã gửi lịch trống để khách tự chọn.'} ] },
+    { id:'cv4', staff:'Nguyễn Phương Thảo', name:'Đỗ Văn Kiệt', phone:'0977888999', email:'kiet.do@gmail.com',
+      source:'Zalo', consultAbout:'Advisor', date:null, time:null, meetLink:'',
+      status:'Đang liên hệ', result:'', nextStep:'Nhắn lại Zalo hẹn khung giờ phù hợp', nextStepDeadline:'2026-07-14',
+      profile:{education:'', experience:'Fresh graduate ngành Tài chính', desire:'Muốn tìm advisor ngành Finance để định hướng', barrier:'', followUp:'Đã nhắn Zalo 1 lần, chưa phản hồi'},
+      log:[ {time:'11/07/2026 14:20', text:'Khách nhắn Zalo hỏi về advisor ngành Finance, chưa xác nhận được lịch rảnh.'} ] },
+  ],
 };
 
 function fmtMoney(n) { return (n||0).toLocaleString('vi-VN') + 'đ'; }
@@ -1363,7 +1387,7 @@ function renderStaffListPage() {
     html += '<td style="font-size:13px">' + s.joinDate + '</td>';
     html += '<td>' + (s.active ? '<span class="badge badge-confirmed">Đang làm</span>' : '<span class="badge badge-cancelled">Tạm nghỉ</span>') + '</td>';
     html += '<td style="display:flex;gap:6px">';
-    html += '<button class="update-btn" onclick="openStaffDetail(' + i + ')">Chi tiết</button>';
+    html += '<button class="update-btn" onclick="navToStaffMemberDetail(\'' + s.id + '\')">Chi tiết →</button>';
     if (s.role === 'Sale') html += '<button class="update-btn" style="border-color:#6D28D9;color:#6D28D9" onclick="navTo(\'stf-schedule\')">📅 Lịch</button>';
     html += '</td></tr>';
   });
@@ -1437,6 +1461,329 @@ function confirmSwitchAdvisor(aeId, newAdvisorName) {
       '<button class="login-btn" onclick="toast(\'Đã ghi nhận! Vui lòng chuyển khoản và gửi bill.\',\'success\');closeModal()" style="width:auto;padding:10px 24px">Xác nhận</button>';
     document.getElementById('modal-overlay').classList.add('open');
   }, 150);
+}
+
+// ════════════════════════════════════════════════════════════
+//  TRANG CHI TIẾT NHÂN VIÊN (giống layout trang Advisor — 3 mục)
+// ════════════════════════════════════════════════════════════
+var _staffDetailId = null;
+var _staffDetailTab = 'consult';
+
+function navToStaffMemberDetail(staffId, tab) {
+  _staffDetailId = staffId;
+  _staffDetailTab = tab || 'consult';
+  document.getElementById('main-content').innerHTML = renderStaffMemberDetail(staffId, _staffDetailTab);
+}
+
+function switchStaffDetailTab(tab) {
+  _staffDetailTab = tab;
+  document.getElementById('main-content').innerHTML = renderStaffMemberDetail(_staffDetailId, tab);
+}
+
+function renderStaffMemberDetail(staffId, tab) {
+  var s = MOCK.staffList.find(function(x){ return x.id === staffId; });
+  if (!s) return '<div class="empty-state">Không tìm thấy nhân viên</div>';
+  tab = tab || 'consult';
+
+  var html = '';
+  // Breadcrumb
+  html += '<div style="display:flex;align-items:center;gap:8px;margin-bottom:20px;font-size:13px">';
+  html += '<button onclick="navTo(\'stf-list\')" style="background:none;border:none;color:var(--brand);cursor:pointer;font-family:inherit;font-size:13px;padding:0">← Danh sách nhân viên</button>';
+  html += '<span style="color:var(--border)">›</span><span style="color:var(--muted)">' + s.name + '</span>';
+  html += '</div>';
+
+  // Hero card
+  html += '<div class="card" style="margin-bottom:16px"><div style="padding:20px 24px;display:flex;gap:16px;align-items:center;flex-wrap:wrap">';
+  html += avatarCircle(s.name, 52);
+  html += '<div style="flex:1;min-width:200px">';
+  html += '<div style="font-size:18px;font-weight:800;margin-bottom:3px">' + s.name + '</div>';
+  html += '<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">' + roleBadge(s.role) + (s.active ? '<span class="badge badge-confirmed">Đang làm</span>' : '<span class="badge badge-cancelled">Tạm nghỉ</span>') + '</div>';
+  html += '</div>';
+  html += '<div style="font-size:13px;color:var(--muted);text-align:right;line-height:1.8">' + s.email + '<br>' + s.phone + '</div>';
+  html += '</div></div>';
+
+  // Local tab switcher (giống role-tabbar của Advisor)
+  var leadCount = MOCK.consultations.filter(function(c){ return c.staff === s.name && !c.date; }).length;
+  var TABS = [
+    { id:'consult', icon:'📞', label:'Lịch tư vấn' },
+    { id:'leads', icon:'⚠', label:'Khách chưa đặt lịch', badge: leadCount },
+    { id:'schedule', icon:'📅', label:'Gửi lịch trống' },
+    { id:'care', icon:'💬', label:'Chăm sóc khách hàng' },
+  ];
+  html += '<div style="display:flex;gap:6px;border-bottom:1.5px solid var(--border);margin-bottom:20px;flex-wrap:wrap">';
+  TABS.forEach(function(t){
+    var active = t.id === tab;
+    html += '<div onclick="switchStaffDetailTab(\'' + t.id + '\')" style="padding:11px 18px;font-size:13.5px;font-weight:600;cursor:pointer;color:' + (active?'var(--brand)':'var(--muted)') + ';border-bottom:2.5px solid ' + (active?'var(--brand)':'transparent') + ';display:flex;align-items:center;gap:6px">' + t.icon + ' ' + t.label;
+    if (t.badge) html += '<span style="background:#FEF3C7;color:#92400E;font-size:11px;font-weight:700;padding:1px 7px;border-radius:100px">' + t.badge + '</span>';
+    html += '</div>';
+  });
+  html += '</div>';
+
+  if (tab === 'leads') html += renderStaffLeadsTab(s);
+  else if (tab === 'schedule') html += renderStaffScheduleTab(s);
+  else if (tab === 'care') html += renderStaffCareTab(s);
+  else html += renderStaffConsultTab(s);
+
+  return html;
+}
+
+// ── Tab 1: Lịch tư vấn cần tham gia ──
+function renderStaffConsultTab(s) {
+  var mine = MOCK.consultations.filter(function(c){ return c.staff === s.name; });
+  var scheduled = mine.filter(function(c){ return c.date; }).sort(function(a,b){ return (a.date+a.time).localeCompare(b.date+b.time); });
+
+  var html = '';
+  html += '<div class="card"><div class="card-header"><div class="card-header-left">Buổi tư vấn đã lên lịch (' + scheduled.length + ')</div>';
+  html += '<span style="font-size:12px;color:var(--muted)">Tự động cập nhật khi có khách đăng ký từ website</span></div>';
+  if (scheduled.length === 0) {
+    html += '<div class="empty-state"><div class="icon">📭</div>Chưa có buổi tư vấn nào được lên lịch</div>';
+  } else {
+    scheduled.forEach(function(c){
+      html += '<div class="session-item">' + avatarCircle(c.name, 38);
+      html += '<div class="session-info"><div class="session-name">' + c.name + '</div>';
+      html += '<div class="session-meta">' + c.consultAbout + ' · Nguồn: ' + c.source + '</div></div>';
+      html += '<div class="session-time"><strong>' + fmtDateStr(c.date) + '</strong>' + c.time + '</div>';
+      html += '<span class="badge badge-pending">' + c.status + '</span>';
+      if (c.meetLink) html += '<a href="' + c.meetLink + '" target="_blank" class="detail-btn" style="margin-left:8px">🎥 Meet</a>';
+      html += '<button class="detail-btn" style="margin-left:8px" onclick="navToConsultationDetail(\'' + c.id + '\')">Chi tiết →</button>';
+      html += '</div>';
+    });
+  }
+  html += '</div>';
+  return html;
+}
+
+// ── Tab: Khách chưa đặt lịch — cần liên hệ ──
+function renderStaffLeadsTab(s) {
+  var leads = MOCK.consultations.filter(function(c){ return c.staff === s.name && !c.date; });
+
+  var html = '<div class="card"><div class="card-header"><div class="card-header-left">⚠ Khách chưa đặt lịch — cần liên hệ (' + leads.length + ')</div>';
+  html += '<span style="font-size:12px;color:var(--muted)">Khách chỉ để lại thông tin, chưa tự chốt được giờ meeting</span></div>';
+  if (leads.length === 0) {
+    html += '<div class="empty-state"><div class="icon">✅</div>Không có khách nào đang chờ liên hệ</div>';
+  } else {
+    leads.forEach(function(c){
+      html += '<div class="session-item">' + avatarCircle(c.name, 38);
+      html += '<div class="session-info"><div class="session-name">' + c.name + '</div>';
+      html += '<div class="session-meta">' + c.phone + ' · Nguồn: ' + c.source + ' · ' + c.consultAbout + '</div></div>';
+      html += '<span class="badge" style="background:#FEF3C7;color:#92400E">' + c.status + '</span>';
+      html += '<button class="login-btn" style="margin-left:8px;width:auto;padding:8px 16px;font-size:13px" onclick="navToConsultationDetail(\'' + c.id + '\')">Liên hệ & chốt lịch</button>';
+      html += '</div>';
+    });
+  }
+  html += '</div>';
+  return html;
+}
+
+const CONSULT_STATUS = ['Chưa liên hệ','Đang liên hệ','Đã chốt lịch','Đã tư vấn xong','Không phù hợp'];
+const CONSULT_RESULT = ['','Đăng ký gói cố vấn','Đăng ký khoá học','Đang cân nhắc','Từ chối'];
+
+function navToConsultationDetail(cid) {
+  _staffDetailTab = 'consult';
+  document.getElementById('main-content').innerHTML = renderConsultationDetail(cid);
+}
+
+function renderConsultationDetail(cid) {
+  var c = MOCK.consultations.find(function(x){ return x.id === cid; });
+  if (!c) return '<div class="empty-state">Không tìm thấy lượt tư vấn</div>';
+  var p = c.profile;
+
+  var html = '';
+  html += '<div style="display:flex;align-items:center;gap:8px;margin-bottom:20px;font-size:13px">';
+  html += '<button onclick="switchStaffDetailTab(\'consult\')" style="background:none;border:none;color:var(--brand);cursor:pointer;font-family:inherit;font-size:13px;padding:0">← Lịch tư vấn</button>';
+  html += '<span style="color:var(--border)">›</span><span style="color:var(--muted)">' + c.name + '</span>';
+  html += '</div>';
+
+  // Thông tin khách hàng + lịch meeting
+  html += '<div class="card" style="margin-bottom:16px"><div style="padding:22px 24px">';
+  html += '<div style="display:flex;gap:16px;align-items:flex-start;margin-bottom:16px">';
+  html += avatarCircle(c.name, 52);
+  html += '<div style="flex:1"><div style="font-size:18px;font-weight:800;margin-bottom:2px">' + c.name + '</div>';
+  html += '<div style="font-size:13px;color:var(--muted)">' + c.phone + ' · ' + c.email + '</div></div>';
+  html += '<div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end">';
+  html += '<span style="background:var(--bg);color:var(--muted);font-size:12px;font-weight:600;padding:4px 12px;border-radius:100px">Nguồn: ' + c.source + '</span>';
+  html += '<span style="background:var(--brand-light);color:var(--brand);font-size:12px;font-weight:700;padding:4px 12px;border-radius:100px">' + c.consultAbout + '</span>';
+  html += '</div></div>';
+
+  if (c.date) {
+    html += '<div style="display:flex;align-items:center;justify-content:space-between;background:#EFF6FF;border:1.5px solid #BFDBFE;border-radius:10px;padding:12px 16px">';
+    html += '<div style="font-size:13px;color:#1D4ED8"><b>📅 ' + fmtDateStr(c.date) + ' · ' + c.time + '</b></div>';
+    if (c.meetLink) html += '<a href="' + c.meetLink + '" target="_blank" class="detail-btn">🎥 Vào Meet</a>';
+    html += '</div>';
+  } else {
+    html += '<div style="background:#FFFBEB;border:1.5px solid #FDE68A;border-radius:10px;padding:16px">';
+    html += '<div style="font-size:13px;font-weight:700;color:#92400E;margin-bottom:10px">⚠ Khách chưa đặt lịch — chốt lịch tư vấn tại đây</div>';
+    html += '<div style="display:grid;grid-template-columns:1fr 1fr 2fr;gap:10px">';
+    html += '<div><div class="form-label">Ngày</div><input class="form-input" id="cv-newdate" type="date" style="margin-top:4px"></div>';
+    html += '<div><div class="form-label">Giờ</div><input class="form-input" id="cv-newtime" type="time" style="margin-top:4px"></div>';
+    html += '<div><div class="form-label">Link Meet (tuỳ chọn)</div><input class="form-input" id="cv-newlink" placeholder="https://meet.google.com/..." style="margin-top:4px"></div>';
+    html += '</div>';
+    html += '<button class="login-btn" style="width:auto;padding:9px 20px;margin-top:12px;font-size:13px" onclick="scheduleConsultation(\'' + c.id + '\')">Xác nhận đặt lịch</button>';
+    html += '</div>';
+  }
+  html += '</div></div>';
+
+  // Form trạng thái & tiến trình (giống cột trong Sheet)
+  html += '<div class="card" style="margin-bottom:16px"><div class="card-header"><div class="card-header-left">Tiến trình tư vấn</div></div>';
+  html += '<div class="form-grid">';
+  html += '<div><div class="form-label">Status tư vấn</div><select class="form-select" id="cv-status">' + CONSULT_STATUS.map(function(st){ return '<option' + (st===c.status?' selected':'') + '>' + st + '</option>'; }).join('') + '</select></div>';
+  html += '<div><div class="form-label">Kết quả</div><select class="form-select" id="cv-result">' + CONSULT_RESULT.map(function(r){ return '<option' + (r===c.result?' selected':'') + '>' + (r||'— Chưa có —') + '</option>'; }).join('') + '</select></div>';
+  html += '<div class="full"><div class="form-label">Next step (kèm deadline)</div><div style="display:grid;grid-template-columns:2fr 1fr;gap:10px"><input class="form-input" id="cv-nextstep" value="' + (c.nextStep||'') + '" placeholder="Việc cần làm tiếp theo..."><input class="form-input" id="cv-deadline" type="date" value="' + (c.nextStepDeadline||'') + '"></div></div>';
+  html += '</div>';
+  html += '<div class="form-footer"><button class="submit-btn" onclick="saveConsultProgress(\'' + c.id + '\')">Lưu tiến trình</button></div>';
+  html += '</div>';
+
+  // Hồ sơ khách hàng
+  html += '<div class="card" style="margin-bottom:16px"><div class="card-header"><div class="card-header-left">Hồ sơ khách hàng</div></div>';
+  html += '<div class="form-grid">';
+  html += '<div class="full"><div class="form-label">Học vấn</div><input class="form-input" id="cv-education" value="' + (p.education||'') + '"></div>';
+  html += '<div class="full"><div class="form-label">Kinh nghiệm</div><input class="form-input" id="cv-experience" value="' + (p.experience||'') + '"></div>';
+  html += '<div class="full"><div class="form-label">Mong muốn</div><textarea class="form-textarea" id="cv-desire" rows="2">' + (p.desire||'') + '</textarea></div>';
+  html += '<div class="full"><div class="form-label">Barrier (rào cản)</div><textarea class="form-textarea" id="cv-barrier" rows="2">' + (p.barrier||'') + '</textarea></div>';
+  html += '<div class="full"><div class="form-label">Follow up</div><textarea class="form-textarea" id="cv-followup" rows="2">' + (p.followUp||'') + '</textarea></div>';
+  html += '</div>';
+  html += '<div class="form-footer"><button class="submit-btn" onclick="saveConsultProfile(\'' + c.id + '\')">Lưu hồ sơ</button></div>';
+  html += '</div>';
+
+  // Nhật ký meeting
+  html += '<div class="card"><div class="card-header"><div class="card-header-left">📝 Nhật ký meeting (' + c.log.length + ')</div></div>';
+  html += '<div style="padding:4px 24px 20px">';
+  if (c.log.length === 0) {
+    html += '<div class="empty-state" style="padding:24px 0"><div class="icon">🗒</div>Chưa có ghi chú nào</div>';
+  } else {
+    c.log.slice().reverse().forEach(function(entry){
+      html += '<div style="padding:12px 0;border-bottom:1px solid var(--border)">';
+      html += '<div style="font-size:11px;font-weight:700;color:var(--muted);margin-bottom:4px">' + entry.time + '</div>';
+      html += '<div style="font-size:13px;color:var(--text);line-height:1.65;white-space:pre-line">' + entry.text + '</div>';
+      html += '</div>';
+    });
+  }
+  html += '<textarea class="form-textarea" id="cv-newlog" rows="3" placeholder="Ghi lại nội dung trao đổi, kết quả cuộc gọi/meeting..." style="margin-top:14px"></textarea>';
+  html += '<button class="submit-btn" style="margin-top:10px" onclick="addConsultLog(\'' + c.id + '\')">+ Thêm ghi chú</button>';
+  html += '</div></div>';
+
+  return html;
+}
+
+function scheduleConsultation(cid) {
+  var c = MOCK.consultations.find(function(x){ return x.id === cid; });
+  if (!c) return;
+  var d = document.getElementById('cv-newdate').value;
+  var t = document.getElementById('cv-newtime').value;
+  if (!d || !t) { toast('Vui lòng chọn ngày và giờ', 'error'); return; }
+  c.date = d; c.time = t;
+  c.meetLink = document.getElementById('cv-newlink').value.trim();
+  c.status = 'Đã chốt lịch';
+  var now = new Date();
+  c.log.push({ time: pad(now.getDate())+'/'+pad(now.getMonth()+1)+'/'+now.getFullYear()+' '+pad(now.getHours())+':'+pad(now.getMinutes()), text: 'Đã chốt lịch tư vấn: ' + fmtDateStr(d) + ' · ' + t + (c.meetLink?' — Link: ' + c.meetLink:'') });
+  toast('Đã chốt lịch tư vấn cho ' + c.name + ' ✅', 'success');
+  navToConsultationDetail(cid);
+}
+
+function saveConsultProgress(cid) {
+  var c = MOCK.consultations.find(function(x){ return x.id === cid; });
+  if (!c) return;
+  c.status = document.getElementById('cv-status').value;
+  var resultVal = document.getElementById('cv-result').value;
+  c.result = resultVal === '— Chưa có —' ? '' : resultVal;
+  c.nextStep = document.getElementById('cv-nextstep').value.trim();
+  c.nextStepDeadline = document.getElementById('cv-deadline').value;
+  toast('Đã lưu tiến trình tư vấn', 'success');
+  navToConsultationDetail(cid);
+}
+
+function saveConsultProfile(cid) {
+  var c = MOCK.consultations.find(function(x){ return x.id === cid; });
+  if (!c) return;
+  c.profile = {
+    education: document.getElementById('cv-education').value.trim(),
+    experience: document.getElementById('cv-experience').value.trim(),
+    desire: document.getElementById('cv-desire').value.trim(),
+    barrier: document.getElementById('cv-barrier').value.trim(),
+    followUp: document.getElementById('cv-followup').value.trim(),
+  };
+  toast('Đã lưu hồ sơ khách hàng', 'success');
+  navToConsultationDetail(cid);
+}
+
+function addConsultLog(cid) {
+  var c = MOCK.consultations.find(function(x){ return x.id === cid; });
+  if (!c) return;
+  var text = document.getElementById('cv-newlog').value.trim();
+  if (!text) { toast('Vui lòng nhập nội dung ghi chú', 'error'); return; }
+  var now = new Date();
+  c.log.push({ time: pad(now.getDate())+'/'+pad(now.getMonth()+1)+'/'+now.getFullYear()+' '+pad(now.getHours())+':'+pad(now.getMinutes()), text: text });
+  toast('Đã thêm ghi chú vào nhật ký', 'success');
+  navToConsultationDetail(cid);
+}
+
+// ── Tab 2: Gửi lịch trống ──
+function renderStaffScheduleTab(s) {
+  var mySlots = MOCK.saleSlots.filter(function(sl){ return sl.staff === s.name; });
+  mySlots.sort(function(a,b){ return (a.date+a.time).localeCompare(b.date+b.time); });
+  var availCount = mySlots.filter(function(sl){ return sl.status === 'available'; }).length;
+
+  var html = '<div class="card"><div class="card-header"><div class="card-header-left">Lịch trống của ' + s.name.split(' ').pop() + ' (' + availCount + ' slot)</div>';
+  html += '<button class="submit-btn" style="padding:8px 16px;font-size:13px" onclick="openSaleScheduleModal(\'' + s.name + '\')">+ Thêm lịch trống</button></div>';
+
+  if (mySlots.length === 0) {
+    html += '<div class="empty-state"><div class="icon">📅</div>Chưa có lịch nào, hãy thêm lịch trống để khách đặt lịch</div>';
+  } else {
+    html += '<table class="bookings-table"><thead><tr><th>NGÀY</th><th>GIỜ</th><th>KHÁCH HÀNG</th><th>TRẠNG THÁI</th><th></th></tr></thead><tbody>';
+    mySlots.forEach(function(sl, idx){
+      var globalIdx = MOCK.saleSlots.indexOf(sl);
+      html += '<tr>';
+      html += '<td>' + fmtDateStr(sl.date) + '</td>';
+      html += '<td>' + sl.time + '</td>';
+      html += '<td>' + (sl.client || '<span style="color:var(--muted)">—</span>') + '</td>';
+      html += '<td>' + (sl.status === 'booked' ? '<span class="badge badge-pending">Đã đặt</span>' : '<span class="badge badge-confirmed">Trống</span>') + '</td>';
+      html += '<td>' + (sl.status === 'available'
+        ? '<button class="update-btn" onclick="deleteSaleSlotInDetail(' + globalIdx + ')">Xoá</button>'
+        : '<button class="update-btn" onclick="openSaleBookingDetail(' + globalIdx + ')">Chi tiết</button>') + '</td>';
+      html += '</tr>';
+    });
+    html += '</tbody></table>';
+  }
+  html += '</div>';
+  return html;
+}
+
+function deleteSaleSlotInDetail(globalIdx) {
+  MOCK.saleSlots.splice(globalIdx, 1);
+  toast('Đã xoá slot', 'success');
+  switchStaffDetailTab('schedule');
+}
+
+// ── Tab 3: Chăm sóc khách hàng ──
+function renderStaffCareTab(s) {
+  var html = '<div class="card"><div class="card-header"><div class="card-header-left">Khách hàng cần chăm sóc (' + MOCK.advisees.length + ')</div>';
+  html += '<span style="font-size:12px;color:var(--muted)">Advisee đã đăng ký gói cố vấn hoặc khoá học</span></div>';
+
+  if (MOCK.advisees.length === 0) {
+    html += '<div class="empty-state"><div class="icon">🙋</div>Chưa có khách hàng nào</div>';
+  } else {
+    html += '<table class="bookings-table"><thead><tr><th>KHÁCH HÀNG</th><th>LIÊN HỆ</th><th>GÓI · ADVISOR</th><th>TIẾN ĐỘ</th><th>HẾT HẠN</th><th></th></tr></thead><tbody>';
+    MOCK.advisees.forEach(function(ae){
+      var pct = Math.round(ae.sessionsDone / ae.sessionsTotal * 100);
+      var expiryDate = new Date(ae.expiry + 'T00:00:00');
+      var today = new Date(); today.setHours(0,0,0,0);
+      var daysLeft = Math.ceil((expiryDate - today) / 86400000);
+      var expiryTag = daysLeft <= 7
+        ? '<span class="badge" style="background:#FEF3C7;color:#92400E">' + ae.expiry + ' (còn ' + daysLeft + ' ngày)</span>'
+        : '<span style="font-size:13px;color:var(--muted)">' + ae.expiry + '</span>';
+      html += '<tr>';
+      html += '<td><div style="display:flex;align-items:center;gap:10px">' + avatarCircle(ae.name, 32) + '<div><div style="font-weight:600">' + ae.name + '</div><div style="font-size:12px;color:var(--muted)">' + ae.email + '</div></div></div></td>';
+      html += '<td style="font-size:13px">' + ae.phone + '<br><span style="color:var(--muted)">' + ae.contact + '</span></td>';
+      html += '<td><div style="font-weight:600;font-size:13px">Gói ' + ae.pkg + '</div><div style="font-size:12px;color:var(--muted)">' + ae.advisor + '</div></td>';
+      html += '<td><div style="display:flex;align-items:center;gap:8px"><div style="flex:1;height:6px;background:var(--bg);border-radius:100px;overflow:hidden;min-width:60px"><div style="height:100%;width:' + pct + '%;background:var(--green);border-radius:100px"></div></div><span style="font-size:12px;font-weight:700;color:var(--muted);white-space:nowrap">' + ae.sessionsDone + '/' + ae.sessionsTotal + '</span></div></td>';
+      html += '<td>' + expiryTag + '</td>';
+      html += '<td><button class="detail-btn" onclick="navToStaffAdviseeDetail(\'' + ae.id + '\',\'staffcare\')">Chi tiết →</button></td>';
+      html += '</tr>';
+    });
+    html += '</tbody></table>';
+  }
+  html += '</div>';
+  return html;
 }
 
 function openStaffDetail(i) {
@@ -1612,7 +1959,8 @@ function saveSaleSlots(staffName) {
   toast('Đã lưu ' + selectedSaleSlots.size + ' slot cho ' + staffName, 'success');
   selectedSaleSlots.clear();
   closeModal();
-  navTo('stf-schedule');
+  if (_staffDetailId) switchStaffDetailTab('schedule');
+  else navTo('stf-schedule');
 }
 
 function deleteSaleSlot(i) {
@@ -1950,7 +2298,7 @@ function renderStaffAdvisorDetail(advisorId) {
 
   html += '</div>'; // end 2-col grid
 
-  // ── Advisee list (same as Advisor dashboard) ──
+  // ── Advisee list (chỉ liệt kê, không hiện chi tiết từng buổi) ──
   html += '<div class="card"><div class="card-header"><div class="card-header-left">Advisee của ' + a.name.split(' ').pop() + ' (' + myAdvisees.length + ')</div></div>';
 
   if (myAdvisees.length === 0) {
@@ -1958,34 +2306,15 @@ function renderStaffAdvisorDetail(advisorId) {
   } else {
     myAdvisees.forEach(function(ae) {
       var pctAe = Math.round(ae.sessionsDone / ae.sessionsTotal * 100);
-      html += '<div style="border-top:1px solid var(--border);padding:16px 24px">';
-
-      // Advisee header row
-      html += '<div style="display:flex;align-items:center;gap:12px;margin-bottom:10px">';
-      html += avatarCircle(ae.name, 38);
-      html += '<div style="flex:1"><div style="font-weight:700;font-size:14px">' + ae.name + '</div>';
+      var needNoteAe = ae.sessions.some(function(s){ return (s.status==='done'||s.status==='feedback') && !s.advisorNotes; });
+      html += '<div style="display:flex;align-items:center;gap:14px;padding:16px 24px;border-top:1px solid var(--border)">';
+      html += avatarCircle(ae.name, 40);
+      html += '<div style="flex:1;min-width:0"><div style="font-weight:700;font-size:14px">' + ae.name + '</div>';
       html += '<div style="font-size:12px;color:var(--muted)">' + ae.email + ' · Gói ' + ae.pkg + ' · ' + ae.bookingId + '</div></div>';
-      html += '<div style="display:flex;align-items:center;gap:8px"><div style="height:6px;width:80px;background:var(--bg);border-radius:100px;overflow:hidden"><div style="height:100%;width:' + pctAe + '%;background:var(--green);border-radius:100px"></div></div>';
+      html += '<div style="display:flex;align-items:center;gap:8px;flex-shrink:0"><div style="height:6px;width:80px;background:var(--bg);border-radius:100px;overflow:hidden"><div style="height:100%;width:' + pctAe + '%;background:var(--green);border-radius:100px"></div></div>';
       html += '<span style="font-size:12px;font-weight:700;color:var(--muted);white-space:nowrap">' + ae.sessionsDone + '/' + ae.sessionsTotal + '</span></div>';
-      html += '<button class="detail-btn" onclick="navToStaffAdviseeDetail(\'' + ae.id + '\',\'' + advisorId + '\')">Xem buổi →</button>';
-      html += '</div>';
-
-      // Compact session rows
-      ae.sessions.forEach(function(s) {
-        var d = s.date ? new Date(s.date + 'T00:00:00') : null;
-        var dow = d ? ['CN','T2','T3','T4','T5','T6','T7'][d.getDay()] : '';
-        var dateLabel = d ? dow + ' ' + d.getDate() + '/' + (d.getMonth()+1) + ' · ' + s.timeStart + '–' + s.timeEnd : 'Chưa xếp lịch';
-        var sc = {done:{bg:'var(--green-bg)',color:'var(--green)',label:'✓ Hoàn thành'},feedback:{bg:'#FFF7ED',color:'#C2410C',label:'Cần feedback'},upcoming:{bg:'#EFF6FF',color:'#1D4ED8',label:'Sắp tới'},locked:{bg:'var(--bg)',color:'var(--muted)',label:'Đã khoá'}}[s.status]||{bg:'var(--bg)',color:'var(--muted)',label:'—'};
-        var needNote = (s.status==='done'||s.status==='feedback') && !s.advisorNotes;
-        html += '<div style="display:flex;align-items:center;gap:12px;padding:9px 0;border-top:1px solid var(--border)">';
-        html += '<div style="width:26px;height:26px;border-radius:50%;background:' + sc.bg + ';color:' + sc.color + ';display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0">' + (s.status==='done'?'✓':String(s.no)) + '</div>';
-        html += '<div style="flex:1"><div style="font-size:13px;font-weight:600">Buổi ' + s.no + '</div><div style="font-size:11px;color:var(--muted)">' + dateLabel + '</div></div>';
-        html += '<span style="background:' + sc.bg + ';color:' + sc.color + ';font-size:11px;font-weight:700;padding:3px 10px;border-radius:100px">' + sc.label + '</span>';
-        if (needNote) html += '<span style="background:#FEF3C7;color:#92400E;font-size:10px;font-weight:700;padding:2px 8px;border-radius:100px">Cần nhận xét</span>';
-        if (s.meetLink && s.status !== 'locked') html += '<a href="' + s.meetLink + '" target="_blank" class="detail-btn" style="font-size:11px;padding:5px 10px">🎥</a>';
-        if (s.status !== 'locked') html += '<button class="detail-btn" style="font-size:11px;padding:5px 10px" onclick="openSessionDetailModal(\'' + ae.id + '\',' + s.no + ')">Chi tiết</button>';
-        html += '</div>';
-      });
+      if (needNoteAe) html += '<span style="background:#FEF3C7;color:#92400E;font-size:11px;font-weight:700;padding:3px 10px;border-radius:100px;flex-shrink:0">Cần nhận xét</span>';
+      html += '<button class="detail-btn" onclick="navToStaffAdviseeDetail(\'' + ae.id + '\',\'' + advisorId + '\')" style="flex-shrink:0">Chi tiết →</button>';
       html += '</div>';
     });
   }
@@ -2036,37 +2365,6 @@ function saveAdvisorEdit(advisorId) {
   navToStaffAdvisorDetail(advisorId);
 }
 
-
-  var a = MOCK.advisors.find(function(x){ return x.id === advisorId; });
-  if (!a) return '';
-  var myAdvisees = MOCK.advisees.filter(function(ae){ return ae.advisor === a.name; });
-
-  var html = '';
-  // Breadcrumb
-  html += '<div style="display:flex;align-items:center;gap:8px;margin-bottom:20px;font-size:13px">';
-  html += '<button onclick="navTo(\'adv-list\')" style="background:none;border:none;color:var(--brand);cursor:pointer;font-family:inherit;font-size:13px;padding:0">← Danh sách Advisor</button>';
-  html += '<span style="color:var(--border)">›</span><span style="color:var(--muted)">' + a.name + '</span>';
-  html += '</div>';
-
-  // Advisor profile card
-  html += '<div class="card" style="margin-bottom:16px"><div style="padding:22px 24px;display:flex;gap:18px;align-items:flex-start">';
-  html += avatarCircle(a.name, 56);
-  html += '<div style="flex:1">';
-  html += '<div style="font-size:19px;font-weight:800;margin-bottom:2px">' + a.name + '</div>';
-  html += '<div style="font-size:13px;color:var(--muted);margin-bottom:12px">' + a.title + '</div>';
-  html += '<div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px">';
-  html += '<span style="background:' + (a.active?'var(--green-bg)':'var(--bg)') + ';color:' + (a.active?'var(--green)':'var(--muted)') + ';font-size:12px;font-weight:700;padding:4px 12px;border-radius:100px">' + (a.active?'● Active':'○ Inactive') + '</span>';
-  html += '<span style="background:var(--bg);color:var(--muted);font-size:12px;font-weight:600;padding:4px 12px;border-radius:100px">📧 ' + a.email + '</span>';
-  html += '<span style="background:var(--bg);color:var(--muted);font-size:12px;font-weight:600;padding:4px 12px;border-radius:100px">📞 ' + a.phone + '</span>';
-  html += '</div>';
-  html += '<div style="font-size:13px;color:var(--muted);line-height:1.7">' + a.bio + '</div>';
-  html += '</div>';
-  html += '<div style="text-align:right;min-width:80px">';
-  html += '<div style="font-size:26px;font-weight:800;color:var(--brand)">' + myAdvisees.length + '</div>';
-  html += '<div style="font-size:11px;color:var(--muted)">advisee</div>';
-  html += '<div style="font-size:20px;font-weight:700;color:var(--text);margin-top:8px">' + a.sessionsDone + '/' + a.sessionsTotal + '</div>';
-  html += '<div style="font-size:11px;color:var(--muted)">buổi</div>';
-  html += '</div></div></div>';
 // ════════════════════════════════════════════════════════════
 //  MODULE 3: ADVISEE
 // ════════════════════════════════════════════════════════════
@@ -2120,15 +2418,20 @@ function renderStaffAdviseeDetail(aeId, fromAdvisorId) {
   if (!ae) return '';
 
   var html = '';
-  // Breadcrumb
-  html += '<div style="display:flex;align-items:center;gap:8px;margin-bottom:20px;font-size:13px">';
-  if (fromAdvisorId) {
+  // Breadcrumb + Edit button
+  html += '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">';
+  html += '<div style="display:flex;align-items:center;gap:8px;font-size:13px">';
+  if (fromAdvisorId === 'staffcare') {
+    html += '<button onclick="switchStaffDetailTab(\'care\')" style="background:none;border:none;color:var(--brand);cursor:pointer;font-family:inherit;font-size:13px;padding:0">← Chăm sóc khách hàng</button>';
+  } else if (fromAdvisorId) {
     var adv = MOCK.advisors.find(function(x){ return x.id === fromAdvisorId; });
     html += '<button onclick="navToStaffAdvisorDetail(\'' + fromAdvisorId + '\')" style="background:none;border:none;color:var(--brand);cursor:pointer;font-family:inherit;font-size:13px;padding:0">← ' + (adv?adv.name:'Advisor') + '</button>';
   } else {
     html += '<button onclick="navTo(\'aee-list\')" style="background:none;border:none;color:var(--brand);cursor:pointer;font-family:inherit;font-size:13px;padding:0">← Danh sách Advisee</button>';
   }
   html += '<span style="color:var(--border)">›</span><span style="color:var(--muted)">' + ae.name + '</span>';
+  html += '</div>';
+  html += '<button class="submit-btn" style="padding:8px 16px;font-size:13px;gap:6px" onclick="openEditAdviseeModal(\'' + ae.id + '\',\'' + (fromAdvisorId||'') + '\')">✏️ Chỉnh sửa thông tin</button>';
   html += '</div>';
 
   // Advisee profile card (full info for Staff)
@@ -2175,6 +2478,75 @@ function renderStaffAdviseeDetail(aeId, fromAdvisorId) {
   });
   html += '</div>';
   return html;
+}
+
+// ── Staff: Chỉnh sửa thông tin Advisee & gói meeting ──
+function openEditAdviseeModal(aeId, fromAdvisorId) {
+  var ae = MOCK.advisees.find(function(x){ return x.id === aeId; });
+  if (!ae) return;
+  var pkgOptions = Object.keys(PACKAGES).map(function(p){
+    return '<option value="' + p + '"' + (p === ae.pkg ? ' selected' : '') + '>' + p + ' — ' + fmtMoney(PACKAGES[p].price) + ' · ' + PACKAGES[p].sessions + ' buổi</option>';
+  }).join('');
+
+  document.getElementById('modal-title').textContent = '✏️ Chỉnh sửa — ' + ae.name;
+  document.getElementById('modal-body').innerHTML =
+    '<div style="display:flex;flex-direction:column;gap:14px">' +
+    '<div><div class="form-label">Họ và tên</div><input class="form-input" id="eae-name" value="' + ae.name + '" style="margin-top:6px"></div>' +
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">' +
+    '<div><div class="form-label">Email</div><input class="form-input" id="eae-email" type="email" value="' + ae.email + '" style="margin-top:6px"></div>' +
+    '<div><div class="form-label">SĐT</div><input class="form-input" id="eae-phone" value="' + ae.phone + '" style="margin-top:6px"></div>' +
+    '</div>' +
+    '<div><div class="form-label">Liên hệ khác (Zalo, FB...)</div><input class="form-input" id="eae-contact" value="' + (ae.contact||'') + '" style="margin-top:6px"></div>' +
+    '<div style="border-top:1px solid var(--border);padding-top:14px"><div class="form-label" style="margin-bottom:8px">Gói meeting</div>' +
+    '<select class="form-select" id="eae-pkg">' + pkgOptions + '</select>' +
+    '<div style="font-size:12px;color:var(--muted);margin-top:6px">Đổi gói sẽ cập nhật lại tổng số buổi và giá trị đã thanh toán bên dưới. Bạn có thể chỉnh tay nếu cần.</div></div>' +
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">' +
+    '<div><div class="form-label">Số buổi đã dùng</div><input class="form-input" id="eae-done" type="number" min="0" value="' + ae.sessionsDone + '" style="margin-top:6px"></div>' +
+    '<div><div class="form-label">Tổng số buổi</div><input class="form-input" id="eae-total" type="number" min="1" value="' + ae.sessionsTotal + '" style="margin-top:6px"></div>' +
+    '</div>' +
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">' +
+    '<div><div class="form-label">Số tiền đã thanh toán</div><input class="form-input" id="eae-paid" type="number" min="0" value="' + ae.paid + '" style="margin-top:6px"></div>' +
+    '<div><div class="form-label">Ngày hết hạn</div><input class="form-input" id="eae-expiry" type="date" value="' + ae.expiry + '" style="margin-top:6px"></div>' +
+    '</div>' +
+    '</div>';
+  document.getElementById('modal-actions').innerHTML =
+    '<button class="btn-secondary" onclick="closeModal()" style="width:auto;padding:10px 20px">Huỷ</button>' +
+    '<button class="login-btn" onclick="saveAdviseeEdit(\'' + aeId + '\',\'' + (fromAdvisorId||'') + '\')" style="width:auto;padding:10px 24px">Lưu thay đổi</button>';
+  document.getElementById('modal-overlay').classList.add('open');
+
+  // Tự động cập nhật số buổi + giá khi đổi gói
+  document.getElementById('eae-pkg').addEventListener('change', function(e){
+    var p = PACKAGES[e.target.value];
+    if (!p) return;
+    document.getElementById('eae-total').value = p.sessions;
+    document.getElementById('eae-paid').value = p.price;
+  });
+}
+
+function saveAdviseeEdit(aeId, fromAdvisorId) {
+  var ae = MOCK.advisees.find(function(x){ return x.id === aeId; });
+  if (!ae) return;
+
+  var newName  = document.getElementById('eae-name').value.trim();
+  var newEmail = document.getElementById('eae-email').value.trim();
+  var newTotal = Number(document.getElementById('eae-total').value) || ae.sessionsTotal;
+  var newDone  = Number(document.getElementById('eae-done').value);
+  if (!newName || !newEmail) { toast('Vui lòng điền tên và email', 'error'); return; }
+  if (newDone > newTotal) { toast('Số buổi đã dùng không thể lớn hơn tổng số buổi', 'error'); return; }
+
+  ae.name          = newName;
+  ae.email         = newEmail;
+  ae.phone         = document.getElementById('eae-phone').value.trim();
+  ae.contact       = document.getElementById('eae-contact').value.trim();
+  ae.pkg           = document.getElementById('eae-pkg').value;
+  ae.sessionsTotal = newTotal;
+  ae.sessionsDone  = newDone;
+  ae.paid          = Number(document.getElementById('eae-paid').value) || ae.paid;
+  ae.expiry        = document.getElementById('eae-expiry').value || ae.expiry;
+
+  toast('Đã lưu thông tin Advisee ✅', 'success');
+  closeModal();
+  navToStaffAdviseeDetail(aeId, fromAdvisorId || null);
 }
 
 // ════════════════════════════════════════════════════════════
