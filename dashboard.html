@@ -620,6 +620,7 @@ function submitChangePassword() {
 const SIDEBAR_DEF = {
   Staff: [
     { id: 'lj', icon: '🏢', label: 'LinkaJob', children: [
+      { id: 'lj-newreg',   label: '🔴 Khách đăng ký mới' },
       { id: 'lj-revenue',  label: 'Doanh thu' },
       { id: 'lj-report',   label: 'Báo cáo vận hành' },
       { id: 'lj-meetings', label: 'Lịch meeting' },
@@ -654,6 +655,7 @@ const SIDEBAR_DEF = {
 // Map sidebar id → render function / legacy tab id
 const ROUTE_MAP = {
   // Staff routes
+  'lj-newreg':     { fn: function(){ renderStaff('lj-newreg'); } },
   'lj-revenue':    { fn: function(){ renderStaff('lj-revenue'); } },
   'lj-report':     { fn: function(){ renderStaff('lj-report'); } },
   'lj-meetings':   { fn: function(){ renderStaff('linkajob-calendar'); } },
@@ -1085,6 +1087,143 @@ function toggleDaySlot(btn, key) {
 
 
 // ── Staff: lịch meeting dạng tháng (trong module LinkaJob) ──
+// ════════════════════════════════════════════════════════════
+//  KHÁCH ĐĂNG KÝ TƯ VẤN MỚI TỪ WEBSITE (kết nối trực tiếp Sheet)
+//  Nguồn: mỗi khi khách đặt lịch qua widget trên trang chủ (bookFreeConsult),
+//  Apps Script ghi 1 dòng vào tab "Sessions" với advisor_name = 'LinkaJob Team'.
+//  Dashboard fetch trực tiếp từ Sheet qua action getSessions.
+// ════════════════════════════════════════════════════════════
+function loadNewRegistrationsPage() {
+  var c = document.getElementById('main-content');
+  c.innerHTML = pageHeader('🔴 Khách đăng ký tư vấn mới', 'Đồng bộ trực tiếp từ form đăng ký trên website') + skeletonRows(3);
+
+  apiGet('getSessions', { advisor: 'LinkaJob Team' }).then(function(res){
+    var sessions = (res && res.data) ? res.data : [];
+    // Mới nhất lên đầu
+    sessions.sort(function(a,b){
+      return String(b.scheduled_date||'') + String(b.scheduled_time||'') > String(a.scheduled_date||'') + String(a.scheduled_time||'') ? 1 : -1;
+    });
+    window._newRegSessions = sessions;
+    c.innerHTML = renderNewRegistrationsList(sessions);
+  }).catch(function(err){
+    c.innerHTML = pageHeader('🔴 Khách đăng ký tư vấn mới', 'Đồng bộ trực tiếp từ form đăng ký trên website') +
+      '<div class="card"><div class="empty-state"><div class="icon">⚠</div>Không kết nối được tới Sheet.<br><small style="color:var(--muted)">' + err.message + '</small></div></div>';
+  });
+}
+
+// Notes có dạng: "Tên: X | SĐT: Y | Email: Z | Dịch vụ: W | Câu hỏi: Q"
+function parseConsultNotes(notes) {
+  var out = { name:'', phone:'', email:'', service:'', question:'' };
+  String(notes||'').split('|').forEach(function(part){
+    var idx = part.indexOf(':');
+    if (idx === -1) return;
+    var key = part.slice(0, idx).trim().toLowerCase();
+    var val = part.slice(idx+1).trim();
+    if (key === 'tên') out.name = val;
+    else if (key === 'sđt') out.phone = val;
+    else if (key === 'email') out.email = val;
+    else if (key === 'dịch vụ') out.service = val;
+    else if (key === 'câu hỏi') out.question = val;
+  });
+  return out;
+}
+
+function renderNewRegistrationsList(sessions) {
+  var html = pageHeader('🔴 Khách đăng ký tư vấn mới', 'Đồng bộ trực tiếp từ form đăng ký trên website (tab Sessions)');
+  html += '<div class="card"><div class="card-header"><div class="card-header-left">Danh sách đăng ký (' + sessions.length + ')</div>';
+  html += '<button class="refresh-btn" onclick="loadNewRegistrationsPage()">↻ Làm mới</button></div>';
+
+  if (sessions.length === 0) {
+    html += '<div class="empty-state"><div class="icon">📭</div>Chưa có khách nào đăng ký từ website</div>';
+  } else {
+    sessions.forEach(function(s, idx){
+      var lead = parseConsultNotes(s.notes);
+      var name = lead.name || s.advisee_name || 'Khách hàng';
+      var assignedTo = (s.assigned_staff || '').trim();
+      html += '<div style="display:flex;align-items:center;gap:14px;padding:16px 24px;border-top:1px solid var(--border);flex-wrap:wrap">';
+      html += avatarCircle(name, 40);
+      html += '<div style="flex:1;min-width:200px">';
+      html += '<div style="font-weight:700;font-size:14px">' + name + (lead.service ? ' <span style="font-weight:400;color:var(--muted);font-size:12px">· ' + lead.service + '</span>' : '') + '</div>';
+      html += '<div style="font-size:12px;color:var(--muted)">' + (lead.phone||'—') + (lead.email ? ' · ' + lead.email : '') + '</div>';
+      if (lead.question) html += '<div style="font-size:12px;color:var(--muted);margin-top:2px;font-style:italic">"' + lead.question + '"</div>';
+      html += '</div>';
+      html += '<div class="session-time"><strong>' + (s.scheduled_date ? fmtDateStr(s.scheduled_date) : '—') + '</strong>' + (s.scheduled_time||'') + '</div>';
+      if (s.meet_link) html += '<a href="' + s.meet_link + '" target="_blank" class="detail-btn">🎥 Meet</a>';
+      if (assignedTo) {
+        html += '<span class="badge badge-confirmed">✓ ' + assignedTo + '</span>';
+      } else {
+        html += '<button class="login-btn" style="width:auto;padding:8px 16px;font-size:13px" id="assign-btn-' + idx + '" onclick="openAssignRegModal(' + idx + ')">Phân công cho Sale →</button>';
+      }
+      html += '</div>';
+    });
+  }
+  html += '</div>';
+  return html;
+}
+
+function openAssignRegModal(idx) {
+  var s = (window._newRegSessions||[])[idx];
+  if (!s) return;
+  var lead = parseConsultNotes(s.notes);
+  var saleStaff = MOCK.staffList.filter(function(st){ return st.role === 'Sale' && st.active; });
+
+  document.getElementById('modal-title').textContent = 'Phân công — ' + (lead.name || s.advisee_name);
+  var body = '<div style="font-size:13px;color:var(--muted);margin-bottom:14px">Chọn Sale phụ trách liên hệ và tư vấn cho khách này. Lượt tư vấn sẽ xuất hiện trong tab "Lịch tư vấn" của Sale được chọn.</div>';
+  body += '<div style="display:flex;flex-direction:column;gap:10px">';
+  saleStaff.forEach(function(st){
+    body += '<div style="display:flex;align-items:center;gap:12px;border:1.5px solid var(--border);border-radius:12px;padding:12px 16px;cursor:pointer;transition:border-color .15s" ' +
+      'onmouseover="this.style.borderColor=\'var(--brand)\'" onmouseout="this.style.borderColor=\'var(--border)\'" onclick="assignRegToStaff(' + idx + ',\'' + st.name + '\')">' +
+      avatarCircle(st.name, 34) +
+      '<div style="flex:1"><div style="font-weight:700;font-size:13.5px">' + st.name + '</div><div style="font-size:12px;color:var(--muted)">' + st.note + '</div></div>' +
+      '<div style="font-size:12px;color:var(--brand);font-weight:600">Chọn →</div></div>';
+  });
+  body += '</div>';
+  document.getElementById('modal-body').innerHTML = body;
+  document.getElementById('modal-actions').innerHTML = '<button class="btn-secondary" onclick="closeModal()" style="width:auto;padding:10px 20px">Đóng</button>';
+  document.getElementById('modal-overlay').classList.add('open');
+}
+
+function assignRegToStaff(idx, staffName) {
+  var s = (window._newRegSessions||[])[idx];
+  if (!s) return;
+
+  closeModal();
+  toast('Đang lưu phân công...', '');
+
+  apiPost({ action: 'assignSession', session_id: s.session_id, staff: staffName }).then(function(res){
+    if (!res || !res.success) {
+      toast('Lỗi: ' + (res && res.error ? res.error : 'không lưu được vào Sheet'), 'error');
+      return;
+    }
+
+    var lead = parseConsultNotes(s.notes);
+    var now = new Date();
+    var nowStr = pad(now.getDate())+'/'+pad(now.getMonth()+1)+'/'+now.getFullYear()+' '+pad(now.getHours())+':'+pad(now.getMinutes());
+
+    MOCK.consultations.push({
+      id: 'fc-' + s.session_id,
+      staff: staffName,
+      name: lead.name || s.advisee_name || 'Khách hàng',
+      phone: lead.phone || '',
+      email: lead.email || '',
+      source: 'Website',
+      consultAbout: lead.service || 'Chưa rõ',
+      date: s.scheduled_date || null,
+      time: s.scheduled_time || null,
+      meetLink: s.meet_link || '',
+      status: s.scheduled_date ? 'Đã chốt lịch' : 'Chưa liên hệ',
+      result: '', nextStep: '', nextStepDeadline: '',
+      profile: { education:'', experience:'', desire:'', barrier:'', followUp:'' },
+      log: [{ time: nowStr, text: 'Khách đăng ký tư vấn miễn phí qua website' + (lead.question ? ' — câu hỏi: ' + lead.question : '') + '. Được phân công cho ' + staffName + '.' }],
+    });
+
+    toast('Đã phân công cho ' + staffName + ' ✅', 'success');
+    loadNewRegistrationsPage();
+  }).catch(function(err){
+    toast('Lỗi kết nối: ' + err.message, 'error');
+  });
+}
+
 function renderMeetingCalendar() {
   const meetingsByDate = {};
   MOCK.meetings.forEach(function(m){
@@ -1192,7 +1331,8 @@ function renderBookedSessions() {
 
 function renderStaff(tab) {
   const c = document.getElementById('main-content');
-  if      (tab === 'lj-revenue')        c.innerHTML = renderRevenuePage();
+  if      (tab === 'lj-newreg')         loadNewRegistrationsPage();
+  else if (tab === 'lj-revenue')        c.innerHTML = renderRevenuePage();
   else if (tab === 'lj-report')         c.innerHTML = renderReportPage();
   else if (tab === 'linkajob-calendar' || tab === 'lj-meetings') c.innerHTML = renderMeetingCalendar();
   else if (tab === 'lj-products')       c.innerHTML = renderProductsPage();
@@ -1579,7 +1719,6 @@ const CONSULT_STATUS = ['Chưa liên hệ','Đang liên hệ','Đã chốt lịc
 const CONSULT_RESULT = ['','Đăng ký gói cố vấn','Đăng ký khoá học','Đang cân nhắc','Từ chối'];
 
 function navToConsultationDetail(cid) {
-  _staffDetailTab = 'consult';
   document.getElementById('main-content').innerHTML = renderConsultationDetail(cid);
 }
 
@@ -1587,10 +1726,12 @@ function renderConsultationDetail(cid) {
   var c = MOCK.consultations.find(function(x){ return x.id === cid; });
   if (!c) return '<div class="empty-state">Không tìm thấy lượt tư vấn</div>';
   var p = c.profile;
+  var backTab = c.date ? 'consult' : 'leads';
+  var backLabel = c.date ? 'Lịch tư vấn' : 'Khách chưa đặt lịch';
 
   var html = '';
   html += '<div style="display:flex;align-items:center;gap:8px;margin-bottom:20px;font-size:13px">';
-  html += '<button onclick="switchStaffDetailTab(\'consult\')" style="background:none;border:none;color:var(--brand);cursor:pointer;font-family:inherit;font-size:13px;padding:0">← Lịch tư vấn</button>';
+  html += '<button onclick="switchStaffDetailTab(\'' + backTab + '\')" style="background:none;border:none;color:var(--brand);cursor:pointer;font-family:inherit;font-size:13px;padding:0">← ' + backLabel + '</button>';
   html += '<span style="color:var(--border)">›</span><span style="color:var(--muted)">' + c.name + '</span>';
   html += '</div>';
 
@@ -1762,25 +1903,35 @@ function renderStaffCareTab(s) {
   if (MOCK.advisees.length === 0) {
     html += '<div class="empty-state"><div class="icon">🙋</div>Chưa có khách hàng nào</div>';
   } else {
-    html += '<table class="bookings-table"><thead><tr><th>KHÁCH HÀNG</th><th>LIÊN HỆ</th><th>GÓI · ADVISOR</th><th>TIẾN ĐỘ</th><th>HẾT HẠN</th><th></th></tr></thead><tbody>';
     MOCK.advisees.forEach(function(ae){
       var pct = Math.round(ae.sessionsDone / ae.sessionsTotal * 100);
       var expiryDate = new Date(ae.expiry + 'T00:00:00');
       var today = new Date(); today.setHours(0,0,0,0);
       var daysLeft = Math.ceil((expiryDate - today) / 86400000);
-      var expiryTag = daysLeft <= 7
-        ? '<span class="badge" style="background:#FEF3C7;color:#92400E">' + ae.expiry + ' (còn ' + daysLeft + ' ngày)</span>'
-        : '<span style="font-size:13px;color:var(--muted)">' + ae.expiry + '</span>';
-      html += '<tr>';
-      html += '<td><div style="display:flex;align-items:center;gap:10px">' + avatarCircle(ae.name, 32) + '<div><div style="font-weight:600">' + ae.name + '</div><div style="font-size:12px;color:var(--muted)">' + ae.email + '</div></div></div></td>';
-      html += '<td style="font-size:13px">' + ae.phone + '<br><span style="color:var(--muted)">' + ae.contact + '</span></td>';
-      html += '<td><div style="font-weight:600;font-size:13px">Gói ' + ae.pkg + '</div><div style="font-size:12px;color:var(--muted)">' + ae.advisor + '</div></td>';
-      html += '<td><div style="display:flex;align-items:center;gap:8px"><div style="flex:1;height:6px;background:var(--bg);border-radius:100px;overflow:hidden;min-width:60px"><div style="height:100%;width:' + pct + '%;background:var(--green);border-radius:100px"></div></div><span style="font-size:12px;font-weight:700;color:var(--muted);white-space:nowrap">' + ae.sessionsDone + '/' + ae.sessionsTotal + '</span></div></td>';
-      html += '<td>' + expiryTag + '</td>';
-      html += '<td><button class="detail-btn" onclick="navToStaffAdviseeDetail(\'' + ae.id + '\',\'staffcare\')">Chi tiết →</button></td>';
-      html += '</tr>';
+      var expiryTag;
+      if (daysLeft < 0) {
+        expiryTag = '<span class="badge" style="background:#FEE2E2;color:#B91C1C">Hết hạn ' + Math.abs(daysLeft) + ' ngày trước</span>';
+      } else if (daysLeft <= 7) {
+        expiryTag = '<span class="badge" style="background:#FEF3C7;color:#92400E">Còn ' + daysLeft + ' ngày</span>';
+      } else {
+        expiryTag = '<span style="font-size:12px;color:var(--muted)">Hết hạn ' + ae.expiry + '</span>';
+      }
+
+      html += '<div style="display:flex;align-items:center;gap:14px;padding:16px 24px;border-top:1px solid var(--border);flex-wrap:wrap">';
+      html += avatarCircle(ae.name, 40);
+      html += '<div style="flex:1;min-width:180px">';
+      html += '<div style="font-weight:700;font-size:14px">' + ae.name + '</div>';
+      html += '<div style="font-size:12px;color:var(--muted)">' + ae.email + ' · ' + ae.phone + '</div>';
+      html += '</div>';
+      html += '<div style="min-width:140px">';
+      html += '<div style="font-weight:600;font-size:13px">Gói ' + ae.pkg + '</div>';
+      html += '<div style="font-size:12px;color:var(--muted)">' + ae.advisor + '</div>';
+      html += '</div>';
+      html += '<div style="display:flex;align-items:center;gap:8px;min-width:110px"><div style="flex:1;height:6px;background:var(--bg);border-radius:100px;overflow:hidden;min-width:50px"><div style="height:100%;width:' + pct + '%;background:var(--green);border-radius:100px"></div></div><span style="font-size:12px;font-weight:700;color:var(--muted);white-space:nowrap">' + ae.sessionsDone + '/' + ae.sessionsTotal + '</span></div>';
+      html += expiryTag;
+      html += '<button class="detail-btn" onclick="navToStaffAdviseeDetail(\'' + ae.id + '\',\'staffcare\')" style="flex-shrink:0;margin-left:auto">Chi tiết →</button>';
+      html += '</div>';
     });
-    html += '</tbody></table>';
   }
   html += '</div>';
   return html;
