@@ -227,6 +227,12 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
 .form-textarea:focus { border-color: var(--brand); }
 .form-select { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23555' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 14px center; padding-right: 36px; }
 .form-footer { padding: 0 24px 24px; display: flex; gap: 12px; align-items: center; }
+
+/* ── Nhóm mục trong modal chỉnh sửa (Advisor edit) ── */
+.ea-section { background: var(--bg); border-radius: 14px; padding: 16px 18px; margin-bottom: 4px; border: 1px solid var(--border); }
+.ea-section-title { font-size: 12.5px; font-weight: 800; color: var(--brand); margin-bottom: 12px; display: flex; align-items: center; gap: 7px; text-transform: uppercase; letter-spacing: .04em; }
+.ea-section .form-label { color: var(--text); font-weight: 600; }
+.ea-section .form-input, .ea-section .form-select, .ea-section .form-textarea { background: var(--white); }
 .submit-btn { padding: 12px 28px; font-size: 15px; font-weight: 700; border-radius: var(--radius-sm); border: none; background: var(--brand); color: #fff; cursor: pointer; transition: opacity .15s; display: flex; align-items: center; gap: 8px; }
 .submit-btn:hover { opacity: .88; }
 .submit-btn:disabled { opacity: .5; cursor: not-allowed; }
@@ -424,6 +430,9 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
             <div class="user-dropdown-name" id="dropdown-name">—</div>
             <div class="user-dropdown-role" id="dropdown-role">—</div>
           </div>
+          <div class="user-dropdown-item" id="dropdown-edit-profile" style="display:none" onclick="openAdvisorSelfEditModal();event.stopPropagation()">
+            <span class="user-dropdown-icon">✏️</span> Chỉnh sửa thông tin
+          </div>
           <div class="user-dropdown-item" onclick="openChangePasswordModal();event.stopPropagation()">
             <span class="user-dropdown-icon">🔑</span> Đổi mật khẩu
           </div>
@@ -531,6 +540,7 @@ function doLogin() {
     document.getElementById('user-name').textContent = u.name;
     document.getElementById('dropdown-name').textContent = u.name;
     document.getElementById('dropdown-role').textContent = u.role + ' · LinkaJob';
+    document.getElementById('dropdown-edit-profile').style.display = (u.role === 'Advisor') ? 'flex' : 'none';
     buildTabBar(u.role);
     if (u.role === 'Staff') loadDashboard(u.role);
   }
@@ -1112,18 +1122,22 @@ function loadNewRegistrationsPage() {
 }
 
 // Notes có dạng: "Tên: X | SĐT: Y | Email: Z | Dịch vụ: W | Câu hỏi: Q"
+function stripDiacritics(s) {
+  return String(s||'').normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/đ/gi, 'd').toLowerCase();
+}
+
 function parseConsultNotes(notes) {
   var out = { name:'', phone:'', email:'', service:'', question:'' };
   String(notes||'').split('|').forEach(function(part){
     var idx = part.indexOf(':');
     if (idx === -1) return;
-    var key = part.slice(0, idx).trim().toLowerCase();
+    var key = stripDiacritics(part.slice(0, idx).trim());
     var val = part.slice(idx+1).trim();
-    if (key === 'tên') out.name = val;
-    else if (key === 'sđt') out.phone = val;
+    if (key === 'ten') out.name = val;
+    else if (key === 'sdt') out.phone = val;
     else if (key === 'email') out.email = val;
-    else if (key === 'dịch vụ') out.service = val;
-    else if (key === 'câu hỏi') out.question = val;
+    else if (key === 'dich vu') out.service = val;
+    else if (key === 'cau hoi') out.question = val;
   });
   return out;
 }
@@ -1369,24 +1383,47 @@ const MOCK = {
     { name: 'Marketing Foundation', type: 'Khoá học', price: 2990000, sessions: 8, advisors: 'GV. Lê Minh Anh', active: true },
   ],
   advisors: [
-    { id:'adv1', name:'Nguyễn Vũ Trí Kiên', title:'Senior Marketing Manager', active:true, adviseeCount:3, sessionsDone:3, sessionsTotal:6,
+    { id:'adv1', name:'Nguyễn Vũ Trí Kiên', title:'Brand Manager', company:'Suntory PepsiCo Vietnam', active:true, adviseeCount:3, sessionsDone:3, sessionsTotal:6,
       email:'kien@linkajob.vn', phone:'0901234567', contact:'linkedin.com/in/kien', bio:'8 năm kinh nghiệm Marketing tại các tập đoàn FMCG.',
-      message:'Mình tin rằng career growth đến từ những bước đi rõ ràng — hãy để mình đồng hành cùng bạn.',
+      message:'Mình từng đứng ở đúng vị trí của các bạn — apply không biết bắt đầu từ đâu, CV chỉnh mãi vẫn không pass. Sau hành trình đó, mình muốn giúp các bạn tiết kiệm thời gian và tránh những sai lầm mình đã từng mắc phải.',
+      tags:['FMCG','Marketing'],
+      supportItems:[
+        {icon:'📄', title:'CV & LinkedIn theo đúng JD FMCG', desc:'Sửa hồ sơ theo từng vị trí cụ thể, không sửa chung chung.'},
+        {icon:'📊', title:'Luyện case interview Marketing', desc:'Framework phân tích case thương hiệu, chiến lược brand building.'},
+        {icon:'🗺', title:'Lộ trình vào MT Program FMCG', desc:'Hiểu rõ quy trình tuyển dụng từ góc nhìn người đã pass.'},
+      ],
+      experience:[
+        {title:'Advisor', company:'LinkaJob', type:'Freelance', dateRange:'Tháng 5/2026 - Hiện tại · 3 tháng', location:'TP.HCM · Remote', desc:'Tham gia dự án Start-Up với vai trò Advisor, chia sẻ kinh nghiệm và góp ý định hướng nghề nghiệp cho sinh viên năm cuối và fresher.'},
+        {title:'Brand Manager', company:'Suntory PepsiCo Vietnam Beverage', type:'Full-time', dateRange:'Tháng 3/2026 - Hiện tại · 5 tháng', location:'TP.HCM · On-site', desc:''},
+        {title:'Brand Manager', company:'Carlsberg Group', type:'Full-time', dateRange:'Tháng 3/2024 - Tháng 3/2026 · 2 năm 1 tháng', location:'TP.HCM · On-site', desc:''},
+        {title:'Brand - Product Marketing Manager', company:'Home Credit Vietnam', type:'Full-time', dateRange:'Tháng 12/2022 - Tháng 3/2024 · 1 năm 4 tháng', location:'TP.HCM · On-site', desc:''},
+      ],
       feedbacks:[{from:'Trần Gia Hân', text:'Advisor rất tận tâm và cho lời khuyên thực tế'}],
       products:['Cơ Bản','Đặc Biệt'],
       slots:['T2 19:00','T3 20:00','T5 19:00'],
       advisees:[{name:'Trần Gia Hân', pkg:'Đặc Biệt', progress:'3/4'},{name:'Bùi Tuấn Anh', pkg:'Cơ Bản', progress:'1/2'}] },
-    { id:'adv2', name:'Phương Thảo', title:'Brand Strategist', active:true, adviseeCount:2, sessionsDone:5, sessionsTotal:8,
+    { id:'adv2', name:'Phương Thảo', title:'Brand Strategist', company:'Unilever Vietnam', active:true, adviseeCount:2, sessionsDone:5, sessionsTotal:8,
       email:'phuong@linkajob.vn', phone:'0907654321', contact:'linkedin.com/in/phuong',
       bio:'Chuyên gia Brand 6 năm, từng làm tại Unilever và các agency lớn.',
       message:'Branding không chỉ là logo — đó là câu chuyện bạn kể mỗi ngày.',
+      tags:['Brand','Marketing'],
+      supportItems:[
+        {icon:'📄', title:'CV & LinkedIn theo hướng Brand', desc:'Xây dựng hồ sơ nổi bật đúng chuẩn ngành Brand.'},
+        {icon:'💡', title:'Tư duy chiến lược thương hiệu', desc:'Cách tiếp cận Brand Ladder, Brand Onion thực chiến.'},
+        {icon:'🎤', title:'Luyện phỏng vấn Brand/Marketing', desc:'Mock interview theo đúng format các agency và client lớn.'},
+      ],
+      experience:[
+        {title:'Advisor', company:'LinkaJob', type:'Freelance', dateRange:'Tháng 4/2026 - Hiện tại · 4 tháng', location:'TP.HCM · Remote', desc:''},
+        {title:'Brand Strategist', company:'Unilever Vietnam', type:'Full-time', dateRange:'Tháng 6/2023 - Hiện tại · 2 năm', location:'TP.HCM · On-site', desc:''},
+      ],
       feedbacks:[{from:'Lê Văn Bình', text:'Cách tiếp cận rất hệ thống, dễ áp dụng'}],
       products:['Đặc Biệt','Chuyên Sâu'],
       slots:['T4 18:00','T6 20:00'],
       advisees:[{name:'Lê Văn Bình', pkg:'Chuyên Sâu', progress:'5/6'}] },
-    { id:'adv3', name:'Đặng Quốc Huy', title:'Finance Lead', active:false, adviseeCount:0, sessionsDone:12, sessionsTotal:12,
+    { id:'adv3', name:'Đặng Quốc Huy', title:'Finance Lead', company:'', active:false, adviseeCount:0, sessionsDone:12, sessionsTotal:12,
       email:'huy@linkajob.vn', phone:'0912345678', contact:'linkedin.com/in/huy',
       bio:'10 năm Finance, CFA Level 3.', message:'Tài chính cá nhân vững vàng là nền tảng của sự nghiệp bền vững.',
+      tags:['Finance'], supportItems:[], experience:[],
       feedbacks:[], products:['Cơ Bản'], slots:[], advisees:[] },
   ],
   advisees: [
@@ -2227,19 +2264,106 @@ function renderProductsPage() {
 }
 
 function renderAdvisorNewForm() {
-  return pageHeader('Thêm Advisor mới','') +
-    '<div class="card"><div class="card-header"><div class="card-header-left">Thông tin Advisor mới</div></div>' +
-    '<div class="form-grid">' +
-    '<div><div class="form-label">Họ và tên *</div><input class="form-input" placeholder="Nguyễn Văn A"></div>' +
-    '<div><div class="form-label">Email *</div><input class="form-input" type="email" placeholder="email@gmail.com"></div>' +
-    '<div><div class="form-label">SĐT *</div><input class="form-input" placeholder="0901234567"></div>' +
-    '<div><div class="form-label">Chức danh *</div><input class="form-input" placeholder="Senior Marketing Manager"></div>' +
-    '<div><div class="form-label">Chuyên môn *</div><input class="form-input" placeholder="Marketing, Brand, Finance..."></div>' +
-    '<div><div class="form-label">Kinh nghiệm</div><input class="form-input" placeholder="5 năm"></div>' +
-    '<div class="full"><div class="form-label">Giới thiệu</div><textarea class="form-textarea" placeholder="Mô tả ngắn về advisor..."></textarea></div>' +
+  _eaExpIdx = 0;
+  var html = pageHeader('Thêm Advisor mới', '');
+
+  html += '<div class="ea-section" style="margin-bottom:16px"><div class="ea-section-title">👤 Thông tin cơ bản</div>' +
+    '<div style="margin-bottom:12px"><div class="form-label">Họ và tên *</div><input class="form-input" id="na-name" placeholder="Nguyễn Văn A" style="margin-top:6px"></div>' +
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">' +
+    '<div><div class="form-label">Chức danh hiện tại *</div><input class="form-input" id="na-title" placeholder="Senior Marketing Manager" style="margin-top:6px"></div>' +
+    '<div><div class="form-label">Công ty hiện tại</div><input class="form-input" id="na-company" placeholder="Suntory PepsiCo Vietnam" style="margin-top:6px"></div>' +
     '</div>' +
-    '<div class="form-footer"><button class="submit-btn" onclick="toast(\'Đã thêm Advisor mới!\',\'success\')">Thêm Advisor</button></div>' +
+    '<div><div class="form-label">Tags (phân cách bằng dấu phẩy — VD: FMCG, Marketing)</div><input class="form-input" id="na-tags" placeholder="FMCG, Marketing" style="margin-top:6px"></div>' +
     '</div>';
+
+  html += '<div class="ea-section" style="margin-bottom:16px"><div class="ea-section-title">📞 Liên hệ <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted)">(chỉ Staff xem)</span></div>' +
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">' +
+    '<div><div class="form-label">Email *</div><input class="form-input" id="na-email" type="email" placeholder="email@gmail.com" style="margin-top:6px"></div>' +
+    '<div><div class="form-label">SĐT *</div><input class="form-input" id="na-phone" placeholder="0901234567" style="margin-top:6px"></div>' +
+    '</div>' +
+    '<div><div class="form-label">LinkedIn / Liên hệ</div><input class="form-input" id="na-contact" placeholder="linkedin.com/in/..." style="margin-top:6px"></div>' +
+    '</div>';
+
+  html += '<div class="ea-section" style="margin-bottom:16px"><div class="ea-section-title">🌐 Nội dung hiển thị công khai</div>' +
+    '<div style="margin-bottom:12px"><div class="form-label">Giới thiệu</div><textarea class="form-textarea" id="na-bio" rows="3" placeholder="Mô tả ngắn về kinh nghiệm của advisor..." style="margin-top:6px"></textarea></div>' +
+    '<div><div class="form-label">Lời nhắn</div><textarea class="form-textarea" id="na-message" rows="2" placeholder="Lời nhắn gửi tới Advisee..." style="margin-top:6px"></textarea></div>' +
+    '</div>';
+
+  html += '<div class="ea-section" style="margin-bottom:16px"><div class="ea-section-title">🤝 Mình có thể hỗ trợ bạn <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted)">(3 mục trên web)</span></div>';
+  for (var i = 0; i < 3; i++) {
+    html += '<div style="background:var(--white);border:1px solid var(--border);border-radius:10px;padding:10px;margin-bottom:8px">' +
+      '<div style="display:grid;grid-template-columns:50px 1fr;gap:8px;margin-bottom:8px">' +
+      '<input class="form-input" id="na-si-icon-' + i + '" placeholder="📄" style="text-align:center">' +
+      '<input class="form-input" id="na-si-title-' + i + '" placeholder="Tiêu đề mục ' + (i+1) + '">' +
+      '</div>' +
+      '<input class="form-input" id="na-si-desc-' + i + '" placeholder="Mô tả ngắn">' +
+      '</div>';
+  }
+  html += '</div>';
+
+  html += '<div class="ea-section" style="margin-bottom:16px"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">' +
+    '<div class="ea-section-title" style="margin-bottom:0">💼 Kinh nghiệm làm việc</div>' +
+    '<button type="button" class="update-btn" onclick="addExperienceRow(\'na-exp-list\')">+ Thêm kinh nghiệm</button></div>' +
+    '<div id="na-exp-list"></div>' +
+    '</div>';
+
+  html += '<div class="ea-section" style="margin-bottom:16px"><div class="ea-section-title">📦 Sản phẩm áp dụng</div>';
+  Object.keys(PACKAGES).forEach(function(p){
+    html += '<label style="display:flex;align-items:center;gap:10px;background:var(--white);border:1.5px solid var(--border);border-radius:10px;padding:9px 14px;cursor:pointer;margin-bottom:6px">' +
+      '<input type="checkbox" class="na-pkg-cb" value="' + p + '">' +
+      '<div style="flex:1"><span style="font-size:13px;font-weight:600">' + p + '</span> <span style="font-size:12px;color:var(--muted)">— ' + fmtMoney(PACKAGES[p].price) + ' · ' + PACKAGES[p].sessions + ' buổi</span></div>' +
+      '</label>';
+  });
+  html += '</div>';
+
+  html += '<div class="card"><div class="form-footer"><button class="submit-btn" onclick="saveNewAdvisor()">Thêm Advisor</button></div></div>';
+  return html;
+}
+
+function saveNewAdvisor() {
+  var name = document.getElementById('na-name').value.trim();
+  var title = document.getElementById('na-title').value.trim();
+  var email = document.getElementById('na-email').value.trim();
+  var phone = document.getElementById('na-phone').value.trim();
+  if (!name || !title || !email || !phone) { toast('Vui lòng điền đầy đủ các trường bắt buộc (*)', 'error'); return; }
+
+  var supportItems = [];
+  for (var i = 0; i < 3; i++) {
+    var t = document.getElementById('na-si-title-' + i).value.trim();
+    if (t) supportItems.push({ icon: document.getElementById('na-si-icon-' + i).value.trim() || '✦', title: t, desc: document.getElementById('na-si-desc-' + i).value.trim() });
+  }
+
+  var experience = [];
+  document.querySelectorAll('#na-exp-list .ea-exp-row').forEach(function(row){
+    var t = row.querySelector('.ea-exp-title').value.trim();
+    if (!t) return;
+    experience.push({
+      title: t,
+      company: row.querySelector('.ea-exp-company').value.trim(),
+      type: row.querySelector('.ea-exp-type').value,
+      location: row.querySelector('.ea-exp-location').value.trim(),
+      dateRange: row.querySelector('.ea-exp-daterange').value.trim(),
+      desc: row.querySelector('.ea-exp-desc').value.trim(),
+    });
+  });
+
+  var products = Array.from(document.querySelectorAll('.na-pkg-cb:checked')).map(function(cb){ return cb.value; });
+
+  MOCK.advisors.push({
+    id: 'adv' + Date.now(),
+    name: name, title: title,
+    company: document.getElementById('na-company').value.trim(),
+    active: true, adviseeCount: 0, sessionsDone: 0, sessionsTotal: 0,
+    email: email, phone: phone, contact: document.getElementById('na-contact').value.trim(),
+    bio: document.getElementById('na-bio').value.trim(),
+    message: document.getElementById('na-message').value.trim(),
+    tags: document.getElementById('na-tags').value.split(',').map(function(t){ return t.trim(); }).filter(Boolean),
+    supportItems: supportItems, experience: experience, hiddenFeedback: [],
+    feedbacks: [], products: products, slots: [], advisees: [],
+  });
+
+  toast('Đã thêm ' + name + ' ✅', 'success');
+  navTo('adv-list');
 }
 
 function fmtDateStr(s) { const d = new Date(s + 'T00:00:00'); return DAYS_VI[d.getDay()] + ' ' + d.getDate() + '/' + (d.getMonth()+1); }
@@ -2365,9 +2489,10 @@ function renderStaffAdvisorDetail(advisorId) {
   html += '<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap">';
   html += '<div>';
   html += '<div style="font-size:20px;font-weight:800;letter-spacing:-.4px;margin-bottom:4px">' + a.name + '</div>';
-  html += '<div style="font-size:13px;color:var(--muted);margin-bottom:10px">' + a.title + '</div>';
+  html += '<div style="font-size:13px;color:var(--muted);margin-bottom:10px">' + a.title + (a.company ? ' · ' + a.company : '') + '</div>';
   html += '<div style="display:flex;gap:8px;flex-wrap:wrap">';
   html += '<span id="sa-active-badge-' + advisorId + '" style="background:' + (a.active?'var(--green-bg)':'var(--bg)') + ';color:' + (a.active?'var(--green)':'var(--muted)') + ';font-size:12px;font-weight:700;padding:4px 12px;border-radius:100px">' + (a.active?'● Đang hoạt động':'○ Không hoạt động') + '</span>';
+  (a.tags||[]).forEach(function(t){ html += '<span style="background:var(--brand-light);color:var(--brand);font-size:12px;font-weight:700;padding:4px 12px;border-radius:100px">' + t + '</span>'; });
   html += '</div>';
   html += '</div>';
   // Action buttons
@@ -2398,16 +2523,42 @@ function renderStaffAdvisorDetail(advisorId) {
   html += '<div><div style="font-size:10.5px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;margin-bottom:5px">Giới thiệu</div><div style="font-size:13px;color:var(--text);line-height:1.7">' + (a.bio||'—') + '</div></div>';
   html += '<div><div style="font-size:10.5px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;margin-bottom:5px">Lời nhắn</div><div style="font-size:13px;color:var(--text);line-height:1.7;font-style:italic">"' + (a.message||'—') + '"</div></div>';
 
-  if (a.feedbacks && a.feedbacks.length) {
-    html += '<div><div style="font-size:10.5px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;margin-bottom:6px">Feedback nhận được</div>';
-    a.feedbacks.forEach(function(f){
-      html += '<div style="background:var(--bg);border-radius:8px;padding:10px 12px;margin-bottom:6px;font-size:12.5px"><span style="color:#F59E0B">★★★★★</span> <span style="color:var(--text)">"' + f.text + '"</span> <span style="color:var(--muted)">— ' + f.from + '</span></div>';
+  if (a.supportItems && a.supportItems.length) {
+    html += '<div><div style="font-size:10.5px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;margin-bottom:8px">Mình có thể hỗ trợ bạn</div>';
+    a.supportItems.forEach(function(si){
+      html += '<div style="display:flex;gap:10px;align-items:flex-start;background:var(--bg);border-radius:10px;padding:10px 12px;margin-bottom:6px">';
+      html += '<div style="width:28px;height:28px;border-radius:8px;background:var(--brand-light);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:14px">' + (si.icon||'✦') + '</div>';
+      html += '<div><div style="font-size:12.5px;font-weight:700;color:var(--text)">' + si.title + '</div><div style="font-size:11.5px;color:var(--muted);margin-top:2px;line-height:1.5">' + si.desc + '</div></div>';
+      html += '</div>';
     });
     html += '</div>';
   }
 
+  // Feedback tự động lấy từ feedback thật của Advisee sau mỗi buổi meeting
+  var realFeedbacks = [];
+  MOCK.advisees.filter(function(ae){ return ae.advisor === a.name; }).forEach(function(ae){
+    ae.sessions.forEach(function(s){
+      if (s.feedback) realFeedbacks.push({ key: ae.id + '-' + s.no, from: ae.name, rating: s.feedback.rating, text: s.feedback.text });
+    });
+  });
+  a.hiddenFeedback = a.hiddenFeedback || [];
+
+  html += '<div><div style="font-size:10.5px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;margin-bottom:6px">Feedback nhận được <span style="font-weight:400;text-transform:none;letter-spacing:0">(tự động lấy sau mỗi buổi meeting)</span></div>';
+  if (realFeedbacks.length === 0) {
+    html += '<span style="font-size:12.5px;color:var(--muted);font-style:italic">Chưa có feedback nào</span>';
+  } else {
+    realFeedbacks.forEach(function(f){
+      var isHidden = a.hiddenFeedback.indexOf(f.key) > -1;
+      var stars = '';
+      for (var si2=1; si2<=5; si2++) stars += (si2 <= f.rating ? '★' : '☆');
+      html += '<div style="background:var(--bg);border-radius:8px;padding:10px 12px;margin-bottom:6px;font-size:12.5px;' + (isHidden?'opacity:.5':'') + '"><span style="color:#F59E0B">' + stars + '</span> <span style="color:var(--text)">"' + f.text + '"</span> <span style="color:var(--muted)">— ' + f.from + '</span>' + (isHidden ? ' <span style="color:var(--muted);font-style:italic">(đã ẩn khỏi web)</span>' : '') + '</div>';
+    });
+  }
+  html += '</div>';
+
   html += '<div><div style="font-size:10.5px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;margin-bottom:6px">Sản phẩm</div><div style="display:flex;flex-wrap:wrap;gap:6px">';
   (a.products||[]).forEach(function(p){ html += '<span class="badge badge-confirmed">' + p + '</span>'; });
+  if (!a.products || a.products.length === 0) html += '<span style="font-size:12.5px;color:var(--muted);font-style:italic">Chưa chọn sản phẩm</span>';
   html += '</div></div>';
 
   html += '<div><div style="font-size:10.5px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;margin-bottom:6px">Lịch available</div>';
@@ -2449,6 +2600,25 @@ function renderStaffAdvisorDetail(advisorId) {
 
   html += '</div>'; // end 2-col grid
 
+  // ── Kinh nghiệm làm việc (LinkedIn-style) ──
+  html += '<div class="card" style="margin-bottom:16px"><div class="card-header"><div class="card-header-left">💼 Kinh nghiệm làm việc</div></div>';
+  if (!a.experience || a.experience.length === 0) {
+    html += '<div class="empty-state" style="padding:24px"><div class="icon">💼</div>Chưa có thông tin kinh nghiệm</div>';
+  } else {
+    a.experience.forEach(function(ex, exi){
+      html += '<div style="display:flex;gap:14px;padding:16px 24px;border-top:1px solid var(--border)">';
+      html += '<div style="width:40px;height:40px;border-radius:10px;background:var(--bg);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:18px">🏢</div>';
+      html += '<div style="flex:1;min-width:0">';
+      html += '<div style="font-weight:700;font-size:14px">' + ex.title + '</div>';
+      html += '<div style="font-size:13px;color:var(--text);margin-top:1px">' + ex.company + (ex.type ? ' · ' + ex.type : '') + '</div>';
+      html += '<div style="font-size:12px;color:var(--muted);margin-top:3px">' + (ex.dateRange||'') + '</div>';
+      if (ex.location) html += '<div style="font-size:12px;color:var(--muted)">' + ex.location + '</div>';
+      if (ex.desc) html += '<div style="font-size:12.5px;color:var(--text);line-height:1.65;margin-top:8px">' + ex.desc + '</div>';
+      html += '</div></div>';
+    });
+  }
+  html += '</div>';
+
   // ── Advisee list (chỉ liệt kê, không hiện chi tiết từng buổi) ──
   html += '<div class="card"><div class="card-header"><div class="card-header-left">Advisee của ' + a.name.split(' ').pop() + ' (' + myAdvisees.length + ')</div></div>';
 
@@ -2481,20 +2651,126 @@ function toggleAdvisorActive(advisorId) {
   navToStaffAdvisorDetail(advisorId);
 }
 
+var _eaExpIdx = 0;
+
+function eaExpRowHtml(idx, ex) {
+  ex = ex || {};
+  return '<div class="ea-exp-row" data-idx="' + idx + '" style="background:var(--white);border:1.5px solid var(--border);border-radius:10px;padding:12px;margin-bottom:10px;position:relative">' +
+    '<button type="button" onclick="this.closest(\'.ea-exp-row\').remove()" style="position:absolute;top:8px;right:8px;background:none;border:none;color:var(--muted);cursor:pointer;font-size:16px;line-height:1">×</button>' +
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">' +
+      '<input class="form-input ea-exp-title" placeholder="Chức danh" value="' + (ex.title||'') + '">' +
+      '<input class="form-input ea-exp-company" placeholder="Công ty" value="' + (ex.company||'') + '">' +
+    '</div>' +
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">' +
+      '<select class="form-select ea-exp-type">' +
+        ['Full-time','Part-time','Freelance','Internship','Contract'].map(function(t){ return '<option' + (ex.type===t?' selected':'') + '>' + t + '</option>'; }).join('') +
+      '</select>' +
+      '<input class="form-input ea-exp-location" placeholder="Địa điểm (VD: TP.HCM · On-site)" value="' + (ex.location||'') + '">' +
+    '</div>' +
+    '<input class="form-input ea-exp-daterange" placeholder="Thời gian (VD: Tháng 3/2024 - Hiện tại · 5 tháng)" value="' + (ex.dateRange||'') + '" style="margin-bottom:8px">' +
+    '<textarea class="form-textarea ea-exp-desc" rows="2" placeholder="Mô tả (không bắt buộc)">' + (ex.desc||'') + '</textarea>' +
+    '</div>';
+}
+
+function addExperienceRow(containerId) {
+  var container = document.getElementById(containerId || 'ea-exp-list');
+  container.insertAdjacentHTML('beforeend', eaExpRowHtml(_eaExpIdx++));
+}
+
 function openEditAdvisorModal(advisorId) {
   var a = MOCK.advisors.find(function(x){ return x.id === advisorId; });
   if (!a) return;
+  _eaExpIdx = 0;
+  var si = a.supportItems || [];
   document.getElementById('modal-title').textContent = '✏️ Chỉnh sửa — ' + a.name;
-  document.getElementById('modal-body').innerHTML =
-    '<div style="display:flex;flex-direction:column;gap:14px">' +
-    '<div><div class="form-label">Họ và tên</div><input class="form-input" id="ea-name" value="' + a.name + '" style="margin-top:6px"></div>' +
-    '<div><div class="form-label">Chức danh</div><input class="form-input" id="ea-title" value="' + a.title + '" style="margin-top:6px"></div>' +
+
+  var body = '<div style="display:flex;flex-direction:column;gap:14px">';
+
+  // ── 1. Thông tin cơ bản ──
+  body += '<div class="ea-section"><div class="ea-section-title">👤 Thông tin cơ bản</div>' +
+    '<div style="margin-bottom:12px"><div class="form-label">Họ và tên</div><input class="form-input" id="ea-name" value="' + a.name + '" style="margin-top:6px"></div>' +
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">' +
+    '<div><div class="form-label">Chức danh hiện tại</div><input class="form-input" id="ea-title" value="' + a.title + '" style="margin-top:6px"></div>' +
+    '<div><div class="form-label">Công ty hiện tại</div><input class="form-input" id="ea-company" value="' + (a.company||'') + '" style="margin-top:6px"></div>' +
+    '</div>' +
+    '<div><div class="form-label">Tags (phân cách bằng dấu phẩy — VD: FMCG, Marketing)</div><input class="form-input" id="ea-tags" value="' + (a.tags||[]).join(', ') + '" style="margin-top:6px"></div>' +
+    '</div>';
+
+  // ── 2. Liên hệ ──
+  body += '<div class="ea-section"><div class="ea-section-title">📞 Liên hệ <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted)">(chỉ Staff xem)</span></div>' +
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">' +
     '<div><div class="form-label">Email</div><input class="form-input" id="ea-email" type="email" value="' + a.email + '" style="margin-top:6px"></div>' +
     '<div><div class="form-label">SĐT</div><input class="form-input" id="ea-phone" value="' + a.phone + '" style="margin-top:6px"></div>' +
+    '</div>' +
     '<div><div class="form-label">LinkedIn / Liên hệ</div><input class="form-input" id="ea-contact" value="' + (a.contact||'') + '" style="margin-top:6px"></div>' +
-    '<div><div class="form-label">Giới thiệu (public)</div><textarea class="form-textarea" id="ea-bio" rows="3" style="margin-top:6px">' + (a.bio||'') + '</textarea></div>' +
-    '<div><div class="form-label">Lời nhắn (public)</div><textarea class="form-textarea" id="ea-message" rows="2" style="margin-top:6px">' + (a.message||'') + '</textarea></div>' +
     '</div>';
+
+  // ── 3. Nội dung public ──
+  body += '<div class="ea-section"><div class="ea-section-title">🌐 Nội dung hiển thị công khai</div>' +
+    '<div style="margin-bottom:12px"><div class="form-label">Giới thiệu</div><textarea class="form-textarea" id="ea-bio" rows="3" style="margin-top:6px">' + (a.bio||'') + '</textarea></div>' +
+    '<div><div class="form-label">Lời nhắn</div><textarea class="form-textarea" id="ea-message" rows="2" style="margin-top:6px">' + (a.message||'') + '</textarea></div>' +
+    '</div>';
+
+  // ── 4. Mình có thể hỗ trợ bạn ──
+  body += '<div class="ea-section"><div class="ea-section-title">🤝 Mình có thể hỗ trợ bạn <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted)">(3 mục trên web)</span></div>';
+  for (var i = 0; i < 3; i++) {
+    var item = si[i] || {};
+    body += '<div style="background:var(--white);border:1px solid var(--border);border-radius:10px;padding:10px;margin-bottom:8px">' +
+      '<div style="display:grid;grid-template-columns:50px 1fr;gap:8px;margin-bottom:8px">' +
+      '<input class="form-input" id="ea-si-icon-' + i + '" placeholder="📄" value="' + (item.icon||'') + '" style="text-align:center">' +
+      '<input class="form-input" id="ea-si-title-' + i + '" placeholder="Tiêu đề mục ' + (i+1) + '" value="' + (item.title||'') + '">' +
+      '</div>' +
+      '<input class="form-input" id="ea-si-desc-' + i + '" placeholder="Mô tả ngắn" value="' + (item.desc||'') + '">' +
+      '</div>';
+  }
+  body += '</div>';
+
+  // ── 5. Kinh nghiệm làm việc ──
+  body += '<div class="ea-section"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">' +
+    '<div class="ea-section-title" style="margin-bottom:0">💼 Kinh nghiệm làm việc</div>' +
+    '<button type="button" class="update-btn" onclick="addExperienceRow(\'ea-exp-list\')">+ Thêm kinh nghiệm</button></div>' +
+    '<div id="ea-exp-list">' + (a.experience||[]).map(function(ex){ var h = eaExpRowHtml(_eaExpIdx, ex); _eaExpIdx++; return h; }).join('') + '</div>' +
+    '</div>';
+
+  // ── 6. Sản phẩm áp dụng ──
+  var currentPkgs = a.products || [];
+  body += '<div class="ea-section"><div class="ea-section-title">📦 Sản phẩm áp dụng</div>';
+  Object.keys(PACKAGES).forEach(function(p){
+    var checked = currentPkgs.indexOf(p) > -1;
+    body += '<label style="display:flex;align-items:center;gap:10px;background:var(--white);border:1.5px solid ' + (checked?'var(--brand)':'var(--border)') + ';border-radius:10px;padding:9px 14px;cursor:pointer;margin-bottom:6px">' +
+      '<input type="checkbox" class="ea-pkg-cb" value="' + p + '" ' + (checked?'checked':'') + '>' +
+      '<div style="flex:1"><span style="font-size:13px;font-weight:600">' + p + '</span> <span style="font-size:12px;color:var(--muted)">— ' + fmtMoney(PACKAGES[p].price) + ' · ' + PACKAGES[p].sessions + ' buổi</span></div>' +
+      '</label>';
+  });
+  body += '</div>';
+
+  // ── 7. Feedback hiển thị trên web ──
+  var realFeedbacksEdit = [];
+  MOCK.advisees.filter(function(ae){ return ae.advisor === a.name; }).forEach(function(ae){
+    ae.sessions.forEach(function(s){
+      if (s.feedback) realFeedbacksEdit.push({ key: ae.id + '-' + s.no, from: ae.name, rating: s.feedback.rating, text: s.feedback.text });
+    });
+  });
+  a.hiddenFeedback = a.hiddenFeedback || [];
+  if (realFeedbacksEdit.length > 0) {
+    body += '<div class="ea-section"><div class="ea-section-title">⭐ Feedback hiển thị trên web</div>';
+    realFeedbacksEdit.forEach(function(f){
+      var checked = a.hiddenFeedback.indexOf(f.key) === -1;
+      body += '<label style="display:flex;align-items:flex-start;gap:10px;background:var(--white);border:1.5px solid var(--border);border-radius:10px;padding:9px 14px;cursor:pointer;margin-bottom:6px">' +
+        '<input type="checkbox" class="ea-fb-cb" value="' + f.key + '" ' + (checked?'checked':'') + ' style="margin-top:2px">' +
+        '<div style="flex:1;font-size:12.5px"><span style="color:#F59E0B">' + '★'.repeat(f.rating) + '☆'.repeat(5-f.rating) + '</span> "' + f.text + '" <span style="color:var(--muted)">— ' + f.from + '</span></div>' +
+        '</label>';
+    });
+    body += '</div>';
+  }
+
+  body += '</div>';
+
+  document.getElementById('modal-body').innerHTML = body;
+  document.getElementById('modal-body').style.maxHeight = '65vh';
+  document.getElementById('modal-body').style.overflowY = 'auto';
+  var modalBox = document.querySelector('.modal');
+  if (modalBox) modalBox.style.maxWidth = '640px';
   document.getElementById('modal-actions').innerHTML =
     '<button class="btn-secondary" onclick="closeModal()" style="width:auto;padding:10px 20px">Huỷ</button>' +
     '<button class="login-btn" onclick="saveAdvisorEdit(\'' + advisorId + '\')" style="width:auto;padding:10px 24px">Lưu thay đổi</button>';
@@ -2506,14 +2782,63 @@ function saveAdvisorEdit(advisorId) {
   if (!a) return;
   a.name    = document.getElementById('ea-name').value.trim()    || a.name;
   a.title   = document.getElementById('ea-title').value.trim()   || a.title;
+  a.company = document.getElementById('ea-company').value.trim();
+  a.tags    = document.getElementById('ea-tags').value.split(',').map(function(t){ return t.trim(); }).filter(Boolean);
   a.email   = document.getElementById('ea-email').value.trim()   || a.email;
   a.phone   = document.getElementById('ea-phone').value.trim()   || a.phone;
   a.contact = document.getElementById('ea-contact').value.trim();
   a.bio     = document.getElementById('ea-bio').value.trim()     || a.bio;
   a.message = document.getElementById('ea-message').value.trim() || a.message;
+
+  a.supportItems = [];
+  for (var i = 0; i < 3; i++) {
+    var iconEl = document.getElementById('ea-si-icon-' + i);
+    var titleEl = document.getElementById('ea-si-title-' + i);
+    var descEl = document.getElementById('ea-si-desc-' + i);
+    if (titleEl && titleEl.value.trim()) {
+      a.supportItems.push({ icon: iconEl.value.trim() || '✦', title: titleEl.value.trim(), desc: descEl.value.trim() });
+    }
+  }
+
+  a.experience = [];
+  document.querySelectorAll('#ea-exp-list .ea-exp-row').forEach(function(row){
+    var title = row.querySelector('.ea-exp-title').value.trim();
+    if (!title) return;
+    a.experience.push({
+      title: title,
+      company: row.querySelector('.ea-exp-company').value.trim(),
+      type: row.querySelector('.ea-exp-type').value,
+      location: row.querySelector('.ea-exp-location').value.trim(),
+      dateRange: row.querySelector('.ea-exp-daterange').value.trim(),
+      desc: row.querySelector('.ea-exp-desc').value.trim(),
+    });
+  });
+
+  a.products = Array.from(document.querySelectorAll('.ea-pkg-cb:checked')).map(function(cb){ return cb.value; });
+
+  var uncheckedFb = Array.from(document.querySelectorAll('.ea-fb-cb')).filter(function(cb){ return !cb.checked; }).map(function(cb){ return cb.value; });
+  if (document.querySelector('.ea-fb-cb')) a.hiddenFeedback = uncheckedFb;
+
   toast('Đã lưu thông tin Advisor ✅', 'success');
   closeModal();
-  navToStaffAdvisorDetail(advisorId);
+
+  if (currentUser && currentUser.role === 'Advisor' && currentUser.name === a.name) {
+    // Advisor tự sửa thông tin của mình — cập nhật lại topbar rồi render lại tab hiện tại
+    document.getElementById('user-name').textContent = a.name;
+    document.getElementById('dropdown-name').textContent = a.name;
+    document.getElementById('user-avatar').textContent = mkInitials(a.name);
+    renderAdvisor(_activeRoleTab || 'overview');
+  } else {
+    navToStaffAdvisorDetail(advisorId);
+  }
+}
+
+function openAdvisorSelfEditModal() {
+  if (!currentUser) return;
+  var a = MOCK.advisors.find(function(x){ return x.name === currentUser.name; });
+  if (!a) { toast('Không tìm thấy hồ sơ Advisor tương ứng', 'error'); return; }
+  closeUserMenu();
+  openEditAdvisorModal(a.id);
 }
 
 // ════════════════════════════════════════════════════════════
@@ -3347,7 +3672,13 @@ function showDetail(b) {
   document.getElementById('modal-actions').innerHTML = '<button class="login-btn" onclick="closeModal()" style="width:auto;padding:10px 24px">Đóng</button>';
   document.getElementById('modal-overlay').classList.add('open');
 }
-function closeModal() { document.getElementById('modal-overlay').classList.remove('open'); }
+function closeModal() {
+  document.getElementById('modal-overlay').classList.remove('open');
+  var modalBox = document.querySelector('.modal');
+  if (modalBox) modalBox.style.maxWidth = '';
+  var mb = document.getElementById('modal-body');
+  if (mb) { mb.style.maxHeight = ''; mb.style.overflowY = ''; }
+}
 document.getElementById('modal-overlay').addEventListener('click', function(e){ if (e.target.id === 'modal-overlay') closeModal(); });
 
 const AV_COLORS = [['#D0E8FF','#2475B0'],['#FFD6D0','#C0392B'],['#D0F0E8','#1A7A5E'],['#EDE9FE','#6D28D9'],['#FEF3C7','#92400E'],['#FCE7F3','#9D174D']];
