@@ -1216,6 +1216,7 @@ function renderNewRegistrationsList(sessions) {
       if (assignedTo) {
         html += '<span class="badge badge-confirmed">✓ ' + assignedTo + '</span>';
       } else {
+        html += '<button class="update-btn" style="border-color:var(--green);color:var(--green)" onclick="autoAssignReg(' + idx + ')">🎯 Tự động</button>';
         html += '<button class="login-btn" style="width:auto;padding:8px 16px;font-size:13px" id="assign-btn-' + idx + '" onclick="openAssignRegModal(' + idx + ')">Phân công cho Sale →</button>';
       }
       html += '</div>';
@@ -1223,6 +1224,12 @@ function renderNewRegistrationsList(sessions) {
   }
   html += '</div>';
   return html;
+}
+
+function autoAssignReg(idx) {
+  var best = findLeastLoadedSale();
+  if (!best) { toast('Không còn Sale trống — tất cả đã đầy tải hoặc nghỉ (theo SOP mục 4)', 'error'); return; }
+  assignRegToStaff(idx, best.name);
 }
 
 function openAssignRegModal(idx) {
@@ -1235,11 +1242,13 @@ function openAssignRegModal(idx) {
   var body = '<div style="font-size:13px;color:var(--muted);margin-bottom:14px">Chọn Sale phụ trách liên hệ và tư vấn cho khách này. Lượt tư vấn sẽ xuất hiện trong tab "Lịch tư vấn" của Sale được chọn.</div>';
   body += '<div style="display:flex;flex-direction:column;gap:10px">';
   saleStaff.forEach(function(st){
-    body += '<div style="display:flex;align-items:center;gap:12px;border:1.5px solid var(--border);border-radius:12px;padding:12px 16px;cursor:pointer;transition:border-color .15s" ' +
-      'onmouseover="this.style.borderColor=\'var(--brand)\'" onmouseout="this.style.borderColor=\'var(--border)\'" onclick="assignRegToStaff(' + idx + ',\'' + st.name + '\')">' +
+    var load = getStaffLeadLoad(st.name), limit = st.leadLimit || 30;
+    var full = load >= limit;
+    body += '<div style="display:flex;align-items:center;gap:12px;border:1.5px solid ' + (full?'#FCA5A5':'var(--border)') + ';border-radius:12px;padding:12px 16px;cursor:' + (full?'not-allowed':'pointer') + ';opacity:' + (full?'.6':'1') + ';transition:border-color .15s" ' +
+      (full ? '' : 'onmouseover="this.style.borderColor=\'var(--brand)\'" onmouseout="this.style.borderColor=\'var(--border)\'" onclick="assignRegToStaff(' + idx + ',\'' + st.name + '\')"') + '>' +
       avatarCircle(st.name, 34) +
-      '<div style="flex:1"><div style="font-weight:700;font-size:13.5px">' + st.name + '</div><div style="font-size:12px;color:var(--muted)">' + st.note + '</div></div>' +
-      '<div style="font-size:12px;color:var(--brand);font-weight:600">Chọn →</div></div>';
+      '<div style="flex:1"><div style="font-weight:700;font-size:13.5px">' + st.name + '</div><div style="font-size:12px;color:var(--muted)">' + st.note + ' · Tải: ' + load + '/' + limit + (full?' (đầy tải)':'') + '</div></div>' +
+      (full ? '' : '<div style="font-size:12px;color:var(--brand);font-weight:600">Chọn →</div>') + '</div>';
   });
   body += '</div>';
   document.getElementById('modal-body').innerHTML = body;
@@ -1608,12 +1617,19 @@ function renderStaffListPage() {
   html += '<div class="card-header"><div class="card-header-left">Danh sách nhân viên</div>';
   html += '<button class="submit-btn" style="padding:8px 16px;font-size:13px" onclick="openAddStaffModal()">+ Thêm nhân viên</button>';
   html += '</div>';
-  html += '<table class="bookings-table"><thead><tr><th>HỌ TÊN</th><th>VỊ TRÍ</th><th>EMAIL / SĐT</th><th>NGÀY VÀO</th><th>TRẠNG THÁI</th><th></th></tr></thead><tbody>';
+  html += '<table class="bookings-table"><thead><tr><th>HỌ TÊN</th><th>VỊ TRÍ</th><th>EMAIL / SĐT</th><th>TẢI LEAD</th><th>NGÀY VÀO</th><th>TRẠNG THÁI</th><th></th></tr></thead><tbody>';
   MOCK.staffList.forEach(function(s, i){
     html += '<tr>';
     html += '<td><div style="display:flex;align-items:center;gap:10px">' + avatarCircle(s.name,32) + '<div><div style="font-weight:600">' + s.name + '</div><div style="font-size:12px;color:var(--muted)">' + s.note + '</div></div></div></td>';
     html += '<td>' + roleBadge(s.role) + '</td>';
     html += '<td><div style="font-size:13px">' + s.email + '</div><div style="font-size:12px;color:var(--muted)">' + s.phone + '</div></td>';
+    if (s.role === 'Sale') {
+      var load = getStaffLeadLoad(s.name), limit = s.leadLimit || 30;
+      var full = load >= limit;
+      html += '<td><span style="font-size:13px;font-weight:700;' + (full?'color:var(--brand)':'') + '">' + load + '/' + limit + '</span>' + (full?' <span style="font-size:11px;color:var(--brand)">Đầy tải</span>':'') + '</td>';
+    } else {
+      html += '<td style="color:var(--muted);font-size:13px">—</td>';
+    }
     html += '<td style="font-size:13px">' + s.joinDate + '</td>';
     html += '<td>' + (s.active ? '<span class="badge badge-confirmed">Đang làm</span>' : '<span class="badge badge-cancelled">Tạm nghỉ</span>') + '</td>';
     html += '<td style="display:flex;gap:6px">';
@@ -1739,6 +1755,7 @@ function renderStaffMemberDetail(staffId, tab) {
     { id:'leads', icon:'⚠', label:'Khách chưa đặt lịch', badge: leadCount },
     { id:'schedule', icon:'📅', label:'Gửi lịch trống' },
     { id:'care', icon:'💬', label:'Chăm sóc khách hàng' },
+    { id:'kpi', icon:'📊', label:'KPI cá nhân' },
   ];
   html += '<div style="display:flex;gap:6px;border-bottom:1.5px solid var(--border);margin-bottom:20px;flex-wrap:wrap">';
   TABS.forEach(function(t){
@@ -1752,6 +1769,7 @@ function renderStaffMemberDetail(staffId, tab) {
   if (tab === 'leads') html += renderStaffLeadsTab(s);
   else if (tab === 'schedule') html += renderStaffScheduleTab(s);
   else if (tab === 'care') html += renderStaffCareTab(s);
+  else if (tab === 'kpi') html += renderStaffKpiTab(s);
   else html += renderStaffConsultTab(s);
 
   return html;
@@ -1769,9 +1787,12 @@ function renderStaffConsultTab(s) {
     html += '<div class="empty-state"><div class="icon">📭</div>Chưa có buổi tư vấn nào được lên lịch</div>';
   } else {
     scheduled.forEach(function(c){
+      var sla = getLeadSlaInfo(c);
       html += '<div class="session-item">' + avatarCircle(c.name, 38);
       html += '<div class="session-info"><div class="session-name">' + c.name + '</div>';
-      html += '<div class="session-meta">' + c.consultAbout + ' · Nguồn: ' + c.source + '</div></div>';
+      html += '<div class="session-meta">' + c.consultAbout + ' · Nguồn: ' + c.source + '</div>';
+      if (sla) html += '<div style="margin-top:4px"><span style="background:' + sla.bg + ';color:' + sla.color + ';font-size:11px;font-weight:700;padding:2px 8px;border-radius:100px">' + sla.label + '</span></div>';
+      html += '</div>';
       html += '<div class="session-time"><strong>' + fmtDateStr(c.date) + '</strong>' + c.time + '</div>';
       html += '<span class="badge badge-pending">' + c.status + '</span>';
       if (c.meetLink) html += '<a href="' + c.meetLink + '" target="_blank" class="detail-btn" style="margin-left:8px">🎥 Meet</a>';
@@ -1793,9 +1814,12 @@ function renderStaffLeadsTab(s) {
     html += '<div class="empty-state"><div class="icon">✅</div>Không có khách nào đang chờ liên hệ</div>';
   } else {
     leads.forEach(function(c){
+      var sla = getLeadSlaInfo(c);
       html += '<div class="session-item">' + avatarCircle(c.name, 38);
       html += '<div class="session-info"><div class="session-name">' + c.name + '</div>';
-      html += '<div class="session-meta">' + c.phone + ' · Nguồn: ' + c.source + ' · ' + c.consultAbout + '</div></div>';
+      html += '<div class="session-meta">' + c.phone + ' · Nguồn: ' + c.source + ' · ' + c.consultAbout + '</div>';
+      if (sla) html += '<div style="margin-top:4px"><span style="background:' + sla.bg + ';color:' + sla.color + ';font-size:11px;font-weight:700;padding:2px 8px;border-radius:100px">' + sla.label + '</span></div>';
+      html += '</div>';
       html += '<span class="badge" style="background:#FEF3C7;color:#92400E">' + c.status + '</span>';
       html += '<button class="login-btn" style="margin-left:8px;width:auto;padding:8px 16px;font-size:13px" onclick="navToConsultationDetail(\'' + c.id + '\')">Liên hệ & chốt lịch</button>';
       html += '</div>';
@@ -1988,6 +2012,53 @@ function deleteSaleSlotInDetail(globalIdx) {
 }
 
 // ── Tab 3: Chăm sóc khách hàng ──
+// ── Tab: KPI cá nhân (theo mục 5.1 SOP) ──
+function renderStaffKpiTab(s) {
+  var mine = MOCK.consultations.filter(function(c){ return c.staff === s.name; });
+  var now = new Date();
+
+  var totalLeads = mine.length;
+  var scheduledCount = mine.filter(function(c){ return !!c.date; }).length;
+  var occurredCount = mine.filter(function(c){ return c.date && new Date(c.date + 'T' + (c.time||'00:00')) <= now; }).length;
+  var paidCount = mine.filter(function(c){ return c.result && c.result.indexOf('Đăng ký') === 0; }).length;
+
+  var responseTimes = [];
+  mine.forEach(function(c){
+    if (c.log && c.log.length >= 2) {
+      var t0 = parseVNDateTime(c.log[0].time), t1 = parseVNDateTime(c.log[1].time);
+      if (t0 && t1) responseTimes.push((t1 - t0) / 60000);
+    }
+  });
+  var avgResponse = responseTimes.length ? Math.round(responseTimes.reduce(function(a,b){return a+b;},0) / responseTimes.length) : null;
+
+  var closeRate = totalLeads ? Math.round(scheduledCount / totalLeads * 100) : 0;
+  var showRate = scheduledCount ? Math.round(occurredCount / scheduledCount * 100) : 0;
+  var payRate = occurredCount ? Math.round(paidCount / occurredCount * 100) : 0;
+
+  var rows = [
+    { name:'Tỷ lệ chốt lịch', formula:'Lead chốt lịch / Tổng lead được giao', value: totalLeads ? closeRate + '%' : '—', sub: scheduledCount + '/' + totalLeads + ' lead', target:'≥ 40%', pass: totalLeads ? closeRate >= 40 : null },
+    { name:'Tỷ lệ show meeting', formula:'Meeting diễn ra / Lịch đã chốt', value: scheduledCount ? showRate + '%' : '—', sub: occurredCount + '/' + scheduledCount + ' buổi', target:'≥ 80%', pass: scheduledCount ? showRate >= 80 : null },
+    { name:'Tỷ lệ chốt thanh toán', formula:'Khách thanh toán / Meeting đã chạy', value: occurredCount ? payRate + '%' : '—', sub: paidCount + '/' + occurredCount + ' khách', target:'Theo mục tiêu từng gói', pass: null },
+    { name:'Thời gian phản hồi TB', formula:'TB (Zalo đầu tiên − lúc nhận lead)', value: avgResponse !== null ? avgResponse + ' phút' : '—', sub: responseTimes.length + ' lead có dữ liệu', target:'≤ 30 phút', pass: avgResponse !== null ? avgResponse <= 30 : null },
+    { name:'Tỷ lệ gia hạn', formula:'Khách gia hạn / Khách hết hạn trong kỳ', value: '—', sub: 'Cần liên kết Advisee ↔ Sale phụ trách để tính', target:'Theo mục tiêu từng kỳ', pass: null },
+  ];
+
+  var html = '<div class="card"><div class="card-header"><div class="card-header-left">📊 KPI cá nhân — ' + s.name + '</div><span style="font-size:12px;color:var(--muted)">Theo SOP vận hành Sale (mục 5.1)</span></div>';
+  html += '<table class="bookings-table"><thead><tr><th>KPI</th><th>Công thức</th><th>Kết quả</th><th>Mục tiêu</th></tr></thead><tbody>';
+  rows.forEach(function(r){
+    html += '<tr>';
+    html += '<td><b>' + r.name + '</b></td>';
+    html += '<td style="font-size:12.5px;color:var(--muted)">' + r.formula + '</td>';
+    html += '<td><div style="font-size:16px;font-weight:800;' + (r.pass===true?'color:var(--green)':r.pass===false?'color:var(--brand)':'') + '">' + r.value + '</div><div style="font-size:11.5px;color:var(--muted)">' + r.sub + '</div></td>';
+    html += '<td>' + r.target + (r.pass===true?' <span class="badge badge-confirmed">Đạt</span>':r.pass===false?' <span class="badge" style="background:var(--brand-light);color:var(--brand)">Chưa đạt</span>':'') + '</td>';
+    html += '</tr>';
+  });
+  html += '</tbody></table></div>';
+
+  html += '<div class="card"><div style="padding:16px 24px;font-size:12.5px;color:var(--muted);line-height:1.7">💡 <b>Lưu ý theo SOP:</b> không đánh giá nhân viên chỉ bằng doanh số cuối cùng — cần nhìn KPI theo từng bước để biết vấn đề nằm ở khâu nào (outreach, tư vấn, hay chăm sóc sau bán). KPI không đạt 2 tháng liên tiếp ở cùng 1 chỉ số → lên kế hoạch đào tạo lại, không mặc định là kỷ luật.</div></div>';
+  return html;
+}
+
 function renderStaffCareTab(s) {
   var html = '<div class="card"><div class="card-header"><div class="card-header-left">Khách hàng cần chăm sóc (' + MOCK.advisees.length + ')</div>';
   html += '<span style="font-size:12px;color:var(--muted)">Advisee đã đăng ký gói cố vấn hoặc khoá học</span></div>';
