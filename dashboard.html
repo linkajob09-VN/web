@@ -466,7 +466,10 @@ const API = 'https://script.google.com/macros/s/AKfycbx7Bd9VvoyzfiiezQV9huoY2BKH
 
 const DEMO_ACCOUNTS = [
   { email: 'kien@linkajob.vn',    password: '123456', role: 'Advisor', name: 'Nguyễn Vũ Trí Kiên', initials: 'KV' },
-  { email: 'phuong@linkajob.vn',  password: '123456', role: 'Staff',   name: 'Phương Staff',        initials: 'PS' },
+  { email: 'phuong@linkajob.vn',  password: '123456', role: 'Staff',   name: 'Phương Staff',        initials: 'PS', subRole: 'Admin' },
+  { email: 'khoa@linkajob.vn',    password: '123456', role: 'Staff',   name: 'Trần Minh Khoa',       initials: 'TK', subRole: 'Sale' },
+  { email: 'chau@linkajob.vn',    password: '123456', role: 'Staff',   name: 'Lê Thị Bảo Châu',      initials: 'LC', subRole: 'CourseManager' },
+  { email: 'thanh@linkajob.vn',   password: '123456', role: 'Staff',   name: 'Đinh Văn Thành',       initials: 'DT', subRole: 'AdvisorManager' },
   { email: 'advisee@linkajob.vn', password: '123456', role: 'Advisee', name: 'Trần Gia Hân',         initials: 'GH' },
 ];
 
@@ -811,9 +814,24 @@ function buildTabBar(role) {
   var sidebar = document.getElementById('sidebar');
 
   if (role === 'Staff') {
-    tabbar.className  = 'role-tabbar';        // hide tabbar
-    sidebar.className = 'sidebar';             // show sidebar
-    buildSidebar(role);
+    var subRole = (currentUser && currentUser.subRole) || 'Admin';
+
+    if (subRole === 'Admin') {
+      tabbar.className  = 'role-tabbar';        // hide tabbar
+      sidebar.className = 'sidebar';             // show sidebar
+      buildSidebar(role);
+      return;
+    }
+
+    // Sale / CourseManager / AdvisorManager — chỉ thấy đúng phạm vi việc của mình
+    tabbar.className  = 'role-tabbar';
+    sidebar.className = 'sidebar hidden';
+    var mc = document.getElementById('main-content');
+    mc.className = 'content';
+    if (subRole === 'Sale') loadSaleSelfDashboard();
+    else if (subRole === 'CourseManager') mc.innerHTML = renderCourseManagerDashboard();
+    else if (subRole === 'AdvisorManager') mc.innerHTML = renderAdvisorManagerDashboard();
+    else mc.innerHTML = '<div class="empty-state">Chưa cấu hình quyền cho vai trò này</div>';
     return;
   }
 
@@ -1529,25 +1547,25 @@ const MOCK = {
   ],
   courses: [
     { id:'c1', name:'Marketing Foundation K12', startDate:'2026-06-20', studentCount:18, sessionsDone:3, sessionsTotal:8, active:true,
-      teacher:'GV. Lê Minh Anh', meetLink:'https://meet.google.com/lll-mmmm-nnn',
+      teacher:'GV. Lê Minh Anh', manager:'Lê Thị Bảo Châu', meetLink:'https://meet.google.com/lll-mmmm-nnn',
       schedule:[{date:'2026-06-20',topic:'Giới thiệu Marketing căn bản'},{date:'2026-06-27',topic:'Customer Insight'},{date:'2026-07-04',topic:'Brand Positioning'}],
       materials:['Slide buổi 1.pdf','Case study Vinamilk.pdf'],
       students:['Trần Gia Hân','Bùi Tuấn Anh','+16 học viên khác'] },
     { id:'c2', name:'Finance for Non-Finance K3', startDate:'2026-07-10', studentCount:12, sessionsDone:0, sessionsTotal:6, active:true,
-      teacher:'Đặng Quốc Huy', meetLink:'https://meet.google.com/fff-gggg-hhh',
+      teacher:'Đặng Quốc Huy', manager:'Lê Thị Bảo Châu', meetLink:'https://meet.google.com/fff-gggg-hhh',
       schedule:[{date:'2026-07-10',topic:'Đọc hiểu báo cáo tài chính'}],
       materials:[], students:['Lê Văn Bình','+11 học viên khác'] },
   ],
   staffList: [
-    { id:'s1', name:'Nguyễn Phương Thảo', role:'Sale', email:'phuong@linkajob.vn', phone:'0901111222',
+    { id:'s1', name:'Nguyễn Phương Thảo', role:'Sale', subRole:'Sale', email:'thao@linkajob.vn', phone:'0901111222',
       joinDate:'2025-09-01', active:true, note:'Sale chính, phụ trách tư vấn KH mới', leadLimit:30 },
-    { id:'s2', name:'Trần Minh Khoa', role:'Sale', email:'khoa@linkajob.vn', phone:'0902222333',
+    { id:'s2', name:'Trần Minh Khoa', role:'Sale', subRole:'Sale', email:'khoa@linkajob.vn', phone:'0902222333',
       joinDate:'2025-11-15', active:true, note:'Sale hỗ trợ, phụ trách KH cũ', leadLimit:30 },
-    { id:'s3', name:'Lê Thị Bảo Châu', role:'Operations', email:'chau@linkajob.vn', phone:'0903333444',
-      joinDate:'2026-01-10', active:true, note:'Quản lý vận hành & lịch meeting' },
-    { id:'s4', name:'Đinh Văn Thành', role:'Marketing', email:'thanh@linkajob.vn', phone:'0904444555',
-      joinDate:'2026-03-01', active:true, note:'Quản lý content & social media' },
-    { id:'s5', name:'Ngô Bích Ngọc', role:'Sale', email:'ngoc@linkajob.vn', phone:'0905555666',
+    { id:'s3', name:'Lê Thị Bảo Châu', role:'Quản lý lớp học', subRole:'CourseManager', email:'chau@linkajob.vn', phone:'0903333444',
+      joinDate:'2026-01-10', active:true, note:'Quản lý học viên, nội dung lớp học & thời khoá biểu' },
+    { id:'s4', name:'Đinh Văn Thành', role:'Quản lý Advisor', subRole:'AdvisorManager', email:'thanh@linkajob.vn', phone:'0904444555',
+      joinDate:'2026-03-01', active:true, note:'Quản lý số lượng advisee & chất lượng buổi meeting của Advisor' },
+    { id:'s5', name:'Ngô Bích Ngọc', role:'Sale', subRole:'Sale', email:'ngoc@linkajob.vn', phone:'0905555666',
       joinDate:'2026-05-01', active:false, note:'Tạm nghỉ', leadLimit:15 },
   ],
   saleSlots: [
@@ -1594,6 +1612,8 @@ const ROLE_COLORS = {
   'Operations':  ['#D1FAE5','#065F46'],
   'Marketing':   ['#EDE9FE','#6D28D9'],
   'Admin':       ['#FEF3C7','#92400E'],
+  'Quản lý lớp học': ['#FCE7F3','#9D174D'],
+  'Quản lý Advisor':  ['#DCFCE7','#15803D'],
 };
 function roleBadge(role) {
   const c = ROLE_COLORS[role] || ['#F3F4F6','#374151'];
@@ -1714,29 +1734,73 @@ function confirmSwitchAdvisor(aeId, newAdvisorName) {
 // ════════════════════════════════════════════════════════════
 var _staffDetailId = null;
 var _staffDetailTab = 'consult';
+var _staffDetailSelfView = false;
 
 function navToStaffMemberDetail(staffId, tab) {
   _staffDetailId = staffId;
   _staffDetailTab = tab || 'consult';
-  document.getElementById('main-content').innerHTML = renderStaffMemberDetail(staffId, _staffDetailTab);
+  _staffDetailSelfView = false;
+  document.getElementById('main-content').innerHTML = renderStaffMemberDetail(staffId, _staffDetailTab, false);
+}
+
+// Điểm vào riêng cho tài khoản Sale — dashboard cá nhân, không có sidebar quản trị
+// Điểm vào cho tài khoản Quản lý lớp học — quản lý học viên, nội dung, thời khoá biểu
+function renderCourseManagerDashboard() {
+  var html = pageHeader('Quản lý lớp học', 'Học viên, nội dung lớp học, thời khoá biểu — ' + (currentUser?currentUser.name:''));
+  html += renderCourseModule();
+
+  // Buổi cố vấn 1-1 (nếu có được phân công)
+  var mine = MOCK.consultations.filter(function(c){ return c.staff === currentUser.name; });
+  if (mine.length > 0) {
+    html += '<div class="card"><div class="card-header"><div class="card-header-left">📞 Buổi cố vấn 1-1 của bạn</div></div>';
+    mine.forEach(function(c){
+      html += '<div class="session-item">' + avatarCircle(c.name, 36);
+      html += '<div class="session-info"><div class="session-name">' + c.name + '</div><div class="session-meta">' + c.consultAbout + ' · ' + c.status + '</div></div>';
+      if (c.date) html += '<div class="session-time"><strong>' + fmtDateStr(c.date) + '</strong>' + c.time + '</div>';
+      html += '</div>';
+    });
+    html += '</div>';
+  }
+  return html;
+}
+
+// Điểm vào cho tài khoản Quản lý Advisor — số lượng advisee & chất lượng meeting
+function renderAdvisorManagerDashboard() {
+  var html = pageHeader('Quản lý Advisor', 'Số lượng advisee & chất lượng buổi meeting — ' + (currentUser?currentUser.name:''));
+  html += renderAdvisorModule();
+  return html;
+}
+
+function loadSaleSelfDashboard() {
+  var s = MOCK.staffList.find(function(x){ return x.name === currentUser.name; });
+  var mc = document.getElementById('main-content');
+  if (!s) { mc.innerHTML = '<div class="empty-state">Không tìm thấy hồ sơ nhân viên tương ứng tài khoản này</div>'; return; }
+  _staffDetailId = s.id;
+  _staffDetailTab = 'consult';
+  _staffDetailSelfView = true;
+  mc.innerHTML = renderStaffMemberDetail(s.id, 'consult', true);
 }
 
 function switchStaffDetailTab(tab) {
   _staffDetailTab = tab;
-  document.getElementById('main-content').innerHTML = renderStaffMemberDetail(_staffDetailId, tab);
+  document.getElementById('main-content').innerHTML = renderStaffMemberDetail(_staffDetailId, tab, _staffDetailSelfView);
 }
 
-function renderStaffMemberDetail(staffId, tab) {
+function renderStaffMemberDetail(staffId, tab, selfView) {
   var s = MOCK.staffList.find(function(x){ return x.id === staffId; });
   if (!s) return '<div class="empty-state">Không tìm thấy nhân viên</div>';
   tab = tab || 'consult';
 
   var html = '';
-  // Breadcrumb
-  html += '<div style="display:flex;align-items:center;gap:8px;margin-bottom:20px;font-size:13px">';
-  html += '<button onclick="navTo(\'stf-list\')" style="background:none;border:none;color:var(--brand);cursor:pointer;font-family:inherit;font-size:13px;padding:0">← Danh sách nhân viên</button>';
-  html += '<span style="color:var(--border)">›</span><span style="color:var(--muted)">' + s.name + '</span>';
-  html += '</div>';
+  if (selfView) {
+    html += '<div style="margin-bottom:20px;font-size:13px;color:var(--muted)">Dashboard cá nhân — theo dõi khối lượng công việc của bạn tại LinkaJob</div>';
+  } else {
+    // Breadcrumb
+    html += '<div style="display:flex;align-items:center;gap:8px;margin-bottom:20px;font-size:13px">';
+    html += '<button onclick="navTo(\'stf-list\')" style="background:none;border:none;color:var(--brand);cursor:pointer;font-family:inherit;font-size:13px;padding:0">← Danh sách nhân viên</button>';
+    html += '<span style="color:var(--border)">›</span><span style="color:var(--muted)">' + s.name + '</span>';
+    html += '</div>';
+  }
 
   // Hero card
   html += '<div class="card" style="margin-bottom:16px"><div style="padding:20px 24px;display:flex;gap:16px;align-items:center;flex-wrap:wrap">';
@@ -2213,51 +2277,98 @@ function renderStaffSchedulePage() {
   return html;
 }
 
+var _saleModalStaffName = null;
+var _saleModalDayIdx = 0;
+var _saleModalDays = [];
+
 function openSaleScheduleModal(staffName) {
   selectedSaleSlots.clear();
-  document.getElementById('modal-title').textContent = '📅 Thêm lịch trống — ' + staffName;
+  _saleModalStaffName = staffName;
+  _saleModalDayIdx = 0;
 
   const base = new Date();
-  const days = [];
-  for (let i=0;i<7;i++) { const d = new Date(base); d.setDate(base.getDate()+i); days.push(d); }
+  _saleModalDays = [];
+  for (let i=0;i<7;i++) { const d = new Date(base); d.setDate(base.getDate()+i); _saleModalDays.push(d); }
 
+  document.getElementById('modal-title').textContent = '📅 Thêm lịch trống — ' + staffName;
+  renderSaleScheduleModalBody();
+
+  var modalBox = document.querySelector('.modal');
+  if (modalBox) modalBox.style.maxWidth = '560px';
+  document.getElementById('modal-overlay').classList.add('open');
+}
+
+function renderSaleScheduleModalBody() {
+  const staffName = _saleModalStaffName;
   const existingKeys = {};
   MOCK.saleSlots.forEach(function(sl){
     if (sl.staff === staffName) existingKeys[sl.date + '_' + sl.time] = sl.status;
   });
 
-  let html = '<div style="font-size:13px;color:var(--muted);margin-bottom:12px">Chọn các khung giờ trống cho <b>' + staffName + '</b> trong 7 ngày tới. Mỗi buổi 30 phút tư vấn miễn phí.</div>';
-  html += '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px" id="sale-slot-grid">';
-  days.forEach(function(d){
+  // Đếm số slot đã chọn/đã có mỗi ngày để hiện chấm trên tab ngày
+  function countForDay(d) {
     const dateStr = ymd(d);
-    const dow = DAYS_VI[d.getDay()];
+    let n = 0;
     ['09:00','10:00','11:00','14:00','15:00','16:00','17:00','19:00','20:00'].forEach(function(t){
       const key = dateStr + '_' + t;
-      const exist = existingKeys[key];
-      let cls = 'day-time-chip';
-      let disabled = '';
-      let label = dow + ' ' + d.getDate() + '/' + (d.getMonth()+1) + '<br><b>' + t + '</b>';
-      if (exist === 'booked') { cls += ' booked'; disabled = 'disabled'; label += '<br><span style="font-size:9px">Đã đặt</span>'; }
-      else if (exist === 'available') { cls += ' selected'; label += '<br><span style="font-size:9px">Đã có</span>'; }
-      html += '<button class="' + cls + '" data-key="' + key + '" ' + disabled + ' onclick="toggleSaleSlot(this,\'' + key + '\')" style="padding:8px 4px;font-size:11px;line-height:1.4">' + label + '</button>';
+      if (selectedSaleSlots.has(key) || existingKeys[key] === 'available') n++;
     });
+    return n;
+  }
+
+  let html = '<div style="font-size:13px;color:var(--muted);margin-bottom:14px">Chọn ngày rồi bấm giờ trống cho <b>' + staffName + '</b>. Mỗi buổi 20 phút tư vấn miễn phí.</div>';
+
+  // Thanh chọn ngày
+  html += '<div style="display:flex;gap:6px;overflow-x:auto;padding-bottom:8px;margin-bottom:14px;border-bottom:1.5px solid var(--border)">';
+  _saleModalDays.forEach(function(d, i){
+    const dow = DAYS_VI[d.getDay()];
+    const active = i === _saleModalDayIdx;
+    const cnt = countForDay(d);
+    html += '<button onclick="switchSaleModalDay(' + i + ')" style="flex-shrink:0;min-width:56px;padding:8px 6px;border-radius:10px;border:1.5px solid ' + (active?'var(--brand)':'var(--border)') + ';background:' + (active?'var(--brand)':'var(--white)') + ';color:' + (active?'#fff':'var(--text)') + ';cursor:pointer;text-align:center;font-family:inherit">';
+    html += '<div style="font-size:11px;font-weight:600">' + dow + '</div><div style="font-size:13px;font-weight:700">' + d.getDate() + '/' + (d.getMonth()+1) + '</div>';
+    if (cnt > 0) html += '<div style="font-size:9px;margin-top:2px;' + (active?'color:#fff':'color:var(--brand)') + '">' + cnt + ' slot</div>';
+    html += '</button>';
   });
   html += '</div>';
-  html += '<div style="font-size:12px;color:var(--muted);margin-top:12px">Đã chọn: <span id="sale-sel-count" style="color:var(--brand);font-weight:700">0</span> slot</div>';
+
+  // Giờ trong ngày đang chọn
+  const curDay = _saleModalDays[_saleModalDayIdx];
+  const dateStr = ymd(curDay);
+  const dow = DAYS_VI[curDay.getDay()];
+  html += '<div style="font-size:13px;font-weight:700;margin-bottom:10px">' + dow + ' ' + curDay.getDate() + '/' + (curDay.getMonth()+1) + ' — chọn giờ trống</div>';
+  html += '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px" id="sale-slot-grid">';
+  ['09:00','10:00','11:00','14:00','15:00','16:00','17:00','19:00','20:00'].forEach(function(t){
+    const key = dateStr + '_' + t;
+    const exist = existingKeys[key];
+    let cls = 'day-time-chip';
+    let disabled = '';
+    let label = '<b>' + t + '</b>';
+    if (exist === 'booked') { cls += ' booked'; disabled = 'disabled'; label += '<br><span style="font-size:9px">Đã đặt</span>'; }
+    else if (selectedSaleSlots.has(key) || exist === 'available') { cls += ' selected'; label += '<br><span style="font-size:9px">' + (exist==='available'?'Đã có':'Mới chọn') + '</span>'; }
+    html += '<button class="' + cls + '" data-key="' + key + '" ' + disabled + ' onclick="toggleSaleSlot(this,\'' + key + '\')" style="padding:12px 4px;font-size:13px;line-height:1.4">' + label + '</button>';
+  });
+  html += '</div>';
+
+  html += '<div style="font-size:12px;color:var(--muted);margin-top:14px;padding-top:12px;border-top:1px solid var(--border)">Tổng đã chọn (tất cả các ngày): <span id="sale-sel-count" style="color:var(--brand);font-weight:700">' + selectedSaleSlots.size + '</span> slot</div>';
 
   document.getElementById('modal-body').innerHTML = html;
+  document.getElementById('modal-body').style.maxHeight = '65vh';
+  document.getElementById('modal-body').style.overflowY = 'auto';
   document.getElementById('modal-actions').innerHTML =
     '<button class="btn-secondary" onclick="closeModal()" style="width:auto;padding:10px 20px">Huỷ</button>' +
-    '<button class="login-btn" id="sale-send-btn" onclick="saveSaleSlots(\'' + staffName + '\')" style="width:auto;padding:10px 24px">Lưu lịch trống</button>';
-  document.getElementById('modal-overlay').classList.add('open');
+    '<button class="login-btn" id="sale-send-btn" onclick="saveSaleSlots(\'' + staffName + '\')" style="width:auto;padding:10px 24px">Lưu lịch trống (' + selectedSaleSlots.size + ')</button>';
+}
+
+function switchSaleModalDay(idx) {
+  _saleModalDayIdx = idx;
+  renderSaleScheduleModalBody();
 }
 
 function toggleSaleSlot(btn, key) {
   if (btn.classList.contains('booked')) return;
-  if (selectedSaleSlots.has(key)) { selectedSaleSlots.delete(key); btn.classList.remove('selected'); }
-  else { selectedSaleSlots.add(key); btn.classList.add('selected'); }
-  const el = document.getElementById('sale-sel-count');
-  if (el) el.textContent = selectedSaleSlots.size;
+  if (selectedSaleSlots.has(key)) selectedSaleSlots.delete(key);
+  else selectedSaleSlots.add(key);
+  renderSaleScheduleModalBody();
 }
 
 function saveSaleSlots(staffName) {
