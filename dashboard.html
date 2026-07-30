@@ -467,9 +467,9 @@ const API = 'https://script.google.com/macros/s/AKfycbx7Bd9VvoyzfiiezQV9huoY2BKH
 const DEMO_ACCOUNTS = [
   { email: 'kien@linkajob.vn',    password: '123456', role: 'Advisor', name: 'Nguyễn Vũ Trí Kiên', initials: 'KV' },
   { email: 'phuong@linkajob.vn',  password: '123456', role: 'Staff',   name: 'Phương Staff',        initials: 'PS', subRole: 'Admin' },
-  { email: 'khoa@linkajob.vn',    password: '123456', role: 'Staff',   name: 'Trần Minh Khoa',       initials: 'TK', subRole: 'Sale' },
-  { email: 'chau@linkajob.vn',    password: '123456', role: 'Staff',   name: 'Lê Thị Bảo Châu',      initials: 'LC', subRole: 'CourseManager' },
-  { email: 'thanh@linkajob.vn',   password: '123456', role: 'Staff',   name: 'Đinh Văn Thành',       initials: 'DT', subRole: 'AdvisorManager' },
+  { email: 'khoa@linkajob.vn',    password: '123456', role: 'Staff',   name: 'Trần Minh Khoa',       initials: 'TK', subRole: 'Sale', staffId: 's2' },
+  { email: 'chau@linkajob.vn',    password: '123456', role: 'Staff',   name: 'Lê Thị Bảo Châu',      initials: 'LC', subRole: 'CourseManager', staffId: 's3' },
+  { email: 'thanh@linkajob.vn',   password: '123456', role: 'Staff',   name: 'Đinh Văn Thành',       initials: 'DT', subRole: 'AdvisorManager', staffId: 's4' },
   { email: 'advisee@linkajob.vn', password: '123456', role: 'Advisee', name: 'Trần Gia Hân',         initials: 'GH' },
 ];
 
@@ -545,7 +545,6 @@ function doLogin() {
     document.getElementById('dropdown-role').textContent = u.role + ' · LinkaJob';
     document.getElementById('dropdown-edit-profile').style.display = (u.role === 'Advisor') ? 'flex' : 'none';
     buildTabBar(u.role);
-    if (u.role === 'Staff') loadDashboard(u.role);
   }
 
   if (user) { finishLogin(user); return; }
@@ -556,7 +555,12 @@ function doLogin() {
     btn.innerHTML = 'Đăng nhập';
     btn.disabled = false;
     if (res && res.success) {
-      finishLogin({ email: email, role: selectedRole, name: res.name || email, initials: mkInitials(res.name || email) });
+      finishLogin({
+        email: email, role: selectedRole, name: res.name || email,
+        initials: mkInitials(res.name || email),
+        subRole: res.sub_role || null,
+        staffId: res.staff_id || null,
+      });
     } else {
       finishLogin(null);
     }
@@ -814,12 +818,23 @@ function buildTabBar(role) {
   var sidebar = document.getElementById('sidebar');
 
   if (role === 'Staff') {
-    var subRole = (currentUser && currentUser.subRole) || 'Admin';
+    var subRole = currentUser && currentUser.subRole;
 
     if (subRole === 'Admin') {
       tabbar.className  = 'role-tabbar';        // hide tabbar
       sidebar.className = 'sidebar';             // show sidebar
       buildSidebar(role);
+      return;
+    }
+
+    if (!subRole) {
+      // Chưa cấu hình quyền cho tài khoản này — chặn lại thay vì mặc định Admin (fail-closed)
+      sidebar.className = 'sidebar hidden';
+      tabbar.className  = 'role-tabbar';
+      var errMc = document.getElementById('main-content');
+      errMc.className = 'content';
+      errMc.innerHTML = '<div class="card"><div class="empty-state"><div class="icon">⚠</div>' +
+        'Tài khoản này chưa được cấu hình quyền truy cập (subRole).<br>Vui lòng liên hệ Admin để gán vai trò phù hợp.</div></div>';
       return;
     }
 
@@ -1250,25 +1265,39 @@ function autoAssignReg(idx) {
   assignRegToStaff(idx, best.name);
 }
 
+function assignCandidateRowHtml(st, idx, load, limit, full) {
+  return '<div style="display:flex;align-items:center;gap:12px;border:1.5px solid ' + (full?'#FCA5A5':'var(--border)') + ';border-radius:12px;padding:12px 16px;cursor:' + (full?'not-allowed':'pointer') + ';opacity:' + (full?'.6':'1') + ';transition:border-color .15s" ' +
+    (full ? '' : 'onmouseover="this.style.borderColor=\'var(--brand)\'" onmouseout="this.style.borderColor=\'var(--border)\'" onclick="assignRegToStaff(' + idx + ',\'' + st.name + '\')"') + '>' +
+    avatarCircle(st.name, 34) +
+    '<div style="flex:1"><div style="font-weight:700;font-size:13.5px">' + st.name + '</div><div style="font-size:12px;color:var(--muted)">' + st.note + (limit !== null ? ' · Tải: ' + load + '/' + limit + (full?' (đầy tải)':'') : '') + '</div></div>' +
+    (full ? '' : '<div style="font-size:12px;color:var(--brand);font-weight:600">Chọn →</div>') + '</div>';
+}
+
 function openAssignRegModal(idx) {
   var s = (window._newRegSessions||[])[idx];
   if (!s) return;
   var lead = parseConsultNotes(s.notes);
-  var saleStaff = MOCK.staffList.filter(function(st){ return st.role === 'Sale' && st.active; });
+  var saleStaff  = MOCK.staffList.filter(function(st){ return st.role === 'Sale' && st.active; });
+  var otherStaff = MOCK.staffList.filter(function(st){ return st.role !== 'Sale' && st.active; });
 
   document.getElementById('modal-title').textContent = 'Phân công — ' + (lead.name || s.advisee_name);
-  var body = '<div style="font-size:13px;color:var(--muted);margin-bottom:14px">Chọn Sale phụ trách liên hệ và tư vấn cho khách này. Lượt tư vấn sẽ xuất hiện trong tab "Lịch tư vấn" của Sale được chọn.</div>';
-  body += '<div style="display:flex;flex-direction:column;gap:10px">';
+  var body = '<div style="font-size:13px;color:var(--muted);margin-bottom:14px">Chọn người phụ trách liên hệ và tư vấn cho khách này. Lượt tư vấn sẽ xuất hiện trong tab tương ứng của người được chọn.</div>';
+
+  body += '<div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">Sale (theo SOP tải lead)</div>';
+  body += '<div style="display:flex;flex-direction:column;gap:10px;margin-bottom:16px">';
   saleStaff.forEach(function(st){
     var load = getStaffLeadLoad(st.name), limit = st.leadLimit || 30;
-    var full = load >= limit;
-    body += '<div style="display:flex;align-items:center;gap:12px;border:1.5px solid ' + (full?'#FCA5A5':'var(--border)') + ';border-radius:12px;padding:12px 16px;cursor:' + (full?'not-allowed':'pointer') + ';opacity:' + (full?'.6':'1') + ';transition:border-color .15s" ' +
-      (full ? '' : 'onmouseover="this.style.borderColor=\'var(--brand)\'" onmouseout="this.style.borderColor=\'var(--border)\'" onclick="assignRegToStaff(' + idx + ',\'' + st.name + '\')"') + '>' +
-      avatarCircle(st.name, 34) +
-      '<div style="flex:1"><div style="font-weight:700;font-size:13.5px">' + st.name + '</div><div style="font-size:12px;color:var(--muted)">' + st.note + ' · Tải: ' + load + '/' + limit + (full?' (đầy tải)':'') + '</div></div>' +
-      (full ? '' : '<div style="font-size:12px;color:var(--brand);font-weight:600">Chọn →</div>') + '</div>';
+    body += assignCandidateRowHtml(st, idx, load, limit, load >= limit);
   });
   body += '</div>';
+
+  if (otherStaff.length) {
+    body += '<div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">Nhân viên khác (phân công thủ công, ngoài SOP tải lead)</div>';
+    body += '<div style="display:flex;flex-direction:column;gap:10px">';
+    otherStaff.forEach(function(st){ body += assignCandidateRowHtml(st, idx, 0, null, false); });
+    body += '</div>';
+  }
+
   document.getElementById('modal-body').innerHTML = body;
   document.getElementById('modal-actions').innerHTML = '<button class="btn-secondary" onclick="closeModal()" style="width:auto;padding:10px 20px">Đóng</button>';
   document.getElementById('modal-overlay').classList.add('open');
@@ -1772,7 +1801,8 @@ function renderAdvisorManagerDashboard() {
 }
 
 function loadSaleSelfDashboard() {
-  var s = MOCK.staffList.find(function(x){ return x.name === currentUser.name; });
+  var s = (currentUser.staffId && MOCK.staffList.find(function(x){ return x.id === currentUser.staffId; }))
+       || MOCK.staffList.find(function(x){ return x.name === currentUser.name; });
   var mc = document.getElementById('main-content');
   if (!s) { mc.innerHTML = '<div class="empty-state">Không tìm thấy hồ sơ nhân viên tương ứng tài khoản này</div>'; return; }
   _staffDetailId = s.id;
@@ -2199,7 +2229,7 @@ function openAddStaffModal() {
     '<div class="modal-field"><div class="form-label">Họ và tên *</div><input class="form-input" id="ns-name" placeholder="Nguyễn Văn A" style="margin-top:6px"></div>' +
     '<div class="modal-field"><div class="form-label">Email *</div><input class="form-input" id="ns-email" type="email" placeholder="email@linkajob.vn" style="margin-top:6px"></div>' +
     '<div class="modal-field"><div class="form-label">SĐT</div><input class="form-input" id="ns-phone" placeholder="0901234567" style="margin-top:6px"></div>' +
-    '<div class="modal-field"><div class="form-label">Vị trí *</div><select class="form-select" id="ns-role" style="margin-top:6px"><option>Sale</option><option>Operations</option><option>Marketing</option><option>Admin</option></select></div>' +
+    '<div class="modal-field"><div class="form-label">Vị trí *</div><select class="form-select" id="ns-role" style="margin-top:6px"><option>Sale</option><option>Quản lý lớp học</option><option>Quản lý Advisor</option><option>Marketing</option><option>Admin</option></select></div>' +
     '<div class="modal-field"><div class="form-label">Ghi chú</div><input class="form-input" id="ns-note" placeholder="Mô tả công việc..." style="margin-top:6px"></div>';
   document.getElementById('modal-actions').innerHTML =
     '<button class="btn-secondary" onclick="closeModal()" style="width:auto;padding:10px 20px">Huỷ</button>' +
