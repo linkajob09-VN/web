@@ -483,6 +483,11 @@ const PACKAGES = {
 const TIME_SLOTS = ['08:00','09:00','10:00','11:00','14:00','15:00','16:00','17:00','18:00','19:00','20:00','21:00'];
 const DAYS_VI = ['CN','T2','T3','T4','T5','T6','T7'];
 
+// Identity dùng chung cho toàn bộ slot "tư vấn miễn phí" trên Sheet — PHẢI khớp CW_STAFF_IDENTITY
+// trong widget "Đăng ký tư vấn" trên trang chủ. Mọi Sale khi gửi lịch trống đều ghi vào pool chung
+// này (không ghi theo tên riêng), rồi dùng field created_by để dashboard biết ai đã tạo slot đó.
+const STAFF_SLOT_IDENTITY = 'LinkaJob Team';
+
 let currentUser = null;
 let selectedRole = 'Advisor';
 let weekOffset = 0;
@@ -1818,18 +1823,20 @@ function switchStaffDetailTab(tab) {
 }
 
 // Tải lịch trống THẬT từ Sheet (AvailableSlots) cho 1 nhân viên, thay vì chỉ đọc MOCK.saleSlots trong bộ nhớ.
-// Đây là nơi khớp trực tiếp với dữ liệu mà widget "Đăng ký tư vấn" trên website đọc ra (getSlots).
+// Toàn bộ slot tư vấn miễn phí nằm chung dưới identity STAFF_SLOT_IDENTITY (khớp với widget public),
+// nên phải lọc thêm theo created_by để biết slot nào của đúng nhân viên đang xem.
 function loadStaffScheduleTabAsync() {
   var s = MOCK.staffList.find(function(x){ return x.id === _staffDetailId; });
   if (!s) return;
   var mc = document.getElementById('main-content');
   mc.innerHTML = skeletonRows(3);
 
-  apiGet('getSlots', { advisor: s.name }).then(function(res){
-    var realSlots = (res && res.data) ? res.data : [];
+  apiGet('getSlots', { advisor: STAFF_SLOT_IDENTITY }).then(function(res){
+    var allSlots = (res && res.data) ? res.data : [];
+    var mySlots = allSlots.filter(function(rs){ return (rs.created_by || '') === s.name; });
     // Xoá dữ liệu mock cũ của nhân viên này, thay bằng dữ liệu thật từ Sheet
     MOCK.saleSlots = MOCK.saleSlots.filter(function(sl){ return sl.staff !== s.name; });
-    realSlots.forEach(function(rs){
+    mySlots.forEach(function(rs){
       MOCK.saleSlots.push({
         staff: s.name,
         date: String(rs.date || '').slice(0, 10),
@@ -2313,30 +2320,27 @@ function saveNewStaff() {
 let selectedSaleSlots = new Set();
 
 // Tải lịch trống THẬT từ Sheet cho TẤT CẢ Sale đang active, dùng cho trang tổng quan của Admin.
+// Chỉ cần 1 lần gọi vào pool chung STAFF_SLOT_IDENTITY, sau đó tách theo created_by cho từng người.
 function loadStaffSchedulePageAsync() {
   var mc = document.getElementById('main-content');
   mc.innerHTML = skeletonRows(3);
   var saleStaff = MOCK.staffList.filter(function(s){ return s.role === 'Sale' && s.active; });
+  var saleNames = saleStaff.map(function(s){ return s.name; });
 
-  Promise.all(saleStaff.map(function(s){
-    return apiGet('getSlots', { advisor: s.name }).catch(function(){ return null; });
-  })).then(function(results){
-    // Xoá mock cũ của các Sale này, thay bằng dữ liệu thật
-    var saleNames = saleStaff.map(function(s){ return s.name; });
+  apiGet('getSlots', { advisor: STAFF_SLOT_IDENTITY }).then(function(res){
+    var allSlots = (res && res.data) ? res.data : [];
     MOCK.saleSlots = MOCK.saleSlots.filter(function(sl){ return saleNames.indexOf(sl.staff) === -1; });
-    results.forEach(function(res, idx){
-      var realSlots = (res && res.data) ? res.data : [];
-      var staffName = saleStaff[idx].name;
-      realSlots.forEach(function(rs){
-        MOCK.saleSlots.push({
-          staff: staffName,
-          date: String(rs.date || '').slice(0, 10),
-          time: rs.time_start,
-          status: rs.status === 'booked' ? 'booked' : 'available',
-          client: rs.status === 'booked' ? (rs.booking_id || 'Đã đặt') : '',
-          note: 'Tư vấn miễn phí',
-          slot_id: rs.slot_id,
-        });
+    allSlots.forEach(function(rs){
+      var owner = rs.created_by || '';
+      if (saleNames.indexOf(owner) === -1) return; // bỏ qua slot không rõ người tạo hoặc của staff không còn active
+      MOCK.saleSlots.push({
+        staff: owner,
+        date: String(rs.date || '').slice(0, 10),
+        time: rs.time_start,
+        status: rs.status === 'booked' ? 'booked' : 'available',
+        client: rs.status === 'booked' ? (rs.booking_id || 'Đã đặt') : '',
+        note: 'Tư vấn miễn phí',
+        slot_id: rs.slot_id,
       });
     });
     mc.innerHTML = renderStaffSchedulePage();
@@ -2495,8 +2499,9 @@ function saveSaleSlots(staffName) {
 
   apiPost({
     action: 'addSlots',
-    advisor: staffName,
+    advisor: STAFF_SLOT_IDENTITY,   // ghi vào pool chung để widget public thấy được
     advisor_email: st ? st.email : '',
+    created_by: staffName,          // đánh dấu ai thực sự tạo slot này, để dashboard lọc lại đúng người
     slots: Array.from(selectedSaleSlots),
   }).then(function(res){
     if (res && res.success) {
