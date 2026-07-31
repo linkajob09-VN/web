@@ -2701,7 +2701,6 @@ function toggleSaleSlot(btn, key) {
 }
 
 function saveSaleSlots(staffName) {
-  function saveSaleSlots(staffName) {
   if (selectedSaleSlots.size === 0) { toast('Chưa chọn giờ nào!', 'error'); return; }
   var st = MOCK.staffList.find(function(x){ return x.name === staffName; });
   var btn = document.getElementById('sale-send-btn');
