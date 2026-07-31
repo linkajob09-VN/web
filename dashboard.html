@@ -1581,7 +1581,7 @@ const MOCK = {
   consultations: [
     { id:'cv1', staff:'Trần Minh Khoa', name:'Phạm Văn Long', phone:'0909111222', email:'long.pham@gmail.com',
       source:'Website', consultAbout:'Gói Cố vấn', date:'2026-07-03', time:'15:00', meetLink:'https://meet.google.com/xyz-uvwx-rst',
-      status:'Đã chốt lịch', result:'', nextStep:'', nextStepDeadline:'',
+      status:'Đã đặt được lịch', result:'', nextStep:'', nextStepDeadline:'',
       profile:{education:'', experience:'', desire:'', barrier:'', followUp:''},
       log:[ {time:'29/06/2026 10:05', text:'Khách đăng ký tư vấn qua website, tự chọn slot 15:00 ngày 3/7.'} ] },
     { id:'cv2', staff:'Trần Minh Khoa', name:'Nguyễn Thị Hoa', phone:'0912345678', email:'hoa.nguyen@gmail.com',
@@ -1591,12 +1591,12 @@ const MOCK = {
       log:[ {time:'10/07/2026 09:12', text:'Khách để lại thông tin qua Form quảng cáo Facebook, chưa đặt lịch meeting.'} ] },
     { id:'cv3', staff:'Nguyễn Phương Thảo', name:'Nguyễn Thị Mai', phone:'0933444555', email:'mai.nguyen@gmail.com',
       source:'Email', consultAbout:'Gói Cố vấn', date:'2026-07-02', time:'14:00', meetLink:'https://meet.google.com/abc-defg-hij',
-      status:'Đã chốt lịch', result:'', nextStep:'', nextStepDeadline:'',
+      status:'Đã đặt được lịch', result:'', nextStep:'', nextStepDeadline:'',
       profile:{education:'', experience:'', desire:'', barrier:'', followUp:''},
       log:[ {time:'27/06/2026 16:40', text:'Khách chủ động email hỏi về gói cố vấn, đã gửi lịch trống để khách tự chọn.'} ] },
     { id:'cv4', staff:'Nguyễn Phương Thảo', name:'Đỗ Văn Kiệt', phone:'0977888999', email:'kiet.do@gmail.com',
       source:'Zalo', consultAbout:'Advisor', date:null, time:null, meetLink:'',
-      status:'Đang liên hệ', result:'', nextStep:'Nhắn lại Zalo hẹn khung giờ phù hợp', nextStepDeadline:'2026-07-14',
+      status:'Đã nhắn tin', result:'', nextStep:'Nhắn lại Zalo hẹn khung giờ phù hợp', nextStepDeadline:'2026-07-14',
       profile:{education:'', experience:'Fresh graduate ngành Tài chính', desire:'Muốn tìm advisor ngành Finance để định hướng', barrier:'', followUp:'Đã nhắn Zalo 1 lần, chưa phản hồi'},
       log:[ {time:'11/07/2026 14:20', text:'Khách nhắn Zalo hỏi về advisor ngành Finance, chưa xác nhận được lịch rảnh.'} ] },
   ],
@@ -1897,10 +1897,10 @@ function renderStaffLeadsTab(s) {
   return html;
 }
 
-const CONSULT_STATUS = ['Chưa liên hệ','Đang liên hệ','Đã chốt lịch','Đã tư vấn xong','Đã đóng','Tạm đóng','Không phù hợp'];
-// 'Đã đóng' = quá Ngày 3 mà khách chưa chốt được lịch (theo SOP mục 3.2)
-// 'Tạm đóng' = quá Ngày 3 sau meeting mà khách không phản hồi thanh toán
-const CONSULT_RESULT = ['','Đăng ký gói cố vấn','Đăng ký khoá học','Đang cân nhắc','Từ chối'];
+const CONSULT_STATUS = ['Chưa liên hệ','Đã nhắn tin','Đã gọi điện','Không phản hồi','Đã đặt được lịch','Đã tư vấn xong','Đã đóng','Tạm đóng','Không phù hợp'];
+// Nhắn tin/Gọi điện = sale đã liên hệ ngoài hệ thống để chốt lịch cho lead chưa tự đặt được
+// Đã đóng/Tạm đóng = quá hạn theo dõi mà không có phản hồi (mục 3.2 SOP)
+const CONSULT_RESULT = ['','Cần follow up','Không phù hợp','Đăng ký gói cố vấn','Đăng ký khoá học','Đang cân nhắc','Từ chối'];
 
 function navToConsultationDetail(cid) {
   document.getElementById('main-content').innerHTML = renderConsultationDetail(cid);
@@ -1941,7 +1941,7 @@ function renderConsultationDetail(cid) {
     html += '<div style="display:grid;grid-template-columns:1fr 1fr 2fr;gap:10px">';
     html += '<div><div class="form-label">Ngày</div><input class="form-input" id="cv-newdate" type="date" style="margin-top:4px"></div>';
     html += '<div><div class="form-label">Giờ</div><input class="form-input" id="cv-newtime" type="time" style="margin-top:4px"></div>';
-    html += '<div><div class="form-label">Link Meet (tuỳ chọn)</div><input class="form-input" id="cv-newlink" placeholder="https://meet.google.com/..." style="margin-top:4px"></div>';
+    html += '<div><div class="form-label">Link Meet (tuỳ chọn)</div><input class="form-input" id="cv-newlink" placeholder="https://meet.google.com/..." style="margin-top:4px"><a href="https://meet.google.com/new" target="_blank" style="font-size:11px;color:var(--brand);display:inline-block;margin-top:4px">↗ Tạo phòng Meet mới, dán link vào đây</a></div>';
     html += '</div>';
     html += '<button class="login-btn" style="width:auto;padding:9px 20px;margin-top:12px;font-size:13px" onclick="scheduleConsultation(\'' + c.id + '\')">Xác nhận đặt lịch</button>';
     html += '</div>';
@@ -1957,6 +1957,21 @@ function renderConsultationDetail(cid) {
   html += '</div>';
   html += '<div class="form-footer"><button class="submit-btn" onclick="saveConsultProgress(\'' + c.id + '\')">Lưu tiến trình</button></div>';
   html += '</div>';
+
+  // Chuyển thành Advisee khi khách đã đăng ký
+  if (c.result === 'Đăng ký gói cố vấn' || c.result === 'Đăng ký khoá học') {
+    if (c.convertedAeId) {
+      html += '<div class="card" style="margin-bottom:16px"><div style="padding:16px 24px;display:flex;align-items:center;justify-content:space-between;background:var(--green-bg)">';
+      html += '<div style="font-size:13px;color:var(--green)"><b>✓ Đã chuyển thành Advisee</b></div>';
+      html += '<button class="detail-btn" onclick="navToStaffAdviseeDetail(\'' + c.convertedAeId + '\',\'staffcare\')">Xem hồ sơ Advisee →</button>';
+      html += '</div></div>';
+    } else {
+      html += '<div class="card" style="margin-bottom:16px"><div style="padding:16px 24px;background:#FFFBEB;border:1.5px solid #FDE68A;border-radius:14px;margin:16px">';
+      html += '<div style="font-size:13px;font-weight:700;color:#92400E;margin-bottom:8px">🎉 Khách đã đăng ký — chuyển hồ sơ thành Advisee để bắt đầu theo dõi các buổi cố vấn</div>';
+      html += '<button class="submit-btn" onclick="openConvertToAdviseeModal(\'' + c.id + '\')">Chuyển thành Advisee →</button>';
+      html += '</div></div>';
+    }
+  }
 
   // Hồ sơ khách hàng
   html += '<div class="card" style="margin-bottom:16px"><div class="card-header"><div class="card-header-left">Hồ sơ khách hàng</div></div>';
@@ -1998,7 +2013,7 @@ function scheduleConsultation(cid) {
   if (!d || !t) { toast('Vui lòng chọn ngày và giờ', 'error'); return; }
   c.date = d; c.time = t;
   c.meetLink = document.getElementById('cv-newlink').value.trim();
-  c.status = 'Đã chốt lịch';
+  c.status = 'Đã đặt được lịch';
   var now = new Date();
   c.log.push({ time: pad(now.getDate())+'/'+pad(now.getMonth()+1)+'/'+now.getFullYear()+' '+pad(now.getHours())+':'+pad(now.getMinutes()), text: 'Đã chốt lịch tư vấn: ' + fmtDateStr(d) + ' · ' + t + (c.meetLink?' — Link: ' + c.meetLink:'') });
   toast('Đã chốt lịch tư vấn cho ' + c.name + ' ✅', 'success');
