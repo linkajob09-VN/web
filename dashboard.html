@@ -1923,121 +1923,190 @@ function renderStaffConsultTab(s) {
 
   var upcoming = mine.filter(function(c){ return new Date(c.date + 'T' + (c.time||'00:00')) >= now; })
     .sort(function(a,b){ return (a.date+a.time).localeCompare(b.date+b.time); });
-
   var past = mine.filter(function(c){ return new Date(c.date + 'T' + (c.time||'00:00')) < now; })
-    .sort(function(a,b){ return (b.date+b.time).localeCompare(a.date+a.time); }); // gần nhất trước
+    .sort(function(a,b){ return (b.date+b.time).localeCompare(a.date+a.time); });
 
   var html = '';
-
-  // ── Buổi sắp tới ──
-  html += '<div class="card"><div class="card-header"><div class="card-header-left">📅 Lịch tư vấn sắp tới (' + upcoming.length + ')</div>';
-  html += '<span style="font-size:12px;color:var(--muted)">Tự động cập nhật khi có khách đăng ký từ website</span></div>';
-  if (upcoming.length === 0) {
-    html += '<div class="empty-state"><div class="icon">📭</div>Chưa có buổi tư vấn nào sắp tới</div>';
-  } else {
-    upcoming.forEach(function(c){
-      var sla = getLeadSlaInfo(c);
-      html += '<div class="session-item">' + avatarCircle(c.name, 38);
-      html += '<div class="session-info"><div class="session-name">' + c.name + '</div>';
-      html += '<div class="session-meta">' + c.consultAbout + ' · Nguồn: ' + c.source + '</div>';
-      if (sla) html += '<div style="margin-top:4px"><span style="background:' + sla.bg + ';color:' + sla.color + ';font-size:11px;font-weight:700;padding:2px 8px;border-radius:100px">' + sla.label + '</span></div>';
-      html += '</div>';
-      html += '<div class="session-time"><strong>' + fmtDateStr(c.date) + '</strong>' + c.time + '</div>';
-      html += '<span class="badge badge-pending">' + c.status + '</span>';
-      if (c.meetLink) html += '<a href="' + c.meetLink + '" target="_blank" class="detail-btn" style="margin-left:8px">🎥 Meet</a>';
-      html += '<button class="detail-btn" style="margin-left:8px" onclick="navToConsultationDetail(\'' + c.id + '\')">Chi tiết →</button>';
-      html += '</div>';
-    });
-  }
+  html += '<div class="card"><div class="card-header"><div class="card-header-left">📅 Lịch tư vấn sắp tới (' + upcoming.length + ')</div></div>';
+  html += renderConsultTable(upcoming);
   html += '</div>';
 
-  // ── Khách hàng đã tư vấn (buổi đã qua giờ hẹn) ──
   html += '<div class="card"><div class="card-header"><div class="card-header-left">✅ Khách hàng đã tư vấn (' + past.length + ')</div></div>';
-  if (past.length === 0) {
-    html += '<div class="empty-state"><div class="icon">🗂</div>Chưa có buổi nào đã diễn ra</div>';
-  } else {
-    past.forEach(function(c){
-      var resultTag = c.result
-        ? '<span class="badge badge-confirmed">' + c.result + '</span>'
-        : '<span class="badge" style="background:#FEF3C7;color:#92400E">Chưa cập nhật kết quả</span>';
-      html += '<div class="session-item">' + avatarCircle(c.name, 36);
-      html += '<div class="session-info"><div class="session-name">' + c.name + '</div>';
-      html += '<div class="session-meta">' + c.consultAbout + ' · ' + fmtDateStr(c.date) + ' ' + c.time + '</div></div>';
-      html += resultTag;
-      html += '<button class="detail-btn" style="margin-left:8px" onclick="navToConsultationDetail(\'' + c.id + '\')">Chi tiết →</button>';
-      html += '</div>';
-    });
-  }
+  html += renderConsultTable(past);
   html += '</div>';
 
   return html;
 }
 
+function renderConsultTable(list) {
+  if (list.length === 0) {
+    return '<div class="empty-state"><div class="icon">📭</div>Chưa có buổi nào</div>';
+  }
+  var html = '<div style="overflow-x:auto"><table class="bookings-table" style="min-width:820px"><thead><tr>' +
+    '<th>KHÁCH HÀNG</th><th>EMAIL / SĐT</th><th>THỜI GIAN TƯ VẤN</th><th>TƯ VẤN SẢN PHẨM</th><th>KẾT QUẢ</th>' +
+    '</tr></thead><tbody>';
+
+  list.forEach(function(c){
+    html += '<tr>';
+    html += '<td style="min-width:130px"><div style="font-weight:700;font-size:13px">' + c.name + '</div></td>';
+    html += '<td style="font-size:12.5px;color:var(--muted);min-width:150px">' + (c.phone||'—') + '<br>' + (c.email||'') + '</td>';
+    html += '<td style="min-width:170px"><div style="font-size:13px;font-weight:600">' + fmtDateStr(c.date) + ' · ' + c.time + '</div>' +
+      (c.meetLink ? '<a href="' + c.meetLink + '" target="_blank" class="detail-btn" style="margin-top:4px;font-size:11.5px;padding:4px 9px">🎥 Meet</a>' : '') + '</td>';
+    html += '<td style="font-size:12.5px">' + c.consultAbout + '</td>';
+    html += '<td><select class="form-select" style="padding:6px 10px;font-size:12.5px;min-width:150px" onchange="handleConsultResultChange(\'' + c.id + '\', this.value)">' +
+      CONSULT_RESULT.map(function(r){ return '<option' + (r===c.result?' selected':'') + '>' + (r||'— Chưa có —') + '</option>'; }).join('') +
+      '</select></td>';
+    html += '</tr>';
+  });
+
+  html += '</tbody></table></div>';
+  return html;
+}
+
+// Xử lý khi Sale chọn Kết quả cho 1 buổi tư vấn
+function handleConsultResultChange(cid, value) {
+  var c = MOCK.consultations.find(function(x){ return x.id === cid; });
+  if (!c) return;
+  var newResult = value === '— Chưa có —' ? '' : value;
+  c.result = newResult;
+
+  if (newResult === 'Đăng ký') {
+    // Nếu khách đã tự đăng ký trên web trùng tên/email → tự động tính doanh thu
+    // cho đúng Sale phụ trách lượt tư vấn này (không tạo trùng hồ sơ Advisee).
+    var existing = MOCK.advisees.find(function(ae){ return ae.email === c.email || ae.name === c.name; });
+    if (existing) {
+      toast('Khách đã có hồ sơ Advisee (trùng thông tin) — đã ghi nhận doanh thu cho ' + c.staff + ' ✅', 'success');
+      refreshStaffTab();
+      return;
+    }
+    openCreateAdviseeFromConsultModal(cid);
+    return;
+  }
+
+  toast('Đã lưu kết quả', 'success');
+  refreshStaffTab();
+}
+
+function refreshStaffTab() {
+  if (_staffDetailId) document.getElementById('main-content').innerHTML = renderStaffMemberDetail(_staffDetailId, _staffDetailTab, _staffDetailSelfView);
+}
+
+// Modal tạo hồ sơ Advisee tự động khi khách chọn "Đăng ký" mà chưa có hồ sơ nào
+function openCreateAdviseeFromConsultModal(cid) {
+  var c = MOCK.consultations.find(function(x){ return x.id === cid; });
+  if (!c) return;
+  var activeAdvisors = MOCK.advisors.filter(function(a){ return a.active; });
+
+  document.getElementById('modal-title').textContent = '🎉 Tạo hồ sơ Advisee — ' + c.name;
+  var body = '<div style="font-size:13px;color:var(--muted);margin-bottom:14px">Khách đã đồng ý đăng ký. Chọn gói và Advisor để tạo hồ sơ — doanh thu sẽ tự động tính cho bạn.</div>';
+  body += '<div class="form-label" style="margin-bottom:6px">Gói</div>';
+  body += '<select class="form-select" id="ca-pkg" style="margin-bottom:14px">' +
+    Object.keys(PACKAGES).map(function(p){ return '<option value="' + p + '">' + p + ' — ' + fmtMoney(PACKAGES[p].price) + ' · ' + PACKAGES[p].sessions + ' buổi</option>'; }).join('') +
+    '</select>';
+  body += '<div class="form-label" style="margin-bottom:6px">Advisor phụ trách</div>';
+  body += '<select class="form-select" id="ca-advisor" style="margin-bottom:14px">' +
+    activeAdvisors.map(function(a){ return '<option value="' + a.name + '">' + a.name + ' — ' + a.title + '</option>'; }).join('') +
+    '</select>';
+  body += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">';
+  body += '<div><div class="form-label" style="margin-bottom:6px">Ngày đăng ký</div><input class="form-input" type="date" id="ca-date" value="' + ymd(new Date()) + '"></div>';
+  body += '<div><div class="form-label" style="margin-bottom:6px">Số tiền thanh toán</div><input class="form-input" type="number" id="ca-paid" value="' + PACKAGES[Object.keys(PACKAGES)[0]].price + '"></div>';
+  body += '</div>';
+
+  document.getElementById('modal-body').innerHTML = body;
+  document.getElementById('modal-actions').innerHTML =
+    '<button class="btn-secondary" onclick="closeModal();refreshStaffTab()" style="width:auto;padding:10px 20px">Huỷ</button>' +
+    '<button class="login-btn" onclick="confirmCreateAdviseeFromConsult(\'' + cid + '\')" style="width:auto;padding:10px 24px">Tạo hồ sơ Advisee</button>';
+  document.getElementById('modal-overlay').classList.add('open');
+
+  document.getElementById('ca-pkg').addEventListener('change', function(e){
+    document.getElementById('ca-paid').value = PACKAGES[e.target.value].price;
+  });
+}
+
+function confirmCreateAdviseeFromConsult(cid) {
+  var c = MOCK.consultations.find(function(x){ return x.id === cid; });
+  if (!c) return;
+  var pkgName = document.getElementById('ca-pkg').value;
+  var advisorName = document.getElementById('ca-advisor').value;
+  var regDate = document.getElementById('ca-date').value;
+  var paid = Number(document.getElementById('ca-paid').value) || PACKAGES[pkgName].price;
+  var pkg = PACKAGES[pkgName];
+
+  var expiry = new Date(regDate + 'T00:00:00');
+  expiry.setDate(expiry.getDate() + pkg.days);
+
+  var sessions = [];
+  for (var i = 1; i <= pkg.sessions; i++) {
+    sessions.push({ no: i, date: null, timeStart: null, timeEnd: null, status: i === 1 ? 'upcoming' : 'locked', lockedReason: i === 1 ? undefined : 'Hoàn thành buổi trước để mở khoá', feedback: null, meetLink: '', prepInfo: null, advisorNotes: null });
+  }
+
+  MOCK.advisees.push({
+    id: 'adv-ee' + Date.now(),
+    name: c.name, email: c.email, phone: c.phone, contact: '',
+    pkg: pkgName, bookingId: 'LJ-' + regDate.replace(/-/g,'') + '-' + String(Date.now()).slice(-4),
+    advisorTitle: '', progress: '0/' + pkg.sessions, sessionsTotal: pkg.sessions, sessionsDone: 0,
+    paid: paid, registeredAt: regDate, expiry: ymd(expiry), advisor: advisorName,
+    sessions: sessions,
+  });
+
+  toast('Đã tạo hồ sơ Advisee cho ' + c.name + ' — doanh thu ghi nhận cho ' + c.staff + ' ✅', 'success');
+  closeModal();
+  refreshStaffTab();
+}
+  
 // ── Tab: Khách chưa đặt lịch — cần liên hệ ──
 function renderStaffLeadsTab(s) {
   var leads = MOCK.consultations.filter(function(c){ return c.staff === s.name && !c.date; });
 
   var html = '<div class="card"><div class="card-header"><div class="card-header-left">⚠ Khách chưa đặt lịch — cần liên hệ (' + leads.length + ')</div>';
-  html += '<span style="font-size:12px;color:var(--muted)">Khách chỉ để lại thông tin, chưa tự chốt được giờ meeting — sửa trực tiếp trạng thái ngay tại đây</span></div>';
+  html += '<span style="font-size:12px;color:var(--muted)">Khách chỉ để lại thông tin, chưa tự chốt được giờ meeting</span></div>';
 
   if (leads.length === 0) {
     html += '<div class="empty-state"><div class="icon">✅</div>Không có khách nào đang chờ liên hệ</div>';
   } else {
-    html += '<div style="overflow-x:auto"><table class="bookings-table" style="min-width:900px"><thead><tr>' +
-      '<th>KHÁCH HÀNG</th><th>NGUỒN BOOK</th><th>STATUS TƯ VẤN</th>' +
-      '<th>CONSULT VỀ</th><th>NEXT STEP (KÈM DEADLINE)</th><th>KẾT QUẢ</th><th>NOTE</th><th></th>' +
+    html += '<div style="overflow-x:auto"><table class="bookings-table" style="min-width:820px"><thead><tr>' +
+      '<th>KHÁCH HÀNG</th><th>EMAIL / SĐT</th><th>THỜI GIAN LEAD</th><th>ĐÃ LIÊN HỆ</th><th></th>' +
       '</tr></thead><tbody>';
 
     leads.forEach(function(c){
-      var sla = getLeadSlaInfo(c);
+      var leadInfo = getLeadFreshness(c);
       html += '<tr>';
-
-      // Khách hàng
-      html += '<td style="min-width:170px"><div style="font-weight:700;font-size:13px">' + c.name + '</div>' +
-        '<div style="font-size:11.5px;color:var(--muted);line-height:1.6">' + (c.phone||'—') + '<br>' + (c.email||'') + '</div>' +
-        (sla ? '<div style="margin-top:4px"><span style="background:' + sla.bg + ';color:' + sla.color + ';font-size:10.5px;font-weight:700;padding:2px 7px;border-radius:100px">' + sla.label + '</span></div>' : '') +
-        '</td>';
-
-      // Nguồn book
-      html += '<td style="font-size:12.5px">' + c.source + '</td>';
-
-      // Status tư vấn — inline select, lưu ngay khi đổi
-      html += '<td><select class="form-select" style="padding:6px 10px;font-size:12.5px;min-width:150px" onchange="updateLeadStatusInline(\'' + c.id + '\', this.value)">' +
-        CONSULT_STATUS.map(function(st){ return '<option' + (st===c.status?' selected':'') + '>' + st + '</option>'; }).join('') +
-        '</select></td>';
-
-      // Consult về
-      html += '<td style="font-size:12.5px">' + c.consultAbout + '</td>';
-
-      // Next step + deadline — inline input, lưu khi blur
-      html += '<td style="min-width:190px">' +
-        '<input class="form-input" style="padding:6px 8px;font-size:12px;margin-bottom:4px" value="' + (c.nextStep||'') + '" placeholder="Việc cần làm..." onblur="updateLeadNoteInline(\'' + c.id + '\',\'nextStep\',this.value)">' +
-        '<input class="form-input" style="padding:6px 8px;font-size:12px" type="date" value="' + (c.nextStepDeadline||'') + '" onblur="updateLeadNoteInline(\'' + c.id + '\',\'nextStepDeadline\',this.value)">' +
-        '</td>';
-
-      // Kết quả — inline select
-      html += '<td><select class="form-select" style="padding:6px 10px;font-size:12.5px;min-width:140px" onchange="updateLeadResultInline(\'' + c.id + '\', this.value)">' +
-        CONSULT_RESULT.map(function(r){ return '<option' + (r===c.result?' selected':'') + '>' + (r||'— Chưa có —') + '</option>'; }).join('') +
-        '</select></td>';
-
-      // Note — hiện profile ngắn gọn kiểu sheet, sửa trực tiếp
-      var noteVal = [
-        c.profile && c.profile.education ? 'Học vấn: ' + c.profile.education : '',
-        c.profile && c.profile.experience ? 'Kinh nghiệm: ' + c.profile.experience : '',
-        c.profile && c.profile.desire ? 'Mong muốn: ' + c.profile.desire : '',
-        c.profile && c.profile.barrier ? 'Barrier: ' + c.profile.barrier : '',
-      ].filter(Boolean).join('\n');
-      html += '<td style="min-width:220px"><textarea class="form-textarea" style="min-height:70px;font-size:12px;padding:6px 8px" placeholder="Học vấn / Kinh nghiệm / Mong muốn / Barrier..." onblur="updateLeadNoteInline(\'' + c.id + '\',\'noteBlock\',this.value)">' + noteVal + '</textarea></td>';
-
-      // Action — tạo hồ sơ tư vấn (chốt lịch + link meet + nội dung)
-      html += '<td><button class="login-btn" style="width:auto;white-space:nowrap;padding:8px 14px;font-size:12.5px" onclick="navToConsultationDetail(\'' + c.id + '\')">📋 Tạo hồ sơ tư vấn →</button></td>';
-
+      html += '<td style="min-width:140px"><div style="font-weight:700;font-size:13px">' + c.name + '</div></td>';
+      html += '<td style="font-size:12.5px;color:var(--muted);min-width:150px">' + (c.phone||'—') + '<br>' + (c.email||'') + '</td>';
+      html += '<td style="min-width:190px"><span style="background:' + leadInfo.bg + ';color:' + leadInfo.color + ';font-size:11.5px;font-weight:700;padding:3px 9px;border-radius:100px;display:inline-block">' + leadInfo.label + '</span></td>';
+      html += '<td style="min-width:200px">' +
+        '<div style="display:flex;gap:6px">' +
+        '<input class="form-input" style="padding:6px 8px;font-size:12px" type="date" value="' + (c.contactedDate||'') + '" onchange="updateLeadContactedInline(\'' + c.id + '\',\'contactedDate\',this.value)">' +
+        '<input class="form-input" style="padding:6px 8px;font-size:12px" type="time" value="' + (c.contactedTime||'') + '" onchange="updateLeadContactedInline(\'' + c.id + '\',\'contactedTime\',this.value)">' +
+        '</div></td>';
+      html += '<td><button class="login-btn" style="width:auto;white-space:nowrap;padding:8px 14px;font-size:12.5px" onclick="navToConsultationDetail(\'' + c.id + '\')">📋 Chốt lịch tư vấn →</button></td>';
       html += '</tr>';
     });
     html += '</tbody></table></div>';
   }
   html += '</div>';
   return html;
+}
+
+// Trạng thái "độ mới" của lead — chỉ 2 mức theo yêu cầu:
+// - Chưa liên hệ: "Lead mới — liên hệ trong 1 tiếng"
+// - Quá 3 ngày mà vẫn chưa chốt được lịch: "Lead quá hạn"
+function getLeadFreshness(c) {
+  var anchor = (c.log && c.log[0]) ? parseVNDateTime(c.log[0].time) : new Date();
+  var now = new Date();
+  var days = anchor ? Math.floor((now - anchor) / 86400000) : 0;
+  if (days > 3) {
+    return { label: '⚠ Lead quá hạn — quá 3 ngày chưa chốt lịch', bg: '#FEE2E2', color: '#B91C1C' };
+  }
+  return { label: '🆕 Lead mới — liên hệ trong 1 tiếng', bg: '#DBEAFE', color: '#1D4ED8' };
+}
+
+// field: 'contactedDate' | 'contactedTime'
+function updateLeadContactedInline(cid, field, value) {
+  var c = MOCK.consultations.find(function(x){ return x.id === cid; });
+  if (!c) return;
+  c[field] = value;
+  toast('Đã lưu thời gian liên hệ', 'success');
 }
 
 // Lưu ngay khi đổi Status tư vấn trên list, không cần vào trang chi tiết
@@ -2074,8 +2143,8 @@ function updateLeadNoteInline(cid, field, value) {
 const CONSULT_STATUS = ['Chưa liên hệ','Đang liên hệ','Đã chốt lịch','Đã tư vấn xong','Đã đóng','Tạm đóng','Không phù hợp'];
 // 'Đã đóng' = quá Ngày 3 mà khách chưa chốt được lịch (theo SOP mục 3.2)
 // 'Tạm đóng' = quá Ngày 3 sau meeting mà khách không phản hồi thanh toán
-const CONSULT_RESULT = ['','Đăng ký gói cố vấn','Đăng ký khoá học','Đang cân nhắc','Từ chối'];
-
+const CONSULT_RESULT = ['','Cân nhắc thêm','Không phản hồi','Từ chối','Đăng ký'];
+  
 function navToConsultationDetail(cid) {
   document.getElementById('main-content').innerHTML = renderConsultationDetail(cid);
 }
@@ -2219,57 +2288,109 @@ function addConsultLog(cid) {
 // ── Tab 2: Gửi lịch trống ──
 function renderStaffScheduleTab(s) {
   var mySlots = MOCK.saleSlots.filter(function(sl){ return sl.staff === s.name; });
-  mySlots.sort(function(a,b){ return (a.date+a.time).localeCompare(b.date+b.time); });
+  var byDate = {};
+  mySlots.forEach(function(sl){
+    if (!byDate[sl.date]) byDate[sl.date] = { available: 0, booked: 0 };
+    if (sl.status === 'booked') byDate[sl.date].booked++;
+    else byDate[sl.date].available++;
+  });
+  window._staffCalByDate = byDate;
+  window._staffCalStaffName = s.name;
+
   var availCount = mySlots.filter(function(sl){ return sl.status === 'available'; }).length;
+  var bookedCount = mySlots.filter(function(sl){ return sl.status === 'booked'; }).length;
 
-  var html = '<div class="card"><div class="card-header"><div class="card-header-left">Lịch trống của ' + s.name.split(' ').pop() + ' (' + availCount + ' slot)</div>';
-  html += '<button class="submit-btn" style="padding:8px 16px;font-size:13px" onclick="openSaleScheduleModal(\'' + s.name + '\')">+ Thêm lịch trống</button></div>';
+  var html = '<div class="card"><div class="card-header">' +
+    '<div class="card-header-left">Lịch của ' + s.name.split(' ').pop() + ' — ' + availCount + ' slot trống · ' + bookedCount + ' đã đặt</div>' +
+    '<button class="submit-btn" style="padding:8px 16px;font-size:13px" onclick="openSaleScheduleModal(\'' + s.name + '\')">+ Thêm lịch trống</button>' +
+    '</div></div>';
 
-  if (mySlots.length === 0) {
-    html += '<div class="empty-state"><div class="icon">📅</div>Chưa có lịch nào, hãy thêm lịch trống để khách đặt lịch</div>';
-  } else {
-    html += '<table class="bookings-table"><thead><tr><th>NGÀY</th><th>GIỜ</th><th>KHÁCH HÀNG</th><th>TRẠNG THÁI</th><th></th></tr></thead><tbody>';
-    mySlots.forEach(function(sl, idx){
-      var globalIdx = MOCK.saleSlots.indexOf(sl);
-      html += '<tr>';
-      html += '<td>' + fmtDateStr(sl.date) + '</td>';
-      html += '<td>' + sl.time + '</td>';
-      html += '<td>' + (sl.client || '<span style="color:var(--muted)">—</span>') + '</td>';
-      html += '<td>' + (sl.status === 'booked' ? '<span class="badge badge-pending">Đã đặt</span>' : '<span class="badge badge-confirmed">Trống</span>') + '</td>';
-      html += '<td>' + (sl.status === 'available'
-        ? '<button class="update-btn" onclick="deleteSaleSlotInDetail(' + globalIdx + ')">Xoá</button>'
-        : '<button class="update-btn" onclick="openSaleBookingDetail(' + globalIdx + ')">Chi tiết</button>') + '</td>';
-      html += '</tr>';
-    });
-    html += '</tbody></table>';
-  }
-  html += '</div>';
+  html += renderStaffCalendarMonth(s.name);
   return html;
 }
 
-function deleteSaleSlotInDetail(globalIdx) {
-  var sl = MOCK.saleSlots[globalIdx];
-  if (!sl) return;
+function renderStaffCalendarMonth(staffName) {
+  var byDate = window._staffCalByDate || {};
+  var base = new Date(); base.setDate(1); base.setMonth(base.getMonth() + staffCalMonthOffset);
+  var year = base.getFullYear(), month = base.getMonth();
+  var firstOfMonth = new Date(year, month, 1);
+  var startDay = firstOfMonth.getDay();
+  var gridStart = new Date(firstOfMonth);
+  gridStart.setDate(gridStart.getDate() - (startDay === 0 ? 6 : startDay - 1));
 
-  if (!sl.slot_id) {
-    // Dữ liệu cũ chưa có slot_id thật (chưa từng đồng bộ) — chỉ xoá local, không có gì để xoá trên Sheet
-    MOCK.saleSlots.splice(globalIdx, 1);
-    toast('Đã xoá slot (chỉ ở local, chưa từng lưu lên Sheet)', 'success');
-    switchStaffDetailTab('schedule');
-    return;
+  var monthLabel = ['Tháng 1','Tháng 2','Tháng 3','Tháng 4','Tháng 5','Tháng 6','Tháng 7','Tháng 8','Tháng 9','Tháng 10','Tháng 11','Tháng 12'][month] + ' ' + year;
+  var today = new Date();
+
+  var html = '<div class="card"><div class="cal-nav"><div class="cal-nav-left">' +
+    '<button onclick="changeStaffCalMonth(-1)">‹</button><span class="cal-nav-label">' + monthLabel + '</span><button onclick="changeStaffCalMonth(1)">›</button>' +
+    '</div><button class="cal-today-btn" onclick="goToStaffCalToday()">Hôm nay</button></div>';
+
+  html += '<div class="cal-grid">';
+  DAYS_VI_FULL.forEach(function(d){ html += '<div class="cal-weekday-hdr">' + d + '</div>'; });
+
+  var cursor = new Date(gridStart);
+  for (var w = 0; w < 6; w++) {
+    for (var d = 0; d < 7; d++) {
+      var dateStr = ymd(cursor);
+      var isOther = cursor.getMonth() !== month;
+      var isToday = ymd(cursor) === ymd(today);
+      var counts = byDate[dateStr] || { available: 0, booked: 0 };
+      html += '<div class="cal-cell' + (isOther?' other-month':'') + (isToday?' today':'') + '" onclick="openStaffSlotDayModal(\'' + dateStr + '\')">';
+      html += '<div class="cal-daynum">' + cursor.getDate() + '</div><div class="cal-add">+</div>';
+      html += '<div class="cal-badges">';
+      if (counts.available > 0) html += '<span class="cal-badge slot">' + counts.available + ' trống</span>';
+      if (counts.booked > 0) html += '<span class="cal-badge meeting">' + counts.booked + ' đã đặt</span>';
+      html += '</div></div>';
+      cursor.setDate(cursor.getDate() + 1);
+    }
+  }
+  html += '</div></div>';
+  return html;
+}
+
+function changeStaffCalMonth(dir) {
+  staffCalMonthOffset += dir;
+  document.getElementById('main-content').innerHTML = renderStaffMemberDetail(_staffDetailId, 'schedule', _staffDetailSelfView);
+}
+function goToStaffCalToday() {
+  staffCalMonthOffset = 0;
+  document.getElementById('main-content').innerHTML = renderStaffMemberDetail(_staffDetailId, 'schedule', _staffDetailSelfView);
+}
+
+function openStaffSlotDayModal(dateStr) {
+  var staffName = window._staffCalStaffName;
+  var dateObj = new Date(dateStr + 'T00:00:00');
+  var dow = DAYS_VI[dateObj.getDay()];
+  document.getElementById('modal-title').textContent = dow + ' ' + dateObj.getDate() + '/' + (dateObj.getMonth()+1) + ' — ' + staffName.split(' ').pop();
+
+  var daySlots = MOCK.saleSlots.filter(function(sl){ return sl.staff === staffName && sl.date === dateStr; })
+    .sort(function(a,b){ return a.time.localeCompare(b.time); });
+
+  var html = '';
+  if (daySlots.length === 0) {
+    html += '<div class="empty-state" style="padding:20px 0"><div class="icon">📭</div>Chưa có slot nào ngày này</div>';
+  } else {
+    daySlots.forEach(function(sl){
+      var idx = MOCK.saleSlots.indexOf(sl);
+      html += '<div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border)">';
+      html += '<div style="font-weight:700;font-size:14px;min-width:56px">' + sl.time + '</div>';
+      if (sl.status === 'booked') {
+        html += '<span class="badge badge-pending" style="flex:1">Đã đặt — ' + (sl.client||'') + '</span>';
+      } else {
+        html += '<span class="badge badge-confirmed" style="flex:1">Trống</span>';
+        html += '<button class="update-btn" onclick="closeModal();deleteSaleSlotInDetail(' + idx + ')">Xoá</button>';
+      }
+      html += '</div>';
+    });
   }
 
-  toast('Đang xoá trên Sheet...', '');
-  apiPost({ action: 'deleteSlot', slot_id: sl.slot_id }).then(function(res){
-    if (res && res.success) {
-      toast('Đã xoá slot ✅', 'success');
-    } else {
-      toast('Lỗi: ' + (res && res.error ? res.error : 'không xoá được'), 'error');
-    }
-    loadStaffScheduleTabAsync();
-  }).catch(function(err){
-    toast('Lỗi kết nối: ' + err.message, 'error');
-  });
+  html += '<div style="margin-top:14px;font-size:12px;color:var(--muted)">Muốn thêm giờ trống cho ngày này? Bấm "+ Thêm giờ trống" bên dưới.</div>';
+
+  document.getElementById('modal-body').innerHTML = html;
+  document.getElementById('modal-actions').innerHTML =
+    '<button class="btn-secondary" onclick="closeModal()" style="width:auto;padding:10px 20px">Đóng</button>' +
+    '<button class="login-btn" onclick="closeModal();openSaleScheduleModal(\'' + staffName + '\')" style="width:auto;padding:10px 24px">+ Thêm giờ trống</button>';
+  document.getElementById('modal-overlay').classList.add('open');
 }
 
 // ── Tab 3: Chăm sóc khách hàng ──
@@ -2523,7 +2644,7 @@ function saveNewStaff() {
 //  MODULE STAFF — LỊCH TƯ VẤN (SALE)
 // ════════════════════════════════════════════════════════════
 let selectedSaleSlots = new Set();
-  
+
 // State cho calendar "Gửi lịch trống" của Staff (tách riêng khỏi calMonthOffset
 // đang dùng chung cho Advisor / Meeting calendar để tránh đụng nhau)
 var staffCalMonthOffset = 0;
