@@ -1828,31 +1828,38 @@ function switchStaffDetailTab(tab) {
 function loadStaffScheduleTabAsync() {
   var s = MOCK.staffList.find(function(x){ return x.id === _staffDetailId; });
   if (!s) return;
-  var mc = document.getElementById('main-content');
-  mc.innerHTML = skeletonRows(3);
 
   apiGet('getSlots', { advisor: STAFF_SLOT_IDENTITY }).then(function(res){
     var allSlots = (res && res.data) ? res.data : [];
-    var mySlots = allSlots.filter(function(rs){ return (rs.created_by || '') === s.name; });
-    // Xoá dữ liệu mock cũ của nhân viên này, thay bằng dữ liệu thật từ Sheet
-    MOCK.saleSlots = MOCK.saleSlots.filter(function(sl){ return sl.staff !== s.name; });
-    mySlots.forEach(function(rs){
-      MOCK.saleSlots.push({
-        staff: s.name,
-        date: String(rs.date || '').slice(0, 10),
-        time: rs.time_start,
-        status: rs.status === 'booked' ? 'booked' : 'available',
-        client: rs.status === 'booked' ? (rs.booking_id || 'Đã đặt') : '',
-        note: 'Tư vấn miễn phí',
-        slot_id: rs.slot_id, // cần để xoá đúng dòng thật trên Sheet
-      });
+    // Nhận diện slot của nhân viên này bằng created_by, fallback theo advisor_email
+    // nếu Sheet chưa lưu/trả cột created_by (đây chính là nguyên nhân bug "0 slot").
+    var mySlots = allSlots.filter(function(rs){
+      var byCreator = (rs.created_by || '') === s.name;
+      var byEmail = !rs.created_by && rs.advisor_email && s.email && rs.advisor_email === s.email;
+      return byCreator || byEmail;
     });
-    _staffDetailTab = 'schedule';
-    mc.innerHTML = renderStaffMemberDetail(_staffDetailId, 'schedule', _staffDetailSelfView);
+
+    // Merge thêm — KHÔNG xoá sạch mảng local trước, để slot vừa gửi (optimistic)
+    // không bị biến mất nếu response từ Sheet thiếu/trễ.
+    mySlots.forEach(function(rs){
+      var d = String(rs.date || '').slice(0, 10);
+      var t = rs.time_start;
+      var existing = MOCK.saleSlots.find(function(sl){ return sl.staff === s.name && sl.date === d && sl.time === t; });
+      var status = rs.status === 'booked' ? 'booked' : 'available';
+      var client = rs.status === 'booked' ? (rs.booking_id || 'Đã đặt') : '';
+      if (existing) {
+        existing.status = status; existing.client = client; existing.slot_id = rs.slot_id;
+      } else {
+        MOCK.saleSlots.push({ staff: s.name, date: d, time: t, status: status, client: client, note: 'Tư vấn miễn phí', slot_id: rs.slot_id });
+      }
+    });
+
+    if (_staffDetailTab === 'schedule') {
+      document.getElementById('main-content').innerHTML = renderStaffMemberDetail(_staffDetailId, 'schedule', _staffDetailSelfView);
+    }
   }).catch(function(err){
-    toast('Không tải được lịch thật từ Sheet: ' + err.message, 'error');
-    _staffDetailTab = 'schedule';
-    mc.innerHTML = renderStaffMemberDetail(_staffDetailId, 'schedule', _staffDetailSelfView);
+    // Lỗi mạng: giữ nguyên dữ liệu local đã có (không xoá), chỉ báo lỗi nhẹ
+    console.warn('Không đồng bộ được lịch từ Sheet:', err.message);
   });
 }
 
@@ -1911,16 +1918,24 @@ function renderStaffMemberDetail(staffId, tab, selfView) {
 
 // ── Tab 1: Lịch tư vấn cần tham gia ──
 function renderStaffConsultTab(s) {
-  var mine = MOCK.consultations.filter(function(c){ return c.staff === s.name; });
-  var scheduled = mine.filter(function(c){ return c.date; }).sort(function(a,b){ return (a.date+a.time).localeCompare(b.date+b.time); });
+  var mine = MOCK.consultations.filter(function(c){ return c.staff === s.name && !!c.date; });
+  var now = new Date();
+
+  var upcoming = mine.filter(function(c){ return new Date(c.date + 'T' + (c.time||'00:00')) >= now; })
+    .sort(function(a,b){ return (a.date+a.time).localeCompare(b.date+b.time); });
+
+  var past = mine.filter(function(c){ return new Date(c.date + 'T' + (c.time||'00:00')) < now; })
+    .sort(function(a,b){ return (b.date+b.time).localeCompare(a.date+a.time); }); // gần nhất trước
 
   var html = '';
-  html += '<div class="card"><div class="card-header"><div class="card-header-left">Buổi tư vấn đã lên lịch (' + scheduled.length + ')</div>';
+
+  // ── Buổi sắp tới ──
+  html += '<div class="card"><div class="card-header"><div class="card-header-left">📅 Lịch tư vấn sắp tới (' + upcoming.length + ')</div>';
   html += '<span style="font-size:12px;color:var(--muted)">Tự động cập nhật khi có khách đăng ký từ website</span></div>';
-  if (scheduled.length === 0) {
-    html += '<div class="empty-state"><div class="icon">📭</div>Chưa có buổi tư vấn nào được lên lịch</div>';
+  if (upcoming.length === 0) {
+    html += '<div class="empty-state"><div class="icon">📭</div>Chưa có buổi tư vấn nào sắp tới</div>';
   } else {
-    scheduled.forEach(function(c){
+    upcoming.forEach(function(c){
       var sla = getLeadSlaInfo(c);
       html += '<div class="session-item">' + avatarCircle(c.name, 38);
       html += '<div class="session-info"><div class="session-name">' + c.name + '</div>';
@@ -1935,6 +1950,26 @@ function renderStaffConsultTab(s) {
     });
   }
   html += '</div>';
+
+  // ── Khách hàng đã tư vấn (buổi đã qua giờ hẹn) ──
+  html += '<div class="card"><div class="card-header"><div class="card-header-left">✅ Khách hàng đã tư vấn (' + past.length + ')</div></div>';
+  if (past.length === 0) {
+    html += '<div class="empty-state"><div class="icon">🗂</div>Chưa có buổi nào đã diễn ra</div>';
+  } else {
+    past.forEach(function(c){
+      var resultTag = c.result
+        ? '<span class="badge badge-confirmed">' + c.result + '</span>'
+        : '<span class="badge" style="background:#FEF3C7;color:#92400E">Chưa cập nhật kết quả</span>';
+      html += '<div class="session-item">' + avatarCircle(c.name, 36);
+      html += '<div class="session-info"><div class="session-name">' + c.name + '</div>';
+      html += '<div class="session-meta">' + c.consultAbout + ' · ' + fmtDateStr(c.date) + ' ' + c.time + '</div></div>';
+      html += resultTag;
+      html += '<button class="detail-btn" style="margin-left:8px" onclick="navToConsultationDetail(\'' + c.id + '\')">Chi tiết →</button>';
+      html += '</div>';
+    });
+  }
+  html += '</div>';
+
   return html;
 }
 
@@ -1943,24 +1978,97 @@ function renderStaffLeadsTab(s) {
   var leads = MOCK.consultations.filter(function(c){ return c.staff === s.name && !c.date; });
 
   var html = '<div class="card"><div class="card-header"><div class="card-header-left">⚠ Khách chưa đặt lịch — cần liên hệ (' + leads.length + ')</div>';
-  html += '<span style="font-size:12px;color:var(--muted)">Khách chỉ để lại thông tin, chưa tự chốt được giờ meeting</span></div>';
+  html += '<span style="font-size:12px;color:var(--muted)">Khách chỉ để lại thông tin, chưa tự chốt được giờ meeting — sửa trực tiếp trạng thái ngay tại đây</span></div>';
+
   if (leads.length === 0) {
     html += '<div class="empty-state"><div class="icon">✅</div>Không có khách nào đang chờ liên hệ</div>';
   } else {
+    html += '<div style="overflow-x:auto"><table class="bookings-table" style="min-width:900px"><thead><tr>' +
+      '<th>KHÁCH HÀNG</th><th>NGUỒN BOOK</th><th>STATUS TƯ VẤN</th>' +
+      '<th>CONSULT VỀ</th><th>NEXT STEP (KÈM DEADLINE)</th><th>KẾT QUẢ</th><th>NOTE</th><th></th>' +
+      '</tr></thead><tbody>';
+
     leads.forEach(function(c){
       var sla = getLeadSlaInfo(c);
-      html += '<div class="session-item">' + avatarCircle(c.name, 38);
-      html += '<div class="session-info"><div class="session-name">' + c.name + '</div>';
-      html += '<div class="session-meta">' + c.phone + ' · Nguồn: ' + c.source + ' · ' + c.consultAbout + '</div>';
-      if (sla) html += '<div style="margin-top:4px"><span style="background:' + sla.bg + ';color:' + sla.color + ';font-size:11px;font-weight:700;padding:2px 8px;border-radius:100px">' + sla.label + '</span></div>';
-      html += '</div>';
-      html += '<span class="badge" style="background:#FEF3C7;color:#92400E">' + c.status + '</span>';
-      html += '<button class="login-btn" style="margin-left:8px;width:auto;padding:8px 16px;font-size:13px" onclick="navToConsultationDetail(\'' + c.id + '\')">Liên hệ & chốt lịch</button>';
-      html += '</div>';
+      html += '<tr>';
+
+      // Khách hàng
+      html += '<td style="min-width:170px"><div style="font-weight:700;font-size:13px">' + c.name + '</div>' +
+        '<div style="font-size:11.5px;color:var(--muted);line-height:1.6">' + (c.phone||'—') + '<br>' + (c.email||'') + '</div>' +
+        (sla ? '<div style="margin-top:4px"><span style="background:' + sla.bg + ';color:' + sla.color + ';font-size:10.5px;font-weight:700;padding:2px 7px;border-radius:100px">' + sla.label + '</span></div>' : '') +
+        '</td>';
+
+      // Nguồn book
+      html += '<td style="font-size:12.5px">' + c.source + '</td>';
+
+      // Status tư vấn — inline select, lưu ngay khi đổi
+      html += '<td><select class="form-select" style="padding:6px 10px;font-size:12.5px;min-width:150px" onchange="updateLeadStatusInline(\'' + c.id + '\', this.value)">' +
+        CONSULT_STATUS.map(function(st){ return '<option' + (st===c.status?' selected':'') + '>' + st + '</option>'; }).join('') +
+        '</select></td>';
+
+      // Consult về
+      html += '<td style="font-size:12.5px">' + c.consultAbout + '</td>';
+
+      // Next step + deadline — inline input, lưu khi blur
+      html += '<td style="min-width:190px">' +
+        '<input class="form-input" style="padding:6px 8px;font-size:12px;margin-bottom:4px" value="' + (c.nextStep||'') + '" placeholder="Việc cần làm..." onblur="updateLeadNoteInline(\'' + c.id + '\',\'nextStep\',this.value)">' +
+        '<input class="form-input" style="padding:6px 8px;font-size:12px" type="date" value="' + (c.nextStepDeadline||'') + '" onblur="updateLeadNoteInline(\'' + c.id + '\',\'nextStepDeadline\',this.value)">' +
+        '</td>';
+
+      // Kết quả — inline select
+      html += '<td><select class="form-select" style="padding:6px 10px;font-size:12.5px;min-width:140px" onchange="updateLeadResultInline(\'' + c.id + '\', this.value)">' +
+        CONSULT_RESULT.map(function(r){ return '<option' + (r===c.result?' selected':'') + '>' + (r||'— Chưa có —') + '</option>'; }).join('') +
+        '</select></td>';
+
+      // Note — hiện profile ngắn gọn kiểu sheet, sửa trực tiếp
+      var noteVal = [
+        c.profile && c.profile.education ? 'Học vấn: ' + c.profile.education : '',
+        c.profile && c.profile.experience ? 'Kinh nghiệm: ' + c.profile.experience : '',
+        c.profile && c.profile.desire ? 'Mong muốn: ' + c.profile.desire : '',
+        c.profile && c.profile.barrier ? 'Barrier: ' + c.profile.barrier : '',
+      ].filter(Boolean).join('\n');
+      html += '<td style="min-width:220px"><textarea class="form-textarea" style="min-height:70px;font-size:12px;padding:6px 8px" placeholder="Học vấn / Kinh nghiệm / Mong muốn / Barrier..." onblur="updateLeadNoteInline(\'' + c.id + '\',\'noteBlock\',this.value)">' + noteVal + '</textarea></td>';
+
+      // Action — tạo hồ sơ tư vấn (chốt lịch + link meet + nội dung)
+      html += '<td><button class="login-btn" style="width:auto;white-space:nowrap;padding:8px 14px;font-size:12.5px" onclick="navToConsultationDetail(\'' + c.id + '\')">📋 Tạo hồ sơ tư vấn →</button></td>';
+
+      html += '</tr>';
     });
+    html += '</tbody></table></div>';
   }
   html += '</div>';
   return html;
+}
+
+// Lưu ngay khi đổi Status tư vấn trên list, không cần vào trang chi tiết
+function updateLeadStatusInline(cid, newStatus) {
+  var c = MOCK.consultations.find(function(x){ return x.id === cid; });
+  if (!c) return;
+  c.status = newStatus;
+  toast('Đã cập nhật status cho ' + c.name, 'success');
+  // re-render đúng tab đang xem (leads) để badge/SLA cập nhật lại
+  if (_staffDetailId) document.getElementById('main-content').innerHTML = renderStaffMemberDetail(_staffDetailId, 'leads', _staffDetailSelfView);
+}
+
+function updateLeadResultInline(cid, newResult) {
+  var c = MOCK.consultations.find(function(x){ return x.id === cid; });
+  if (!c) return;
+  c.result = newResult === '— Chưa có —' ? '' : newResult;
+  toast('Đã cập nhật kết quả cho ' + c.name, 'success');
+}
+
+// field: 'nextStep' | 'nextStepDeadline' | 'noteBlock'
+function updateLeadNoteInline(cid, field, value) {
+  var c = MOCK.consultations.find(function(x){ return x.id === cid; });
+  if (!c) return;
+  if (field === 'nextStep') c.nextStep = value.trim();
+  else if (field === 'nextStepDeadline') c.nextStepDeadline = value;
+  else if (field === 'noteBlock') {
+    // Ghi đè khối note nhanh vào profile.desire để không phá cấu trúc log gốc
+    c.profile = c.profile || {};
+    c.profile.followUp = value.trim();
+  }
+  toast('Đã lưu', 'success');
 }
 
 const CONSULT_STATUS = ['Chưa liên hệ','Đang liên hệ','Đã chốt lịch','Đã tư vấn xong','Đã đóng','Tạm đóng','Không phù hợp'];
@@ -2166,49 +2274,124 @@ function deleteSaleSlotInDetail(globalIdx) {
 
 // ── Tab 3: Chăm sóc khách hàng ──
 // ── Tab: KPI cá nhân (theo mục 5.1 SOP) ──
-function renderStaffKpiTab(s) {
-  var mine = MOCK.consultations.filter(function(c){ return c.staff === s.name; });
+// Doanh thu quy đổi cho 1 Sale, dựa trên các consultation đã "Đăng ký ..."
+// (paid lấy từ hồ sơ Advisee tương ứng theo tên).
+function getStaffRevenueStats(staffName) {
+  var mine = MOCK.consultations.filter(function(c){ return c.staff === staffName; });
   var now = new Date();
+  var weekAgo = new Date(now); weekAgo.setDate(now.getDate() - 7);
+  var monthAgo = new Date(now); monthAgo.setDate(now.getDate() - 30);
 
-  var totalLeads = mine.length;
-  var scheduledCount = mine.filter(function(c){ return !!c.date; }).length;
-  var occurredCount = mine.filter(function(c){ return c.date && new Date(c.date + 'T' + (c.time||'00:00')) <= now; }).length;
-  var paidCount = mine.filter(function(c){ return c.result && c.result.indexOf('Đăng ký') === 0; }).length;
+  var occurred = mine.filter(function(c){ return c.date && new Date(c.date + 'T' + (c.time||'00:00')) <= now; });
+  var converted = occurred.filter(function(c){ return c.result && c.result.indexOf('Đăng ký') === 0; });
 
-  var responseTimes = [];
-  mine.forEach(function(c){
-    if (c.log && c.log.length >= 2) {
-      var t0 = parseVNDateTime(c.log[0].time), t1 = parseVNDateTime(c.log[1].time);
-      if (t0 && t1) responseTimes.push((t1 - t0) / 60000);
-    }
+  var weekRevenue = 0, monthRevenue = 0;
+  converted.forEach(function(c){
+    var ae = MOCK.advisees.find(function(x){ return x.name === c.name; });
+    var paid = ae ? ae.paid : 0;
+    var d = new Date(c.date + 'T' + (c.time||'00:00'));
+    if (d >= weekAgo) weekRevenue += paid;
+    if (d >= monthAgo) monthRevenue += paid;
   });
-  var avgResponse = responseTimes.length ? Math.round(responseTimes.reduce(function(a,b){return a+b;},0) / responseTimes.length) : null;
 
-  var closeRate = totalLeads ? Math.round(scheduledCount / totalLeads * 100) : 0;
-  var showRate = scheduledCount ? Math.round(occurredCount / scheduledCount * 100) : 0;
-  var payRate = occurredCount ? Math.round(paidCount / occurredCount * 100) : 0;
+  var conversionRate = occurred.length ? Math.round(converted.length / occurred.length * 100) : 0;
 
-  var rows = [
-    { name:'Tỷ lệ chốt lịch', formula:'Lead chốt lịch / Tổng lead được giao', value: totalLeads ? closeRate + '%' : '—', sub: scheduledCount + '/' + totalLeads + ' lead', target:'≥ 40%', pass: totalLeads ? closeRate >= 40 : null },
-    { name:'Tỷ lệ show meeting', formula:'Meeting diễn ra / Lịch đã chốt', value: scheduledCount ? showRate + '%' : '—', sub: occurredCount + '/' + scheduledCount + ' buổi', target:'≥ 80%', pass: scheduledCount ? showRate >= 80 : null },
-    { name:'Tỷ lệ chốt thanh toán', formula:'Khách thanh toán / Meeting đã chạy', value: occurredCount ? payRate + '%' : '—', sub: paidCount + '/' + occurredCount + ' khách', target:'Theo mục tiêu từng gói', pass: null },
-    { name:'Thời gian phản hồi TB', formula:'TB (Zalo đầu tiên − lúc nhận lead)', value: avgResponse !== null ? avgResponse + ' phút' : '—', sub: responseTimes.length + ' lead có dữ liệu', target:'≤ 30 phút', pass: avgResponse !== null ? avgResponse <= 30 : null },
-    { name:'Tỷ lệ gia hạn', formula:'Khách gia hạn / Khách hết hạn trong kỳ', value: '—', sub: 'Cần liên kết Advisee ↔ Sale phụ trách để tính', target:'Theo mục tiêu từng kỳ', pass: null },
+  return {
+    weekRevenue: weekRevenue, monthRevenue: monthRevenue,
+    occurredCount: occurred.length, convertedCount: converted.length,
+    conversionRate: conversionRate,
+  };
+}
+
+function renderStaffKpiTab(s) {
+  var stats = getStaffRevenueStats(s.name);
+  var html = '';
+
+  // ── 2 KPI chính ──
+  html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px">';
+
+  // KPI 1: Doanh thu tuần
+  var weekTarget = 7000000;
+  var weekPct = Math.min(100, Math.round(stats.weekRevenue / weekTarget * 100));
+  var weekPass = stats.weekRevenue >= weekTarget;
+  html += '<div class="card"><div style="padding:20px 24px">';
+  html += '<div style="font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">🎯 Doanh thu tuần này</div>';
+  html += '<div style="font-size:26px;font-weight:800;color:' + (weekPass?'var(--green)':'var(--text)') + ';margin-bottom:4px">' + fmtMoney(stats.weekRevenue) + '</div>';
+  html += '<div style="font-size:12.5px;color:var(--muted);margin-bottom:12px">Mục tiêu: ' + fmtMoney(weekTarget) + '/tuần</div>';
+  html += '<div style="height:10px;background:var(--bg);border-radius:100px;overflow:hidden"><div style="height:100%;width:' + weekPct + '%;background:' + (weekPass?'var(--green)':'var(--brand)') + ';border-radius:100px;transition:width .4s"></div></div>';
+  html += '<div style="margin-top:8px;font-size:12.5px;font-weight:700;color:' + (weekPass?'var(--green)':'var(--brand)') + '">' + (weekPass ? '✅ Đã đạt mục tiêu tuần!' : weekPct + '% mục tiêu') + '</div>';
+  html += '</div></div>';
+
+  // KPI 2: Tỷ lệ chuyển đổi
+  var convPass = stats.conversionRate >= 60;
+  html += '<div class="card"><div style="padding:20px 24px">';
+  html += '<div style="font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">🎯 Tỷ lệ chuyển đổi</div>';
+  html += '<div style="font-size:26px;font-weight:800;color:' + (convPass?'var(--green)':'var(--text)') + ';margin-bottom:4px">' + stats.conversionRate + '%</div>';
+  html += '<div style="font-size:12.5px;color:var(--muted);margin-bottom:12px">' + stats.convertedCount + '/' + stats.occurredCount + ' buổi tư vấn đã đăng ký · Mục tiêu ≥ 60%</div>';
+  html += '<div style="height:10px;background:var(--bg);border-radius:100px;overflow:hidden"><div style="height:100%;width:' + Math.min(100,stats.conversionRate) + '%;background:' + (convPass?'var(--green)':'#F59E0B') + ';border-radius:100px;transition:width .4s"></div></div>';
+  html += '<div style="margin-top:8px;font-size:12.5px;font-weight:700;color:' + (convPass?'var(--green)':'#92400E') + '">' + (convPass ? '✅ Đã đạt mục tiêu chuyển đổi!' : 'Cần thêm ' + (60-stats.conversionRate) + '% để đạt mục tiêu') + '</div>';
+  html += '</div></div>';
+
+  html += '</div>';
+
+  // ── Bảng thưởng theo doanh thu tháng — dạng "qua màn" ──
+  var tiers = [
+    { threshold: 30000000, bonus: 1000000,  label: 'Cấp 1', icon: '🥉' },
+    { threshold: 45000000, bonus: 3000000,  label: 'Cấp 2', icon: '🥈' },
+    { threshold: 60000000, bonus: 5000000,  label: 'Cấp 3', icon: '🥇' },
+    { threshold: Infinity, bonus: null,     label: 'Cấp 4', icon: '👑', percentBonus: 0.10 },
   ];
+  var monthRevenue = stats.monthRevenue;
+  var maxFiniteTier = 60000000;
+  var progressCap = Math.max(monthRevenue, 1);
+  var overallPct = Math.min(100, Math.round(monthRevenue / maxFiniteTier * 100));
 
-  var html = '<div class="card"><div class="card-header"><div class="card-header-left">📊 KPI cá nhân — ' + s.name + '</div><span style="font-size:12px;color:var(--muted)">Theo SOP vận hành Sale (mục 5.1)</span></div>';
-  html += '<table class="bookings-table"><thead><tr><th>KPI</th><th>Công thức</th><th>Kết quả</th><th>Mục tiêu</th></tr></thead><tbody>';
-  rows.forEach(function(r){
-    html += '<tr>';
-    html += '<td><b>' + r.name + '</b></td>';
-    html += '<td style="font-size:12.5px;color:var(--muted)">' + r.formula + '</td>';
-    html += '<td><div style="font-size:16px;font-weight:800;' + (r.pass===true?'color:var(--green)':r.pass===false?'color:var(--brand)':'') + '">' + r.value + '</div><div style="font-size:11.5px;color:var(--muted)">' + r.sub + '</div></td>';
-    html += '<td>' + r.target + (r.pass===true?' <span class="badge badge-confirmed">Đạt</span>':r.pass===false?' <span class="badge" style="background:var(--brand-light);color:var(--brand)">Chưa đạt</span>':'') + '</td>';
-    html += '</tr>';
+  html += '<div class="card"><div class="card-header"><div class="card-header-left">🏆 Thưởng doanh thu tháng — ' + fmtMoney(monthRevenue) + ' / tháng</div></div>';
+  html += '<div style="padding:28px 24px 32px">';
+
+  // Thanh path kiểu game với các mốc
+  html += '<div style="position:relative;padding:0 20px">';
+  html += '<div style="position:absolute;top:27px;left:20px;right:20px;height:6px;background:var(--bg);border-radius:100px;overflow:hidden;z-index:0">';
+  html += '<div style="height:100%;width:' + overallPct + '%;background:linear-gradient(90deg,#F59E0B,var(--brand));border-radius:100px;transition:width .5s"></div>';
+  html += '</div>';
+
+  html += '<div style="display:flex;justify-content:space-between;position:relative;z-index:1">';
+  tiers.forEach(function(tier, i){
+    var achieved = monthRevenue >= tier.threshold || (tier.threshold === Infinity && monthRevenue >= maxFiniteTier);
+    var isCurrentTarget = !achieved && (i === 0 || monthRevenue >= tiers[i-1].threshold);
+    var circleColor = achieved ? 'var(--brand)' : '#E5E7EB';
+    var circleTextColor = achieved ? '#fff' : '#9CA3AF';
+    var bonusLabel = tier.percentBonus ? '10% doanh thu' : fmtMoney(tier.bonus);
+    var thresholdLabel = tier.threshold === Infinity ? '> ' + fmtMoney(maxFiniteTier) : fmtMoney(tier.threshold);
+
+    html += '<div style="display:flex;flex-direction:column;align-items:center;gap:8px;width:23%;text-align:center">';
+    html += '<div style="width:56px;height:56px;border-radius:50%;background:' + circleColor + ';color:' + circleTextColor + ';display:flex;align-items:center;justify-content:center;font-size:24px;box-shadow:' + (isCurrentTarget?'0 0 0 4px var(--brand-light)':'none') + ';transition:all .3s">' + (achieved ? '✓' : tier.icon) + '</div>';
+    html += '<div style="font-size:12px;font-weight:800;color:' + (achieved?'var(--brand)':'var(--muted)') + '">' + tier.label + '</div>';
+    html += '<div style="font-size:11px;color:var(--muted)">' + thresholdLabel + '</div>';
+    html += '<div style="font-size:12px;font-weight:700;color:' + (achieved?'var(--green)':'var(--text)') + '">🎁 ' + bonusLabel + '</div>';
+    if (isCurrentTarget) html += '<div style="font-size:10.5px;color:var(--brand);font-weight:700">← Đang hướng tới</div>';
+    html += '</div>';
   });
-  html += '</tbody></table></div>';
+  html += '</div></div>';
 
-  html += '<div class="card"><div style="padding:16px 24px;font-size:12.5px;color:var(--muted);line-height:1.7">💡 <b>Lưu ý theo SOP:</b> không đánh giá nhân viên chỉ bằng doanh số cuối cùng — cần nhìn KPI theo từng bước để biết vấn đề nằm ở khâu nào (outreach, tư vấn, hay chăm sóc sau bán). KPI không đạt 2 tháng liên tiếp ở cùng 1 chỉ số → lên kế hoạch đào tạo lại, không mặc định là kỷ luật.</div></div>';
+  // Thưởng thực nhận tháng này
+  var earnedBonus = 0, earnedLabel = 'Chưa đạt mốc thưởng nào';
+  for (var i = tiers.length - 1; i >= 0; i--) {
+    if (tiers[i].threshold === Infinity) {
+      if (monthRevenue > maxFiniteTier) { earnedBonus = Math.round(monthRevenue * tiers[i].percentBonus); earnedLabel = '10% doanh thu tháng (Cấp 4)'; break; }
+    } else if (monthRevenue >= tiers[i].threshold) {
+      earnedBonus = tiers[i].bonus; earnedLabel = tiers[i].label; break;
+    }
+  }
+  html += '<div style="margin-top:24px;background:var(--brand-light);border-radius:14px;padding:16px 20px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px">';
+  html += '<div><div style="font-size:12px;font-weight:700;color:var(--brand);text-transform:uppercase;letter-spacing:.05em">Thưởng tháng này</div><div style="font-size:13px;color:var(--muted);margin-top:2px">' + earnedLabel + '</div></div>';
+  html += '<div style="font-size:26px;font-weight:800;color:var(--brand)">' + fmtMoney(earnedBonus) + '</div>';
+  html += '</div>';
+
+  html += '</div></div>';
+
+  html += '<div class="card"><div style="padding:16px 24px;font-size:12.5px;color:var(--muted);line-height:1.7">💡 Doanh thu tháng được tính từ các buổi tư vấn của bạn có kết quả "Đăng ký..." trong 30 ngày gần nhất. KPI không đạt 2 tháng liên tiếp ở cùng 1 chỉ số → lên kế hoạch đào tạo lại, không mặc định là kỷ luật.</div></div>';
+
   return html;
 }
 
@@ -2225,15 +2408,24 @@ function renderStaffCareTab(s) {
       var today = new Date(); today.setHours(0,0,0,0);
       var daysLeft = Math.ceil((expiryDate - today) / 86400000);
       var expiryTag;
-      if (daysLeft < 0) {
-        expiryTag = '<span class="badge" style="background:#FEE2E2;color:#B91C1C">Hết hạn ' + Math.abs(daysLeft) + ' ngày trước</span>';
-      } else if (daysLeft <= 7) {
-        expiryTag = '<span class="badge" style="background:#FEF3C7;color:#92400E">Còn ' + daysLeft + ' ngày</span>';
-      } else {
-        expiryTag = '<span style="font-size:12px;color:var(--muted)">Hết hạn ' + ae.expiry + '</span>';
-      }
+      if (daysLeft < 0) expiryTag = '<span class="badge" style="background:#FEE2E2;color:#B91C1C">Hết hạn ' + Math.abs(daysLeft) + ' ngày trước</span>';
+      else if (daysLeft <= 7) expiryTag = '<span class="badge" style="background:#FEF3C7;color:#92400E">Còn ' + daysLeft + ' ngày</span>';
+      else expiryTag = '<span style="font-size:12px;color:var(--muted)">Hết hạn ' + ae.expiry + '</span>';
 
-      html += '<div style="display:flex;align-items:center;gap:14px;padding:16px 24px;border-top:1px solid var(--border);flex-wrap:wrap">';
+      // ── Notification: lịch meeting vừa đổi giờ ──
+      var rescheduleNotices = MOCK.rescheduleRequests.filter(function(r){ return r.aeId === ae.id && r.status === 'confirmed'; });
+
+      // ── Notification: Advisor chậm gửi feedback (nhận xét) sau buổi ──
+      var delayNotices = [];
+      ae.sessions.forEach(function(sess){
+        if (sess.status === 'done' && !sess.advisorNotes && sess.date) {
+          var daysSince = Math.floor((today - new Date(sess.date + 'T00:00:00')) / 86400000);
+          if (daysSince >= 2) delayNotices.push({ no: sess.no, days: daysSince });
+        }
+      });
+
+      html += '<div style="padding:16px 24px;border-top:1px solid var(--border)">';
+      html += '<div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap">';
       html += avatarCircle(ae.name, 40);
       html += '<div style="flex:1;min-width:180px">';
       html += '<div style="font-weight:700;font-size:14px">' + ae.name + '</div>';
@@ -2246,6 +2438,19 @@ function renderStaffCareTab(s) {
       html += '<div style="display:flex;align-items:center;gap:8px;min-width:110px"><div style="flex:1;height:6px;background:var(--bg);border-radius:100px;overflow:hidden;min-width:50px"><div style="height:100%;width:' + pct + '%;background:var(--green);border-radius:100px"></div></div><span style="font-size:12px;font-weight:700;color:var(--muted);white-space:nowrap">' + ae.sessionsDone + '/' + ae.sessionsTotal + '</span></div>';
       html += expiryTag;
       html += '<button class="detail-btn" onclick="navToStaffAdviseeDetail(\'' + ae.id + '\',\'staffcare\')" style="flex-shrink:0;margin-left:auto">Chi tiết →</button>';
+      html += '</div>';
+
+      if (rescheduleNotices.length || delayNotices.length) {
+        html += '<div style="margin-top:10px;display:flex;flex-direction:column;gap:6px;padding-left:54px">';
+        rescheduleNotices.forEach(function(r){
+          html += '<div style="display:flex;align-items:center;gap:6px;font-size:12.5px;color:#1D4ED8;background:#EFF6FF;border:1px solid #BFDBFE;border-radius:8px;padding:6px 10px;width:fit-content">🔔 Buổi ' + r.sessionNo + ' vừa được đổi giờ — thông báo cho advisor & advisee để xác nhận lại.</div>';
+        });
+        delayNotices.forEach(function(d){
+          html += '<div style="display:flex;align-items:center;gap:6px;font-size:12.5px;color:#92400E;background:#FFFBEB;border:1px solid #FDE68A;border-radius:8px;padding:6px 10px;width:fit-content">⏳ Advisor chậm gửi nhận xét buổi ' + d.no + ' (' + d.days + ' ngày) — nhắc advisor giúp khách.</div>';
+        });
+        html += '</div>';
+      }
+
       html += '</div>';
     });
   }
@@ -2318,7 +2523,11 @@ function saveNewStaff() {
 //  MODULE STAFF — LỊCH TƯ VẤN (SALE)
 // ════════════════════════════════════════════════════════════
 let selectedSaleSlots = new Set();
-
+  
+// State cho calendar "Gửi lịch trống" của Staff (tách riêng khỏi calMonthOffset
+// đang dùng chung cho Advisor / Meeting calendar để tránh đụng nhau)
+var staffCalMonthOffset = 0;
+  
 // Tải lịch trống THẬT từ Sheet cho TẤT CẢ Sale đang active, dùng cho trang tổng quan của Admin.
 // Chỉ cần 1 lần gọi vào pool chung STAFF_SLOT_IDENTITY, sau đó tách theo created_by cho từng người.
 function loadStaffSchedulePageAsync() {
@@ -2492,24 +2701,40 @@ function toggleSaleSlot(btn, key) {
 }
 
 function saveSaleSlots(staffName) {
+  function saveSaleSlots(staffName) {
   if (selectedSaleSlots.size === 0) { toast('Chưa chọn giờ nào!', 'error'); return; }
   var st = MOCK.staffList.find(function(x){ return x.name === staffName; });
   var btn = document.getElementById('sale-send-btn');
   if (btn) { btn.innerHTML = '<span class="spinner"></span> Đang lưu...'; btn.disabled = true; }
 
+  var slotsToAdd = Array.from(selectedSaleSlots); // ["2026-07-20_09:00", ...]
+
   apiPost({
     action: 'addSlots',
-    advisor: STAFF_SLOT_IDENTITY,   // ghi vào pool chung để widget public thấy được
+    advisor: STAFF_SLOT_IDENTITY,
     advisor_email: st ? st.email : '',
-    created_by: staffName,          // đánh dấu ai thực sự tạo slot này, để dashboard lọc lại đúng người
-    slots: Array.from(selectedSaleSlots),
+    created_by: staffName,
+    slots: slotsToAdd,
   }).then(function(res){
     if (res && res.success) {
-      toast('Đã lưu ' + selectedSaleSlots.size + ' slot cho ' + staffName + ' lên Sheet ✅', 'success');
+      // ── Optimistic update: hiện ngay trên UI, không đợi fetch lại Sheet ──
+      slotsToAdd.forEach(function(key){
+        var parts = key.split('_');
+        var d = parts[0], t = parts[1];
+        var already = MOCK.saleSlots.some(function(sl){ return sl.staff === staffName && sl.date === d && sl.time === t; });
+        if (!already) {
+          MOCK.saleSlots.push({ staff: staffName, date: d, time: t, status: 'available', client: '', note: 'Tư vấn miễn phí', slot_id: null });
+        }
+      });
+
+      toast('Đã lưu ' + slotsToAdd.length + ' slot cho ' + staffName + ' ✅', 'success');
       selectedSaleSlots.clear();
       closeModal();
-      if (_staffDetailId) loadStaffScheduleTabAsync();
+      if (_staffDetailId) document.getElementById('main-content').innerHTML = renderStaffMemberDetail(_staffDetailId, 'schedule', _staffDetailSelfView);
       else navTo('stf-schedule');
+
+      // Đồng bộ nền với Sheet (không xoá dữ liệu local nếu Sheet thiếu cột created_by)
+      if (_staffDetailId) loadStaffScheduleTabAsync();
     } else {
       toast('Lỗi: ' + (res && res.error ? res.error : 'không lưu được lên Sheet'), 'error');
       if (btn) { btn.innerHTML = 'Lưu lịch trống đã chọn'; btn.disabled = false; }
