@@ -2052,6 +2052,17 @@ function confirmCreateAdviseeFromConsult(cid) {
   toast('Đã tạo hồ sơ Advisee cho ' + c.name + ' — doanh thu ghi nhận cho ' + c.staff + ' ✅', 'success');
   closeModal();
   refreshStaffTab();
+
+  apiPost({
+    action: 'createMeetLink',
+    type: 'advisor',
+    date: sessionDate,
+    time: sessionTime,
+    guest_name: adviseeName,
+    guests: [advisorEmail, adviseeEmail],
+    }).then(function(res){
+    if (res.success) session.meetLink = res.meetLink;
+    });
 }
   
 // ── Tab: Khách chưa đặt lịch — cần liên hệ ──
@@ -2246,6 +2257,17 @@ function scheduleConsultation(cid) {
   c.log.push({ time: pad(now.getDate())+'/'+pad(now.getMonth()+1)+'/'+now.getFullYear()+' '+pad(now.getHours())+':'+pad(now.getMinutes()), text: 'Đã chốt lịch tư vấn: ' + fmtDateStr(d) + ' · ' + t + (c.meetLink?' — Link: ' + c.meetLink:'') });
   toast('Đã chốt lịch tư vấn cho ' + c.name + ' ✅', 'success');
   navToConsultationDetail(cid);
+
+  apiPost({
+    action: 'createMeetLink',
+    type: 'sale',
+    date: d,          // '2026-07-31'
+    time: t,           // '15:00'
+    guest_name: c.name,
+    guests: [c.email, staffEmail],   // staffEmail lấy từ MOCK.staffList tương ứng
+  }).then(function(res){
+  if (res.success) c.meetLink = res.meetLink;
+});
 }
 
 function saveConsultProgress(cid) {
