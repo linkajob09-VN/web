@@ -505,7 +505,7 @@
         <textarea id="cwQuestion" rows="3" placeholder="VD: Mình đang muốn tìm advisor ngành Marketing..."></textarea>
       </div>
       <div class="cw-note"><i class="ti ti-video" aria-hidden="true"></i> Chúng tôi sẽ tư vấn qua Google Meet — bạn vui lòng chọn khung giờ phù hợp ở bước tiếp theo.</div>
-      <button class="cw-next" id="cwBtn1" onclick="cwGoStep(2)" disabled>Tiếp theo →</button>
+      <button class="cw-next" id="cwBtn1" onclick="cwProceedToStep2()" disabled>Tiếp theo →</button>
     </div>
 
     <!-- STEP 2: calendar -->
@@ -549,7 +549,9 @@ var CW_TIME_GRID = ['09:00','09:30','10:00','10:30','11:00','11:30','12:00','12:
 // cwRealSlots: { 'YYYY-MM-DD': Set các giờ còn ít nhất 1 slot trống (đã gộp nhiều Sale) }
 var cwRealSlots = {};
 var cwSlotsLoaded = false;
-var cwSelectedDate = null, cwSelectedDateKey = null, cwSelectedTime = null;
+var cwSelectedDate = null, cwSelectedDateKey = null, cwSelectedTime = null
+var cwLeadSessionId = null;
+var cwLeadCaptured = false;
 var cwMonthNames = ['Tháng 1','Tháng 2','Tháng 3','Tháng 4','Tháng 5','Tháng 6','Tháng 7','Tháng 8','Tháng 9','Tháng 10','Tháng 11','Tháng 12'];
 var cwViewYear = null, cwViewMonth = null;
 function cwPad2(n){ return (n<10?'0':'')+n; }
@@ -561,6 +563,8 @@ function openConsultWidget(){
   cwViewMonth = t.getMonth();
   cwSlotsLoaded = false;
   cwRealSlots = {};
+  wLeadSessionId = null;
+  cwLeadCaptured = false;
   ['cwName','cwPhone','cwEmail','cwQuestion'].forEach(function(id){
     var el = document.getElementById(id); if(el) el.value = '';
   });
@@ -587,6 +591,38 @@ function cwCheckStep1(){
   document.getElementById('cwBtn1').disabled = !(name && phone && validEmail);
 }
 
+  function cwProceedToStep2(){
+  cwGoStep(2);
+  cwCaptureLeadIfNeeded();
+}
+
+// Gửi thông tin khách lên Sheet ngay khi họ điền xong Bước 1 — kể cả khi
+// sau đó họ thoát ngang không chọn giờ, Sale vẫn thấy được lead này.
+function cwCaptureLeadIfNeeded(){
+  if (cwLeadCaptured) return;
+  var name     = document.getElementById('cwName').value.trim();
+  var phone    = document.getElementById('cwPhone').value.trim();
+  var email    = document.getElementById('cwEmail').value.trim();
+  var service  = document.getElementById('cwService').value;
+  var question = document.getElementById('cwQuestion').value.trim();
+  if (!name || !phone) return;
+
+  cwLeadCaptured = true; // đánh dấu ngay, tránh gửi trùng nếu bấm nhanh nhiều lần
+
+  fetch(CW_WEBAPP_URL, {
+    method : 'POST',
+    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+    body   : JSON.stringify({
+      action: 'captureLead',
+      name: name, phone: phone, email: email, service: service, question: question
+    })
+  })
+  .then(function(r){ return r.json(); })
+  .then(function(data){
+    if (data && data.success) cwLeadSessionId = data.session_id;
+  })
+  .catch(function(){ /* im lặng — lỗi mạng lúc này không nên chặn trải nghiệm đặt lịch */ });
+}
 // Load toàn bộ slot trống (mọi Sale) rồi gộp lại: mỗi ngày → tập hợp các giờ còn ít nhất 1 chỗ trống,
 // chỉ giữ những giờ nằm trong lưới 30 phút chuẩn (CW_TIME_GRID)
 function cwLoadSlots(callback) {
@@ -713,6 +749,7 @@ function cwConfirm(){
     email   : email,
     service : service,
     question: question
+    lead_session_id: cwLeadSessionId
   };
 
   btn.dataset.sending = '1';
