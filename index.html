@@ -563,7 +563,7 @@ function openConsultWidget(){
   cwViewMonth = t.getMonth();
   cwSlotsLoaded = false;
   cwRealSlots = {};
-  wLeadSessionId = null;
+  cwLeadSessionId = null;
   cwLeadCaptured = false;
   ['cwName','cwPhone','cwEmail','cwQuestion'].forEach(function(id){
     var el = document.getElementById(id); if(el) el.value = '';
@@ -748,7 +748,7 @@ function cwConfirm(){
     phone   : phone,
     email   : email,
     service : service,
-    question: question
+    question: question,
     lead_session_id: cwLeadSessionId
   };
 
@@ -801,19 +801,16 @@ function cwConfirm(){
   function toggleNavDropdown(btn) {
     var item = btn.closest('.lj-nav-item');
     var wasOpen = item.classList.contains('open');
-    <button class="lj-nav-btn-plain" onclick="toggleNavDropdown(this)">Cố vấn 1-1 <i class="ti ti-chevron-down lj-nav-chevron" aria-hidden="true"></i></button>
-      document.querySelectorAll('.lj-nav-item.open').forEach(function(el){ el.classList.remove('open'); });
-      if (!wasOpen) item.classList.add('open');
-    }
-    <button class="lj-nav-btn-plain" onclick="toggleNavDropdown(this)">Khoá học <i class="ti ti-chevron-down lj-nav-chevron" aria-hidden="true"></i></button>
-      document.addEventListener('click', function(e){
-      if (!e.target.closest('.lj-nav-item')) {
+    document.querySelectorAll('.lj-nav-item.open').forEach(function(el){ el.classList.remove('open'); });
+    if (!wasOpen) item.classList.add('open');
+  }
+  document.addEventListener('click', function(e){
+    if (!e.target.closest('.lj-nav-item')) {
       document.querySelectorAll('.lj-nav-item.open').forEach(function(el){ el.classList.remove('open'); });
     }
-    });
-    <button class="lj-nav-btn-plain" onclick="toggleNavDropdown(this)">Thành công <i class="ti ti-chevron-down lj-nav-chevron" aria-hidden="true"></i></button>
-      document.addEventListener('keydown', function(e){
-      if (e.key === 'Escape') {
+  });
+  document.addEventListener('keydown', function(e){
+    if (e.key === 'Escape') {
       document.querySelectorAll('.lj-nav-item.open').forEach(function(el){ el.classList.remove('open'); });
     }
   });
