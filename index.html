@@ -22,8 +22,16 @@
   .lj-btn-nav { background: #fc5229; color: #fff; font-size: 13px; font-weight: 500; font-family: 'Space Grotesk', sans-serif; padding: 8px 20px; border-radius: 100px; border: none; cursor: pointer; white-space: nowrap; margin-left: 8px; }
 
   /* DROPDOWN */
-  .lj-dropdown { position: absolute; top: calc(100% + 8px); left: 50%; transform: translateX(-50%) translateY(-6px); background: #161616; border: 0.5px solid rgba(255,255,255,0.1); border-radius: 14px; padding: 8px; min-width: 230px; opacity: 0; pointer-events: none; transition: opacity 0.18s ease, transform 0.18s ease; z-index: 300; }
-  .lj-nav-item:hover .lj-dropdown { opacity: 1; pointer-events: auto; transform: translateX(-50%) translateY(0); }
+  .lj-dropdown { position: absolute; top: 100%; left: 50%; padding-top: 10px; /* vùng đệm liền mạch, không còn khoảng hở gây mất hover */ transform: translateX(-50%); opacity: 0; pointer-events: none; transition: opacity 0.18s ease, transform 0.18s ease; z-index: 300; }
+  .lj-dropdown-inner { background: #161616; border: 0.5px solid rgba(255,255,255,0.1); border-radius: 14px; padding: 8px; min-width: 230px; box-shadow: 0 12px 32px rgba(0,0,0,.35); transform: translateY(-6px); transition: transform 0.18s ease; }
+  .lj-dropdown.show .lj-dropdown-inner,
+  .lj-nav-item:hover .lj-dropdown-inner { transform: translateY(0); }
+  .lj-dropdown.show,
+  .lj-nav-item:hover .lj-dropdown { opacity: 1; pointer-events: auto; }
+  .lj-nav-item.open .lj-dropdown { opacity: 1; pointer-events: auto; }
+  .lj-nav-item.open .lj-dropdown-inner { transform: translateY(0); }
+  .lj-nav-chevron { transition: transform 0.2s; }
+  .lj-nav-item.open .lj-nav-chevron { transform: rotate(180deg); }
   .lj-di { display: flex; align-items: flex-start; gap: 11px; padding: 10px 12px; border-radius: 10px; text-decoration: none; transition: background 0.15s; }
   .lj-di:hover { background: rgba(255,255,255,0.05); }
   .lj-di-icon { width: 32px; height: 32px; border-radius: 9px; background: rgba(252,82,41,0.1); display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 1px; transition: background 0.15s; }
@@ -186,6 +194,16 @@
       <div class="lj-nav-item">
         <button class="lj-nav-btn-plain">Cố vấn 1-1 <i class="ti ti-chevron-down lj-nav-chevron" aria-hidden="true"></i></button>
         <div class="lj-dropdown">
+          <div class="lj-nav-item">
+            <button class="lj-nav-btn-plain" onclick="toggleNavDropdown(this)">Cố vấn 1-1 <i class="ti ti-chevron-down lj-nav-chevron" aria-hidden="true"></i></button>
+            <div class="lj-dropdown">
+              <div class="lj-dropdown-inner">
+                <a class="lj-di" href="advisor.html">...</a>
+                <div class="lj-dropdown-divider"></div>
+                <a class="lj-di" href="pricing.html">...</a>
+              </div>
+            </div>
+          </div>
           <a class="lj-di" href="advisor.html">
             <div class="lj-di-icon"><i class="ti ti-user-star" aria-hidden="true"></i></div>
             <div>
@@ -208,6 +226,18 @@
       <div class="lj-nav-item">
         <button class="lj-nav-btn-plain">Khoá học <i class="ti ti-chevron-down lj-nav-chevron" aria-hidden="true"></i></button>
         <div class="lj-dropdown lj-dropdown-courses">
+          <div class="lj-nav-item">
+            <button class="lj-nav-btn-plain" onclick="toggleNavDropdown(this)">Khoá học <i class="ti ti-chevron-down lj-nav-chevron" aria-hidden="true"></i></button>
+            <div class="lj-dropdown">
+              <div class="lj-dropdown-inner">
+                <a class="lj-di" href="land_your_dream_job.html">...</a>
+                <div class="lj-dropdown-divider"></div>
+                <a class="lj-di" href="logistics_operation-cracking.html">...</a>
+                <div class="lj-dropdown-divider"></div>
+                <a class="lj-di" href="supply_chain_principle.html">...</a>
+              </div>
+            </div>
+          </div>
           <a class="lj-di" href="#">
             <div class="lj-di-icon"><i class="ti ti-rocket" aria-hidden="true"></i></div>
             <div>
