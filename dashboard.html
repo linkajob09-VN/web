@@ -494,6 +494,50 @@ let weekOffset = 0;
 let selectedSlots = new Set();
 let sheetData = { bookings: [], slots: [] };
 
+sheetData.advisors = [];
+let advisorsLoaded = false;
+
+function normalizeAdvisorFromSheet(a) {
+  return {
+    id: a.advisor_id,
+    name: a.name || '',
+    title: a.role || '',
+    company: a.company || '',
+    active: a.is_active === true || a.is_active === 'TRUE' || a.is_active === 'true',
+    adviseeCount: 0,
+    sessionsDone: Number(a.total_session_done) || 0,
+    sessionsTotal: 0,
+    email: a.email || '',
+    phone: a.phone || '',
+    contact: a.zalo_id || '',
+    bio: a.bio || '',
+    message: a.message || '',
+    tags: a.industry ? a.industry.split(',').map(function(t){ return t.trim(); }).filter(Boolean) : [],
+    supportItems: [],
+    experience: Array.isArray(a.experience) ? a.experience : [],
+    hiddenFeedback: [],
+    feedbacks: Array.isArray(a.feedbacks) ? a.feedbacks : [],
+    products: Array.isArray(a.products) ? a.products : [],
+    slots: [],
+    advisees: [],
+  };
+}
+
+function loadAdvisorsFromSheet(callback) {
+  apiGet('getAdvisors', {}).then(function(res){
+    if (res && res.data) {
+      sheetData.advisors = res.data.map(normalizeAdvisorFromSheet);
+    } else {
+      sheetData.advisors = [];
+    }
+    advisorsLoaded = true;
+    if (callback) callback();
+  }).catch(function(){
+    advisorsLoaded = true;
+    if (callback) callback();
+  });
+}
+  
 function toast(msg, type) {
   type = type || '';
   const el = document.getElementById('toast');
@@ -685,7 +729,7 @@ const ROUTE_MAP = {
   'lj-products':   { fn: function(){ renderStaff('lj-products'); } },
   'stf-list':      { fn: function(){ renderStaff('stf-list'); } },
   'stf-schedule':  { fn: function(){ loadStaffSchedulePageAsync(); } },
-  'adv-list':      { fn: function(){ renderStaff('advisor-mod'); } },
+  'adv-list':      { fn: function(){ loadAdvisorsFromSheet(function(){ renderStaff('advisor-mod'); }); } },
   'adv-new':       { fn: function(){ renderStaff('adv-new'); } },
   'aee-list':      { fn: function(){ renderStaff('advisee-mod'); } },
   'aee-reschedule': { fn: function(){ renderStaff('aee-reschedule'); } },
