@@ -1762,7 +1762,7 @@ function openExtendModal(aeId) {
 }
 
 function openSwitchAdvisorModal(aeId) {
-  const activeAdvisors = MOCK.advisors.filter(function(a){ return a.active; });
+  const activeAdvisors = sheetData.advisors.filter(function(a){ return a.active; });
   const ae = MOCK.advisees.find(function(x){ return x.id === aeId; });
   document.getElementById('modal-title').textContent = '🔄 Đổi sang Advisor khác';
   let body =
@@ -2039,7 +2039,7 @@ function refreshStaffTab() {
 function openCreateAdviseeFromConsultModal(cid) {
   var c = MOCK.consultations.find(function(x){ return x.id === cid; });
   if (!c) return;
-  var activeAdvisors = MOCK.advisors.filter(function(a){ return a.active; });
+  var activeAdvisors = sheetData.advisors.filter(function(a){ return a.active; });
 
   document.getElementById('modal-title').textContent = '🎉 Tạo hồ sơ Advisee — ' + c.name;
   var body = '<div style="font-size:13px;color:var(--muted);margin-bottom:14px">Khách đã đồng ý đăng ký. Chọn gói và Advisor để tạo hồ sơ — doanh thu sẽ tự động tính cho bạn.</div>';
@@ -3010,7 +3010,7 @@ function renderReportPage() {
   // Biểu đồ số buổi hoàn thành theo advisor
   html += '<div class="card"><div class="card-header"><div class="card-header-left">Buổi hoàn thành theo Advisor</div></div>';
   html += '<div style="padding:16px 28px 28px;display:flex;flex-direction:column;gap:14px">';
-  MOCK.advisors.forEach(function(a){
+  sheetData.advisors.forEach(function(a){
     const pct = a.sessionsTotal > 0 ? Math.round(a.sessionsDone/a.sessionsTotal*100) : 0;
     html += '<div><div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:6px"><span><b>' + a.name + '</b> · ' + a.title + '</span><span style="color:var(--muted)">' + a.sessionsDone + '/' + a.sessionsTotal + ' buổi</span></div>';
     html += '<div style="height:8px;background:var(--bg);border-radius:100px;overflow:hidden"><div style="height:100%;width:' + pct + '%;background:var(--brand);border-radius:100px;transition:width .4s"></div></div></div>';
@@ -3133,21 +3133,24 @@ function saveNewAdvisor() {
 
   var products = Array.from(document.querySelectorAll('.na-pkg-cb:checked')).map(function(cb){ return cb.value; });
 
-  MOCK.advisors.push({
-    id: 'adv' + Date.now(),
-    name: name, title: title,
+  apiPost({
+    action: 'registerAdvisor',
+    name: name, role: title,
     company: document.getElementById('na-company').value.trim(),
-    active: true, adviseeCount: 0, sessionsDone: 0, sessionsTotal: 0,
-    email: email, phone: phone, contact: document.getElementById('na-contact').value.trim(),
+    industry: document.getElementById('na-tags').value.trim(),
+    email: email, phone: phone,
     bio: document.getElementById('na-bio').value.trim(),
-    message: document.getElementById('na-message').value.trim(),
-    tags: document.getElementById('na-tags').value.split(',').map(function(t){ return t.trim(); }).filter(Boolean),
-    supportItems: supportItems, experience: experience, hiddenFeedback: [],
-    feedbacks: [], products: products, slots: [], advisees: [],
+    experience: experience,
+  }).then(function(res){
+    if (res && res.success) {
+      toast('Đã thêm ' + name + ' — cần vào Sheet đổi is_active = TRUE để hiện trên web ✅', 'success');
+      navTo('adv-list');
+    } else {
+      toast('Lỗi khi lưu lên Sheet: ' + (res && res.error), 'error');
+    }
+  }).catch(function(err){
+    toast('Lỗi kết nối: ' + err.message, 'error');
   });
-
-  toast('Đã thêm ' + name + ' ✅', 'success');
-  navTo('adv-list');
 }
 
 function fmtDateStr(s) { const d = new Date(s + 'T00:00:00'); return DAYS_VI[d.getDay()] + ' ' + d.getDate() + '/' + (d.getMonth()+1); }
@@ -3195,15 +3198,15 @@ function saveProductPrice(i) {
 //  MODULE 2: ADVISOR
 // ════════════════════════════════════════════════════════════
 function renderAdvisorModule() {
-  var active   = MOCK.advisors.filter(function(a){ return a.active; });
-  var inactive = MOCK.advisors.filter(function(a){ return !a.active; });
+  var active   = sheetData.advisors.filter(function(a){ return a.active; });
+  var inactive = sheetData.advisors.filter(function(a){ return !a.active; });
   var html = '';
 
   // KPI strip
   html += '<div class="stats-row" style="margin-bottom:20px">';
   html += '<div class="stat-cell"><div class="stat-num">' + active.length + '</div><div class="stat-label">Advisor active</div></div>';
   html += '<div class="stat-cell"><div class="stat-num">' + inactive.length + '</div><div class="stat-label">Không hoạt động</div></div>';
-  var totalSessions = MOCK.advisors.reduce(function(s,a){ return s + a.sessionsDone; }, 0);
+  var totalSessions = sheetData.advisors.reduce(function(s,a){ return s + a.sessionsDone; }, 0);
   html += '<div class="stat-cell"><div class="stat-num">' + totalSessions + '</div><div class="stat-label">Tổng buổi đã hoàn thành</div></div>';
   html += '</div>';
 
@@ -3247,7 +3250,7 @@ function navToStaffAdvisorDetail(advisorId) {
 }
 
 function renderStaffAdvisorDetail(advisorId) {
-  var a = MOCK.advisors.find(function(x){ return x.id === advisorId; });
+  var a = sheetData.advisors.find(function(x){ return x.id === advisorId; });
   if (!a) return '';
   var myAdvisees = MOCK.advisees.filter(function(ae){ return ae.advisor === a.name; });
   var totalDone  = myAdvisees.reduce(function(s,ae){ return s + ae.sessionsDone; }, 0);
@@ -3428,11 +3431,18 @@ function renderStaffAdvisorDetail(advisorId) {
 }
 
 function toggleAdvisorActive(advisorId) {
-  var a = MOCK.advisors.find(function(x){ return x.id === advisorId; });
+  var a = sheetData.advisors.find(function(x){ return x.id === advisorId; });
   if (!a) return;
   a.active = !a.active;
-  toast((a.active ? '✅ Advisor đã được hiện trên web' : '🔕 Advisor đã bị ẩn khỏi web'), 'success');
-  navToStaffAdvisorDetail(advisorId);
+  apiPost({ action: 'updateAdvisor', advisor_id: advisorId, is_active: a.active }).then(function(res){
+    if (res && res.success) toast((a.active ? '✅ Đã hiện trên web' : '🔕 Đã ẩn khỏi web') + ' (đã đồng bộ Sheet)', 'success');
+    else { a.active = !a.active; toast('Lỗi khi lưu Sheet: ' + (res && res.error), 'error'); }
+    navToStaffAdvisorDetail(advisorId);
+  }).catch(function(err){
+    a.active = !a.active;
+    toast('Lỗi kết nối: ' + err.message, 'error');
+    navToStaffAdvisorDetail(advisorId);
+  });
 }
 
 var _eaExpIdx = 0;
@@ -3462,7 +3472,7 @@ function addExperienceRow(containerId) {
 }
 
 function openEditAdvisorModal(advisorId) {
-  var a = MOCK.advisors.find(function(x){ return x.id === advisorId; });
+  var a = sheetData.advisors.find(function(x){ return x.id === advisorId; });
   if (!a) return;
   _eaExpIdx = 0;
   var si = a.supportItems || [];
@@ -3562,7 +3572,7 @@ function openEditAdvisorModal(advisorId) {
 }
 
 function saveAdvisorEdit(advisorId) {
-  var a = MOCK.advisors.find(function(x){ return x.id === advisorId; });
+  var a = sheetData.advisors.find(function(x){ return x.id === advisorId; });
   if (!a) return;
   a.name    = document.getElementById('ea-name').value.trim()    || a.name;
   a.title   = document.getElementById('ea-title').value.trim()   || a.title;
@@ -3603,7 +3613,18 @@ function saveAdvisorEdit(advisorId) {
   var uncheckedFb = Array.from(document.querySelectorAll('.ea-fb-cb')).filter(function(cb){ return !cb.checked; }).map(function(cb){ return cb.value; });
   if (document.querySelector('.ea-fb-cb')) a.hiddenFeedback = uncheckedFb;
 
-  toast('Đã lưu thông tin Advisor ✅', 'success');
+  apiPost({
+    action: 'updateAdvisor',
+    advisor_id: advisorId,
+    name: a.name, role: a.title, company: a.company,
+    industry: (a.tags||[]).join(', '),
+    email: a.email, phone: a.phone, zalo_id: a.contact,
+    bio: a.bio, message: a.message,
+    experience: a.experience, products: a.products, feedbacks: a.feedbacks,
+  }).then(function(res){
+    if (res && res.success) toast('Đã lưu & đồng bộ lên Sheet ✅', 'success');
+    else toast('Lỗi khi lưu lên Sheet: ' + (res && res.error), 'error');
+  }).catch(function(err){ toast('Lỗi kết nối: ' + err.message, 'error'); });
   closeModal();
 
   if (currentUser && currentUser.role === 'Advisor' && currentUser.name === a.name) {
@@ -3619,7 +3640,7 @@ function saveAdvisorEdit(advisorId) {
 
 function openAdvisorSelfEditModal() {
   if (!currentUser) return;
-  var a = MOCK.advisors.find(function(x){ return x.name === currentUser.name; });
+  var a = sheetData.advisors.find(function(x){ return x.name === currentUser.name; });
   if (!a) { toast('Không tìm thấy hồ sơ Advisor tương ứng', 'error'); return; }
   closeUserMenu();
   openEditAdvisorModal(a.id);
@@ -3687,7 +3708,7 @@ function renderStaffAdviseeDetail(aeId, fromAdvisorId) {
   if (fromAdvisorId === 'staffcare') {
     html += '<button onclick="switchStaffDetailTab(\'care\')" style="background:none;border:none;color:var(--brand);cursor:pointer;font-family:inherit;font-size:13px;padding:0">← Chăm sóc khách hàng</button>';
   } else if (fromAdvisorId) {
-    var adv = MOCK.advisors.find(function(x){ return x.id === fromAdvisorId; });
+    var adv = sheetData.advisors.find(function(x){ return x.id === fromAdvisorId; });
     html += '<button onclick="navToStaffAdvisorDetail(\'' + fromAdvisorId + '\')" style="background:none;border:none;color:var(--brand);cursor:pointer;font-family:inherit;font-size:13px;padding:0">← ' + (adv?adv.name:'Advisor') + '</button>';
   } else {
     html += '<button onclick="navTo(\'aee-list\')" style="background:none;border:none;color:var(--brand);cursor:pointer;font-family:inherit;font-size:13px;padding:0">← Danh sách Advisee</button>';
