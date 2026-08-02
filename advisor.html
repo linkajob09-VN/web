@@ -382,162 +382,7 @@ body{font-family:'Inter',sans-serif;background:#F5F4F1;color:#1C1C1C;overflow-x:
 <div class="grid-wrap">
   <div class="grid-count"><span id="countNum">9</span> advisors</div>
   <div class="adv-grid" id="advGrid">
-
-    <!-- ADVISOR DATA: data-ind = filter key, data-id = JS lookup key -->
-
-    <div class="acard" data-ind="fmcg marketing" data-id="0">
-      <div class="acard-top">
-        <div class="acard-ava">KV<div class="acard-verified"><i class="ti ti-check"></i></div></div>
-        <div class="acard-name">Nguyễn Vũ Trí Kiên</div>
-        <div class="acard-role">Brand Manager</div>
-        <div class="acard-co"><span class="acard-co-dot"></span>Suntory PepsiCo Vietnam</div>
-      </div>
-      <div class="acard-tags">
-        <span class="atag atag-ind">FMCG</span>
-        <span class="atag atag-ind">Marketing</span>
-        <span class="atag atag-prog">MT Program</span>
-        <span class="atag atag-prog">Internship</span>
-      </div>
-      <div class="acard-perf"></div>
-      <button class="acard-btn" onclick="openDrawer(0)">Chi tiết về Advisor →</button>
-    </div>
-
-    <div class="acard" data-ind="ecom fmcg" data-id="1">
-      <div class="acard-top">
-        <div class="acard-ava">NP<div class="acard-verified"><i class="ti ti-check"></i></div></div>
-        <div class="acard-name">Dương Uy Trọng Phúc</div>
-        <div class="acard-role">Ecommerce Lead</div>
-        <div class="acard-co"><span class="acard-co-dot"></span>Mondelēz International</div>
-      </div>
-      <div class="acard-tags">
-        <span class="atag atag-ind">E-Commerce</span>
-        <span class="atag atag-ind">FMCG</span>
-        <span class="atag atag-prog">Fresher</span>
-        <span class="atag atag-prog">Internship</span>
-      </div>
-      <div class="acard-perf"></div>
-      <button class="acard-btn" onclick="openDrawer(1)">Chi tiết về Advisor →</button>
-    </div>
-
-    <div class="acard" data-ind="tech" data-id="2">
-      <div class="acard-top">
-        <div class="acard-ava">PL<div class="acard-verified"><i class="ti ti-check"></i></div></div>
-        <div class="acard-name">Phạm Ngọc Lâm</div>
-        <div class="acard-role">Senior Software Engineer</div>
-        <div class="acard-co"><span class="acard-co-dot"></span>TikTok Singapore</div>
-      </div>
-      <div class="acard-tags">
-        <span class="atag atag-ind">Tech</span>
-        <span class="atag atag-prog">Fresher SWE</span>
-        <span class="atag atag-prog">Big Tech</span>
-      </div>
-      <div class="acard-perf"></div>
-      <button class="acard-btn" onclick="openDrawer(2)">Chi tiết về Advisor →</button>
-    </div>
-
-    <div class="acard" data-ind="finance tech" data-id="3">
-      <div class="acard-top">
-        <div class="acard-ava">KN<div class="acard-verified"><i class="ti ti-check"></i></div></div>
-        <div class="acard-name">Nguyễn Kim Ngân</div>
-        <div class="acard-role">Business Performance Mgmt</div>
-        <div class="acard-co"><span class="acard-co-dot"></span>Grab Vietnam</div>
-      </div>
-      <div class="acard-tags">
-        <span class="atag atag-ind">Finance</span>
-        <span class="atag atag-ind">Tech</span>
-        <span class="atag atag-prog">FP&A</span>
-        <span class="atag atag-prog">Fresher</span>
-      </div>
-      <div class="acard-perf"></div>
-      <button class="acard-btn" onclick="openDrawer(3)">Chi tiết về Advisor →</button>
-    </div>
-
-    <div class="acard" data-ind="fmcg supply" data-id="4">
-      <div class="acard-top">
-        <div class="acard-ava">HP<div class="acard-verified"><i class="ti ti-check"></i></div></div>
-        <div class="acard-name">Vũ Hải Phong</div>
-        <div class="acard-role">Key Account Asst. Manager</div>
-        <div class="acard-co"><span class="acard-co-dot"></span>Unilever Vietnam</div>
-      </div>
-      <div class="acard-tags">
-        <span class="atag atag-ind">FMCG</span>
-        <span class="atag atag-ind">Supply Chain</span>
-        <span class="atag atag-prog">MT Program</span>
-        <span class="atag atag-prog">Assessment Center</span>
-      </div>
-      <div class="acard-perf"></div>
-      <button class="acard-btn" onclick="openDrawer(4)">Chi tiết về Advisor →</button>
-    </div>
-
-    <div class="acard" data-ind="marketing fmcg" data-id="5">
-      <div class="acard-top">
-        <div class="acard-ava">TL<div class="acard-verified"><i class="ti ti-check"></i></div></div>
-        <div class="acard-name">Nguyễn Thị Thu Linh</div>
-        <div class="acard-role">Product Manager</div>
-        <div class="acard-co"><span class="acard-co-dot"></span>Sanofi Vietnam</div>
-      </div>
-      <div class="acard-tags">
-        <span class="atag atag-ind">Marketing</span>
-        <span class="atag atag-ind">Pharma</span>
-        <span class="atag atag-prog">Fresher</span>
-        <span class="atag atag-prog">Internship</span>
-      </div>
-      <div class="acard-perf"></div>
-      <button class="acard-btn" onclick="openDrawer(5)">Chi tiết về Advisor →</button>
-    </div>
-
-    <div class="acard" data-ind="audit finance" data-id="6">
-      <div class="acard-top">
-        <div class="acard-ava">MT<div class="acard-verified"><i class="ti ti-check"></i></div></div>
-        <div class="acard-name">Trần Minh Tuấn</div>
-        <div class="acard-role">Audit Associate</div>
-        <div class="acard-co"><span class="acard-co-dot"></span>Deloitte Vietnam</div>
-      </div>
-      <div class="acard-tags">
-        <span class="atag atag-ind">Audit</span>
-        <span class="atag atag-ind">Big 4</span>
-        <span class="atag atag-prog">Fresher</span>
-        <span class="atag atag-prog">Intern Deloitte</span>
-      </div>
-      <div class="acard-perf"></div>
-      <button class="acard-btn" onclick="openDrawer(6)">Chi tiết về Advisor →</button>
-    </div>
-
-    <div class="acard" data-ind="supply" data-id="7">
-      <div class="acard-top">
-        <div class="acard-ava">QH<div class="acard-verified"><i class="ti ti-check"></i></div></div>
-        <div class="acard-name">Lê Quang Hưng</div>
-        <div class="acard-role">Supply Chain Analyst</div>
-        <div class="acard-co"><span class="acard-co-dot"></span>Maersk Vietnam</div>
-      </div>
-      <div class="acard-tags">
-        <span class="atag atag-ind">Supply Chain</span>
-        <span class="atag atag-ind">Logistics</span>
-        <span class="atag atag-prog">Operations</span>
-        <span class="atag atag-prog">Fresher</span>
-      </div>
-      <div class="acard-perf"></div>
-      <button class="acard-btn" onclick="openDrawer(7)">Chi tiết về Advisor →</button>
-    </div>
-
-    <div class="acard" data-ind="marketing fmcg ecom" data-id="8">
-      <div class="acard-top">
-        <div class="acard-ava">PT<div class="acard-verified"><i class="ti ti-check"></i></div></div>
-        <div class="acard-name">Phạm Hoài Thương</div>
-        <div class="acard-role">Consumer Insights Manager</div>
-        <div class="acard-co"><span class="acard-co-dot"></span>Nestlé Vietnam</div>
-      </div>
-      <div class="acard-tags">
-        <span class="atag atag-ind">Marketing</span>
-        <span class="atag atag-ind">FMCG</span>
-        <span class="atag atag-prog">Research & Insights</span>
-        <span class="atag atag-prog">Internship</span>
-      </div>
-      <div class="acard-perf"></div>
-      <button class="acard-btn" onclick="openDrawer(8)">Chi tiết về Advisor →</button>
-    </div>
-
-  </div>
+  <div style="grid-column:1/-1;text-align:center;padding:40px;color:rgba(28,28,28,.35);font-family:'Space Grotesk',sans-serif;font-size:13px;">Đang tải danh sách advisor...</div>
 </div>
 
 <!-- CTA STRIP -->
@@ -723,128 +568,64 @@ body{font-family:'Inter',sans-serif;background:#F5F4F1;color:#1C1C1C;overflow-x:
 // URL Web App lấy từ: Deploy → Web App → Anyone (sau khi chạy setupProperties() + setupTriggers() trong Code.gs)
 var WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbx7Bd9VvoyzfiiezQV9huoY2BKHH_Br1RAFIz00mjdyKeis-Zv-38a0gf_b-fMlul2C/exec';
 
-/* ─── ADVISOR DATA ─── */
-var ADVISORS = [
-  {
-    id:0, initials:'KV', name:'Nguyễn Vũ Trí Kiên', role:'Brand Manager', co:'Suntory PepsiCo Vietnam',
-    ind:['FMCG','Marketing'], prog:['MT Program','Internship'],
-    message:'Mình từng đứng ở đúng vị trí của các bạn — apply không biết bắt đầu từ đâu, CV chỉnh mãi vẫn không pass. Sau hành trình đó, mình muốn giúp các bạn tiết kiệm thời gian và tránh những sai lầm mình đã từng mắc phải.',
-    supports:[
-      {icon:'ti-file-text', title:'CV & LinkedIn theo đúng JD FMCG', desc:'Sửa hồ sơ theo từng vị trí cụ thể, không sửa chung chung.'},
-      {icon:'ti-presentation', title:'Luyện case interview Marketing', desc:'Framework phân tích case thương hiệu, chiến lược brand building.'},
-      {icon:'ti-map-2', title:'Lộ trình vào MT Program FMCG', desc:'Hiểu rõ quy trình tuyển dụng từ góc nhìn người đã pass.'},
-    ],
-    feedbacks:[
-      {badge:'✓ Offer — FMCG MNC', text:'"Sau buổi meeting em đã <strong>mạnh dạn nộp vào MNC và nhận được offer</strong>. Cảm ơn anh Kiên vì đã truyền động lực."', name:'Gia Hân', school:'International University – VNU HCMC', initials:'GH'},
-      {badge:'✓ Intern — Suntory', text:'"Anh Kiên giúp mình <strong>hiểu cách đọc JD và điều chỉnh CV</strong> rất rõ ràng và thực tế."', name:'Minh Đức', school:'UEH – Đại học Kinh tế TP.HCM', initials:'MĐ'},
-    ]
-  },
-  {
-    id:1, initials:'NP', name:'Dương Uy Trọng Phúc', role:'Ecommerce Lead', co:'Mondelēz International',
-    ind:['E-Commerce','FMCG'], prog:['Fresher','Internship'],
-    message:'Mảng E-commerce trong FMCG đang phát triển rất nhanh và tuyển dụng rất nhiều. Mình muốn giúp các bạn hiểu ngành từ trong ra ngoài — không chỉ để xin được việc mà còn để thực sự làm tốt.',
-    supports:[
-      {icon:'ti-brand-shopee', title:'Insight ngành E-Commerce trong FMCG MNC', desc:'Shopee, Lazada, TikTok Shop — hiểu cách MNC vận hành từng kênh.'},
-      {icon:'ti-file-cv', title:'CV & cover letter cho vị trí Digital/Ecom', desc:'Highlight đúng skills mà nhà tuyển dụng FMCG đang tìm.'},
-      {icon:'ti-users-group', title:'Luyện group discussion & presentation', desc:'Thực hành các tình huống thường gặp trong vòng Assessment.'},
-    ],
-    feedbacks:[
-      {badge:'✓ Intern — Mondelēz', text:'"Anh Phúc không chỉ sửa CV mà còn <strong>giúp mình hiểu ngành E-com FMCG</strong> một cách rất thực tế và dễ hiểu."', name:'Khánh Linh', school:'FTU – Đại học Ngoại thương', initials:'KL'},
-    ]
-  },
-  {
-    id:2, initials:'PL', name:'Phạm Ngọc Lâm', role:'Senior Software Engineer', co:'TikTok Singapore',
-    ind:['Tech'], prog:['Fresher SWE','Big Tech'],
-    message:'Tech tại Big Tech khác hoàn toàn so với startup. Mình muốn giúp các bạn hiểu sự khác biệt đó và chuẩn bị đúng hướng — từ cách viết CV cho đến cách nghĩ trong technical interview.',
-    supports:[
-      {icon:'ti-code', title:'Mock technical & behavioral interview', desc:'Luyện tập với format phỏng vấn thực tế của Big Tech như TikTok, Shopee.'},
-      {icon:'ti-file-text', title:'CV cho SWE / Data / PM tại MNC', desc:'Hiểu điều nhà tuyển dụng Tech đang tìm kiếm ở fresher.'},
-      {icon:'ti-map-pin', title:'Định hướng career path Tech tại Đông Nam Á', desc:'Lộ trình từ fresher → senior tại các công ty Tech khu vực.'},
-    ],
-    feedbacks:[
-      {badge:'✓ Intern — Tech MNC', text:'"Anh Lâm giúp mình <strong>hiểu cách tiếp cận technical interview</strong> tại Big Tech rất khác so với những gì mình đọc online."', name:'Quang Khải', school:'HCMUT – Bách Khoa TP.HCM', initials:'QK'},
-    ]
-  },
-  {
-    id:3, initials:'KN', name:'Nguyễn Kim Ngân', role:'Business Performance Mgmt', co:'Grab Vietnam',
-    ind:['Finance','Tech'], prog:['FP&A','Fresher'],
-    message:'Finance trong Tech MNC như Grab rất khác với ngân hàng hay FMCG truyền thống. Mình muốn giúp các bạn hiểu sự khác biệt đó và tìm ra con đường phù hợp với mình.',
-    supports:[
-      {icon:'ti-chart-bar', title:'CV Finance / FP&A tại Tech MNC', desc:'Định hướng hồ sơ cho vị trí Finance tại Grab, Shopee, Sea Group.'},
-      {icon:'ti-brain', title:'Luyện phỏng vấn năng lực & case Finance', desc:'Phân tích case business performance, financial modeling cơ bản.'},
-      {icon:'ti-route', title:'Lộ trình Finance trong Tech MNC', desc:'Hiểu sự khác biệt giữa Finance tại Tech vs. Banking vs. FMCG.'},
-    ],
-    feedbacks:[
-      {badge:'✓ Offer — Tech MNC', text:'"Chị Ngân giúp mình <strong>nhìn ra hướng đi rõ ràng hơn</strong> trong mảng Finance — và hiểu tại sao Tech MNC phù hợp với mình."', name:'Thanh Nhi', school:'UEH – Đại học Kinh tế TP.HCM', initials:'TN'},
-    ]
-  },
-  {
-    id:4, initials:'HP', name:'Vũ Hải Phong', role:'Key Account Asst. Manager', co:'Unilever Vietnam',
-    ind:['FMCG','Supply Chain'], prog:['MT Program','Assessment Center'],
-    message:'Unilever có quy trình tuyển dụng rất cụ thể và khắt khe. Mình đã trải qua toàn bộ hành trình đó và muốn giúp các bạn không phải vừa làm vừa dò đường như mình ngày trước.',
-    supports:[
-      {icon:'ti-target', title:'Chiến lược apply Unilever & FMCG lớn', desc:'Hiểu rõ tiêu chí từng vòng: CV screening, online test, interview.'},
-      {icon:'ti-users', title:'Luyện Assessment Center & Group Exercise', desc:'Thực hành các tình huống nhóm, case study FMCG thực tế.'},
-      {icon:'ti-certificate', title:'CV & LinkedIn cho Supply Chain / Sales', desc:'Đúng format, đúng keyword mà Unilever HR đang tìm.'},
-    ],
-    feedbacks:[
-      {badge:'✓ Intern — Unilever', text:'"Nhờ anh Phong mình mới <strong>hiểu Assessment Center thực sự test cái gì</strong> và biết cách chuẩn bị đúng hướng."', name:'Thanh Trúc', school:'RMIT Vietnam', initials:'TT'},
-      {badge:'✓ MT Program — FMCG', text:'"Anh hướng dẫn rất thực tế — <strong>không lý thuyết suông</strong>, toàn những gì thực sự xảy ra trong vòng phỏng vấn."', name:'Phúc Anh', school:'NEU – Đại học Kinh tế Quốc dân', initials:'PA'},
-    ]
-  },
-  {
-    id:5, initials:'TL', name:'Nguyễn Thị Thu Linh', role:'Product Manager', co:'Sanofi Vietnam',
-    ind:['Marketing','Pharma'], prog:['Fresher','Internship'],
-    message:'Ngành Dược phẩm MNC không khó vào như nhiều bạn nghĩ — nhưng cần hiểu đúng những gì họ tìm kiếm. Mình ở đây để giúp các bạn tiếp cận ngành một cách tự tin hơn.',
-    supports:[
-      {icon:'ti-pill', title:'Insight ngành Pharma & Healthcare MNC', desc:'Hiểu văn hoá, cơ hội và career path trong ngành Dược quốc tế.'},
-      {icon:'ti-file-text', title:'CV & phỏng vấn Product / Marketing Pharma', desc:'Sửa hồ sơ phù hợp với đặc thù ngành Dược.'},
-      {icon:'ti-compass', title:'Định hướng fresher vào ngành Dược quốc tế', desc:'Lộ trình từ intern đến full-time tại Sanofi, Pfizer, Novartis...'},
-    ],
-    feedbacks:[
-      {badge:'✓ Intern — Sanofi', text:'"Chị Linh giúp mình <strong>cải thiện mindset và những điểm chưa tốt</strong> — không chỉ về CV mà cả cách nhìn ngành."', name:'Phúc Anh N.', school:'Đại học Y Dược TP.HCM', initials:'PA'},
-    ]
-  },
-  {
-    id:6, initials:'MT', name:'Trần Minh Tuấn', role:'Audit Associate', co:'Deloitte Vietnam',
-    ind:['Audit','Big 4'], prog:['Fresher','Intern Deloitte'],
-    message:'Big 4 tuyển hàng trăm người mỗi năm — nhưng cũng loại hàng nghìn CV mỗi mùa. Mình muốn giúp các bạn hiểu culture Deloitte và những gì thực sự tạo ra sự khác biệt.',
-    supports:[
-      {icon:'ti-search', title:'Chiến lược apply Big 4 từ A đến Z', desc:'CV screening, aptitude test, competency interview — từng bước cụ thể.'},
-      {icon:'ti-file-description', title:'CV & cover letter cho Audit / Accounting', desc:'Format chuẩn Big 4, keyword phù hợp cho từng vị trí.'},
-      {icon:'ti-microphone', title:'Luyện phỏng vấn năng lực Big 4', desc:'Competency-based interview — STAR method thực chiến.'},
-    ],
-    feedbacks:[
-      {badge:'✓ Intern — PwC', text:'"Em có được offer nhờ anh giúp <strong>sửa CV trong round đầu tiên</strong>. Cảm ơn anh Tuấn nhiều ạ."', name:'Bùi Tuấn Anh', school:'Incoming Intern tại PwC', initials:'BT'},
-    ]
-  },
-  {
-    id:7, initials:'QH', name:'Lê Quang Hưng', role:'Supply Chain Analyst', co:'Maersk Vietnam',
-    ind:['Supply Chain','Logistics'], prog:['Operations','Fresher'],
-    message:'Supply Chain là ngành cần cả tư duy phân tích lẫn hiểu biết thực tế. Mình muốn chia sẻ những gì mình đã học được từ trong ngành để giúp các bạn bắt đầu đúng hướng.',
-    supports:[
-      {icon:'ti-ship', title:'Insight ngành Logistics & SCM quốc tế', desc:'Hiểu cách các tập đoàn như Maersk, DHL, Kuehne+Nagel vận hành.'},
-      {icon:'ti-file-text', title:'CV & phỏng vấn Operations / SCM', desc:'Highlight đúng skills quan trọng trong ngành Supply Chain.'},
-      {icon:'ti-clipboard-data', title:'Case study Supply Chain thực chiến', desc:'Luyện phân tích và xử lý tình huống vận hành thực tế.'},
-    ],
-    feedbacks:[
-      {badge:'✓ Intern — Logistics MNC', text:'"Anh Hưng giúp mình <strong>hiểu ngành Logistics một cách hệ thống</strong> — từ thuật ngữ đến cách apply đúng cách."', name:'Minh Khoa', school:'HCMUTE – Đại học Sư phạm Kỹ thuật', initials:'MK'},
-    ]
-  },
-  {
-    id:8, initials:'PT', name:'Phạm Hoài Thương', role:'Consumer Insights Manager', co:'Nestlé Vietnam',
-    ind:['Marketing','FMCG'], prog:['Research & Insights','Internship'],
-    message:'Consumer Insights là ngành vừa cần sáng tạo vừa cần tư duy phân tích. Mình muốn giúp các bạn hiểu ngành này không chỉ qua lý thuyết mà từ những dự án thực tế mình đã làm tại Nestlé.',
-    supports:[
-      {icon:'ti-eye', title:'Định hướng Marketing Research & Insights', desc:'Hiểu rõ career path trong Consumer Research tại MNC FMCG.'},
-      {icon:'ti-file-text', title:'CV & phỏng vấn cho vị trí Marketing MNC', desc:'Sửa hồ sơ theo đúng kỳ vọng của hiring manager tại Nestlé.'},
-      {icon:'ti-presentation-analytics', title:'Luyện case presentation & storytelling', desc:'Cách trình bày insights một cách thuyết phục và logic.'},
-    ],
-    feedbacks:[
-      {badge:'✓ Intern — Nestlé', text:'"Chị Thương giúp mình <strong>tìm lại được đam mê với ngành Marketing</strong> và biết cách định vị bản thân tốt hơn."', name:'Hoàng Anh', school:'UEH – Đại học Kinh tế TP.HCM', initials:'HA'},
-    ]
+/* ─── ADVISOR DATA (fetch thật từ Google Sheet) ─── */
+var ADVISORS = [];
+
+function fetchAdvisorsFromSheet() {
+  return fetch(WEBAPP_URL + '?action=getAdvisors&only_active=1')
+    .then(function(r){ return r.json(); })
+    .then(function(res){
+      ADVISORS = (res && res.data) ? res.data.map(function(a, idx){
+        return {
+          id: idx,
+          initials: (a.initials || '').toUpperCase() || mkInitialsFallback(a.name),
+          name: a.name || '',
+          role: a.role || '',
+          co: a.company || '',
+          ind: a.industry ? a.industry.split(',').map(function(t){ return t.trim(); }).filter(Boolean) : [],
+          prog: [],
+          message: a.message || a.bio || '',
+          supports: [],
+          feedbacks: Array.isArray(a.feedbacks) ? a.feedbacks.map(function(f){
+            return { badge: '✓ Feedback', text: f.text || '', name: f.from || '', school: '', initials: mkInitialsFallback(f.from||'') };
+          }) : [],
+        };
+      }) : [];
+    })
+    .catch(function(){ ADVISORS = []; });
+}
+
+function mkInitialsFallback(name) {
+  var parts = String(name||'').split(' ').filter(Boolean);
+  return parts.map(function(p){ return p[0]; }).join('').slice(-2).toUpperCase() || '?';
+}
+
+function renderAdvisorGrid() {
+  var grid = document.getElementById('advGrid');
+  if (ADVISORS.length === 0) {
+    grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:40px;color:rgba(28,28,28,.35);font-family:\'Space Grotesk\',sans-serif;font-size:13px;">Chưa có advisor nào đang hoạt động.</div>';
+    document.getElementById('countNum').textContent = 0;
+    return;
   }
-];
+  var html = '';
+  ADVISORS.forEach(function(a){
+    var tagsHtml = '';
+    a.ind.slice(0,2).forEach(function(t){ tagsHtml += '<span class="atag atag-ind">'+t+'</span>'; });
+    html += '<div class="acard" data-ind="'+a.ind.join(' ').toLowerCase()+'" data-id="'+a.id+'">'
+      + '<div class="acard-top">'
+      +   '<div class="acard-ava">'+a.initials+'<div class="acard-verified"><i class="ti ti-check"></i></div></div>'
+      +   '<div class="acard-name">'+a.name+'</div>'
+      +   '<div class="acard-role">'+a.role+'</div>'
+      +   '<div class="acard-co"><span class="acard-co-dot"></span>'+a.co+'</div>'
+      + '</div>'
+      + '<div class="acard-tags">'+tagsHtml+'</div>'
+      + '<div class="acard-perf"></div>'
+      + '<button class="acard-btn" onclick="openDrawer('+a.id+')">Chi tiết về Advisor →</button>'
+      + '</div>';
+  });
+  grid.innerHTML = html;
+  document.getElementById('countNum').textContent = ADVISORS.length;
+}
 
 /* ─── State ─── */
 var S={adv:'',advRole:'',advCo:'',advInitials:'',pkg:'',sess:'',priceLabel:'',priceNum:0};
@@ -866,6 +647,7 @@ document.addEventListener('DOMContentLoaded', function(){
     document.getElementById('presetPkgName').textContent = PKG_DATA[presetPackage].name;
     document.getElementById('presetBanner').style.display = 'flex';
   }
+  fetchAdvisorsFromSheet().then(renderAdvisorGrid);
 });
 
 function applyPackageSelection(slug){
