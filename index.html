@@ -776,6 +776,23 @@ function cwConfirm(){
     });
   });
 }
+  /* ─── NAV DROPDOWN: bấm để mở/đóng, hoạt động cả trên mobile ─── */
+function toggleNavDropdown(btn) {
+  var item = btn.closest('.lj-nav-item');
+  var wasOpen = item.classList.contains('open');
+  document.querySelectorAll('.lj-nav-item.open').forEach(function(el){ el.classList.remove('open'); });
+  if (!wasOpen) item.classList.add('open');
+}
+document.addEventListener('click', function(e){
+  if (!e.target.closest('.lj-nav-item')) {
+    document.querySelectorAll('.lj-nav-item.open').forEach(function(el){ el.classList.remove('open'); });
+  }
+});
+document.addEventListener('keydown', function(e){
+  if (e.key === 'Escape') {
+    document.querySelectorAll('.lj-nav-item.open').forEach(function(el){ el.classList.remove('open'); });
+  }
+});
 </script>
 </body>
 </html>
