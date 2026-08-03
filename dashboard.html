@@ -1110,7 +1110,7 @@ function renderMonthCalendar(opts) {
   return html;
 }
 
-ffunction changeCalMonth(dir) {
+function changeCalMonth(dir) {
   calMonthOffset += dir;
   if (_calendarContext === 'meetings') { loadMeetingCalendarAsync(); return; }
   if (currentUser.role === 'Advisor') switchRoleTab('schedule');
@@ -2493,7 +2493,9 @@ function renderStaffCalendarMonth(staffName) {
   html += '</div></div>';
   return html;
 }
-
+function openStaffSlotDayModal(dateStr) {
+  openSaleScheduleModal(window._staffCalStaffName);
+}
 function changeStaffCalMonth(dir) {
   staffCalMonthOffset += dir;
   document.getElementById('main-content').innerHTML = renderStaffMemberDetail(_staffDetailId, 'schedule', _staffDetailSelfView);
@@ -3977,6 +3979,9 @@ function renderAdvisee(tab) {
   const c = document.getElementById('main-content');
   if (tab === 'my-bookings') c.innerHTML = renderMyBookings();
   else c.innerHTML = renderNewBookingForm();
+}
+function renderNewBookingForm() {
+  return '<div class="card"><div class="empty-state"><div class="icon">🛠</div>Tính năng đặt lịch mới đang được hoàn thiện.<br><small style="color:var(--muted)">Vui lòng liên hệ đội LinkaJob để được hỗ trợ đặt gói mới.</small></div></div>';
 }
 
 // State lưu star rating đang hover/chọn cho từng buổi
