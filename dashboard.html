@@ -1282,9 +1282,10 @@ function parseConsultNotes(notes) {
 }
 
 function renderNewRegistrationsList(sessions) {
-  var html = pageHeader('🔴 Khách đăng ký tư vấn mới', 'Đồng bộ trực tiếp từ form đăng ký trên website (tab Sessions)');
+  var html = '';
+  html += '<div style="font-size:15px;font-weight:700;margin-bottom:14px">🔴 Khách đăng ký tư vấn mới</div>';
   html += '<div class="card"><div class="card-header"><div class="card-header-left">Danh sách đăng ký (' + sessions.length + ')</div>';
-  html += '<button class="refresh-btn" onclick="loadNewRegistrationsPage()">↻ Làm mới</button></div>';
+  html += '<button class="refresh-btn" onclick="loadStaffSchedulePageAsync()">↻ Làm mới</button></div>';
 
   if (sessions.length === 0) {
     html += '<div class="empty-state"><div class="icon">📭</div>Chưa có khách nào đăng ký từ website</div>';
@@ -2719,12 +2720,17 @@ function loadStaffSchedulePageAsync() {
   var saleStaff = MOCK.staffList.filter(function(s){ return s.role === 'Sale' && s.active; });
   var saleNames = saleStaff.map(function(s){ return s.name; });
 
-  apiGet('getSlots', { advisor: STAFF_SLOT_IDENTITY }).then(function(res){
-    var allSlots = (res && res.data) ? res.data : [];
+  Promise.all([
+    apiGet('getSlots', { advisor: STAFF_SLOT_IDENTITY }).catch(function(){ return null; }),
+    apiGet('getSessions', { advisor: 'LinkaJob Team' }).catch(function(){ return null; })
+  ]).then(function(results){
+    var slotRes = results[0], sessRes = results[1];
+
+    var allSlots = (slotRes && slotRes.data) ? slotRes.data : [];
     MOCK.saleSlots = MOCK.saleSlots.filter(function(sl){ return saleNames.indexOf(sl.staff) === -1; });
     allSlots.forEach(function(rs){
       var owner = rs.created_by || '';
-      if (saleNames.indexOf(owner) === -1) return; // bỏ qua slot không rõ người tạo hoặc của staff không còn active
+      if (saleNames.indexOf(owner) === -1) return;
       MOCK.saleSlots.push({
         staff: owner,
         date: String(rs.date || '').slice(0, 10),
@@ -2735,6 +2741,19 @@ function loadStaffSchedulePageAsync() {
         slot_id: rs.slot_id,
       });
     });
+
+    var sessions = (sessRes && sessRes.data) ? sessRes.data : [];
+    sessions.sort(function(a,b){
+      return extractSessionTimestamp(b.session_id) > extractSessionTimestamp(a.session_id) ? 1 : -1;
+    });
+    window._newRegSessions = sessions;
+
+    mc.innerHTML = renderNewRegistrationsList(sessions) + renderStaffSchedulePage();
+  }).catch(function(err){
+    toast('Không tải được dữ liệu: ' + err.message, 'error');
+    mc.innerHTML = renderStaffSchedulePage();
+  });
+}
     mc.innerHTML = renderStaffSchedulePage();
   }).catch(function(err){
     toast('Không tải được lịch thật từ Sheet: ' + err.message, 'error');
