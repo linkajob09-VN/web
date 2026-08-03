@@ -2166,6 +2166,18 @@ function confirmCreateAdviseeFromConsult(cid) {
   toast('Đã tạo hồ sơ Advisee cho ' + c.name + ' — doanh thu ghi nhận cho ' + c.staff + ' ✅', 'success');
   closeModal();
   refreshStaffTab();
+
+  apiPost({
+    action: 'createMeetLink',
+    type: 'advisor',
+    date: sessionDate,
+    time: sessionTime,
+    guest_name: adviseeName,
+    guests: [advisorEmail, adviseeEmail],
+    }).then(function(res){
+    if (res.success) session.meetLink = res.meetLink;
+    });
+}
   
 // ── Tab: Khách chưa đặt lịch — cần liên hệ ──
 function renderStaffLeadsTab(s) {
