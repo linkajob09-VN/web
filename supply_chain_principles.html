@@ -5,381 +5,381 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Supply Chain Principles · LinkaJob</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=Inter:wght@400;500&display=swap');
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
-.lj{font-family:'Inter',sans-serif;background:#0D0D0D;color:#F0F0F0;overflow-x:hidden;}
-
-/* NAV (giữ nguyên 100% từ các trang khác) */
-.lj-nav{display:flex;align-items:center;justify-content:space-between;padding:16px 32px;border-bottom:.5px solid rgba(255,255,255,.08);position:relative;z-index:200;}
-.lj-logo{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:18px;color:#fc5229;letter-spacing:-.5px;}
-.lj-nav-links{display:flex;gap:4px;align-items:center;}
-.lj-nav-item{position:relative;}
-.lj-nav-links a,.lj-nav-btn-plain{font-size:13px;color:rgba(240,240,240,.5);text-decoration:none;font-family:'Space Grotesk',sans-serif;font-weight:500;transition:color .2s,background .2s;padding:8px 14px;border-radius:8px;display:inline-flex;align-items:center;gap:5px;cursor:pointer;background:transparent;border:none;}
-.lj-nav-links a:hover,.lj-nav-btn-plain:hover{color:#F0F0F0;background:rgba(255,255,255,.05);}
-.lj-nav-chevron{font-size:11px;transition:transform .2s;color:rgba(240,240,240,.3);}
-.lj-nav-item:hover .lj-nav-chevron{transform:rotate(180deg);color:rgba(240,240,240,.6);}
-.lj-btn-nav{background:#fc5229;color:#fff;font-size:13px;font-weight:500;font-family:'Space Grotesk',sans-serif;padding:8px 20px;border-radius:100px;border:none;cursor:pointer;white-space:nowrap;margin-left:8px;}
-
-.lj-dropdown{position:absolute;top:calc(100% + 8px);left:50%;transform:translateX(-50%) translateY(-6px);background:#161616;border:.5px solid rgba(255,255,255,.1);border-radius:14px;padding:8px;min-width:230px;opacity:0;pointer-events:none;transition:opacity .18s ease,transform .18s ease;z-index:300;}
-.lj-nav-item:hover .lj-dropdown{opacity:1;pointer-events:auto;transform:translateX(-50%) translateY(0);}
-.lj-di{display:flex;align-items:flex-start;gap:11px;padding:10px 12px;border-radius:10px;text-decoration:none;transition:background .15s;}
-.lj-di:hover{background:rgba(255,255,255,.05);}
-.lj-di-icon{width:32px;height:32px;border-radius:9px;background:rgba(252,82,41,.1);display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;transition:background .15s;}
-.lj-di-icon i{font-size:16px;color:#fc5229;transition:color .15s;}
-.lj-dropdown-courses .lj-di-icon{background:rgba(255,255,255,.05);}
-.lj-dropdown-courses .lj-di-icon i{color:rgba(240,240,240,.45);}
-.lj-dropdown-courses .lj-di:hover .lj-di-icon{background:rgba(252,82,41,.1);}
-.lj-dropdown-courses .lj-di:hover .lj-di-icon i{color:#fc5229;}
-.lj-di-title{font-family:'Space Grotesk',sans-serif;font-size:13px;font-weight:600;color:#F0F0F0;margin-bottom:2px;}
-.lj-di-sub{font-size:11px;color:rgba(240,240,240,.38);line-height:1.45;}
-.lj-dropdown-divider{height:.5px;background:rgba(255,255,255,.07);margin:6px 0;}
-.lj-dropdown-badge{display:inline-block;font-size:9px;font-weight:700;font-family:'Space Grotesk',sans-serif;letter-spacing:.06em;text-transform:uppercase;background:rgba(252,82,41,.15);color:#fc5229;padding:2px 7px;border-radius:4px;margin-left:6px;vertical-align:middle;}
-
-/* ── HERO ── */
-.hero{padding:64px 32px 0;text-align:center;}
-.eyebrow{display:inline-flex;align-items:center;gap:7px;background:#1A1A1A;border:.5px solid rgba(255,255,255,.1);border-radius:100px;padding:6px 14px;font-size:12px;color:rgba(240,240,240,.5);font-family:'Space Grotesk',sans-serif;font-weight:500;margin-bottom:22px;}
-.eyebrow-dot{width:5px;height:5px;border-radius:50%;background:#fc5229;flex-shrink:0;}
-.hero h1{font-family:'Space Grotesk',sans-serif;font-size:46px;font-weight:700;line-height:1.1;letter-spacing:-2px;color:#F0F0F0;margin-bottom:16px;max-width:680px;margin-left:auto;margin-right:auto;}
-.hero h1 em{color:#fc5229;font-style:normal;}
-.hero-sub{font-size:15px;color:rgba(240,240,240,.45);max-width:560px;margin:0 auto 30px;line-height:1.75;}
-.hero-tags{display:flex;justify-content:center;gap:10px;flex-wrap:wrap;margin-bottom:34px;}
-.hero-tag{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:rgba(240,240,240,.5);font-family:'Space Grotesk',sans-serif;font-weight:500;background:#1A1A1A;border:.5px solid rgba(255,255,255,.08);padding:6px 13px;border-radius:100px;}
-.hero-tag i{font-size:13px;color:#fc5229;}
-.hero-cta{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-bottom:40px;}
-.btn-primary{background:#fc5229;color:#fff;font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:14px;padding:13px 26px;border-radius:100px;border:none;cursor:pointer;}
-.btn-ghost{background:transparent;color:#F0F0F0;font-family:'Space Grotesk',sans-serif;font-weight:500;font-size:14px;padding:12px 26px;border-radius:100px;border:.5px solid rgba(240,240,240,.2);cursor:pointer;}
-
-/* ── PRICE CARD STRIP ── */
-.price-strip{max-width:760px;margin:0 auto;background:#1A1A1A;border:.5px solid rgba(255,255,255,.08);border-radius:18px;padding:26px 32px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:20px;}
-.price-left{display:flex;align-items:center;gap:14px;}
-.price-icon{width:46px;height:46px;border-radius:12px;background:rgba(252,82,41,.1);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
-.price-icon i{font-size:22px;color:#fc5229;}
-.price-name{font-family:'Space Grotesk',sans-serif;font-size:14px;font-weight:700;color:#F0F0F0;}
-.price-sub{font-size:12px;color:rgba(240,240,240,.4);margin-top:2px;}
-.price-stats{display:flex;gap:28px;flex-wrap:wrap;}
-.price-stat{text-align:center;}
-.price-stat-num{font-family:'Space Grotesk',sans-serif;font-size:20px;font-weight:700;color:#fc5229;line-height:1;}
-.price-stat-lbl{font-size:10px;color:rgba(240,240,240,.3);margin-top:4px;text-transform:uppercase;letter-spacing:.05em;}
-.price-fee{text-align:right;}
-.price-fee-num{font-family:'Space Grotesk',sans-serif;font-size:24px;font-weight:700;color:#F0F0F0;letter-spacing:-.5px;}
-.price-fee-lbl{font-size:11px;color:rgba(240,240,240,.32);margin-top:2px;}
-
-/* ── SECTION BASE ── */
-.lj-sec{padding:60px 32px;}
-.lj-sec-label{font-size:11px;color:rgba(240,240,240,.28);letter-spacing:.12em;text-transform:uppercase;margin-bottom:10px;text-align:center;}
-.lj-sec-title{font-family:'Space Grotesk',sans-serif;font-size:28px;font-weight:700;letter-spacing:-1px;color:#F0F0F0;margin-bottom:10px;line-height:1.2;text-align:center;}
-.lj-sec-sub{font-size:14px;color:rgba(240,240,240,.4);margin:0 auto 36px;line-height:1.7;max-width:540px;text-align:center;}
-
-/* ── WHO IS THIS FOR ── */
-.who-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;max-width:1000px;margin:0 auto;}
-.who-card{background:#1A1A1A;border:.5px solid rgba(255,255,255,.07);border-radius:16px;padding:26px 24px;}
-.who-icon{font-size:26px;margin-bottom:14px;}
-.who-title{font-family:'Space Grotesk',sans-serif;font-size:15px;font-weight:700;color:#F0F0F0;margin-bottom:8px;}
-.who-desc{font-size:13px;color:rgba(240,240,240,.42);line-height:1.65;}
-
-/* ── MODULES ── */
-.mod-list{display:flex;flex-direction:column;gap:10px;max-width:760px;margin:0 auto;}
-.mod-item{background:#1A1A1A;border:.5px solid rgba(255,255,255,.07);border-radius:14px;padding:18px 22px;display:flex;gap:18px;align-items:flex-start;transition:border-color .2s;}
-.mod-item:hover{border-color:rgba(252,82,41,.25);}
-.mod-num{font-family:'Space Grotesk',sans-serif;font-size:13px;font-weight:700;color:#fc5229;background:rgba(252,82,41,.1);width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
-.mod-title{font-family:'Space Grotesk',sans-serif;font-size:14px;font-weight:700;color:#F0F0F0;margin-bottom:5px;line-height:1.3;}
-.mod-desc{font-size:13px;color:rgba(240,240,240,.42);line-height:1.65;}
-
-/* ── SKILLS ── */
-.skill-cloud{display:flex;flex-wrap:wrap;gap:9px;justify-content:center;max-width:760px;margin:0 auto;}
-.skill-pill{font-size:13px;font-family:'Space Grotesk',sans-serif;font-weight:500;color:rgba(240,240,240,.65);background:#1A1A1A;border:.5px solid rgba(255,255,255,.08);padding:9px 18px;border-radius:100px;display:inline-flex;align-items:center;gap:7px;}
-.skill-pill i{font-size:13px;color:#fc5229;}
-
-/* ── OUTCOMES ── */
-.outcome-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;max-width:760px;margin:0 auto;}
-.outcome-card{background:#1A1A1A;border:.5px solid rgba(255,255,255,.07);border-radius:16px;padding:22px;display:flex;gap:14px;align-items:flex-start;}
-.outcome-check{width:28px;height:28px;border-radius:8px;background:rgba(252,82,41,.1);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
-.outcome-check i{font-size:15px;color:#fc5229;}
-.outcome-title{font-family:'Space Grotesk',sans-serif;font-size:13.5px;font-weight:700;color:#F0F0F0;margin-bottom:5px;}
-.outcome-desc{font-size:12.5px;color:rgba(240,240,240,.42);line-height:1.6;}
-
-/* ── INSTRUCTOR ── */
-.instructor-wrap{max-width:800px;margin:0 auto;background:#1A1A1A;border:.5px solid rgba(255,255,255,.07);border-radius:20px;padding:36px;display:grid;grid-template-columns:140px 1fr;gap:32px;align-items:start;}
-.instr-photo{width:140px;height:140px;border-radius:16px;background:linear-gradient(135deg,#2a2a2a,#1a1a1a);border:.5px solid rgba(252,82,41,.2);display:flex;align-items:center;justify-content:center;font-family:'Space Grotesk',sans-serif;font-size:32px;font-weight:700;color:#fc5229;}
-.instr-name{font-family:'Space Grotesk',sans-serif;font-size:19px;font-weight:700;color:#F0F0F0;letter-spacing:-.4px;margin-bottom:3px;}
-.instr-tag{font-size:13px;color:#fc5229;font-family:'Space Grotesk',sans-serif;font-weight:600;margin-bottom:14px;}
-.instr-bio{font-size:13px;color:rgba(240,240,240,.48);line-height:1.75;margin-bottom:20px;}
-.instr-timeline{display:flex;flex-direction:column;gap:11px;}
-.timeline-item{display:flex;gap:12px;align-items:flex-start;border-left:2px solid rgba(252,82,41,.2);padding-left:14px;}
-.tl-role{font-family:'Space Grotesk',sans-serif;font-size:12.5px;font-weight:700;color:#F0F0F0;}
-.tl-co{font-size:12px;color:rgba(240,240,240,.4);}
-.tl-time{font-size:11px;color:rgba(240,240,240,.28);margin-top:2px;}
-
-/* ── PROCESS STEPS ── */
-.process-row{display:flex;gap:14px;max-width:680px;margin:0 auto;}
-.process-card{flex:1;background:#1A1A1A;border:.5px solid rgba(255,255,255,.07);border-radius:16px;padding:26px 22px;text-align:center;position:relative;}
-.process-num{width:36px;height:36px;border-radius:50%;background:#fc5229;color:#fff;font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:15px;display:flex;align-items:center;justify-content:center;margin:0 auto 14px;}
-.process-title{font-family:'Space Grotesk',sans-serif;font-size:14px;font-weight:700;color:#F0F0F0;margin-bottom:7px;}
-.process-desc{font-size:12.5px;color:rgba(240,240,240,.4);line-height:1.6;}
-.process-arrow{display:flex;align-items:center;color:rgba(252,82,41,.4);font-size:20px;}
-
-/* ── BENEFIT STRIP (before form CTA) ── */
-.benefit-strip{max-width:1000px;margin:0 auto;display:grid;grid-template-columns:repeat(5,1fr);gap:12px;}
-.benefit-item{text-align:center;padding:6px;}
-.benefit-icon{font-size:24px;margin-bottom:10px;}
-.benefit-text{font-size:12px;color:rgba(240,240,240,.45);line-height:1.55;}
-
-/* ── FAQ ── */
-.faq-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;max-width:900px;margin:0 auto;}
-.faq-item{background:#1A1A1A;border:.5px solid rgba(255,255,255,.07);border-radius:14px;overflow:hidden;}
-.faq-q{width:100%;background:none;border:none;display:flex;justify-content:space-between;align-items:center;padding:18px 20px;cursor:pointer;text-align:left;gap:14px;}
-.faq-q span{font-family:'Space Grotesk',sans-serif;font-size:13px;font-weight:600;color:#F0F0F0;line-height:1.4;}
-.faq-q i{font-size:15px;color:rgba(240,240,240,.28);flex-shrink:0;transition:transform .2s;}
-.faq-item.open .faq-q i{transform:rotate(45deg);color:#fc5229;}
-.faq-a{font-size:13px;color:rgba(240,240,240,.48);line-height:1.75;padding:0 20px 18px;display:none;}
-.faq-item.open .faq-a{display:block;}
-
-/* ── FINAL CTA ── */
-.cta-wrap{padding:0 32px 64px;}
-.cta-box{max-width:1000px;margin:0 auto;background:#fc5229;border-radius:20px;padding:48px 48px;text-align:center;}
-.cta-box h2{font-family:'Space Grotesk',sans-serif;font-size:28px;font-weight:700;letter-spacing:-1px;color:#fff;margin-bottom:10px;line-height:1.2;}
-.cta-box p{font-size:14px;color:rgba(255,255,255,.75);margin-bottom:10px;}
-.cta-seats{font-size:12px;color:rgba(255,255,255,.6);margin-bottom:26px;}
-.cta-btn{background:#0D0D0D;color:#fc5229;font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:15px;padding:14px 32px;border-radius:100px;border:none;cursor:pointer;}
-
-/* ── FOOTER ── */
-.lj-footer{padding:24px 32px;border-top:.5px solid rgba(255,255,255,.08);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;}
-.lj-footer-copy{font-size:12px;color:rgba(240,240,240,.22);}
-.lj-footer-links{display:flex;gap:20px;}
-.lj-footer-links a{font-size:12px;color:rgba(240,240,240,.28);text-decoration:none;}
-
-/* ── CONSULT WIDGET (giữ nguyên 100%) ── */
-.cw-overlay{position:fixed;inset:0;background:transparent;z-index:998;display:none;}
-.cw-overlay.show{display:block;}
-.cw-box{position:fixed;bottom:20px;right:20px;width:360px;max-width:calc(100vw - 32px);max-height:calc(100vh - 40px);background:#161616;border:.5px solid rgba(255,255,255,.1);border-radius:18px;box-shadow:0 20px 60px rgba(0,0,0,.5);z-index:999;display:flex;flex-direction:column;overflow:hidden;}
-.cw-head{display:flex;align-items:flex-start;justify-content:space-between;padding:18px 20px 14px;border-bottom:.5px solid rgba(255,255,255,.08);flex-shrink:0;}
-.cw-title{font-family:'Space Grotesk',sans-serif;font-size:15px;font-weight:700;color:#F0F0F0;}
-.cw-sub{font-size:12px;color:rgba(240,240,240,.4);margin-top:3px;}
-.cw-close{background:rgba(255,255,255,.06);border:none;width:28px;height:28px;border-radius:8px;color:rgba(240,240,240,.6);cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
-.cw-close:hover{background:rgba(255,255,255,.12);color:#F0F0F0;}
-.cw-close i{font-size:15px;}
-.cw-step{padding:18px 20px 20px;overflow-y:auto;}
-.cw-field{margin-bottom:14px;}
-.cw-field label{display:block;font-size:12px;color:rgba(240,240,240,.55);font-family:'Space Grotesk',sans-serif;font-weight:500;margin-bottom:6px;}
-.cw-field label span{color:#fc5229;}
-.cw-field input,.cw-field select,.cw-field textarea{width:100%;background:#0D0D0D;border:.5px solid rgba(255,255,255,.12);border-radius:9px;padding:10px 12px;color:#F0F0F0;font-size:13px;font-family:'Inter',sans-serif;outline:none;box-sizing:border-box;}
-.cw-field input:focus,.cw-field select:focus,.cw-field textarea:focus{border-color:#fc5229;}
-.cw-field textarea{resize:none;line-height:1.5;}
-.cw-field select{appearance:none;}
-.cw-note{display:flex;gap:8px;align-items:flex-start;font-size:11.5px;color:rgba(240,240,240,.5);line-height:1.6;background:rgba(252,82,41,.06);border:.5px solid rgba(252,82,41,.15);border-radius:10px;padding:10px 12px;margin-bottom:16px;}
-.cw-note i{color:#fc5229;font-size:14px;flex-shrink:0;margin-top:1px;}
-.cw-next{width:100%;background:#fc5229;color:#fff;font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:13.5px;padding:12px;border-radius:100px;border:none;cursor:pointer;}
-.cw-next:disabled{opacity:.35;cursor:not-allowed;}
-.cw-back{background:transparent;color:rgba(240,240,240,.5);font-family:'Space Grotesk',sans-serif;font-weight:500;font-size:12.5px;border:none;cursor:pointer;padding:12px 4px;white-space:nowrap;}
-.cw-nav-row{display:flex;align-items:center;gap:10px;margin-top:4px;}
-.cw-nav-row .cw-next{flex:1;}
-.cw-cal-title{font-family:'Space Grotesk',sans-serif;font-size:13px;font-weight:700;color:#F0F0F0;margin-bottom:10px;text-align:center;text-transform:capitalize;}
-.cw-cal-days-lbl{display:grid;grid-template-columns:repeat(7,1fr);margin-bottom:4px;}
-.cw-cal-days-lbl span{text-align:center;font-size:10px;color:rgba(240,240,240,.35);font-family:'Space Grotesk',sans-serif;}
-.cw-cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;margin-bottom:16px;}
-.cw-day{height:32px;display:flex;align-items:center;justify-content:center;font-size:12.5px;color:rgba(240,240,240,.6);border-radius:8px;cursor:default;position:relative;}
-.cw-day.empty{visibility:hidden;}
-.cw-day.past{opacity:.25;}
-.cw-day.no-slots{opacity:.3;}
-.cw-day.has-slots{color:#F0F0F0;font-weight:500;cursor:pointer;}
-.cw-day.has-slots:hover{background:rgba(255,255,255,.06);}
-.cw-day.has-slots::after{content:'';position:absolute;bottom:3px;left:50%;transform:translateX(-50%);width:4px;height:4px;border-radius:50%;background:#fc5229;}
-.cw-day.selected{background:#fc5229;color:#fff;}
-.cw-day.selected::after{display:none;}
-.cw-ts-label{font-size:11px;color:rgba(240,240,240,.4);margin-bottom:10px;}
-.cw-ts-slots{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:18px;min-height:36px;}
-.cw-ts-slot{padding:8px 14px;border-radius:100px;border:.5px solid rgba(255,255,255,.12);background:transparent;color:#F0F0F0;font-size:12px;font-family:'Space Grotesk',sans-serif;font-weight:500;cursor:pointer;}
-.cw-ts-slot:hover{border-color:rgba(252,82,41,.5);color:#fc5229;}
-.cw-ts-slot.on{background:#fc5229;border-color:#fc5229;color:#fff;}
-.cw-success-icon{width:52px;height:52px;border-radius:50%;background:rgba(252,82,41,.12);display:flex;align-items:center;justify-content:center;margin:6px auto 16px;}
-.cw-success-icon i{font-size:26px;color:#fc5229;}
-.cw-success-title{font-family:'Space Grotesk',sans-serif;font-size:16px;font-weight:700;color:#F0F0F0;text-align:center;margin-bottom:8px;}
-.cw-success-sub{font-size:12.5px;color:rgba(240,240,240,.5);text-align:center;line-height:1.7;margin-bottom:20px;}
-@media (max-width:480px){.cw-box{left:16px;right:16px;bottom:16px;width:auto;}}
-
-/* ── ENROLL WIDGET (center modal, 3 steps) ── */
-.ew-overlay{position:fixed;inset:0;background:rgba(0,0,0,.78);backdrop-filter:blur(8px);z-index:1000;display:none;align-items:center;justify-content:center;padding:20px;}
-.ew-overlay.show{display:flex;}
-.ew-box{width:100%;max-width:560px;max-height:90vh;background:#161616;border:.5px solid rgba(255,255,255,.1);border-radius:20px;box-shadow:0 30px 80px rgba(0,0,0,.6);display:flex;flex-direction:column;overflow:hidden;}
-.ew-head{display:flex;align-items:flex-start;justify-content:space-between;padding:22px 26px 0;flex-shrink:0;}
-.ew-title{font-family:'Space Grotesk',sans-serif;font-size:17px;font-weight:700;color:#F0F0F0;}
-.ew-sub{font-size:12px;color:rgba(240,240,240,.4);margin-top:3px;}
-.ew-close{background:rgba(255,255,255,.06);border:none;width:30px;height:30px;border-radius:9px;color:rgba(240,240,240,.6);cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
-.ew-close:hover{background:rgba(255,255,255,.12);color:#F0F0F0;}
-.ew-close i{font-size:16px;}
-
-/* steps indicator */
-.ew-steps{display:flex;align-items:center;padding:18px 26px 0;flex-shrink:0;}
-.ew-step{display:flex;align-items:center;gap:7px;flex:1;}
-.ew-step:last-child{flex:none;}
-.ew-step-c{width:25px;height:25px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Space Grotesk',sans-serif;font-size:11px;font-weight:700;flex-shrink:0;transition:all .2s;}
-.ew-step-c.done{background:#fc5229;color:#fff;}
-.ew-step-c.active{background:rgba(252,82,41,.18);color:#fc5229;border:.5px solid #fc5229;}
-.ew-step-c.pend{background:rgba(255,255,255,.05);color:rgba(240,240,240,.22);}
-.ew-step-l{font-size:11px;font-family:'Space Grotesk',sans-serif;font-weight:600;white-space:nowrap;}
-.ew-step-l.done{color:rgba(240,240,240,.35);}
-.ew-step-l.active{color:#F0F0F0;}
-.ew-step-l.pend{color:rgba(240,240,240,.2);}
-.ew-step-line{flex:1;height:.5px;background:rgba(255,255,255,.08);margin:0 6px;}
-.ew-step-line.done{background:rgba(252,82,41,.35);}
-
-.ew-body{padding:20px 26px 26px;overflow-y:auto;}
-.ew-panel{display:none;}
-.ew-panel.active{display:block;}
-
-/* course summary bar */
-.ew-course-bar{background:#1A1A1A;border:.5px solid rgba(255,255,255,.08);border-radius:12px;padding:13px 16px;display:flex;align-items:center;gap:12px;margin-bottom:18px;}
-.ew-course-icon{width:36px;height:36px;border-radius:10px;background:rgba(252,82,41,.1);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
-.ew-course-icon i{font-size:18px;color:#fc5229;}
-.ew-course-name{font-family:'Space Grotesk',sans-serif;font-size:13px;font-weight:700;color:#F0F0F0;}
-.ew-course-meta{font-size:11px;color:rgba(240,240,240,.4);margin-top:1px;}
-.ew-course-fee{margin-left:auto;text-align:right;}
-.ew-course-fee-num{font-family:'Space Grotesk',sans-serif;font-size:15px;font-weight:700;color:#fc5229;}
-
-/* form */
-.ew-fgrid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
-.ew-ffull{grid-column:1/-1;}
-.ew-field{display:flex;flex-direction:column;gap:6px;margin-bottom:14px;}
-.ew-field label{font-size:11px;color:rgba(240,240,240,.45);font-family:'Space Grotesk',sans-serif;font-weight:600;letter-spacing:.03em;}
-.ew-field label span{color:#fc5229;}
-.ew-field input,.ew-field select,.ew-field textarea{width:100%;background:#0D0D0D;border:.5px solid rgba(255,255,255,.12);border-radius:9px;padding:10px 13px;color:#F0F0F0;font-size:13px;font-family:'Inter',sans-serif;outline:none;box-sizing:border-box;transition:border-color .2s;}
-.ew-field input:focus,.ew-field select:focus,.ew-field textarea:focus{border-color:#fc5229;}
-.ew-field input::placeholder,.ew-field textarea::placeholder{color:rgba(240,240,240,.2);}
-.ew-field select{appearance:none;}
-.ew-field textarea{resize:none;line-height:1.6;}
-
-/* file upload (CV) */
-.ew-upload{border:1.5px dashed rgba(255,255,255,.15);border-radius:11px;padding:20px;text-align:center;cursor:pointer;transition:all .2s;position:relative;}
-.ew-upload:hover{border-color:rgba(252,82,41,.4);background:rgba(252,82,41,.03);}
-.ew-upload.has-file{border-style:solid;border-color:rgba(252,82,41,.4);background:rgba(252,82,41,.05);}
-.ew-upload input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;}
-.ew-upload-icon{font-size:22px;color:rgba(240,240,240,.3);margin-bottom:8px;}
-.ew-upload.has-file .ew-upload-icon{color:#fc5229;}
-.ew-upload-text{font-size:12.5px;color:rgba(240,240,240,.45);font-family:'Space Grotesk',sans-serif;font-weight:500;}
-.ew-upload-hint{font-size:11px;color:rgba(240,240,240,.25);margin-top:3px;}
-.ew-upload-filename{font-size:12.5px;color:#fc5229;font-family:'Space Grotesk',sans-serif;font-weight:600;}
-
-.ew-or-divider{display:flex;align-items:center;gap:10px;margin:16px 0;}
-.ew-or-divider::before,.ew-or-divider::after{content:'';flex:1;height:.5px;background:rgba(255,255,255,.08);}
-.ew-or-divider span{font-size:11px;color:rgba(240,240,240,.3);font-family:'Space Grotesk',sans-serif;}
-
-/* nav buttons */
-.ew-nav{display:flex;gap:10px;align-items:center;margin-top:8px;}
-.ew-back{background:transparent;border:.5px solid rgba(255,255,255,.12);color:rgba(240,240,240,.5);font-family:'Space Grotesk',sans-serif;font-weight:500;font-size:13px;padding:11px 20px;border-radius:100px;cursor:pointer;transition:all .2s;}
-.ew-back:hover{border-color:rgba(255,255,255,.25);color:#F0F0F0;}
-.ew-next{flex:1;background:#fc5229;color:#fff;font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:13.5px;padding:12px;border-radius:100px;border:none;cursor:pointer;transition:opacity .2s;}
-.ew-next:hover{opacity:.88;}
-.ew-next:disabled{opacity:.32;cursor:not-allowed;}
-
-/* confirm step */
-.ew-confirm-box{background:#1A1A1A;border:.5px solid rgba(255,255,255,.07);border-radius:12px;padding:16px;margin-bottom:14px;}
-.ew-crow{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;padding:8px 0;border-bottom:.5px solid rgba(255,255,255,.05);}
-.ew-crow:first-child{padding-top:0;}
-.ew-crow:last-child{border-bottom:none;padding-bottom:0;}
-.ew-cl{font-size:11.5px;color:rgba(240,240,240,.32);}
-.ew-cv{font-family:'Space Grotesk',sans-serif;font-size:12.5px;font-weight:700;color:#F0F0F0;text-align:right;}
-.ew-cv.orange{color:#fc5229;}
-.ew-cedit{font-size:10.5px;color:rgba(240,240,240,.22);cursor:pointer;text-align:right;margin-top:2px;}
-.ew-cedit:hover{color:#fc5229;}
-
-.ew-total-row{background:rgba(252,82,41,.08);border:.5px solid rgba(252,82,41,.18);border-radius:11px;padding:14px 18px;display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;}
-.ew-total-l{font-family:'Space Grotesk',sans-serif;font-size:14px;font-weight:700;color:#F0F0F0;}
-.ew-total-p{font-family:'Space Grotesk',sans-serif;font-size:24px;font-weight:700;color:#fc5229;letter-spacing:-.5px;}
-
-/* payment step */
-.ew-pay-wrap{display:flex;gap:16px;align-items:flex-start;margin-bottom:14px;}
-.ew-pay-qr{background:#fff;border-radius:12px;padding:12px;flex-shrink:0;}
-.ew-pay-qr svg{width:118px;height:118px;display:block;}
-.ew-pay-details{flex:1;}
-.ew-pay-bank{font-family:'Space Grotesk',sans-serif;font-size:14px;font-weight:700;color:#F0F0F0;margin-bottom:10px;}
-.ew-prow{display:flex;justify-content:space-between;gap:8px;padding:7px 0;border-bottom:.5px solid rgba(255,255,255,.05);}
-.ew-prow:last-child{border-bottom:none;}
-.ew-pl{font-size:10.5px;color:rgba(240,240,240,.3);}
-.ew-pv{font-size:12.5px;font-family:'Space Grotesk',sans-serif;font-weight:600;color:#F0F0F0;}
-.ew-pv.orange{color:#fc5229;}
-.ew-pay-note{background:rgba(252,82,41,.07);border:.5px solid rgba(252,82,41,.18);border-radius:10px;padding:12px 14px;font-size:12px;color:rgba(240,240,240,.5);line-height:1.7;margin-bottom:14px;}
-.ew-pay-note strong{color:#F0F0F0;font-weight:500;}
-
-.ew-status-box{display:none;margin-bottom:14px;padding:11px 13px;border-radius:9px;font-size:12.5px;line-height:1.55;}
-
-/* success */
-.ew-success-icon{width:56px;height:56px;border-radius:50%;background:rgba(252,82,41,.12);display:flex;align-items:center;justify-content:center;margin:8px auto 18px;}
-.ew-success-icon i{font-size:28px;color:#fc5229;}
-.ew-success-title{font-family:'Space Grotesk',sans-serif;font-size:18px;font-weight:700;color:#F0F0F0;text-align:center;margin-bottom:10px;}
-.ew-success-sub{font-size:13px;color:rgba(240,240,240,.5);text-align:center;line-height:1.75;margin-bottom:22px;}
-
-@media (max-width:600px){
-  .ew-box{max-height:94vh;}
-  .ew-fgrid{grid-template-columns:1fr;}
-  .ew-pay-wrap{flex-direction:column;align-items:center;text-align:center;}
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600;700;800&display=swap');
+:root{
+  --dark:#0D0D0D;
+  --dark-card:#1A1A1A;
+  --paper:#F5F4F1;
+  --paper-2:#FFFFFF;
+  --orange:#fc5229;
+  --orange-tint:rgba(252,82,41,.1);
+  --orange-tint-2:rgba(252,82,41,.06);
+  --text:#1C1C1C;
+  --text-dark:#F0F0F0;
+  --muted:rgba(28,28,28,.45);
+  --muted-2:rgba(28,28,28,.3);
+  --muted-dark:rgba(240,240,240,.4);
+  --muted-dark-2:rgba(240,240,240,.28);
+  --line:rgba(28,28,28,.1);
+  --line-dark:rgba(255,255,255,.09);
+  --success:#3ecf8e;
 }
+*,*::before,*::after{box-sizing:border-box; margin:0; padding:0;}
+html{scroll-behavior:smooth;}
+body{font-family:'Inter',sans-serif; background:var(--paper); color:var(--text); line-height:1.55; -webkit-font-smoothing:antialiased;}
+a{color:inherit; text-decoration:none;}
+.wrap{max-width:1120px; margin:0 auto; padding:0 32px;}
+h1,h2,h3,h4{font-family:'Space Grotesk',sans-serif; font-weight:700; letter-spacing:-0.02em; line-height:1.15;}
 
-@media (max-width:860px){
-  .who-grid,.outcome-grid{grid-template-columns:1fr;}
-  .instructor-wrap{grid-template-columns:1fr;text-align:center;}
-  .instr-photo{margin:0 auto;}
-  .timeline-item{text-align:left;}
-  .process-row{flex-direction:column;}
-  .process-arrow{display:none;}
-  .benefit-strip{grid-template-columns:repeat(2,1fr);}
+.eyebrow{
+  display:inline-flex; align-items:center; gap:7px;
+  font-family:'Space Grotesk',sans-serif; font-size:12px; font-weight:600;
+  background:var(--orange-tint); color:var(--orange);
+  border:.5px solid rgba(252,82,41,.18); border-radius:100px; padding:5px 14px;
+}
+.eyebrow-dot{width:5px; height:5px; border-radius:50%; background:var(--orange); flex:none;}
+.eyebrow.on-dark{ background:#1A1A1A; color:var(--muted-dark); border-color:var(--line-dark);}
+.eyebrow.on-dark .eyebrow-dot{background:var(--orange);}
+
+/* buttons */
+.btn{ display:inline-flex; align-items:center; justify-content:center; gap:8px; padding:13px 26px; border-radius:100px; font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:14px; cursor:pointer; border:none; transition:opacity .2s, transform .15s;}
+.btn-orange{ background:var(--orange); color:#fff;}
+.btn-orange:hover{ opacity:.88; transform:translateY(-1px);}
+.btn-ghost-dark{ background:transparent; color:var(--muted-dark); border:.5px solid var(--line-dark);}
+.btn-ghost-dark:hover{ color:var(--text-dark); border-color:rgba(252,82,41,.4);}
+.btn-ghost-light{ background:#fff; color:var(--text); border:.5px solid var(--line);}
+.btn-ghost-light:hover{ border-color:rgba(252,82,41,.4); color:var(--orange);}
+
+/* nav — matching LinkaJob homepage */
+.lj-nav{ position:sticky; top:0; z-index:200; display:flex; align-items:center; justify-content:space-between; padding:16px 32px; background:var(--dark); border-bottom:.5px solid var(--line-dark);}
+.lj-logo{ font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:18px; color:var(--orange); letter-spacing:-.5px; text-decoration:none; cursor:pointer;}
+.lj-nav-links{ display:flex; gap:4px; align-items:center;}
+.lj-nav-item{ position:relative;}
+.lj-nav-links a, .lj-nav-btn-plain{ font-size:13px; color:var(--muted-dark); text-decoration:none; font-family:'Space Grotesk',sans-serif; font-weight:500; transition:color .2s, background .2s; padding:8px 14px; border-radius:8px; display:inline-flex; align-items:center; gap:5px; cursor:pointer; background:transparent; border:none;}
+.lj-nav-links a:hover, .lj-nav-btn-plain:hover{ color:var(--text-dark); background:rgba(255,255,255,.05);}
+.lj-nav-chevron{ font-size:11px; transition:transform .2s; color:var(--muted-dark-2);}
+.lj-nav-item.open .lj-nav-chevron{ transform:rotate(180deg); color:rgba(240,240,240,.6);}
+.lj-btn-nav{ background:var(--orange); color:#fff; font-size:13px; font-weight:500; font-family:'Space Grotesk',sans-serif; padding:8px 20px; border-radius:100px; border:none; cursor:pointer; white-space:nowrap; margin-left:8px;}
+.lj-dropdown{ position:absolute; top:calc(100% + 8px); left:50%; transform:translateX(-50%) translateY(-6px); background:#161616; border:.5px solid rgba(255,255,255,.1); border-radius:14px; padding:8px; min-width:230px; opacity:0; pointer-events:none; transition:opacity .18s ease, transform .18s ease; z-index:300; box-shadow:0 12px 32px rgba(0,0,0,.35);}
+.lj-nav-item:hover .lj-dropdown, .lj-nav-item.open .lj-dropdown{ opacity:1; pointer-events:auto; transform:translateX(-50%) translateY(0);}
+.lj-di{ display:flex; align-items:flex-start; gap:11px; padding:10px 12px; border-radius:10px; text-decoration:none; transition:background .15s;}
+.lj-di:hover{ background:rgba(255,255,255,.05);}
+.lj-di-icon{ width:32px; height:32px; border-radius:9px; background:rgba(252,82,41,.1); display:flex; align-items:center; justify-content:center; flex-shrink:0; margin-top:1px;}
+.lj-di-icon i{ font-size:16px; color:var(--orange);}
+.lj-di-title{ font-family:'Space Grotesk',sans-serif; font-size:13px; font-weight:600; color:var(--text-dark); margin-bottom:2px;}
+.lj-di-sub{ font-size:11px; color:rgba(240,240,240,.38); line-height:1.45;}
+.lj-dropdown-divider{ height:.5px; background:rgba(255,255,255,.07); margin:6px 0;}
+.lj-dropdown-badge{ display:inline-block; font-size:9px; font-weight:700; font-family:'Space Grotesk',sans-serif; letter-spacing:.06em; text-transform:uppercase; background:rgba(252,82,41,.15); color:var(--orange); padding:2px 7px; border-radius:4px; margin-left:6px; vertical-align:middle;}
+
+/* consult widget */
+.cw-overlay{ position:fixed; inset:0; background:transparent; z-index:998; display:none;}
+.cw-overlay.show{ display:block;}
+.cw-box{ position:fixed; bottom:20px; right:20px; width:360px; max-width:calc(100vw - 32px); max-height:calc(100vh - 40px); background:#161616; border:.5px solid rgba(255,255,255,.1); border-radius:18px; box-shadow:0 20px 60px rgba(0,0,0,.5); z-index:999; display:flex; flex-direction:column; overflow:hidden;}
+.cw-head{ display:flex; align-items:flex-start; justify-content:space-between; padding:18px 20px 14px; border-bottom:.5px solid rgba(255,255,255,.08); flex-shrink:0;}
+.cw-title{ font-family:'Space Grotesk',sans-serif; font-size:15px; font-weight:700; color:var(--text-dark);}
+.cw-sub{ font-size:12px; color:rgba(240,240,240,.4); margin-top:3px;}
+.cw-close{ background:rgba(255,255,255,.06); border:none; width:28px; height:28px; border-radius:8px; color:rgba(240,240,240,.6); cursor:pointer; display:flex; align-items:center; justify-content:center; flex-shrink:0;}
+.cw-close:hover{ background:rgba(255,255,255,.12); color:var(--text-dark);}
+.cw-close i{ font-size:15px;}
+.cw-step{ padding:18px 20px 20px; overflow-y:auto;}
+.cw-field{ margin-bottom:14px;}
+.cw-field label{ display:block; font-size:12px; color:rgba(240,240,240,.55); font-family:'Space Grotesk',sans-serif; font-weight:500; margin-bottom:6px;}
+.cw-field label span{ color:var(--orange);}
+.cw-field input, .cw-field select, .cw-field textarea{ width:100%; background:var(--dark); border:.5px solid rgba(255,255,255,.12); border-radius:9px; padding:10px 12px; color:var(--text-dark); font-size:13px; font-family:'Inter',sans-serif; outline:none; box-sizing:border-box;}
+.cw-field input:focus, .cw-field select:focus, .cw-field textarea:focus{ border-color:var(--orange);}
+.cw-field textarea{ resize:none; line-height:1.5;}
+.cw-field select{ appearance:none;}
+.cw-note{ display:flex; gap:8px; align-items:flex-start; font-size:11.5px; color:rgba(240,240,240,.5); line-height:1.6; background:var(--orange-tint-2); border:.5px solid rgba(252,82,41,.15); border-radius:10px; padding:10px 12px; margin-bottom:16px;}
+.cw-note i{ color:var(--orange); font-size:14px; flex-shrink:0; margin-top:1px;}
+.cw-next{ width:100%; background:var(--orange); color:#fff; font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:13.5px; padding:12px; border-radius:100px; border:none; cursor:pointer;}
+.cw-next:disabled{ opacity:.35; cursor:not-allowed;}
+.cw-back{ background:transparent; color:rgba(240,240,240,.5); font-family:'Space Grotesk',sans-serif; font-weight:500; font-size:12.5px; border:none; cursor:pointer; padding:12px 4px; white-space:nowrap;}
+.cw-nav-row{ display:flex; align-items:center; gap:10px; margin-top:4px;}
+.cw-nav-row .cw-next{ flex:1;}
+.cw-cal-title{ font-family:'Space Grotesk',sans-serif; font-size:13px; font-weight:700; color:var(--text-dark); margin-bottom:10px; text-align:center; text-transform:capitalize;}
+.cw-cal-days-lbl{ display:grid; grid-template-columns:repeat(7,1fr); margin-bottom:4px;}
+.cw-cal-days-lbl span{ text-align:center; font-size:10px; color:rgba(240,240,240,.35); font-family:'Space Grotesk',sans-serif;}
+.cw-cal-grid{ display:grid; grid-template-columns:repeat(7,1fr); gap:3px; margin-bottom:16px;}
+.cw-day{ height:32px; display:flex; align-items:center; justify-content:center; font-size:12.5px; color:rgba(240,240,240,.6); border-radius:8px; cursor:default; position:relative;}
+.cw-day.empty{ visibility:hidden;}
+.cw-day.past{ opacity:.25;}
+.cw-day.no-slots{ opacity:.3;}
+.cw-day.has-slots{ color:var(--text-dark); font-weight:500; cursor:pointer;}
+.cw-day.has-slots:hover{ background:rgba(255,255,255,.06);}
+.cw-day.has-slots::after{ content:''; position:absolute; bottom:3px; left:50%; transform:translateX(-50%); width:4px; height:4px; border-radius:50%; background:var(--orange);}
+.cw-day.selected{ background:var(--orange); color:#fff;}
+.cw-day.selected::after{ display:none;}
+.cw-ts-label{ font-size:11px; color:rgba(240,240,240,.4); margin-bottom:10px;}
+.cw-ts-slots{ display:flex; flex-wrap:wrap; gap:8px; margin-bottom:18px; min-height:36px;}
+.cw-ts-slot{ padding:8px 14px; border-radius:100px; border:.5px solid rgba(255,255,255,.12); background:transparent; color:var(--text-dark); font-size:12px; font-family:'Space Grotesk',sans-serif; font-weight:500; cursor:pointer;}
+.cw-ts-slot:hover{ border-color:rgba(252,82,41,.5); color:var(--orange);}
+.cw-ts-slot.on{ background:var(--orange); border-color:var(--orange); color:#fff;}
+.cw-success-icon{ width:52px; height:52px; border-radius:50%; background:var(--orange-tint); display:flex; align-items:center; justify-content:center; margin:6px auto 16px;}
+.cw-success-icon i{ font-size:26px; color:var(--orange);}
+.cw-success-title{ font-family:'Space Grotesk',sans-serif; font-size:16px; font-weight:700; color:var(--text-dark); text-align:center; margin-bottom:8px;}
+.cw-success-sub{ font-size:12.5px; color:rgba(240,240,240,.5); text-align:center; line-height:1.7; margin-bottom:20px;}
+@media(max-width:480px){ .cw-box{ left:16px; right:16px; bottom:16px; width:auto;} }
+
+/* hero */
+.hero{ background:var(--dark); padding:64px 0 44px; text-align:center;}
+.hero .eyebrow{ margin-bottom:20px;}
+.hero h1{ font-size:40px; color:var(--text-dark); letter-spacing:-1.6px; margin-bottom:14px; white-space:nowrap;}
+@media(max-width:640px){ .hero h1{ font-size:26px; white-space:normal;} }
+.hero h1 em{ color:var(--orange); font-style:normal;}
+.hero .sub{ font-size:15px; color:var(--muted-dark); max-width:480px; margin:0 auto 30px; line-height:1.7;}
+.hero-cta{ display:flex; gap:12px; justify-content:center; flex-wrap:wrap; margin-bottom:36px;}
+.hero-stats{ display:flex; gap:40px; justify-content:center; flex-wrap:wrap; max-width:640px; margin:52px auto 0; padding-top:32px; border-top:.5px solid var(--line-dark);}
+.hstat{ text-align:center;}
+.hstat-num{ font-family:'Space Grotesk',sans-serif; font-size:34px; font-weight:700; color:var(--orange); line-height:1;}
+.hstat-lbl{ font-size:11px; color:var(--muted-dark-2); margin-top:5px; text-transform:uppercase; letter-spacing:.06em;}
+
+/* wave divider */
+.wave{ background:var(--dark); line-height:0;}
+.wave svg{ width:100%; height:36px; display:block;}
+
+/* sections */
+section{ padding:80px 0;}
+.section-head{ max-width:620px; margin-bottom:44px;}
+.section-head h2{ font-size:30px; color:var(--text); margin-top:14px; letter-spacing:-1px;}
+.section-head p{ margin-top:14px; font-size:15px; color:var(--muted); line-height:1.7;}
+.on-dark .section-head h2{ color:var(--text-dark);}
+.on-dark .section-head p{ color:var(--muted-dark);}
+
+/* problem cards */
+.problem-grid{ display:grid; grid-template-columns:repeat(4,1fr); gap:14px;}
+.problem-card{ background:var(--paper-2); border:.5px solid var(--line); border-radius:16px; padding:24px 20px; transition:border-color .2s, transform .2s;}
+.problem-card:hover{ border-color:rgba(252,82,41,.3); transform:translateY(-3px);}
+.problem-card .num{ font-family:'Space Grotesk',sans-serif; font-size:12px; color:var(--orange); font-weight:700; letter-spacing:.04em;}
+.problem-card h3{ font-size:16px; margin:14px 0 8px; letter-spacing:-0.3px;}
+.problem-card p{ font-size:13.5px; color:var(--muted); line-height:1.6;}
+
+/* solution dark strip */
+.solution{ background:var(--dark); text-align:center;}
+.solution h2{ font-size:28px; max-width:720px; margin:0 auto 16px; color:var(--text-dark); letter-spacing:-0.8px;}
+.solution p.lead{ max-width:560px; margin:0 auto 30px; color:var(--muted-dark); font-size:15px;}
+.pill-row{ display:flex; gap:10px; justify-content:center; flex-wrap:wrap;}
+.pill{ background:var(--orange-tint); border:.5px solid rgba(252,82,41,.25); color:var(--orange); padding:9px 18px; border-radius:100px; font-family:'Space Grotesk',sans-serif; font-size:13px; font-weight:600;}
+
+/* before/after */
+.transform-table{ display:grid; grid-template-columns:1fr 1fr; border-radius:18px; overflow:hidden; border:.5px solid var(--line);}
+.col-before, .col-after{ padding:30px 26px;}
+.col-before{ background:#fff;}
+.col-after{ background:var(--dark);}
+.col-head{ font-family:'Space Grotesk',sans-serif; font-size:12px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; margin-bottom:20px; display:flex; align-items:center; gap:8px;}
+.col-before .col-head{ color:var(--muted-2);}
+.col-after .col-head{ color:var(--orange);}
+.transform-row{ display:flex; gap:12px; padding:12px 0; border-top:.5px solid var(--line);}
+.col-after .transform-row{ border-top:.5px solid var(--line-dark);}
+.transform-row:first-of-type{ border-top:none;}
+.transform-row .mark{ flex:none; width:18px; height:18px; border-radius:50%; margin-top:2px; display:flex; align-items:center; justify-content:center; font-size:10px; font-weight:700;}
+.col-before .mark{ background:rgba(28,28,28,.06); color:var(--muted);}
+.col-after .mark{ background:var(--orange); color:#fff;}
+.transform-row span{ font-size:14px;}
+.col-before .transform-row span{ color:var(--text);}
+.col-after .transform-row span{ color:var(--muted-dark);}
+
+/* curriculum modules - accordion */
+.module{ border-top:.5px solid var(--line);}
+.module:last-child{ border-bottom:.5px solid var(--line);}
+.module-q{ display:flex; align-items:flex-start; gap:18px; padding:20px 0; cursor:pointer;}
+.module-num{ font-family:'Space Grotesk',sans-serif; font-size:22px; color:rgba(28,28,28,.18); font-weight:700; flex:none; width:36px;}
+.module-head{ flex:1;}
+.module-head h3{ font-size:16.5px; letter-spacing:-0.3px; margin-bottom:5px;}
+.module-outcome{ display:flex; align-items:center; gap:6px; font-size:12.5px; color:var(--orange); font-weight:600; font-family:'Space Grotesk',sans-serif;}
+.module-outcome-dot{ width:4px; height:4px; border-radius:50%; background:var(--orange); flex:none;}
+.module-plus{ font-family:'Space Grotesk',sans-serif; font-size:18px; color:var(--orange); flex:none; transition:transform .2s ease; margin-top:2px;}
+.module.open .module-plus{ transform:rotate(45deg);}
+.module-a{ max-height:0; overflow:hidden; transition:max-height .25s ease;}
+.module-a ul{ list-style:none; display:flex; flex-direction:column; gap:7px; padding:0 0 22px 54px;}
+.module-a li{ font-size:13.5px; color:var(--muted); padding-left:16px; position:relative;}
+.module-a li::before{ content:"—"; position:absolute; left:0; color:var(--orange);}
+
+/* audience */
+.audience-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:16px;}
+.audience-card{ background:var(--paper-2); border:.5px solid var(--line); border-radius:16px; padding:26px;}
+.audience-card .eyebrow{ margin-bottom:16px;}
+.audience-card p{ font-size:14px; color:var(--muted); line-height:1.6;}
+
+/* instructor cards - matching brand avatar+verified style */
+.instructor-grid{ display:grid; grid-template-columns:1fr 1fr; gap:16px;}
+.instructor-card{ background:var(--dark-card); border:.5px solid var(--line-dark); border-radius:16px; padding:26px; display:flex; gap:18px;}
+.avatar{ position:relative; flex:none; width:60px; height:60px; border-radius:50%; background:linear-gradient(135deg,#252525,#1a1a1a); border:.5px solid rgba(252,82,41,.2); display:flex; align-items:center; justify-content:center; font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:19px; color:var(--orange);}
+.avatar .verified{ position:absolute; bottom:-1px; right:-1px; width:18px; height:18px; background:var(--orange); border-radius:50%; display:flex; align-items:center; justify-content:center; border:2px solid var(--dark-card); font-size:9px; color:#fff;}
+.avatar.on-light{ background:linear-gradient(135deg,#fdf1ee,#fce8e2); border-color:rgba(252,82,41,.15);}
+.avatar.on-light .verified{ border-color:#fff;}
+.instructor-card h3{ font-size:17px; color:var(--text-dark); margin-bottom:4px; letter-spacing:-0.3px;}
+.instructor-card .role{ font-size:12.5px; color:var(--orange); font-weight:600; margin-bottom:12px; font-family:'Space Grotesk',sans-serif;}
+.instructor-card ul{ list-style:none; display:flex; flex-direction:column; gap:6px;}
+.instructor-card li{ font-size:13px; color:var(--muted-dark); padding-left:14px; position:relative;}
+.instructor-card li::before{ content:"—"; position:absolute; left:0; color:var(--orange);}
+
+/* gift / benefit cards */
+.gift-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:16px;}
+.gift-card{ background:var(--paper-2); border:.5px solid var(--line); border-radius:16px; padding:24px;}
+.gift-top{ display:flex; align-items:flex-start; justify-content:space-between; margin-bottom:16px;}
+.gift-icon{ width:42px; height:42px; border-radius:10px; background:var(--orange-tint); display:flex; align-items:center; justify-content:center; color:var(--orange); font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:12px;}
+.gift-value{ font-family:'Space Grotesk',sans-serif; font-size:11px; font-weight:600; color:var(--orange); background:var(--orange-tint-2); border:.5px solid rgba(252,82,41,.15); padding:4px 9px; border-radius:100px; white-space:nowrap;}
+.gift-card h3{ font-size:15.5px; margin-bottom:8px; letter-spacing:-0.2px;}
+.gift-card p{ font-size:13px; color:var(--muted); line-height:1.6;}
+
+/* perforated divider - brand ticket motif */
+.perf{ height:.5px; background:repeating-linear-gradient(90deg, rgba(28,28,28,.14) 0, rgba(28,28,28,.14) 4px, transparent 4px, transparent 8px); margin:20px 0;}
+.perf.on-dark{ background:repeating-linear-gradient(90deg, rgba(255,255,255,.14) 0, rgba(255,255,255,.14) 4px, transparent 4px, transparent 8px);}
+
+/* pricing */
+.pricing{ background:var(--dark); text-align:center;}
+.price-grid{ display:grid; grid-template-columns:1fr 1fr; gap:18px; max-width:780px; margin:0 auto;}
+.price-box{ background:var(--dark-card); border:.5px solid var(--line-dark); border-radius:20px; padding:32px 28px; text-align:left;}
+.price-box.advisee{ border-color:rgba(252,82,41,.4); background:linear-gradient(180deg, rgba(252,82,41,.08), var(--dark-card) 55%);}
+.price-box .eyebrow{ margin-bottom:18px;}
+.price-old{ font-family:'Space Grotesk',sans-serif; font-size:13px; color:var(--muted-dark-2); text-decoration:line-through; margin-bottom:6px;}
+.price-new{ font-family:'Space Grotesk',sans-serif; font-size:38px; color:var(--orange); font-weight:700; letter-spacing:-1.3px; margin-bottom:6px;}
+.price-note{ font-size:12px; color:var(--muted-dark-2); margin-bottom:8px;}
+.price-list{ list-style:none; display:flex; flex-direction:column; gap:9px; margin:18px 0 22px;}
+.price-list li{ font-size:12.8px; color:var(--muted-dark); padding-left:20px; position:relative;}
+.price-list li::before{ content:"✓"; position:absolute; left:0; color:var(--orange); font-weight:700;}
+.scarcity{ margin-top:24px; font-size:12px; color:var(--orange); font-family:'Space Grotesk',sans-serif; font-weight:600; text-align:center;}
+
+/* testimonials - matching brand feedback card style */
+.testi-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:14px;}
+.testi-card{ background:var(--paper-2); border:.5px solid var(--line); border-radius:14px; padding:22px; display:flex; flex-direction:column; gap:12px;}
+.stars{ color:var(--orange); font-size:12px; letter-spacing:2px;}
+.testi-card p{ font-size:13.3px; color:var(--text); line-height:1.6; flex:1;}
+.testi-who{ display:flex; align-items:center; gap:10px; border-top:.5px solid var(--line); padding-top:12px;}
+.testi-who .avatar{ width:34px; height:34px; font-size:12px;}
+.testi-who .avatar .verified{ width:13px; height:13px;}
+.testi-who strong{ display:block; font-size:13px; font-family:'Space Grotesk',sans-serif;}
+.testi-who span{ display:block; font-size:11.5px; color:var(--muted);}
+
+/* FAQ */
+.faq-item{ border-top:.5px solid var(--line); padding:20px 0;}
+.faq-item:last-child{ border-bottom:.5px solid var(--line);}
+.faq-q{ display:flex; justify-content:space-between; align-items:center; cursor:pointer; gap:16px;}
+.faq-q h4{ font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:15px; letter-spacing:-0.2px;}
+.faq-q .plus{ font-family:'Space Grotesk',sans-serif; font-size:18px; color:var(--orange); transition:transform .2s ease; flex:none;}
+.faq-item.open .plus{ transform:rotate(45deg);}
+.faq-a{ max-height:0; overflow:hidden; transition:max-height .25s ease;}
+.faq-a p, .faq-a ul{ font-size:13.5px; color:var(--muted); padding-top:14px; line-height:1.65;}
+.faq-a ul{ list-style:none; display:flex; flex-direction:column; gap:6px;}
+.faq-a li{ padding-left:16px; position:relative;}
+.faq-a li::before{ content:"—"; position:absolute; left:0; color:var(--orange);}
+
+/* final CTA */
+.final{ background:var(--dark); text-align:center;}
+.final h2{ font-size:32px; color:var(--text-dark); max-width:620px; margin:0 auto 14px; letter-spacing:-1px;}
+.final p{ color:var(--muted-dark); max-width:500px; margin:0 auto 32px; font-size:14.5px;}
+.form-box{ max-width:540px; margin:0 auto; background:var(--dark-card); border:.5px solid var(--line-dark); border-radius:18px; padding:30px; text-align:left;}
+.form-row{ display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:10px;}
+.form-box input, .form-box select, .form-box textarea{ width:100%; padding:12px 14px; border-radius:9px; border:.5px solid var(--line-dark); background:#141414; color:var(--text-dark); font-family:'Inter'; font-size:13.5px; outline:none;}
+.form-box input:focus, .form-box select:focus, .form-box textarea:focus{ border-color:var(--orange);}
+.form-box input::placeholder, .form-box textarea::placeholder{ color:var(--muted-dark-2);}
+.form-box textarea{ margin-bottom:16px; resize:vertical; min-height:66px;}
+.form-box .btn{ width:100%;}
+
+footer{ background:var(--dark); color:var(--muted-dark-2); padding:28px 0; text-align:center; font-size:12.5px; border-top:.5px solid var(--line-dark);}
+footer span{ color:var(--orange);}
+
+@media(max-width:900px){
+  .hero h1{ font-size:34px;}
+  .problem-grid, .audience-grid, .gift-grid, .testi-grid{ grid-template-columns:repeat(2,1fr);}
+  .instructor-grid{ grid-template-columns:1fr;}
+  .form-row{ grid-template-columns:1fr;}
+}
+@media(max-width:760px){
+  .col-before, .col-after{ padding:20px 16px;}
+  .col-head{ font-size:10.5px; margin-bottom:14px;}
+  .transform-row{ padding:9px 0; gap:9px;}
+  .transform-row span{ font-size:12.5px; line-height:1.4;}
+  .price-box{ padding:22px 16px;}
+  .price-new{ font-size:26px;}
+  .price-list li{ font-size:11.5px;}
+  .price-box .btn{ padding:11px 10px; font-size:12px;}
+}
+@media(max-width:480px){
+  .transform-table{ grid-template-columns:1fr;}
+  .price-grid{ grid-template-columns:1fr;}
+}
+@media(max-width:560px){
+  .problem-grid, .audience-grid, .gift-grid, .testi-grid{ grid-template-columns:1fr;}
+  section{ padding:56px 0;}
+  .wrap{ padding:0 20px;}
 }
 </style>
 </head>
 <body>
-<div class="lj">
-
-<!-- NAV -->
 <nav class="lj-nav">
-  <a href="index.html" class="lj-logo" style="text-decoration:none;cursor:pointer;">LinkaJob</a>
+  <a href="index.html" class="lj-logo">LinkaJob</a>
   <div class="lj-nav-links">
 
     <div class="lj-nav-item">
-      <button class="lj-nav-btn-plain">Cố vấn 1-1 <i class="ti ti-chevron-down lj-nav-chevron" aria-hidden="true"></i></button>
+      <button class="lj-nav-btn-plain" onclick="toggleNavDropdown(this)">Cố vấn 1-1 <i class="ti ti-chevron-down lj-nav-chevron" aria-hidden="true"></i></button>
       <div class="lj-dropdown">
         <a class="lj-di" href="advisor.html">
           <div class="lj-di-icon"><i class="ti ti-user-star" aria-hidden="true"></i></div>
-          <div><div class="lj-di-title">Profile Advisor</div><div class="lj-di-sub">Tìm advisor phù hợp với định hướng của bạn</div></div>
+          <div>
+            <div class="lj-di-title">Profile Advisor</div>
+            <div class="lj-di-sub">Tìm advisor phù hợp với định hướng của bạn</div>
+          </div>
         </a>
         <div class="lj-dropdown-divider"></div>
-        <a class="lj-di" href="pricing.html">
+        <a class="lj-di" href="linkajob_pricing.html">
           <div class="lj-di-icon"><i class="ti ti-calendar-event" aria-hidden="true"></i></div>
-          <div><div class="lj-di-title">Các gói meeting 1-1 <span class="lj-dropdown-badge">Phổ biến</span></div><div class="lj-di-sub">Buổi đầu miễn phí · 3–7 sessions/gói</div></div>
+          <div>
+            <div class="lj-di-title">Các gói meeting 1-1 <span class="lj-dropdown-badge">Phổ biến</span></div>
+            <div class="lj-di-sub">Buổi đầu miễn phí · 3–7 sessions/gói</div>
+          </div>
         </a>
       </div>
     </div>
 
     <div class="lj-nav-item">
-      <button class="lj-nav-btn-plain">Khoá học <i class="ti ti-chevron-down lj-nav-chevron" aria-hidden="true"></i></button>
-      <div class="lj-dropdown lj-dropdown-courses">
-        <a class="lj-di" href="land-your-dream-job.html">
+      <button class="lj-nav-btn-plain" onclick="toggleNavDropdown(this)">Khoá học <i class="ti ti-chevron-down lj-nav-chevron" aria-hidden="true"></i></button>
+      <div class="lj-dropdown">
+        <a class="lj-di" href="land_your_dream_job.html">
           <div class="lj-di-icon"><i class="ti ti-rocket" aria-hidden="true"></i></div>
-          <div><div class="lj-di-title">Land Your Dream Job</div><div class="lj-di-sub">CV · Interview · Offer negotiation</div></div>
+          <div>
+            <div class="lj-di-title">Land Your Dream Job</div>
+            <div class="lj-di-sub">Marketing · Sales · FMCG · Fields · Case Study</div>
+          </div>
         </a>
         <div class="lj-dropdown-divider"></div>
-        <a class="lj-di" href="logistics-operation.html">
+        <a class="lj-di" href="logistics_operation_cracking.html">
           <div class="lj-di-icon"><i class="ti ti-truck-delivery" aria-hidden="true"></i></div>
-          <div><div class="lj-di-title">Logistics Operation</div><div class="lj-di-sub">Thực chiến logistics từ MNC insiders</div></div>
+          <div>
+            <div class="lj-di-title">Logistics Operation Cracking</div>
+            <div class="lj-di-sub">Logistics Operation · E-Logistics · FMCG · Case Study</div>
+          </div>
         </a>
         <div class="lj-dropdown-divider"></div>
-        <a class="lj-di" href="supply-chain-principles.html">
+        <a class="lj-di" href="supply_chain_principles.html">
           <div class="lj-di-icon"><i class="ti ti-topology-star-3" aria-hidden="true"></i></div>
-          <div><div class="lj-di-title">Supply Chain Principles <span class="lj-dropdown-badge">Đang xem</span></div><div class="lj-di-sub">Nền tảng supply chain cho fresher</div></div>
+          <div>
+            <div class="lj-di-title">Supply Chain Principles <span class="lj-dropdown-badge">Đang xem</span></div>
+            <div class="lj-di-sub">Planning · Sourcing · Procurement · Manufacturing · Logistics</div>
+          </div>
         </a>
       </div>
     </div>
 
     <div class="lj-nav-item">
-      <button class="lj-nav-btn-plain">Thành công <i class="ti ti-chevron-down lj-nav-chevron" aria-hidden="true"></i></button>
+      <button class="lj-nav-btn-plain" onclick="toggleNavDropdown(this)">Thành công <i class="ti ti-chevron-down lj-nav-chevron" aria-hidden="true"></i></button>
       <div class="lj-dropdown">
         <a class="lj-di" href="success-stories.html">
           <div class="lj-di-icon"><i class="ti ti-trophy" aria-hidden="true"></i></div>
-          <div><div class="lj-di-title">Câu chuyện thành công</div><div class="lj-di-sub">Hành trình vào MNC từ sinh viên thật</div></div>
+          <div>
+            <div class="lj-di-title">Câu chuyện thành công</div>
+            <div class="lj-di-sub">Hành trình vào MNC từ sinh viên thật</div>
+          </div>
         </a>
         <div class="lj-dropdown-divider"></div>
         <a class="lj-di" href="feedback.html">
           <div class="lj-di-icon"><i class="ti ti-message-circle-2" aria-hidden="true"></i></div>
-          <div><div class="lj-di-title">Feedback dịch vụ</div><div class="lj-di-sub">~80% advisee nhận offer sau khi hoàn thành</div></div>
+          <div>
+            <div class="lj-di-title">Feedback dịch vụ</div>
+            <div class="lj-di-sub">~80% advisee nhận offer sau khi hoàn thành</div>
+          </div>
         </a>
       </div>
     </div>
@@ -388,271 +388,509 @@
     <button class="lj-btn-nav" onclick="openConsultWidget()">Đăng ký tư vấn</button>
   </div>
 </nav>
-
-<!-- HERO -->
 <section class="hero">
-  <div class="eyebrow"><span class="eyebrow-dot"></span>Khai giảng 01/07/2026</div>
-  <h1>Hiểu toàn diện <em>Supply Chain</em><br>từ nền tảng đến thực chiến</h1>
-  <p class="hero-sub">Khoá học giúp bạn nắm vững 11 thành phần chuỗi cung ứng, từ Raw Materials đến Reverse Logistics — được đào tạo trực tiếp bởi chuyên gia 10+ năm tại Lazada, Maersk, OnPoint.</p>
-  <div class="hero-tags">
-    <span class="hero-tag"><i class="ti ti-calendar-week"></i>4 tuần / 8 buổi</span>
-    <span class="hero-tag"><i class="ti ti-video"></i>Học qua Zoom</span>
-    <span class="hero-tag"><i class="ti ti-users"></i>Số lượng có hạn</span>
+  <div class="wrap">
+    <span class="eyebrow on-dark"><span class="eyebrow-dot"></span>Khoá học Supply Chain & Logistics · LinkaJob</span>
+    <h1 style="white-space:normal; font-size:clamp(26px,4.6vw,42px); margin-top:16px;">Hiểu toàn diện <em>Supply Chain</em> từ nền tảng đến thực chiến</h1>
+    <p class="sub">Khoá học giúp bạn nắm vững 11 thành phần chuỗi cung ứng, từ Raw Materials đến Reverse Logistics — đào tạo trực tiếp bởi chuyên gia 10+ năm tại Lazada, Maersk, OnPoint.</p>
+    <div class="pill-row" style="margin-bottom:28px;">
+      <span class="pill">4 tuần / 8 buổi</span>
+      <span class="pill">Học qua Zoom</span>
+      <span class="pill">Số lượng có hạn</span>
+      <span class="pill">Khai giảng 01/07/2026</span>
+    </div>
+    <div class="hero-cta">
+      <button class="btn btn-orange" onclick="openConsultWidget()">Đăng ký tư vấn ngay</button>
+      <a href="#noidung" class="btn btn-ghost-dark">Xem nội dung khoá ↓</a>
+    </div>
+    <div class="hero-stats">
+      <div class="hstat"><div class="hstat-num">8</div><div class="hstat-lbl">Modules</div></div>
+      <div class="hstat"><div class="hstat-num">13</div><div class="hstat-lbl">Kỹ năng</div></div>
+      <div class="hstat"><div class="hstat-num">10+</div><div class="hstat-lbl">Năm KN giảng viên</div></div>
+      <div class="hstat"><div class="hstat-num">5M</div><div class="hstat-lbl">Học phí trọn khoá</div></div>
+    </div>
   </div>
-  <div class="hero-cta">
-    <button class="btn-primary" onclick="openConsultWidget()">Đăng ký tư vấn ngay</button>
-    <button class="btn-ghost" onclick="document.getElementById('modules').scrollIntoView({behavior:'smooth'})">Xem nội dung khoá</button>
-  </div>
+</section>
 
-  <div class="price-strip">
-    <div class="price-left">
-      <div class="price-icon"><i class="ti ti-package"></i></div>
-      <div>
-        <div class="price-name">Supply Chain Principles</div>
-        <div class="price-sub">Thanh toán linh hoạt · Học trực tiếp cùng Advisor</div>
+<div class="wave"><svg viewBox="0 0 1440 40" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none"><path d="M0,40 C360,0 1080,0 1440,40 L1440,40 L0,40 Z" fill="#F5F4F1"/></svg></div>
+
+<section>
+  <div class="wrap">
+    <div class="section-head">
+      <span class="eyebrow"><span class="eyebrow-dot"></span>Vấn đề cốt lõi</span>
+      <h2>Vì sao nhiều bạn học đúng ngành vẫn apply mà không trúng?</h2>
+      <p>Supply Chain là một bức tranh lớn với nhiều mắt xích — thiếu nền tảng tổng thể khiến việc định hướng và ứng tuyển trở nên mơ hồ.</p>
+    </div>
+    <div class="problem-grid">
+      <div class="problem-card">
+        <span class="num">01</span>
+        <h3>Chưa nắm được bức tranh tổng thể</h3>
+        <p>Học rời rạc từng phần mà chưa hiểu 11 thành phần chuỗi cung ứng liên kết với nhau như thế nào.</p>
       </div>
-    </div>
-    <div class="price-stats">
-      <div class="price-stat"><div class="price-stat-num">8</div><div class="price-stat-lbl">Modules</div></div>
-      <div class="price-stat"><div class="price-stat-num">13</div><div class="price-stat-lbl">Kỹ năng</div></div>
-      <div class="price-stat"><div class="price-stat-num">10+</div><div class="price-stat-lbl">Năm KN giảng viên</div></div>
-    </div>
-    <div class="price-fee">
-      <div class="price-fee-num">5.000.000đ</div>
-      <div class="price-fee-lbl">Học phí trọn khoá</div>
-    </div>
-  </div>
-</section>
-
-<!-- WHO IS THIS FOR -->
-<section class="lj-sec">
-  <div class="lj-sec-label">Khoá học này dành cho ai?</div>
-  <h2 class="lj-sec-title">Bạn là ai trong bức tranh này?</h2>
-  <p class="lj-sec-sub">Khoá học phù hợp với những ai muốn bước vào ngành Supply Chain & Logistics với nền tảng vững chắc.</p>
-  <div class="who-grid">
-    <div class="who-card">
-      <div class="who-icon">🎓</div>
-      <div class="who-title">Sinh viên</div>
-      <div class="who-desc">Đang học Kinh tế, Logistics, Quản trị kinh doanh và muốn apply vị trí Intern, Fresh Graduate tại các công ty đa quốc gia.</div>
-    </div>
-    <div class="who-card">
-      <div class="who-icon">🔄</div>
-      <div class="who-title">Người chuyển ngành</div>
-      <div class="who-desc">Đang làm ở lĩnh vực khác nhưng muốn hiểu Supply Chain để chuyển sang vị trí phù hợp trong chuỗi cung ứng.</div>
-    </div>
-    <div class="who-card">
-      <div class="who-icon">📈</div>
-      <div class="who-title">Fresher muốn định hướng đúng</div>
-      <div class="who-desc">Đã có CV nhưng chưa hiểu rõ mình phù hợp vai trò nào: Planner, Buyer, Logistics Coordinator hay Warehouse Supervisor?</div>
-    </div>
-  </div>
-</section>
-
-<!-- MODULES -->
-<section class="lj-sec" id="modules" style="padding-top:0;">
-  <div class="lj-sec-label">Nội dung khoá học</div>
-  <h2 class="lj-sec-title">4 tuần – 8 modules</h2>
-  <p class="lj-sec-sub">Từ bức tranh tổng thể đến từng mắt xích vận hành, bạn sẽ hiểu chuỗi cung ứng hoạt động như thế nào trong doanh nghiệp thực tế.</p>
-  <div class="mod-list">
-    <div class="mod-item">
-      <div class="mod-num">M1</div>
-      <div><div class="mod-title">Bức tranh tổng thể của Supply Chain & Logistics</div><div class="mod-desc">Xác định đầy đủ 11 thành phần chuỗi cung ứng từ Raw Materials đến Reverse. Phân tích SC trong 3 ngành: E-commerce, Sản xuất, Bán lẻ.</div></div>
-    </div>
-    <div class="mod-item">
-      <div class="mod-num">M2</div>
-      <div><div class="mod-title">What's in Supply Chain?</div><div class="mod-desc">Hiểu sức cạnh tranh và xu hướng chuyển đổi số trong Supply Chain hiện đại — tại sao SC là xương sống của mọi doanh nghiệp.</div></div>
-    </div>
-    <div class="mod-item">
-      <div class="mod-num">M3</div>
-      <div><div class="mod-title">Planning – Nghệ thuật dự đoán & lập kế hoạch</div><div class="mod-desc">Phân biệt 3 mô hình MTS, MTO, ETO. Nắm vai trò cốt lõi của Demand Planning & Supply Planning trong vận hành thực tế.</div></div>
-    </div>
-    <div class="mod-item">
-      <div class="mod-num">M4</div>
-      <div><div class="mod-title">Sourcing – Tìm kiếm & đánh giá nguồn cung</div><div class="mod-desc">Toàn bộ quy trình Tender/RFQ, đánh giá supplier theo 5 mô hình sourcing, xây dựng bảng tiêu chí chọn nhà cung cấp.</div></div>
-    </div>
-    <div class="mod-item">
-      <div class="mod-num">M5</div>
-      <div><div class="mod-title">Procurement & Purchasing – Mua hàng chiến lược</div><div class="mod-desc">Kỹ thuật, quy trình và công cụ tối ưu chi phí, giảm rủi ro và quản lý quan hệ nhà cung cấp hiệu quả.</div></div>
-    </div>
-    <div class="mod-item">
-      <div class="mod-num">M6</div>
-      <div><div class="mod-title">Manufacturing – Từ nguyên liệu đến sản phẩm</div><div class="mod-desc">Phân tích Production Plan hoàn chỉnh, đánh giá công suất và so sánh mô hình Discontinuous vs Continuous Manufacturing.</div></div>
-    </div>
-    <div class="mod-item">
-      <div class="mod-num">M7</div>
-      <div><div class="mod-title">B2B & B2C – Logistics & 5 phương thức vận tải</div><div class="mod-desc">Nắm các khái niệm Bulk/Break Bulk, LCL/LTL, FCL/FTL và sự khác biệt trong logistics B2B vs B2C.</div></div>
-    </div>
-    <div class="mod-item">
-      <div class="mod-num">M8</div>
-      <div><div class="mod-title">Reverse Logistics – Hành trình ngược & giá trị thu hồi</div><div class="mod-desc">Mô hình Closed-loop Supply Chain, tác động môi trường, và 7 vai trò của logistics ngược: Return, Recycling, Refurbishing...</div></div>
-    </div>
-  </div>
-  <div style="text-align:center;margin-top:30px;">
-    <button class="btn-primary" onclick="openEnrollWidget()">Đăng ký học ngay →</button>
-  </div>
-</section>
-
-<!-- SKILLS -->
-<section class="lj-sec" style="padding-top:0;">
-  <div class="lj-sec-label">Kỹ năng đạt được</div>
-  <h2 class="lj-sec-title">13 kỹ năng bạn sẽ sở hữu</h2>
-  <p class="lj-sec-sub">Mỗi kỹ năng được xây dựng từ bài học thực tế, không chỉ lý thuyết — để bạn tự tin ứng tuyển ngay sau khoá.</p>
-  <div class="skill-cloud">
-    <span class="skill-pill"><i class="ti ti-check"></i>Supply Chain Fundamentals</span>
-    <span class="skill-pill"><i class="ti ti-check"></i>Demand Planning</span>
-    <span class="skill-pill"><i class="ti ti-check"></i>Supply Planning</span>
-    <span class="skill-pill"><i class="ti ti-check"></i>Sourcing</span>
-    <span class="skill-pill"><i class="ti ti-check"></i>Logistics Operations</span>
-    <span class="skill-pill"><i class="ti ti-check"></i>Quality Control</span>
-    <span class="skill-pill"><i class="ti ti-check"></i>Reverse Logistics</span>
-    <span class="skill-pill"><i class="ti ti-check"></i>Tender Process</span>
-    <span class="skill-pill"><i class="ti ti-check"></i>Inventory Management</span>
-    <span class="skill-pill"><i class="ti ti-check"></i>Procurement</span>
-    <span class="skill-pill"><i class="ti ti-check"></i>Warehouse Management</span>
-    <span class="skill-pill"><i class="ti ti-check"></i>Transportation</span>
-    <span class="skill-pill"><i class="ti ti-check"></i>Manufacturing Planning</span>
-  </div>
-</section>
-
-<!-- OUTCOMES -->
-<section class="lj-sec" style="padding-top:0;">
-  <div class="lj-sec-label">Sau khoá học</div>
-  <h2 class="lj-sec-title">Bạn nhận được gì?</h2>
-  <p class="lj-sec-sub">Không chỉ kiến thức — bạn có một bộ công cụ thực chiến để bước vào thị trường lao động với lợi thế rõ ràng.</p>
-  <div class="outcome-grid">
-    <div class="outcome-card">
-      <div class="outcome-check"><i class="ti ti-check"></i></div>
-      <div><div class="outcome-title">Nền tảng kiến thức vững chắc</div><div class="outcome-desc">Hiểu rõ cách doanh nghiệp Supply Chain & Logistics vận hành — từ tổng thể đến từng mắt xích.</div></div>
-    </div>
-    <div class="outcome-card">
-      <div class="outcome-check"><i class="ti ti-check"></i></div>
-      <div><div class="outcome-title">Làm chủ kỹ năng phân tích</div><div class="outcome-desc">Thành thạo Planning, Sourcing, Data Analysis và Process Mapping — những kỹ năng được nhà tuyển dụng tìm kiếm nhất.</div></div>
-    </div>
-    <div class="outcome-card">
-      <div class="outcome-check"><i class="ti ti-check"></i></div>
-      <div><div class="outcome-title">Định hướng đúng vai trò</div><div class="outcome-desc">Hiểu rõ mình phù hợp vị trí nào trong chuỗi cung ứng và xây dựng lộ trình sự nghiệp phù hợp.</div></div>
-    </div>
-    <div class="outcome-card">
-      <div class="outcome-check"><i class="ti ti-check"></i></div>
-      <div><div class="outcome-title">Tài liệu ứng tuyển đa quốc gia</div><div class="outcome-desc">Nhận bộ tài liệu hỗ trợ ứng tuyển vào các công ty đa quốc gia trong ngành Supply Chain & Logistics.</div></div>
-    </div>
-  </div>
-  <div style="text-align:center;margin-top:30px;">
-    <button class="btn-primary" onclick="openEnrollWidget()">Đăng ký học ngay →</button>
-  </div>
-</section>
-
-<!-- INSTRUCTOR -->
-<section class="lj-sec" style="padding-top:0;">
-  <div class="lj-sec-label">Giảng viên</div>
-  <h2 class="lj-sec-title">ThS. Trần Quốc Toản</h2>
-  <p class="lj-sec-sub">Advisor tại LinkaJob · 10+ năm kinh nghiệm Supply Chain</p>
-  <div class="instructor-wrap">
-    <div class="instr-photo">TQT</div>
-    <div>
-      <div class="instr-name">ThS. Trần Quốc Toản</div>
-      <div class="instr-tag">Senior Operation Manager · Lazada E-logistics</div>
-      <p class="instr-bio">Từ sản xuất, chuỗi cung ứng, thương mại điện tử đến logistics quốc tế — ThS. Trần Quốc Toản có hơn 10 năm làm việc thực chiến tại các tập đoàn đa quốc gia. Anh hiểu rõ từng vai trò trong chuỗi cung ứng và biết cách đào tạo để bạn không chỉ học lý thuyết mà còn ứng dụng được ngay vào công việc thực tế.</p>
-      <div class="instr-timeline">
-        <div class="timeline-item"><div><div class="tl-role">Senior Operation Manager</div><div class="tl-co">Lazada E-logistics</div><div class="tl-time">05/2026 – Hiện tại</div></div></div>
-        <div class="timeline-item"><div><div class="tl-role">Senior Business Solutions Manager</div><div class="tl-co">A.P. Moller – Maersk</div><div class="tl-time">06/2025 – 01/2026</div></div></div>
-        <div class="timeline-item"><div><div class="tl-role">Supply Chain & Logistics Manager</div><div class="tl-co">OnPoint E-commerce</div><div class="tl-time">12/2021 – 10/2022</div></div></div>
-        <div class="timeline-item"><div><div class="tl-role">Inventory Manager → Outbound Manager</div><div class="tl-co">Lazada eLogistics Vietnam</div><div class="tl-time">01/2019 – 12/2021</div></div></div>
+      <div class="problem-card">
+        <span class="num">02</span>
+        <h3>Không biết mình phù hợp vai trò nào</h3>
+        <p>Có CV nhưng chưa rõ nên nhắm tới Planner, Buyer, Logistics Coordinator hay Warehouse Supervisor.</p>
+      </div>
+      <div class="problem-card">
+        <span class="num">03</span>
+        <h3>Muốn chuyển ngành nhưng không biết bắt đầu từ đâu</h3>
+        <p>Đang làm lĩnh vực khác, muốn sang Supply Chain nhưng thiếu nền tảng kiến thức để tự tin apply.</p>
+      </div>
+      <div class="problem-card">
+        <span class="num">04</span>
+        <h3>Lý thuyết trên trường xa rời thực tế</h3>
+        <p>Chưa hiểu Supply Chain vận hành thế nào trong doanh nghiệp thật ở E-commerce, Sản xuất, Bán lẻ.</p>
       </div>
     </div>
   </div>
 </section>
 
-<!-- PROCESS -->
-<section class="lj-sec" style="padding-top:0;">
-  <div class="lj-sec-label">Quy trình đăng ký</div>
-  <h2 class="lj-sec-title">2 bước để bắt đầu hành trình</h2>
-  <p class="lj-sec-sub">Đơn giản, nhanh chóng — chúng tôi sẽ đồng hành cùng bạn từ bước đầu tiên.</p>
-  <div class="process-row">
-    <div class="process-card">
-      <div class="process-num">1</div>
-      <div class="process-title">Đăng ký tư vấn</div>
-      <div class="process-desc">Điền form để LinkaJob liên hệ tư vấn lộ trình phù hợp với mục tiêu của bạn.</div>
-    </div>
-    <div class="process-arrow">→</div>
-    <div class="process-card">
-      <div class="process-num">2</div>
-      <div class="process-title">Xác nhận & học thôi!</div>
-      <div class="process-desc">Hoàn tất đăng ký, thanh toán và chuẩn bị cho ngày khai giảng 01/07/2026.</div>
+<section class="solution">
+  <div class="wrap">
+    <span class="eyebrow on-dark"><span class="eyebrow-dot"></span>Giải pháp</span>
+    <h2 style="margin-top:16px;">Nền tảng Supply Chain vững chắc, đi thẳng vào thực chiến</h2>
+    <p class="lead">Giảng dạy trực tiếp bởi ThS. Trần Quốc Toản — 10+ năm kinh nghiệm tại Lazada, Maersk, OnPoint — qua 8 module trong 4 tuần, học trực tiếp qua Zoom, số lượng học viên có hạn để đảm bảo chất lượng tương tác 1-1.</p>
+    <div class="pill-row">
+      <span class="pill">8 module từ tổng thể đến vận hành</span>
+      <span class="pill">13 kỹ năng thực chiến</span>
+      <span class="pill">Tư vấn 1-1 xuyên suốt khoá học</span>
     </div>
   </div>
 </section>
 
-<!-- BENEFITS + REGISTER CTA -->
-<section class="lj-sec" style="padding-top:0;">
-  <div class="lj-sec-label">Đăng ký ngay</div>
-  <h2 class="lj-sec-title">Sẵn sàng bắt đầu hành trình Supply Chain?</h2>
-  <p class="lj-sec-sub">Khai giảng <strong style="color:#F0F0F0;">01/07/2026</strong>. Số lượng học viên có hạn — để đảm bảo chất lượng đào tạo 1-1 với Advisor.</p>
-  <div class="benefit-strip">
-    <div class="benefit-item"><div class="benefit-icon">📦</div><div class="benefit-text">8 modules thực chiến với chuyên gia Lazada, Maersk</div></div>
-    <div class="benefit-item"><div class="benefit-icon">🎯</div><div class="benefit-text">Định hướng vai trò phù hợp trong Supply Chain</div></div>
-    <div class="benefit-item"><div class="benefit-icon">📄</div><div class="benefit-text">Tài liệu ứng tuyển công ty đa quốc gia</div></div>
-    <div class="benefit-item"><div class="benefit-icon">💬</div><div class="benefit-text">Tư vấn 1-1 với Advisor trong suốt khoá học</div></div>
-    <div class="benefit-item"><div class="benefit-icon">🏢</div><div class="benefit-text">Giới thiệu cơ hội việc làm từ đối tác LinkaJob</div></div>
-  </div>
-</section>
-
-<!-- FAQ -->
-<section class="lj-sec" style="padding-top:0;">
-  <div class="lj-sec-label">Câu hỏi thường gặp</div>
-  <h2 class="lj-sec-title">Bạn đang thắc mắc điều gì?</h2>
-  <p class="lj-sec-sub">Những câu hỏi phổ biến nhất từ học viên trước khi đăng ký khoá Supply Chain Principles.</p>
-  <div class="faq-grid">
-    <div class="faq-item">
-      <button class="faq-q" onclick="toggleFaq(this)"><span>Khoá học phù hợp với ai?</span><i class="ti ti-plus"></i></button>
-      <div class="faq-a">Khoá học dành cho sinh viên, fresher và người muốn chuyển sang ngành Supply Chain & Logistics. Bạn không cần có kinh nghiệm trước — khoá học được thiết kế từ nền tảng, giúp bạn hiểu toàn bộ bức tranh chuỗi cung ứng từ đầu.</div>
+<section>
+  <div class="wrap">
+    <div class="section-head">
+      <span class="eyebrow"><span class="eyebrow-dot"></span>Chuyển đổi</span>
+      <h2>Hành trình của bạn sẽ khác đi thế nào?</h2>
     </div>
-    <div class="faq-item">
-      <button class="faq-q" onclick="toggleFaq(this)"><span>Học theo hình thức nào?</span><i class="ti ti-plus"></i></button>
-      <div class="faq-a">Học trực tiếp với Giảng viên qua Zoom. Khoá học kéo dài 4 tuần với 8 buổi. Lịch học sẽ được thống nhất với học viên để phù hợp với thời gian của bạn.</div>
-    </div>
-    <div class="faq-item">
-      <button class="faq-q" onclick="toggleFaq(this)"><span>Học phí là bao nhiêu và có thanh toán linh hoạt không?</span><i class="ti ti-plus"></i></button>
-      <div class="faq-a">Học phí khoá học là <strong>5.000.000 VNĐ</strong>. LinkaJob hỗ trợ thanh toán linh hoạt — bạn có thể trao đổi thêm với Advisor trong buổi tư vấn để biết các hình thức phù hợp.</div>
-    </div>
-    <div class="faq-item">
-      <button class="faq-q" onclick="toggleFaq(this)"><span>Khoá học khai giảng khi nào? Còn bao nhiêu chỗ?</span><i class="ti ti-plus"></i></button>
-      <div class="faq-a">Khoá học khai giảng ngày <strong>01/07/2026</strong>. Số lượng học viên có hạn để đảm bảo chất lượng tương tác 1-1 với Advisor. Bạn nên đăng ký sớm để giữ chỗ trước khi khoá đầy.</div>
-    </div>
-    <div class="faq-item">
-      <button class="faq-q" onclick="toggleFaq(this)"><span>Sau khoá học, tôi có thể ứng tuyển vị trí nào?</span><i class="ti ti-plus"></i></button>
-      <div class="faq-a">Bạn sẽ có đủ nền tảng để ứng tuyển các vị trí như: Supply Chain Analyst, Demand Planner, Sourcing Executive, Procurement Officer, Logistics Coordinator, Inventory Analyst, Warehouse Supervisor... tại các công ty Việt Nam và đa quốc gia.</div>
-    </div>
-    <div class="faq-item">
-      <button class="faq-q" onclick="toggleFaq(this)"><span>LinkaJob có hỗ trợ tìm việc sau khoá học không?</span><i class="ti ti-plus"></i></button>
-      <div class="faq-a">Có. Học viên sẽ nhận được bộ tài liệu hỗ trợ ứng tuyển vào các công ty đa quốc gia, được Advisor review CV và định hướng vai trò phù hợp. Ngoài ra, LinkaJob cũng giới thiệu cơ hội việc làm từ đối tác trực tiếp.</div>
-    </div>
-    <div class="faq-item">
-      <button class="faq-q" onclick="toggleFaq(this)"><span>Tôi có thể xem lại bài giảng sau buổi học không?</span><i class="ti ti-plus"></i></button>
-      <div class="faq-a">Buổi học qua Zoom sẽ được ghi lại và chia sẻ cho học viên để ôn tập. Ngoài ra bạn còn nhận được tài liệu kèm theo từng module để tham khảo sau khoá học.</div>
+    <div class="transform-table">
+      <div class="col-before">
+        <div class="col-head">Before — Chưa tham gia SCP</div>
+        <div class="transform-row"><span class="mark">✕</span><span>Chưa nắm đủ 11 thành phần chuỗi cung ứng, hiểu rời rạc từng mảng</span></div>
+        <div class="transform-row"><span class="mark">✕</span><span>Mông lung không biết mình phù hợp vai trò Planner, Buyer hay Logistics</span></div>
+        <div class="transform-row"><span class="mark">✕</span><span>Chưa phân biệt được vận hành Supply Chain giữa B2B và B2C</span></div>
+        <div class="transform-row"><span class="mark">✕</span><span>CV chưa thể hiện được nền tảng kiến thức chuyên ngành</span></div>
+        <div class="transform-row"><span class="mark">✕</span><span>Tự học một mình, không ai định hướng vai trò phù hợp</span></div>
+      </div>
+      <div class="col-after">
+        <div class="col-head">After — Hoàn thành SCP</div>
+        <div class="transform-row"><span class="mark">✓</span><span>Nắm vững 11 thành phần chuỗi cung ứng từ Raw Materials đến Reverse Logistics</span></div>
+        <div class="transform-row"><span class="mark">✓</span><span>Hiểu rõ mình phù hợp vai trò nào và xây được lộ trình sự nghiệp rõ ràng</span></div>
+        <div class="transform-row"><span class="mark">✓</span><span>Phân biệt thành thạo vận hành Planning, Sourcing, Manufacturing, Logistics B2B/B2C</span></div>
+        <div class="transform-row"><span class="mark">✓</span><span>Có bộ tài liệu ứng tuyển công ty đa quốc gia trong ngành Supply Chain</span></div>
+        <div class="transform-row"><span class="mark">✓</span><span>Được Advisor tư vấn 1-1 xuyên suốt khoá học, định hướng đúng vai trò</span></div>
+      </div>
     </div>
   </div>
 </section>
 
-<!-- FINAL CTA -->
-<div class="cta-wrap">
-  <div class="cta-box">
-    <h2>Sẵn sàng bắt đầu hành trình<br>Supply Chain của bạn?</h2>
-    <p>Khai giảng 01/07/2026 · Đăng ký tư vấn miễn phí ngay hôm nay.</p>
-    <div class="cta-seats">Số lượng học viên có hạn để đảm bảo chất lượng đào tạo 1-1.</div>
-    <button class="cta-btn" onclick="openConsultWidget()">Đăng ký tư vấn</button>
-  </div>
-</div>
+<section id="noidung">
+  <div class="wrap">
+    <div class="section-head">
+      <span class="eyebrow"><span class="eyebrow-dot"></span>Nội dung khoá học</span>
+      <h2>4 tuần — 8 modules</h2>
+      <p>Từ bức tranh tổng thể đến từng mắt xích vận hành, bạn sẽ hiểu chuỗi cung ứng hoạt động như thế nào trong doanh nghiệp thực tế. Bấm vào từng module để xem chi tiết.</p>
+    </div>
 
-<!-- FOOTER -->
-<footer class="lj-footer">
-  <div class="lj-logo" style="font-size:15px;">LinkaJob</div>
-  <div class="lj-footer-copy">© 2026 LinkaJob · Khoá học Supply Chain Principles</div>
-  <div class="lj-footer-links"><a href="index.html">Giới thiệu</a><a href="blog.html">Blog</a><a href="#">Liên hệ</a></div>
+    <div id="module-list">
+      <div class="module">
+        <div class="module-q">
+          <div class="module-num">M1</div>
+          <div class="module-head">
+            <h3>Bức tranh tổng thể của Supply Chain & Logistics</h3>
+            <div class="module-outcome"><span class="module-outcome-dot"></span>Nắm đủ 11 thành phần chuỗi cung ứng, nhìn được bức tranh tổng thể</div>
+          </div>
+          <span class="module-plus">+</span>
+        </div>
+        <div class="module-a">
+          <ul>
+            <li>Xác định đầy đủ 11 thành phần chuỗi cung ứng từ Raw Materials đến Reverse Logistics</li>
+            <li>Phân tích Supply Chain trong 3 ngành: E-commerce, Sản xuất, Bán lẻ</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="module">
+        <div class="module-q">
+          <div class="module-num">M2</div>
+          <div class="module-head">
+            <h3>What's in Supply Chain?</h3>
+            <div class="module-outcome"><span class="module-outcome-dot"></span>Hiểu vì sao Supply Chain là xương sống của mọi doanh nghiệp</div>
+          </div>
+          <span class="module-plus">+</span>
+        </div>
+        <div class="module-a">
+          <ul>
+            <li>Hiểu sức cạnh tranh và xu hướng chuyển đổi số trong Supply Chain hiện đại</li>
+            <li>Nắm được lý do Supply Chain là xương sống của mọi doanh nghiệp</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="module">
+        <div class="module-q">
+          <div class="module-num">M3</div>
+          <div class="module-head">
+            <h3>Planning — Nghệ thuật dự đoán & lập kế hoạch</h3>
+            <div class="module-outcome"><span class="module-outcome-dot"></span>Phân biệt MTS, MTO, ETO và vai trò của Demand/Supply Planning</div>
+          </div>
+          <span class="module-plus">+</span>
+        </div>
+        <div class="module-a">
+          <ul>
+            <li>Phân biệt 3 mô hình MTS, MTO, ETO</li>
+            <li>Nắm vai trò cốt lõi của Demand Planning & Supply Planning trong vận hành thực tế</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="module">
+        <div class="module-q">
+          <div class="module-num">M4</div>
+          <div class="module-head">
+            <h3>Sourcing — Tìm kiếm & đánh giá nguồn cung</h3>
+            <div class="module-outcome"><span class="module-outcome-dot"></span>Thành thạo quy trình Tender/RFQ và đánh giá nhà cung cấp</div>
+          </div>
+          <span class="module-plus">+</span>
+        </div>
+        <div class="module-a">
+          <ul>
+            <li>Toàn bộ quy trình Tender/RFQ</li>
+            <li>Đánh giá supplier theo 5 mô hình sourcing</li>
+            <li>Xây dựng bảng tiêu chí chọn nhà cung cấp</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="module">
+        <div class="module-q">
+          <div class="module-num">M5</div>
+          <div class="module-head">
+            <h3>Procurement & Purchasing — Mua hàng chiến lược</h3>
+            <div class="module-outcome"><span class="module-outcome-dot"></span>Nắm kỹ thuật mua hàng chiến lược, tối ưu chi phí và rủi ro</div>
+          </div>
+          <span class="module-plus">+</span>
+        </div>
+        <div class="module-a">
+          <ul>
+            <li>Kỹ thuật, quy trình và công cụ tối ưu chi phí</li>
+            <li>Giảm rủi ro và quản lý quan hệ nhà cung cấp hiệu quả</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="module">
+        <div class="module-q">
+          <div class="module-num">M6</div>
+          <div class="module-head">
+            <h3>Manufacturing — Từ nguyên liệu đến sản phẩm</h3>
+            <div class="module-outcome"><span class="module-outcome-dot"></span>Hiểu Production Plan và so sánh các mô hình sản xuất</div>
+          </div>
+          <span class="module-plus">+</span>
+        </div>
+        <div class="module-a">
+          <ul>
+            <li>Phân tích Production Plan hoàn chỉnh</li>
+            <li>Đánh giá công suất sản xuất</li>
+            <li>So sánh mô hình Discontinuous vs Continuous Manufacturing</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="module">
+        <div class="module-q">
+          <div class="module-num">M7</div>
+          <div class="module-head">
+            <h3>B2B & B2C — Logistics & 5 phương thức vận tải</h3>
+            <div class="module-outcome"><span class="module-outcome-dot"></span>Phân biệt rõ logistics B2B và B2C qua 5 phương thức vận tải</div>
+          </div>
+          <span class="module-plus">+</span>
+        </div>
+        <div class="module-a">
+          <ul>
+            <li>Nắm các khái niệm Bulk/Break Bulk, LCL/LTL, FCL/FTL</li>
+            <li>Hiểu sự khác biệt trong logistics B2B vs B2C</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="module">
+        <div class="module-q">
+          <div class="module-num">M8</div>
+          <div class="module-head">
+            <h3>Reverse Logistics — Hành trình ngược & giá trị thu hồi</h3>
+            <div class="module-outcome"><span class="module-outcome-dot"></span>Hiểu mô hình Closed-loop và 7 vai trò của logistics ngược</div>
+          </div>
+          <span class="module-plus">+</span>
+        </div>
+        <div class="module-a">
+          <ul>
+            <li>Mô hình Closed-loop Supply Chain</li>
+            <li>Tác động môi trường của logistics ngược</li>
+            <li>7 vai trò của logistics ngược: Return, Recycling, Refurbishing...</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <div class="section-head">
+      <span class="eyebrow"><span class="eyebrow-dot"></span>Đối tượng</span>
+      <h2>Bạn là ai trong bức tranh này?</h2>
+      <p>Khoá học phù hợp với những ai muốn bước vào ngành Supply Chain & Logistics với nền tảng vững chắc.</p>
+    </div>
+    <div class="audience-grid" style="grid-template-columns:repeat(3,1fr);">
+      <div class="audience-card">
+        <span class="eyebrow"><span class="eyebrow-dot"></span>🎓 Sinh viên</span>
+        <p>Đang học Kinh tế, Logistics, Quản trị kinh doanh và muốn apply vị trí Intern, Fresh Graduate tại các công ty đa quốc gia.</p>
+      </div>
+      <div class="audience-card">
+        <span class="eyebrow"><span class="eyebrow-dot"></span>🔄 Người chuyển ngành</span>
+        <p>Đang làm ở lĩnh vực khác nhưng muốn hiểu Supply Chain để chuyển sang vị trí phù hợp trong chuỗi cung ứng.</p>
+      </div>
+      <div class="audience-card">
+        <span class="eyebrow"><span class="eyebrow-dot"></span>📈 Fresher muốn định hướng đúng</span>
+        <p>Đã có CV nhưng chưa hiểu rõ mình phù hợp vai trò nào: Planner, Buyer, Logistics Coordinator hay Warehouse Supervisor.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section style="background:var(--paper-2)">
+  <div class="wrap">
+    <div class="section-head">
+      <span class="eyebrow"><span class="eyebrow-dot"></span>Kỹ năng đạt được</span>
+      <h2>13 kỹ năng bạn sẽ sở hữu</h2>
+      <p>Mỗi kỹ năng được xây dựng từ bài học thực tế, không chỉ lý thuyết — để bạn tự tin ứng tuyển ngay sau khoá.</p>
+    </div>
+    <div class="pill-row" style="justify-content:flex-start;">
+      <span class="pill">Supply Chain Fundamentals</span>
+      <span class="pill">Demand Planning</span>
+      <span class="pill">Supply Planning</span>
+      <span class="pill">Sourcing</span>
+      <span class="pill">Logistics Operations</span>
+      <span class="pill">Quality Control</span>
+      <span class="pill">Reverse Logistics</span>
+      <span class="pill">Tender Process</span>
+      <span class="pill">Inventory Management</span>
+      <span class="pill">Procurement</span>
+      <span class="pill">Warehouse Management</span>
+      <span class="pill">Transportation</span>
+      <span class="pill">Manufacturing Planning</span>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <div class="section-head">
+      <span class="eyebrow"><span class="eyebrow-dot"></span>Sau khoá học</span>
+      <h2>Bạn nhận được gì?</h2>
+      <p>Không chỉ kiến thức — bạn có một bộ công cụ thực chiến để bước vào thị trường lao động với lợi thế rõ ràng.</p>
+    </div>
+    <div class="gift-grid">
+      <div class="gift-card">
+        <h3>Nền tảng kiến thức vững chắc</h3>
+        <p>Hiểu rõ cách doanh nghiệp Supply Chain & Logistics vận hành — từ tổng thể đến từng mắt xích.</p>
+      </div>
+      <div class="gift-card">
+        <h3>Làm chủ kỹ năng phân tích</h3>
+        <p>Thành thạo Planning, Sourcing, Data Analysis và Process Mapping — những kỹ năng được nhà tuyển dụng tìm kiếm nhất.</p>
+      </div>
+      <div class="gift-card">
+        <h3>Định hướng đúng vai trò</h3>
+        <p>Hiểu rõ mình phù hợp vị trí nào trong chuỗi cung ứng và xây dựng lộ trình sự nghiệp phù hợp.</p>
+      </div>
+      <div class="gift-card">
+        <h3>Tài liệu ứng tuyển đa quốc gia</h3>
+        <p>Nhận bộ tài liệu hỗ trợ ứng tuyển vào các công ty đa quốc gia trong ngành Supply Chain & Logistics.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section style="background:var(--dark)" class="on-dark">
+  <div class="wrap">
+    <div class="section-head">
+      <span class="eyebrow on-dark"><span class="eyebrow-dot"></span>Giảng viên</span>
+      <h2>ThS. Trần Quốc Toản — Senior Operation Manager tại Lazada E-logistics</h2>
+      <p>Từ sản xuất, chuỗi cung ứng, thương mại điện tử đến logistics quốc tế — hơn 10 năm làm việc thực chiến tại các tập đoàn đa quốc gia. Hiểu rõ từng vai trò trong chuỗi cung ứng và biết cách đào tạo để học viên ứng dụng được ngay vào công việc thực tế.</p>
+    </div>
+    <div class="instructor-grid" style="grid-template-columns:1fr;">
+      <div class="instructor-card">
+        <div class="avatar">TQT<span class="verified"><i class="ti ti-check"></i></span></div>
+        <div>
+          <h3>ThS. Trần Quốc Toản</h3>
+          <div class="role">Senior Operation Manager @ Lazada E-logistics · 05/2026 – Hiện tại</div>
+          <ul>
+            <li>Senior Business Solutions Manager @ A.P. Moller – Maersk · 06/2025 – 01/2026</li>
+            <li>Supply Chain & Logistics Manager @ OnPoint E-commerce · 12/2021 – 10/2022</li>
+            <li>Inventory Manager → Outbound Manager @ Lazada eLogistics Vietnam · 01/2019 – 12/2021</li>
+            <li>Advisor tại LinkaJob · 10+ năm kinh nghiệm Supply Chain</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section style="background:var(--paper-2)">
+  <div class="wrap">
+    <div class="section-head">
+      <span class="eyebrow"><span class="eyebrow-dot"></span>Quy trình đăng ký</span>
+      <h2>2 bước để bắt đầu hành trình</h2>
+      <p>Đơn giản, nhanh chóng — chúng tôi sẽ đồng hành cùng bạn từ bước đầu tiên.</p>
+    </div>
+    <div class="audience-grid" style="grid-template-columns:repeat(2,1fr);">
+      <div class="audience-card">
+        <span class="eyebrow">1</span>
+        <h3 style="font-size:16.5px; margin-top:14px;">Đăng ký tư vấn</h3>
+        <p>Điền form để LinkaJob liên hệ tư vấn lộ trình phù hợp với mục tiêu của bạn.</p>
+      </div>
+      <div class="audience-card">
+        <span class="eyebrow">2</span>
+        <h3 style="font-size:16.5px; margin-top:14px;">Xác nhận & học thôi!</h3>
+        <p>Hoàn tất đăng ký, thanh toán và chuẩn bị cho ngày khai giảng 01/07/2026.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="pricing">
+  <div class="wrap">
+    <span class="eyebrow on-dark"><span class="eyebrow-dot"></span>Học phí</span>
+    <h2 style="color:var(--text-dark); font-size:28px; margin:16px 0 8px; letter-spacing:-0.8px;">Sẵn sàng bắt đầu hành trình Supply Chain?</h2>
+    <p style="color:var(--muted-dark); font-size:13.5px; margin-bottom:36px;">Khai giảng 01/07/2026 · Số lượng học viên có hạn để đảm bảo chất lượng đào tạo 1-1 với Advisor.</p>
+    <div class="price-grid">
+      <div class="price-box">
+        <span class="eyebrow" style="display:inline-flex;">Học viên mới</span>
+        <div class="price-new">5.000.000đ</div>
+        <div class="price-note">Trọn khoá · 4 tuần / 8 buổi</div>
+        <div class="perf on-dark"></div>
+        <ul class="price-list">
+          <li>8 modules thực chiến với chuyên gia Lazada, Maersk</li>
+          <li>Định hướng vai trò phù hợp trong Supply Chain</li>
+          <li>Tài liệu ứng tuyển công ty đa quốc gia</li>
+          <li>Tư vấn 1-1 với Advisor trong suốt khoá học</li>
+          <li>Giới thiệu cơ hội việc làm từ đối tác LinkaJob</li>
+          <li>Thanh toán linh hoạt — trao đổi thêm với Advisor</li>
+        </ul>
+        <button class="btn btn-orange" style="width:100%" onclick="openConsultWidget()">Đăng ký tư vấn ngay</button>
+      </div>
+      <div class="price-box advisee">
+        <span class="eyebrow" style="display:inline-flex;">Advisee cũ · Giảm 10%</span>
+        <div class="price-old">Giá gốc 5.000.000đ</div>
+        <div class="price-new">4.500.000đ</div>
+        <div class="price-note">Dành riêng cho Advisee đã từng đặt lịch 1:1 với LinkaJob</div>
+        <div class="perf on-dark"></div>
+        <ul class="price-list">
+          <li>Toàn bộ quyền lợi như gói Học viên mới</li>
+          <li>Giảm thẳng 500.000đ trên học phí</li>
+          <li>Ưu tiên xác nhận suất học do số lượng có hạn</li>
+        </ul>
+        <button class="btn btn-orange" style="width:100%" onclick="openConsultWidget()">Đăng ký với ưu đãi Advisee</button>
+      </div>
+    </div>
+    <div class="scarcity">⚠ Số lượng học viên có hạn để đảm bảo chất lượng tương tác 1-1</div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap" style="max-width:740px;">
+    <div class="section-head">
+      <span class="eyebrow"><span class="eyebrow-dot"></span>FAQ</span>
+      <h2>Bạn đang thắc mắc điều gì?</h2>
+      <p>Những câu hỏi phổ biến nhất từ học viên trước khi đăng ký khoá Supply Chain Principles.</p>
+    </div>
+    <div id="faq-list">
+      <div class="faq-item">
+        <div class="faq-q"><h4>Khoá học phù hợp với ai?</h4><span class="plus">+</span></div>
+        <div class="faq-a"><p>Dành cho sinh viên, fresher và người muốn chuyển sang ngành Supply Chain & Logistics. Bạn không cần có kinh nghiệm trước — khoá học được thiết kế từ nền tảng, giúp bạn hiểu toàn bộ bức tranh chuỗi cung ứng từ đầu.</p></div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q"><h4>Học theo hình thức nào?</h4><span class="plus">+</span></div>
+        <div class="faq-a"><p>Học trực tiếp với giảng viên qua Zoom, kéo dài 4 tuần với 8 buổi. Lịch học sẽ được thống nhất với học viên để phù hợp với thời gian của bạn.</p></div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q"><h4>Học phí bao nhiêu và có thanh toán linh hoạt không?</h4><span class="plus">+</span></div>
+        <div class="faq-a"><p>Học phí khoá học là 5.000.000đ. LinkaJob hỗ trợ thanh toán linh hoạt — bạn có thể trao đổi thêm với Advisor trong buổi tư vấn để biết các hình thức phù hợp.</p></div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q"><h4>Khoá học khai giảng khi nào? Còn bao nhiêu chỗ?</h4><span class="plus">+</span></div>
+        <div class="faq-a"><p>Khoá học khai giảng ngày 01/07/2026. Số lượng học viên có hạn để đảm bảo chất lượng tương tác 1-1 với Advisor — nên đăng ký sớm để giữ chỗ trước khi khoá đầy.</p></div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q"><h4>Sau khoá học, tôi có thể ứng tuyển vị trí nào?</h4><span class="plus">+</span></div>
+        <div class="faq-a"><p>Bạn sẽ có đủ nền tảng để ứng tuyển các vị trí như Supply Chain Analyst, Demand Planner, Sourcing Executive, Procurement Officer, Logistics Coordinator, Inventory Analyst, Warehouse Supervisor... tại các công ty Việt Nam và đa quốc gia.</p></div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q"><h4>LinkaJob có hỗ trợ tìm việc sau khoá học không?</h4><span class="plus">+</span></div>
+        <div class="faq-a"><p>Có. Học viên nhận được bộ tài liệu hỗ trợ ứng tuyển vào các công ty đa quốc gia, được Advisor review CV và định hướng vai trò phù hợp. LinkaJob cũng giới thiệu cơ hội việc làm từ đối tác trực tiếp.</p></div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q"><h4>Tôi có thể xem lại bài giảng sau buổi học không?</h4><span class="plus">+</span></div>
+        <div class="faq-a"><p>Buổi học qua Zoom được ghi lại và chia sẻ cho học viên để ôn tập. Bạn còn nhận được tài liệu kèm theo từng module để tham khảo sau khoá học.</p></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="final" id="dangky">
+  <div class="wrap">
+    <span class="eyebrow on-dark"><span class="eyebrow-dot"></span>Đăng ký ngay</span>
+    <h2 style="margin-top:16px;">Sẵn sàng bắt đầu hành trình Supply Chain của bạn?</h2>
+    <p>Khai giảng 01/07/2026 — số lượng học viên có hạn để đảm bảo chất lượng đào tạo 1-1. Đăng ký tư vấn miễn phí ngay hôm nay.</p>
+    <div class="form-box" style="text-align:center;">
+      <ul class="price-list" style="text-align:left; max-width:400px; margin:0 auto 24px;">
+        <li>8 modules thực chiến với chuyên gia Lazada, Maersk</li>
+        <li>Định hướng vai trò phù hợp trong Supply Chain</li>
+        <li>Tài liệu ứng tuyển công ty đa quốc gia</li>
+        <li>Tư vấn 1-1 với Advisor trong suốt khoá học</li>
+        <li>Giới thiệu cơ hội việc làm từ đối tác LinkaJob</li>
+      </ul>
+      <button class="btn btn-orange" style="width:100%" onclick="openConsultWidget()">Đăng ký tư vấn</button>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">Linka<span>Job</span> — Giảng viên ThS. Trần Quốc Toản · Senior Operation Manager tại Lazada E-logistics · 10+ năm kinh nghiệm Supply Chain.</div>
 </footer>
-</div>
 
-<!-- CONSULT WIDGET (giữ nguyên 100% logic + Apps Script connection) -->
+
+<script>
+  document.querySelectorAll('.faq-item').forEach(item=>{
+    const q = item.querySelector('.faq-q');
+    const a = item.querySelector('.faq-a');
+    q.addEventListener('click', ()=>{
+      const isOpen = item.classList.contains('open');
+      document.querySelectorAll('.faq-item.open').forEach(o=>{
+        o.classList.remove('open');
+        o.querySelector('.faq-a').style.maxHeight = null;
+      });
+      if(!isOpen){
+        item.classList.add('open');
+        a.style.maxHeight = a.scrollHeight + 'px';
+      }
+    });
+  });
+  document.querySelectorAll('.module').forEach(item=>{
+    const q = item.querySelector('.module-q');
+    const a = item.querySelector('.module-a');
+    q.addEventListener('click', ()=>{
+      const isOpen = item.classList.contains('open');
+      item.classList.toggle('open', !isOpen);
+      a.style.maxHeight = isOpen ? null : a.scrollHeight + 'px';
+    });
+  });
+</script>
+
+<!-- CONSULT WIDGET -->
 <div class="cw-overlay" id="cwOverlay" onclick="if(event.target===this)closeConsultWidget()">
   <div class="cw-box" id="cwBox">
     <div class="cw-head">
@@ -673,44 +911,37 @@
         <input type="tel" id="cwPhone" placeholder="09xx xxx xxx" oninput="cwCheckStep1()">
       </div>
       <div class="cw-field">
-        <label>Email</label>
-        <input type="email" id="cwEmail" placeholder="yourname@email.com">
+        <label>Email <span>*</span></label>
+        <input type="email" id="cwEmail" placeholder="email@example.com" oninput="cwCheckStep1()">
       </div>
       <div class="cw-field">
         <label>Quan tâm dịch vụ</label>
         <select id="cwService">
-          <option value="Khoá học Supply Chain Principles">Khoá học Supply Chain Principles</option>
+          <option value="Khoá học Supply Chain Principles" selected>Khoá học Supply Chain Principles</option>
           <option value="Cố vấn 1-1">Cố vấn 1-1</option>
           <option value="Chưa rõ — cần tư vấn thêm">Chưa rõ — cần tư vấn thêm</option>
         </select>
       </div>
       <div class="cw-field">
-        <label>Bạn đang là</label>
-        <select id="cwYear">
-          <option value="">Chọn...</option>
-          <option>Sinh viên năm 1, 2</option>
-          <option>Sinh viên năm 3, 4</option>
-          <option>Đã tốt nghiệp dưới 2 năm</option>
-          <option>Khác</option>
-        </select>
-      </div>
-      <div class="cw-field">
         <label>Câu hỏi muốn tư vấn</label>
-        <textarea id="cwQuestion" rows="3" placeholder="VD: Mình muốn biết thêm về khoá Supply Chain Principles..."></textarea>
+        <textarea id="cwQuestion" rows="3" placeholder="VD: Mình muốn hỏi thêm về khoá Supply Chain Principles..."></textarea>
       </div>
       <div class="cw-note"><i class="ti ti-video" aria-hidden="true"></i> Chúng tôi sẽ tư vấn qua Google Meet — bạn vui lòng chọn khung giờ phù hợp ở bước tiếp theo.</div>
-      <button class="cw-next" id="cwBtn1" onclick="cwGoStep(2)" disabled>Tiếp theo →</button>
+      <button class="cw-next" id="cwBtn1" onclick="cwProceedToStep2()" disabled>Tiếp theo →</button>
     </div>
 
     <div class="cw-step" id="cwStep2" style="display:none;">
-      <div class="cw-cal-title" id="cwCalTitle">—</div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+        <button onclick="cwChangeMonth(-1)" style="background:rgba(255,255,255,0.06);border:none;width:26px;height:26px;border-radius:7px;color:#F0F0F0;cursor:pointer;font-size:14px;">‹</button>
+        <div class="cw-cal-title" id="cwCalTitle" style="margin-bottom:0;">—</div>
+        <button onclick="cwChangeMonth(1)" style="background:rgba(255,255,255,0.06);border:none;width:26px;height:26px;border-radius:7px;color:#F0F0F0;cursor:pointer;font-size:14px;">›</button>
+      </div>
       <div class="cw-cal-days-lbl">
         <span>CN</span><span>T2</span><span>T3</span><span>T4</span><span>T5</span><span>T6</span><span>T7</span>
       </div>
       <div class="cw-cal-grid" id="cwCalGrid"></div>
       <div class="cw-ts-label" id="cwTsLabel">Chọn ngày có chấm cam để xem giờ trống</div>
       <div class="cw-ts-slots" id="cwTsSlots"></div>
-      <div id="cwSubmitStatus" style="display:none;margin-bottom:12px;padding:10px 12px;border-radius:8px;font-size:12px;line-height:1.5;"></div>
       <div class="cw-nav-row">
         <button class="cw-back" onclick="cwGoStep(1)">← Quay lại</button>
         <button class="cw-next" id="cwBtn2" onclick="cwConfirm()" disabled>Xác nhận đặt lịch</button>
@@ -726,327 +957,37 @@
   </div>
 </div>
 
-<!-- ═══════════════════════════════════════
-     ENROLL WIDGET — Đăng ký học ngay (center modal, 3 bước)
-     ═══════════════════════════════════════ -->
-<div class="ew-overlay" id="ewOverlay" onclick="if(event.target===this)closeEnrollWidget()">
-  <div class="ew-box">
-
-    <div class="ew-head">
-      <div>
-        <div class="ew-title">Đăng ký học · Supply Chain Principles</div>
-        <div class="ew-sub" id="ewSub">Điền thông tin để giữ chỗ khoá học</div>
-      </div>
-      <button class="ew-close" onclick="closeEnrollWidget()"><i class="ti ti-x" aria-hidden="true"></i></button>
-    </div>
-
-    <div class="ew-steps" id="ewSteps"></div>
-
-    <div class="ew-body">
-
-      <!-- STEP 1: Thông tin + CV/giới thiệu -->
-      <div class="ew-panel" id="ewPanel1">
-        <div class="ew-course-bar">
-          <div class="ew-course-icon"><i class="ti ti-package"></i></div>
-          <div>
-            <div class="ew-course-name">Supply Chain Principles</div>
-            <div class="ew-course-meta">4 tuần · 8 buổi · Khai giảng 01/07/2026</div>
-          </div>
-          <div class="ew-course-fee">
-            <div class="ew-course-fee-num">5.000.000đ</div>
-          </div>
-        </div>
-
-        <div class="ew-fgrid">
-          <div class="ew-field"><label>Họ và tên <span>*</span></label><input type="text" id="ewName" placeholder="Nguyễn Văn A" oninput="ewCheckStep1()"></div>
-          <div class="ew-field"><label>Số điện thoại <span>*</span></label><input type="tel" id="ewPhone" placeholder="09xx xxx xxx" oninput="ewCheckStep1()"></div>
-          <div class="ew-field ew-ffull"><label>Email <span>*</span></label><input type="email" id="ewEmail" placeholder="yourname@email.com" oninput="ewCheckStep1()"></div>
-          <div class="ew-field"><label>Trường / Tổ chức</label><input type="text" id="ewSchool" placeholder="UEH, RMIT, FTU..."></div>
-          <div class="ew-field"><label>Bạn đang là</label>
-            <select id="ewYear">
-              <option value="">Chọn...</option>
-              <option>Sinh viên năm 1, 2</option>
-              <option>Sinh viên năm 3, 4</option>
-              <option>Đã tốt nghiệp dưới 2 năm</option>
-              <option>Khác</option>
-            </select>
-          </div>
-        </div>
-
-        <div class="ew-field" style="margin-bottom:8px;">
-          <label>CV của bạn (nếu có)</label>
-          <div class="ew-upload" id="ewUploadBox">
-            <input type="file" id="ewCvFile" accept=".pdf,.doc,.docx" onchange="ewHandleFile(this)">
-            <div class="ew-upload-icon"><i class="ti ti-file-upload"></i></div>
-            <div class="ew-upload-text" id="ewUploadText">Kéo thả hoặc bấm để tải CV lên</div>
-            <div class="ew-upload-hint">PDF, DOC, DOCX · tối đa 5MB</div>
-          </div>
-        </div>
-
-        <div class="ew-or-divider"><span>HOẶC</span></div>
-
-        <div class="ew-field">
-          <label>Vài lời giới thiệu về bạn</label>
-          <textarea id="ewIntro" rows="4" placeholder="Mình là sinh viên năm 3 ngành Logistics tại FTU, đang tìm hiểu về Supply Chain để chuẩn bị cho kỳ thực tập sắp tới. Mình muốn..."></textarea>
-        </div>
-
-        <div class="ew-nav">
-          <button class="ew-next" id="ewBtn1" onclick="ewGoStep(2)" disabled>Tiếp theo →</button>
-        </div>
-      </div>
-
-      <!-- STEP 2: Xác nhận -->
-      <div class="ew-panel" id="ewPanel2">
-        <div class="ew-confirm-box">
-          <div class="ew-crow"><span class="ew-cl">Khoá học</span><span class="ew-cv orange">Supply Chain Principles</span></div>
-          <div class="ew-crow"><span class="ew-cl">Lịch học</span><span class="ew-cv">4 tuần · 8 buổi · Zoom</span></div>
-          <div class="ew-crow"><span class="ew-cl">Khai giảng</span><span class="ew-cv">01/07/2026</span></div>
-          <div class="ew-crow"><span class="ew-cl">Họ tên</span><div><div class="ew-cv" id="ewCvName">—</div><div class="ew-cedit" onclick="ewGoStep(1)">Sửa</div></div></div>
-          <div class="ew-crow"><span class="ew-cl">Email</span><span class="ew-cv" id="ewCvEmail" style="font-weight:400;font-size:12px;">—</span></div>
-          <div class="ew-crow"><span class="ew-cl">SĐT</span><span class="ew-cv" id="ewCvPhone" style="font-weight:400;font-size:12px;">—</span></div>
-          <div class="ew-crow"><span class="ew-cl">Trường</span><span class="ew-cv" id="ewCvSchool" style="font-weight:400;font-size:12px;">—</span></div>
-          <div class="ew-crow"><span class="ew-cl">Hồ sơ gửi kèm</span><span class="ew-cv" id="ewCvAttach" style="font-weight:400;font-size:12px;">—</span></div>
-        </div>
-
-        <div class="ew-total-row">
-          <div class="ew-total-l">Học phí</div>
-          <div class="ew-total-p">5.000.000đ</div>
-        </div>
-
-        <div class="ew-nav">
-          <button class="ew-back" onclick="ewGoStep(1)">← Sửa</button>
-          <button class="ew-next" onclick="ewGoStep(3)">Tiếp tục thanh toán →</button>
-        </div>
-      </div>
-
-      <!-- STEP 3: Thanh toán -->
-      <div class="ew-panel" id="ewPanel3">
-        <div class="ew-pay-wrap">
-          <div class="ew-pay-qr">
-            <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-              <rect width="100" height="100" fill="white"/>
-              <rect x="5" y="5" width="28" height="28" rx="2" fill="none" stroke="#111" stroke-width="4"/><rect x="11" y="11" width="16" height="16" fill="#111"/>
-              <rect x="67" y="5" width="28" height="28" rx="2" fill="none" stroke="#111" stroke-width="4"/><rect x="73" y="11" width="16" height="16" fill="#111"/>
-              <rect x="5" y="67" width="28" height="28" rx="2" fill="none" stroke="#111" stroke-width="4"/><rect x="11" y="73" width="16" height="16" fill="#111"/>
-              <rect x="40" y="5" width="5" height="5" fill="#111"/><rect x="48" y="5" width="5" height="5" fill="#111"/><rect x="56" y="5" width="5" height="5" fill="#111"/>
-              <rect x="40" y="13" width="5" height="5" fill="#111"/><rect x="56" y="13" width="5" height="5" fill="#111"/>
-              <rect x="40" y="21" width="5" height="5" fill="#111"/><rect x="48" y="21" width="5" height="5" fill="#111"/>
-              <rect x="5" y="40" width="5" height="5" fill="#111"/><rect x="13" y="40" width="5" height="5" fill="#111"/>
-              <rect x="5" y="48" width="5" height="5" fill="#111"/><rect x="21" y="48" width="5" height="5" fill="#111"/>
-              <rect x="40" y="40" width="5" height="5" fill="#111"/><rect x="56" y="40" width="5" height="5" fill="#111"/>
-              <rect x="72" y="40" width="5" height="5" fill="#111"/><rect x="88" y="40" width="5" height="5" fill="#111"/>
-              <rect x="40" y="64" width="5" height="5" fill="#111"/><rect x="56" y="64" width="5" height="5" fill="#111"/>
-              <rect x="40" y="72" width="5" height="5" fill="#111"/><rect x="48" y="72" width="5" height="5" fill="#111"/>
-              <rect x="40" y="80" width="5" height="5" fill="#111"/><rect x="56" y="80" width="5" height="5" fill="#111"/>
-              <text x="50" y="97" text-anchor="middle" font-size="5.5" fill="#fc5229" font-family="Arial" font-weight="bold">LinkaJob</text>
-            </svg>
-          </div>
-          <div class="ew-pay-details">
-            <div class="ew-pay-bank">Chuyển khoản ngân hàng</div>
-            <div class="ew-prow"><span class="ew-pl">Ngân hàng</span><span class="ew-pv">Vietcombank · MB Bank</span></div>
-            <div class="ew-prow"><span class="ew-pl">Chủ TK</span><span class="ew-pv">LINKAJOB</span></div>
-            <div class="ew-prow"><span class="ew-pl">Số tiền</span><span class="ew-pv orange">5.000.000đ</span></div>
-            <div class="ew-prow"><span class="ew-pl">Nội dung CK</span><span class="ew-pv orange" id="ewPayContent">—</span></div>
-          </div>
-        </div>
-        <div class="ew-pay-note">
-          Sau khi chuyển khoản, gửi bill qua <strong>contact@linkajob.vn</strong> hoặc inbox Facebook/Instagram.<br>
-          Đội LinkaJob xác nhận và gửi <strong>thông tin lớp học trong 24h</strong>.
-        </div>
-
-        <div class="ew-status-box" id="ewStatusBox"></div>
-
-        <div class="ew-nav">
-          <button class="ew-back" onclick="ewGoStep(2)">← Quay lại</button>
-          <button class="ew-next" id="ewBtnDone" onclick="ewSubmitEnroll()">Đã chuyển khoản ✓</button>
-        </div>
-      </div>
-
-      <!-- STEP 4: Success -->
-      <div class="ew-panel" id="ewPanel4">
-        <div class="ew-success-icon"><i class="ti ti-check" aria-hidden="true"></i></div>
-        <div class="ew-success-title">Đăng ký thành công! 🎉</div>
-        <div class="ew-success-sub" id="ewSuccessDetail">—</div>
-        <button class="ew-next" onclick="closeEnrollWidget()">Đóng</button>
-      </div>
-
-    </div>
-  </div>
-</div>
-
-<script>
-/* ─── CONFIG: dùng chung Apps Script URL như các trang khác ─── */
-var WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbx7Bd9VvoyzfiiezQV9huoY2BKHH_Br1RAFIz00mjdyKeis-Zv-38a0gf_b-fMlul2C/exec';
-
-/* ─── FAQ ─── */
-function toggleFaq(btn){
-  var item=btn.parentElement,wasOpen=item.classList.contains('open');
-  document.querySelectorAll('.faq-item.open').forEach(function(el){el.classList.remove('open');});
-  if(!wasOpen)item.classList.add('open');
-}
-
-/* ─── ENROLL WIDGET (Đăng ký học ngay) ─── */
-var EW_STEPS = ['Thông tin', 'Xác nhận', 'Thanh toán'];
-var ewCvFileName = '';
-
-function openEnrollWidget(){
-  document.getElementById('ewOverlay').classList.add('show');
-  document.body.style.overflow = 'hidden';
-  ewResetForm();
-  ewGoStep(1);
-}
-function closeEnrollWidget(){
-  document.getElementById('ewOverlay').classList.remove('show');
-  document.body.style.overflow = '';
-}
-function ewResetForm(){
-  ['ewName','ewPhone','ewEmail','ewSchool','ewIntro'].forEach(function(id){
-    var el = document.getElementById(id); if(el) el.value = '';
-  });
-  var y = document.getElementById('ewYear'); if(y) y.value = '';
-  var f = document.getElementById('ewCvFile'); if(f) f.value = '';
-  ewCvFileName = '';
-  var box = document.getElementById('ewUploadBox');
-  box.classList.remove('has-file');
-  document.getElementById('ewUploadText').textContent = 'Kéo thả hoặc bấm để tải CV lên';
-  document.getElementById('ewBtn1').disabled = true;
-  var status = document.getElementById('ewStatusBox'); status.style.display='none'; status.textContent='';
-  var btn = document.getElementById('ewBtnDone'); btn.disabled=false; btn.textContent='Đã chuyển khoản ✓';
-}
-
-function ewHandleFile(input){
-  var box = document.getElementById('ewUploadBox');
-  if(input.files && input.files[0]){
-    ewCvFileName = input.files[0].name;
-    box.classList.add('has-file');
-    document.getElementById('ewUploadText').innerHTML = '<span class="ew-upload-filename">✓ '+ewCvFileName+'</span>';
-  } else {
-    ewCvFileName = '';
-    box.classList.remove('has-file');
-    document.getElementById('ewUploadText').textContent = 'Kéo thả hoặc bấm để tải CV lên';
-  }
-  ewCheckStep1();
-}
-
-function ewCheckStep1(){
-  var name = document.getElementById('ewName').value.trim();
-  var phone = document.getElementById('ewPhone').value.trim();
-  var email = document.getElementById('ewEmail').value.trim();
-  document.getElementById('ewBtn1').disabled = !(name && phone && email);
-}
-
-function ewGoStep(n){
-  for(var i=1;i<=4;i++){
-    document.getElementById('ewPanel'+i).classList.toggle('active', i===n);
-  }
-  var subs = {1:'Điền thông tin để giữ chỗ khoá học', 2:'Kiểm tra lại thông tin của bạn', 3:'Quét QR để hoàn tất đăng ký', 4:'Cảm ơn bạn đã đăng ký'};
-  document.getElementById('ewSub').textContent = subs[n] || '';
-
-  if(n <= 3){
-    ewRenderSteps(n);
-    document.getElementById('ewSteps').style.display = 'flex';
-  } else {
-    document.getElementById('ewSteps').style.display = 'none';
-  }
-
-  if(n===2) ewRenderConfirm();
-  if(n===3) ewRenderPayment();
-
-  document.querySelector('.ew-box').scrollTop = 0;
-}
-
-function ewRenderSteps(active){
-  var html = '';
-  EW_STEPS.forEach(function(s,i){
-    var num = i+1, st = num<active?'done':num===active?'active':'pend';
-    html += '<div class="ew-step"><div class="ew-step-c '+st+'">'+(st==='done'?'✓':num)+'</div><div class="ew-step-l '+st+'">'+s+'</div></div>';
-    if(i < EW_STEPS.length-1) html += '<div class="ew-step-line'+(num<active?' done':'')+'"></div>';
-  });
-  document.getElementById('ewSteps').innerHTML = html;
-}
-
-function ewRenderConfirm(){
-  document.getElementById('ewCvName').textContent = document.getElementById('ewName').value.trim();
-  document.getElementById('ewCvEmail').textContent = document.getElementById('ewEmail').value.trim();
-  document.getElementById('ewCvPhone').textContent = document.getElementById('ewPhone').value.trim();
-  document.getElementById('ewCvSchool').textContent = document.getElementById('ewSchool').value.trim() || '—';
-  var attach = ewCvFileName ? ('CV: '+ewCvFileName) : (document.getElementById('ewIntro').value.trim() ? 'Lời giới thiệu (text)' : 'Chưa có');
-  document.getElementById('ewCvAttach').textContent = attach;
-}
-
-function ewRenderPayment(){
-  var n = document.getElementById('ewName').value.trim();
-  var code = 'LJ SCP ' + (n.split(' ').pop() || '').toUpperCase();
-  document.getElementById('ewPayContent').textContent = code;
-}
-
-function ewSetStatus(kind, msg){
-  var box = document.getElementById('ewStatusBox');
-  box.style.display = 'block';
-  box.textContent = msg;
-  if(kind==='error'){ box.style.background='rgba(252,82,41,.1)'; box.style.border='1px solid rgba(252,82,41,.4)'; box.style.color='#fc5229'; }
-  else if(kind==='success'){ box.style.background='rgba(62,207,142,.1)'; box.style.border='1px solid rgba(62,207,142,.4)'; box.style.color='#3ecf8e'; }
-  else { box.style.background='rgba(240,240,240,.06)'; box.style.border='1px solid rgba(240,240,240,.12)'; box.style.color='rgba(240,240,240,.7)'; }
-}
-
-/* Gửi đăng ký khoá học về Google Sheet qua Apps Script (registerAdvisee) */
-function ewSubmitEnroll(){
-  var btn = document.getElementById('ewBtnDone');
-  if(btn.disabled) return;
-
-  var name = document.getElementById('ewName').value.trim();
-  var phone = document.getElementById('ewPhone').value.trim();
-  var email = document.getElementById('ewEmail').value.trim();
-  var school = document.getElementById('ewSchool').value.trim();
-  var year = document.getElementById('ewYear').value;
-  var intro = document.getElementById('ewIntro').value.trim();
-
-  var goalParts = ['Đăng ký khoá học: Supply Chain Principles (5.000.000đ)'];
-  if(school) goalParts.push('Trường: ' + school);
-  if(ewCvFileName) goalParts.push('CV đính kèm: ' + ewCvFileName + ' (gửi qua email/Zalo)');
-  if(intro) goalParts.push('Giới thiệu bản thân: ' + intro);
-
-  var payload = {
-    action: 'registerAdvisee',
-    advisee_name: name,
-    advisee_phone: phone,
-    advisee_email: email,
-    advisee_year: year,
-    advisee_industry: 'Supply Chain',
-    advisee_goal: goalParts.join(' | '),
-    package_name: 'Cơ Bản' // ghi nhận tạm; admin cập nhật đúng "Supply Chain Principles" khi xác nhận trên Sheet
-  };
-
-  btn.disabled = true;
-  btn.textContent = 'Đang gửi...';
-  ewSetStatus('pending', 'Đang gửi thông tin đăng ký...');
-
-  fetch(WEBAPP_URL, {
-    method: 'POST',
-    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-    body: JSON.stringify(payload)
-  })
-  .then(function(res){ return res.json(); })
-  .then(function(data){
-    if(!data.success) throw new Error(data.error || 'Lỗi không xác định từ server');
-    document.getElementById('ewSuccessDetail').innerHTML =
-      'Cảm ơn <strong>'+name+'</strong> đã đăng ký khoá <strong>Supply Chain Principles</strong>!<br><br>'+
-      'Mã đăng ký: <strong>'+data.booking_id+'</strong><br>'+
-      'Đội LinkaJob sẽ xác nhận thanh toán và gửi thông tin lớp học trong <strong>24h</strong>.';
-    ewGoStep(4);
-  })
-  .catch(function(err){
-    ewSetStatus('error', '⚠ Gửi thất bại ('+err.message+'). Vui lòng thử lại hoặc gửi thông tin qua contact@linkajob.vn.');
-    btn.disabled = false;
-    btn.textContent = 'Đã chuyển khoản ✓';
-  });
-}
-</script>
-
 <script>
 /* ─── CONSULT WIDGET ─── */
+var CW_WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbx7Bd9VvoyzfiiezQV9huoY2BKHH_Br1RAFIz00mjdyKeis-Zv-38a0gf_b-fMlul2C/exec';
+var CW_STAFF_IDENTITY = 'LinkaJob Team';
+
+var CW_TIME_GRID = ['09:00','09:30','10:00','10:30','11:00','11:30','12:00','12:30',
+                     '13:00','13:30','14:00','14:30','15:00','15:30','16:00','16:30','17:00','17:30'];
+
+var cwRealSlots = {};
+var cwSlotsLoaded = false;
+var cwSelectedDate = null, cwSelectedDateKey = null, cwSelectedTime = null;
+var cwLeadSessionId = null;
+var cwLeadCaptured = false;
+var cwMonthNames = ['Tháng 1','Tháng 2','Tháng 3','Tháng 4','Tháng 5','Tháng 6','Tháng 7','Tháng 8','Tháng 9','Tháng 10','Tháng 11','Tháng 12'];
+var cwViewYear = null, cwViewMonth = null;
+function cwPad2(n){ return (n<10?'0':'')+n; }
+
 function openConsultWidget(){
   document.getElementById('cwOverlay').classList.add('show');
+  var t = new Date();
+  cwViewYear = t.getFullYear();
+  cwViewMonth = t.getMonth();
+  cwSlotsLoaded = false;
+  cwRealSlots = {};
+  cwLeadSessionId = null;
+  cwLeadCaptured = false;
+  ['cwName','cwPhone','cwEmail','cwQuestion'].forEach(function(id){
+    var el = document.getElementById(id); if(el) el.value = '';
+  });
+  var s = document.getElementById('cwService'); if(s) s.selectedIndex = 0;
+  var b = document.getElementById('cwBtn1'); if(b) b.disabled = true;
   cwGoStep(1);
 }
 function closeConsultWidget(){
@@ -1061,130 +1002,214 @@ function cwGoStep(n){
   if(n===2) cwRenderCalendar();
 }
 function cwCheckStep1(){
-  var name = document.getElementById('cwName').value.trim();
+  var name  = document.getElementById('cwName').value.trim();
   var phone = document.getElementById('cwPhone').value.trim();
-  document.getElementById('cwBtn1').disabled = !(name && phone);
+  var email = document.getElementById('cwEmail').value.trim();
+  var validEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  document.getElementById('cwBtn1').disabled = !(name && phone && validEmail);
 }
 
-/* mock available slots theo thứ trong tuần — thay bằng data thật từ Apps Script (AvailableSlots) sau */
-var CW_SLOTS_BY_WEEKDAY = {
-  1: ['19:00–20:00','20:00–21:00'],
-  3: ['19:00–20:00','20:00–21:00','21:00–22:00'],
-  5: ['19:00–20:00','20:00–21:00'],
-};
-var cwSelectedDate = null, cwSelectedTime = null;
-var cwMonthNames = ['Tháng 1','Tháng 2','Tháng 3','Tháng 4','Tháng 5','Tháng 6','Tháng 7','Tháng 8','Tháng 9','Tháng 10','Tháng 11','Tháng 12'];
+function cwProceedToStep2(){
+  cwGoStep(2);
+  cwCaptureLeadIfNeeded();
+}
+
+function cwCaptureLeadIfNeeded(){
+  if (cwLeadCaptured) return;
+  var name     = document.getElementById('cwName').value.trim();
+  var phone    = document.getElementById('cwPhone').value.trim();
+  var email    = document.getElementById('cwEmail').value.trim();
+  var service  = document.getElementById('cwService').value;
+  var question = document.getElementById('cwQuestion').value.trim();
+  if (!name || !phone) return;
+
+  cwLeadCaptured = true;
+
+  fetch(CW_WEBAPP_URL, {
+    method : 'POST',
+    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+    body   : JSON.stringify({
+      action: 'captureLead',
+      name: name, phone: phone, email: email, service: service, question: question
+    })
+  })
+  .then(function(r){ return r.json(); })
+  .then(function(data){
+    if (data && data.success) cwLeadSessionId = data.session_id;
+  })
+  .catch(function(){});
+}
+
+function cwLoadSlots(callback) {
+  if (cwSlotsLoaded) { if(callback) callback(); return; }
+  fetch(CW_WEBAPP_URL + '?action=getSlots&advisor=' + encodeURIComponent(CW_STAFF_IDENTITY) + '&only_available=1')
+    .then(function(r){ return r.json(); })
+    .then(function(res){
+      cwRealSlots = {};
+      if (res && res.data) {
+        res.data.forEach(function(s){
+          var d = String(s.date || s.scheduled_date || '').slice(0,10);
+          if (!d || d.length < 10) return;
+          var rawTime = String(s.time_start || '');
+          var timeStr = '';
+          if (rawTime.indexOf('T') > -1 || rawTime.indexOf('1899') > -1) {
+            var td = new Date(rawTime);
+            timeStr = cwPad2(td.getUTCHours() + 7 >= 24 ? td.getUTCHours() + 7 - 24 : td.getUTCHours() + 7) + ':' + cwPad2(td.getUTCMinutes());
+          } else {
+            timeStr = rawTime.slice(0,5);
+          }
+          if (!timeStr) return;
+          if (CW_TIME_GRID.indexOf(timeStr) === -1) return;
+          if (!cwRealSlots[d]) cwRealSlots[d] = {};
+          cwRealSlots[d][timeStr] = true;
+        });
+      }
+      cwSlotsLoaded = true;
+      if(callback) callback();
+    })
+    .catch(function(){
+      cwSlotsLoaded = true;
+      if(callback) callback();
+    });
+}
+
+function cwChangeMonth(dir){
+  cwViewMonth += dir;
+  if(cwViewMonth < 0){ cwViewMonth = 11; cwViewYear--; }
+  if(cwViewMonth > 11){ cwViewMonth = 0; cwViewYear++; }
+  cwRenderCalendar();
+}
 
 function cwRenderCalendar(){
   var today = new Date();
-  var y = today.getFullYear(), m = today.getMonth();
-  document.getElementById('cwCalTitle').textContent = cwMonthNames[m]+', '+y;
+  if(cwViewYear === null){ cwViewYear = today.getFullYear(); cwViewMonth = today.getMonth(); }
+  var y = cwViewYear, m = cwViewMonth;
+
+  var calTitle = document.getElementById('cwCalTitle');
   var grid = document.getElementById('cwCalGrid');
+  if(!calTitle || !grid) return;
+
+  calTitle.textContent = cwMonthNames[m]+', '+y;
+
+  if(!cwSlotsLoaded){
+    grid.innerHTML = '<div style="grid-column:1/-1;padding:24px;text-align:center;color:rgba(240,240,240,0.4);font-size:13px;">Đang tải lịch trống...</div>';
+    cwLoadSlots(function(){ cwRenderCalendar(); });
+    return;
+  }
+
   var startOffset = new Date(y,m,1).getDay();
   var daysInMonth = new Date(y,m+1,0).getDate();
-  var todayStart = new Date(y,today.getMonth(),today.getDate());
+  var todayStart = new Date(today.getFullYear(),today.getMonth(),today.getDate());
   var html = '';
   for(var i=0;i<startOffset;i++) html += '<div class="cw-day empty"></div>';
   for(var d=1; d<=daysInMonth; d++){
     var dateObj = new Date(y,m,d);
-    var wd = dateObj.getDay();
+    var dateKey = y+'-'+cwPad2(m+1)+'-'+cwPad2(d);
     var isPast = dateObj < todayStart;
-    var hasSlots = !isPast && CW_SLOTS_BY_WEEKDAY[wd];
+    var timesMap = cwRealSlots[dateKey];
+    var hasSlots = !isPast && timesMap && Object.keys(timesMap).length > 0;
     var cls = 'cw-day'+(isPast?' past':(hasSlots?' has-slots':' no-slots'));
-    html += '<div class="'+cls+'"'+(hasSlots?(' onclick="cwSelectDay(this,'+y+','+m+','+d+')"'):'')+'>'+d+'</div>';
+    html += '<div class="'+cls+'"'+(hasSlots?' onclick="cwSelectDay(this,\''+dateKey+'\','+y+','+m+','+d+')"':'')+'>'+d+'</div>';
   }
   grid.innerHTML = html;
   document.getElementById('cwTsLabel').textContent = 'Chọn ngày có chấm cam để xem giờ trống';
   document.getElementById('cwTsSlots').innerHTML = '';
-  cwSelectedDate = null; cwSelectedTime = null;
+  cwSelectedDate = null; cwSelectedDateKey = null; cwSelectedTime = null;
   document.getElementById('cwBtn2').disabled = true;
 }
-function cwSelectDay(el,y,m,d){
-  document.querySelectorAll('.cw-day').forEach(function(x){x.classList.remove('selected');});
+
+function cwSelectDay(el, dateKey, y, m, d){
+  document.querySelectorAll('.cw-day').forEach(function(x){ x.classList.remove('selected'); });
   el.classList.add('selected');
-  var dateObj = new Date(y,m,d);
-  cwSelectedDate = dateObj;
+  cwSelectedDate = new Date(y,m,d);
+  cwSelectedDateKey = dateKey;
   cwSelectedTime = null;
-  var slots = CW_SLOTS_BY_WEEKDAY[dateObj.getDay()] || [];
-  document.getElementById('cwTsLabel').textContent = 'Giờ trống — '+d+'/'+(m+1)+'/'+y;
+  var timesMap = cwRealSlots[dateKey] || {};
+  document.getElementById('cwTsLabel').textContent = 'Giờ trống — ' + d+'/'+(m+1)+'/'+y;
+
   var html = '';
-  slots.forEach(function(s){
-    html += '<button class="cw-ts-slot" onclick="cwSelectTime(this,\''+s+'\')">'+s+'</button>';
+  CW_TIME_GRID.forEach(function(t){
+    if (!timesMap[t]) return;
+    html += '<button class="cw-ts-slot" onclick="cwSelectTime(this,\''+t+'\')">'+t+'</button>';
   });
-  document.getElementById('cwTsSlots').innerHTML = html;
+  document.getElementById('cwTsSlots').innerHTML = html || '<span style="color:rgba(240,240,240,0.4);font-size:13px;">Không còn slot trống ngày này.</span>';
   document.getElementById('cwBtn2').disabled = true;
 }
-function cwSelectTime(el,t){
-  document.querySelectorAll('.cw-ts-slot').forEach(function(x){x.classList.remove('on');});
+
+function cwSelectTime(el, t){
+  document.querySelectorAll('.cw-ts-slot').forEach(function(x){ x.classList.remove('on'); });
   el.classList.add('on');
   cwSelectedTime = t;
   document.getElementById('cwBtn2').disabled = false;
 }
 
-/* ─── Gửi lịch tư vấn về Google Sheet qua Apps Script (registerAdvisee) ─── */
-function cwSetStatus(kind, msg){
-  var box = document.getElementById('cwSubmitStatus');
-  box.style.display = 'block';
-  box.textContent = msg;
-  if(kind==='error'){ box.style.background='rgba(252,82,41,.1)'; box.style.border='1px solid rgba(252,82,41,.4)'; box.style.color='#fc5229'; }
-  else if(kind==='success'){ box.style.background='rgba(62,207,142,.1)'; box.style.border='1px solid rgba(62,207,142,.4)'; box.style.color='#3ecf8e'; }
-  else { box.style.background='rgba(240,240,240,.06)'; box.style.border='1px solid rgba(240,240,240,.12)'; box.style.color='rgba(240,240,240,.7)'; }
-}
-
 function cwConfirm(){
   var btn = document.getElementById('cwBtn2');
-  if(btn.disabled) return;
+  if(btn.dataset.sending) return;
+  if(!cwSelectedDateKey || !cwSelectedTime){ alert('Vui lòng chọn giờ.'); return; }
 
-  var name = document.getElementById('cwName').value.trim();
-  var phone = document.getElementById('cwPhone').value.trim();
-  var email = document.getElementById('cwEmail').value.trim();
-  var service = document.getElementById('cwService').value;
-  var year = document.getElementById('cwYear').value;
+  var name     = document.getElementById('cwName').value.trim();
+  var phone    = document.getElementById('cwPhone').value.trim();
+  var email    = document.getElementById('cwEmail').value.trim();
+  var service  = document.getElementById('cwService').value;
   var question = document.getElementById('cwQuestion').value.trim();
 
-  var d = cwSelectedDate;
-  var dateStr = d.getDate()+'/'+(d.getMonth()+1)+'/'+d.getFullYear();
-
-  var goalText = 'Quan tâm: ' + service +
-    (question ? ' | Câu hỏi: ' + question : '') +
-    ' | Lịch tư vấn mong muốn: ' + dateStr + ' ' + cwSelectedTime;
-
   var payload = {
-    action: 'registerAdvisee',
-    advisee_name: name,
-    advisee_phone: phone,
-    advisee_email: email || '(chưa cung cấp)',
-    advisee_year: year,
-    advisee_industry: 'Supply Chain',
-    advisee_goal: goalText,
-    package_name: 'Cơ Bản'  // mặc định ghi nhận booking tư vấn; sales sẽ cập nhật gói thật sau khi tư vấn
+    action  : 'bookFreeConsultByTime',
+    date    : cwSelectedDateKey,
+    time    : cwSelectedTime,
+    name    : name,
+    phone   : phone,
+    email   : email,
+    service : service,
+    question: question,
+    lead_session_id: cwLeadSessionId
   };
 
+  btn.dataset.sending = '1';
   btn.disabled = true;
-  btn.textContent = 'Đang gửi...';
-  cwSetStatus('pending', 'Đang gửi thông tin đăng ký...');
+  btn.textContent = 'Đang đặt lịch...';
 
-  fetch(WEBAPP_URL, {
-    method: 'POST',
+  fetch(CW_WEBAPP_URL, {
+    method : 'POST',
     headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-    body: JSON.stringify(payload)
+    body   : JSON.stringify(payload)
   })
-  .then(function(res){ return res.json(); })
+  .then(function(r){ return r.json(); })
   .then(function(data){
-    if(!data.success) throw new Error(data.error || 'Lỗi không xác định từ server');
+    if(!data.success) throw new Error(data.error || 'Lỗi không xác định');
+    var d = cwSelectedDate;
+    var dateStr = d.getDate()+'/'+(d.getMonth()+1)+'/'+d.getFullYear();
     document.getElementById('cwSuccessDetail').innerHTML =
-      'Cảm ơn <strong>'+name+'</strong>! Lịch tư vấn của bạn:<br><strong>'+dateStr+' · '+cwSelectedTime+'</strong><br><br>'+
-      'Mã đăng ký: <strong>'+data.booking_id+'</strong><br>'+
-      'Link Google Meet sẽ được gửi qua Zalo/SMS trước giờ hẹn.';
+      'Cảm ơn <strong>'+name+'</strong>! Lịch tư vấn của bạn đã được xác nhận:<br>' +
+      '<strong>'+dateStr+' · '+cwSelectedTime+'</strong><br><br>' +
+      'Link Google Meet sẽ được gửi qua Zalo/SMS (<strong>'+phone+'</strong>) trước giờ hẹn.';
     cwGoStep(3);
-  })
-  .catch(function(err){
-    cwSetStatus('error', '⚠ Gửi thất bại ('+err.message+'). Vui lòng thử lại hoặc liên hệ trực tiếp qua Zalo LinkaJob.');
+    btn.dataset.sending = '';
     btn.disabled = false;
     btn.textContent = 'Xác nhận đặt lịch';
+    cwSlotsLoaded = false;
+  })
+  .catch(function(err){
+    btn.dataset.sending = '';
+    btn.disabled = false;
+    btn.textContent = 'Xác nhận đặt lịch';
+    document.getElementById('cwTsLabel').innerHTML =
+      '<span style="color:#fc5229">⚠ '+err.message+'. Vui lòng thử lại hoặc liên hệ contact@linkajob.vn</span>';
+    cwSlotsLoaded = false;
+    cwLoadSlots(function(){
+      if (cwSelectedDateKey) {
+        var timesMap = cwRealSlots[cwSelectedDateKey] || {};
+        if (!timesMap[cwSelectedTime]) {
+          var dObj = cwSelectedDate;
+          var elDay = document.querySelector('.cw-day.selected');
+          if (elDay) cwSelectDay(elDay, cwSelectedDateKey, dObj.getFullYear(), dObj.getMonth(), dObj.getDate());
+        }
+      }
+    });
   });
 }
-  /* ─── NAV DROPDOWN: bấm để mở/đóng, hoạt động cả trên mobile ─── */
+
 function toggleNavDropdown(btn) {
   var item = btn.closest('.lj-nav-item');
   var wasOpen = item.classList.contains('open');
@@ -1202,5 +1227,6 @@ document.addEventListener('keydown', function(e){
   }
 });
 </script>
+
 </body>
 </html>
