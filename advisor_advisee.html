@@ -4009,7 +4009,7 @@ var adviseeStarState = {}; // key: sessionNo, value: { selected, hover }
 
 function renderMyBookings() {
   var ae = MOCK.advisees.find(function(x){ return x.name === currentUser.name || x.email === currentUser.email; });
-
+  
   if (!ae) {
     return '<div class="card"><div class="empty-state"><div class="icon">📭</div>Bạn chưa có booking nào.<br><small style="color:var(--muted)">Nếu vừa đăng ký, vui lòng chờ đội LinkaJob xác nhận.</small></div></div>';
   }
@@ -4048,6 +4048,7 @@ function renderMyBookings() {
     var statusCfg = { done:{bg:'var(--green-bg)',color:'var(--green)',label:'✓ Hoàn thành'}, feedback:{bg:'#FFF7ED',color:'#C2410C',label:'Cần feedback'}, upcoming:{bg:'#EFF6FF',color:'#1D4ED8',label:'Sắp tới'}, locked:{bg:'var(--bg)',color:'var(--muted)',label:'Đã khoá'} };
     var sc = statusCfg[s.status] || statusCfg.locked;
     var extraTag = '';
+    if (s.status === 'upcoming' && !s.date) extraTag = '<span style="background:#DBEAFE;color:#1D4ED8;font-size:11px;font-weight:700;padding:3px 10px;border-radius:100px">⏰ Cần chọn giờ meeting</span>';
     if (s.status === 'upcoming' && !s.prepInfo) extraTag = '<span style="background:#DBEAFE;color:#1D4ED8;font-size:11px;font-weight:700;padding:3px 10px;border-radius:100px">Chưa gửi chuẩn bị</span>';
     if (s.status === 'feedback') extraTag = '<span style="background:#FEF3C7;color:#92400E;font-size:11px;font-weight:700;padding:3px 10px;border-radius:100px">Cần feedback</span>';
     if (s.status === 'done' && !s.advisorNotes) extraTag = '<span style="font-size:11px;color:var(--muted);font-style:italic">⏳ Chờ nhận xét</span>';
@@ -4067,6 +4068,16 @@ function renderMyBookings() {
 }
 
 function openAdviseeSessionModal(sessionNo) {
+  body += '<div style="display:flex;gap:8px">';
+  if (s.meetLink) body += '<a href="' + s.meetLink + '" target="_blank" class="detail-btn">🎥 Vào Meet</a>';
+  if (s.status === 'upcoming' && !s.date) {
+    // Chưa có lịch — cho chọn giờ thật từ Advisor, KHÔNG phải form đề xuất tay
+    body += '<button class="detail-btn" onclick="closeModal();openBookSessionModal(\'' + ae.id + '\',' + sessionNo + ')">🗓 Chọn giờ meeting</button>';
+  } else if (s.status === 'upcoming' && s.date) {
+    // Đã có lịch rồi — giữ nguyên flow đề xuất đổi giờ như cũ
+    body += '<button class="detail-btn" onclick="closeModal();openRescheduleModal(\'' + ae.id + '\',' + sessionNo + ',\'advisee\')">🔄 Đổi giờ</button>';
+  }
+  body += '</div></div>';
   var ae = MOCK.advisees.find(function(x){ return x.name === currentUser.name || x.email === currentUser.email; });
   if (!ae) return;
   var s = ae.sessions.find(function(x){ return x.no === sessionNo; });
@@ -4076,6 +4087,88 @@ function openAdviseeSessionModal(sessionNo) {
   var dateLabel = d ? dow + ' ' + d.getDate() + '/' + (d.getMonth()+1) + '/' + d.getFullYear() + ' · ' + s.timeStart + '–' + s.timeEnd : 'Chưa xếp lịch';
   document.getElementById('modal-title').textContent = 'Buổi ' + sessionNo;
   var body = '';
+
+  var _bookSessionCtx = null; // { aeId, sessionNo, advisorName }
+var _bookSessionSlots = {}; // { 'YYYY-MM-DD': [{slot_id, time}] }
+
+function openBookSessionModal(aeId, sessionNo) {
+  var ae = MOCK.advisees.find(function(x){ return x.id === aeId; });
+  if (!ae) return;
+  _bookSessionCtx = { aeId: aeId, sessionNo: sessionNo, advisorName: ae.advisor };
+  _bookSessionSlots = {};
+
+  document.getElementById('modal-title').textContent = 'Chọn giờ meeting — Buổi ' + sessionNo;
+  document.getElementById('modal-body').innerHTML = skeletonRows(2);
+  document.getElementById('modal-actions').innerHTML =
+    '<button class="btn-secondary" onclick="closeModal()" style="width:auto;padding:10px 20px">Đóng</button>';
+  document.getElementById('modal-overlay').classList.add('open');
+
+  apiGet('getSlots', { advisor: ae.advisor, only_available: '1' }).then(function(res){
+    var raw = (res && res.data) ? res.data : [];
+    raw.forEach(function(s){
+      var d = String(s.date || '').slice(0, 10);
+      if (!d) return;
+      if (!_bookSessionSlots[d]) _bookSessionSlots[d] = [];
+      _bookSessionSlots[d].push({ slot_id: s.slot_id, time: s.time_start, timeEnd: s.time_end });
+    });
+    Object.keys(_bookSessionSlots).forEach(function(d){
+      _bookSessionSlots[d].sort(function(a,b){ return a.time.localeCompare(b.time); });
+    });
+    renderBookSessionModalBody();
+  }).catch(function(err){
+    document.getElementById('modal-body').innerHTML =
+      '<div class="empty-state"><div class="icon">⚠</div>Không tải được lịch trống của Advisor.<br><small style="color:var(--muted)">' + err.message + '</small></div>';
+  });
+}
+
+function renderBookSessionModalBody() {
+  var dates = Object.keys(_bookSessionSlots).filter(function(d){ return _bookSessionSlots[d].length > 0; }).sort();
+  var html = '<div style="font-size:13px;color:var(--muted);margin-bottom:14px">Chọn 1 khung giờ trống từ lịch của Advisor <b>' + _bookSessionCtx.advisorName + '</b>.</div>';
+
+  if (dates.length === 0) {
+    html += '<div class="empty-state"><div class="icon">📭</div>Advisor hiện chưa có giờ trống nào. Vui lòng liên hệ đội LinkaJob để được hỗ trợ xếp lịch.</div>';
+  } else {
+    dates.forEach(function(d){
+      var dateObj = new Date(d + 'T00:00:00');
+      var label = DAYS_VI[dateObj.getDay()] + ' ' + dateObj.getDate() + '/' + (dateObj.getMonth()+1) + '/' + dateObj.getFullYear();
+      html += '<div style="font-size:12.5px;font-weight:700;color:var(--text);margin:14px 0 8px">' + label + '</div>';
+      html += '<div style="display:flex;flex-wrap:wrap;gap:8px">';
+      _bookSessionSlots[d].forEach(function(sl){
+        html += '<button class="day-time-chip" onclick="confirmBookSession(\'' + d + '\',\'' + sl.time + '\',\'' + sl.slot_id + '\')">' + sl.time + '</button>';
+      });
+      html += '</div>';
+    });
+  }
+  document.getElementById('modal-body').innerHTML = html;
+}
+
+function confirmBookSession(dateStr, time, slotId) {
+  var ctx = _bookSessionCtx;
+  var ae = MOCK.advisees.find(function(x){ return x.id === ctx.aeId; });
+  if (!ae) return;
+
+  toast('Đang đặt lịch...', '');
+  apiPost({
+    action: 'bookSession',
+    slot_id: slotId,
+    booking_id: ae.bookingId,
+    session_number: ctx.sessionNo,
+    advisee_name: ae.name,
+  }).then(function(res){
+    if (!res || !res.success) {
+      toast('Lỗi: ' + (res && res.error ? res.error : 'không đặt được lịch — slot có thể vừa bị người khác chọn'), 'error');
+      openBookSessionModal(ctx.aeId, ctx.sessionNo); // tải lại danh sách mới nhất
+      return;
+    }
+    var s = ae.sessions.find(function(x){ return x.no === ctx.sessionNo; });
+    if (s) { s.date = dateStr; s.timeStart = time; }
+    toast('Đã đặt lịch buổi ' + ctx.sessionNo + ' ✅', 'success');
+    closeModal();
+    document.getElementById('main-content').innerHTML = renderMyBookings();
+  }).catch(function(err){
+    toast('Lỗi kết nối: ' + err.message, 'error');
+  });
+}
 
   // Header
   body += '<div style="display:flex;align-items:center;justify-content:space-between;background:var(--bg);border-radius:10px;padding:12px 16px;margin-bottom:16px;flex-wrap:wrap;gap:8px">';
