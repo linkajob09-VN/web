@@ -359,6 +359,15 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%); background-size: 200% 100%; border-radius: 6px; }
 @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
 .skel-row { display: flex; gap: 12px; padding: 16px 24px; border-top: 1px solid var(--border); align-items: center; }
+/* ── Google Calendar style event list trong ô ngày ── */
+.cal-cell-google { min-height: 108px; align-items: stretch; }
+.cal-cell-google .cal-daynum { cursor: pointer; }
+.cal-event-list { display: flex; flex-direction: column; gap: 2px; overflow: hidden; }
+.cal-event-pill { display: flex; align-items: center; gap: 5px; font-size: 11px; font-weight: 600; padding: 1px 4px; border-radius: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; cursor: pointer; transition: background .12s; }
+.cal-event-pill:hover { background: var(--bg); }
+.cal-event-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+.cal-event-more { font-size: 11px; color: var(--muted); font-weight: 700; padding: 1px 4px; cursor: pointer; }
+.cal-event-more:hover { color: var(--brand); }
 </style>
 </head>
 <body>
@@ -725,7 +734,7 @@ const ROUTE_MAP = {
   'lj-newreg':     { fn: function(){ renderStaff('lj-newreg'); } },
   'lj-revenue':    { fn: function(){ renderStaff('lj-revenue'); } },
   'lj-report':     { fn: function(){ renderStaff('lj-report'); } },
-  'lj-meetings':   { fn: function(){ renderStaff('linkajob-calendar'); } },
+  'lj-meetings':   { fn: function(){ loadMeetingCalendarAsync(); } },
   'lj-products':   { fn: function(){ renderStaff('lj-products'); } },
   'stf-list':      { fn: function(){ renderStaff('stf-list'); } },
   'stf-schedule':  { fn: function(){ loadStaffSchedulePageAsync(); } },
@@ -1038,6 +1047,7 @@ function renderAdvisorOverview() {
 //  MONTH CALENDAR (kiểu Amelia) — dùng chung cho Advisor + Staff
 // ════════════════════════════════════════════════════════════
 let calMonthOffset = 0; // số tháng lệch so với tháng hiện tại
+var _calendarContext = null; // 'advisor-schedule' | 'meetings'
 
 function getCalendarMatrix(monthOffset) {
   const base = new Date();
@@ -1100,15 +1110,17 @@ function renderMonthCalendar(opts) {
   return html;
 }
 
-function changeCalMonth(dir) {
+ffunction changeCalMonth(dir) {
   calMonthOffset += dir;
+  if (_calendarContext === 'meetings') { loadMeetingCalendarAsync(); return; }
   if (currentUser.role === 'Advisor') switchRoleTab('schedule');
-  else loadDashboard('Staff','linkajob-calendar');
+  else loadMeetingCalendarAsync();
 }
 function goToCalToday() {
   calMonthOffset = 0;
+  if (_calendarContext === 'meetings') { loadMeetingCalendarAsync(); return; }
   if (currentUser.role === 'Advisor') switchRoleTab('schedule');
-  else loadDashboard('Staff','linkajob-calendar');
+  else loadMeetingCalendarAsync();
 }
 
 const DAYS_VI_FULL = ['T2','T3','T4','T5','T6','T7','CN'];
@@ -1117,6 +1129,7 @@ const DAYS_VI_FULL = ['T2','T3','T4','T5','T6','T7','CN'];
 
 // ── Advisor: lịch trống dạng tháng ──
 function renderSchedulePicker() {
+  _calendarContext = 'advisor-schedule';
   const slotsByDate = {};
   sheetData.slots.forEach(function(s){
     if (s.advisor_name !== currentUser.name) return;
@@ -1401,21 +1414,78 @@ function assignRegToStaff(idx, staffName) {
   });
 }
 
-function renderMeetingCalendar() {
-  const meetingsByDate = {};
-  MOCK.meetings.forEach(function(m){
-    if (!meetingsByDate[m.date]) meetingsByDate[m.date] = [];
-    meetingsByDate[m.date].push(m);
-  });
-  window._meetingsByDate = meetingsByDate;
+function loadMeetingCalendarAsync() {
+  _calendarContext = 'meetings';
+  var mc = document.getElementById('main-content');
+  mc.innerHTML = skeletonRows(3);
 
-  let html = renderMonthCalendar({
-    title: 'Lịch meeting',
-    onCellClick: 'openStaffDayModal',
-    countFn: function(dateStr) {
-      return { slot: 0, meeting: (meetingsByDate[dateStr]||[]).length };
-    }
+  apiGet('getSessions', {}).then(function(res){
+    var sessions = (res && res.data) ? res.data : [];
+    var meetingsByDate = {};
+
+    sessions.forEach(function(s){
+      var d = String(s.scheduled_date || '').slice(0, 10);
+      if (!d) return;
+      if (!meetingsByDate[d]) meetingsByDate[d] = [];
+      var type = s.advisor_name === STAFF_SLOT_IDENTITY ? 'Tư vấn miễn phí' : 'Cố vấn 1-1';
+      meetingsByDate[d].push({
+        type: type,
+        advisor: s.advisor_name,
+        advisee: s.advisee_name,
+        time: s.scheduled_time,
+        meet_link: s.meet_link,
+        session_id: s.session_id,
+        status: s.status,
+      });
+    });
+
+    window._meetingsByDate = meetingsByDate;
+    mc.innerHTML = renderMeetingMonthCalendar(meetingsByDate);
+  }).catch(function(err){
+    mc.innerHTML = '<div class="card"><div class="empty-state"><div class="icon">⚠</div>Không tải được lịch meeting.<br><small style="color:var(--muted)">' + err.message + '</small></div></div>';
   });
+}
+
+function renderMeetingMonthCalendar(meetingsByDate) {
+  const { year, month, weeks } = getCalendarMatrix(calMonthOffset);
+  const monthLabel = ['Tháng 1','Tháng 2','Tháng 3','Tháng 4','Tháng 5','Tháng 6','Tháng 7','Tháng 8','Tháng 9','Tháng 10','Tháng 11','Tháng 12'][month] + ' ' + year;
+  const today = new Date();
+  const MAX_VISIBLE = 3;
+  const typeColor = { 'Cố vấn 1-1': '#1D4ED8', 'Tư vấn miễn phí': '#F4451A', 'Khoá học': '#7C3AED' };
+
+  let html = '<div class="card"><div class="card-header"><div class="card-header-left">Lịch meeting</div>' +
+    '<button class="refresh-btn" onclick="loadMeetingCalendarAsync()">↻ Làm mới</button></div>';
+  html += '<div class="cal-nav"><div class="cal-nav-left"><button onclick="changeCalMonth(-1)">‹</button><span class="cal-nav-label">' + monthLabel + '</span><button onclick="changeCalMonth(1)">›</button></div>';
+  html += '<button class="cal-today-btn" onclick="goToCalToday()">Hôm nay</button></div>';
+
+  html += '<div class="cal-grid">';
+  DAYS_VI_FULL.forEach(function(d){ html += '<div class="cal-weekday-hdr">' + d + '</div>'; });
+
+  weeks.forEach(function(week){
+    week.forEach(function(d){
+      const dateStr = ymd(d);
+      const isOther = d.getMonth() !== month;
+      const isToday = isSameDate(d, today);
+      const dayMeetings = (meetingsByDate[dateStr] || []).slice().sort(function(a,b){ return (a.time||'').localeCompare(b.time||''); });
+
+      let cls = 'cal-cell cal-cell-google' + (isOther?' other-month':'') + (isToday?' today':'');
+      html += '<div class="' + cls + '">';
+      html += '<div class="cal-daynum" onclick="openStaffDayModal(\'' + dateStr + '\')">' + d.getDate() + '</div>';
+      html += '<div class="cal-event-list">';
+      dayMeetings.slice(0, MAX_VISIBLE).forEach(function(m){
+        const color = typeColor[m.type] || 'var(--muted)';
+        const label = (m.time ? m.time + ' ' : '') + (m.advisee || m.type);
+        html += '<div class="cal-event-pill" style="color:' + color + '" onclick="openStaffDayModal(\'' + dateStr + '\')" title="' + String(label).replace(/"/g,'') + '">';
+        html += '<span class="cal-event-dot" style="background:' + color + '"></span>' + label;
+        html += '</div>';
+      });
+      if (dayMeetings.length > MAX_VISIBLE) {
+        html += '<div class="cal-event-more" onclick="openStaffDayModal(\'' + dateStr + '\')">+' + (dayMeetings.length - MAX_VISIBLE) + ' more</div>';
+      }
+      html += '</div></div>';
+    });
+  });
+  html += '</div></div>';
   return html;
 }
 
@@ -1424,16 +1494,17 @@ function openStaffDayModal(dateStr) {
   const dow = DAYS_VI[dateObj.getDay()];
   document.getElementById('modal-title').textContent = dow + ' ' + dateObj.getDate() + '/' + (dateObj.getMonth()+1);
 
-  const list = window._meetingsByDate[dateStr] || [];
+  const list = (window._meetingsByDate && window._meetingsByDate[dateStr]) || [];
   let html = '';
   if (list.length === 0) {
     html = '<div class="empty-state" style="padding:24px 0"><div class="icon">📭</div>Không có buổi meeting nào ngày này</div>';
   } else {
-    list.forEach(function(m){
-      const idx = MOCK.meetings.indexOf(m);
-      html += '<div class="day-meeting-item">' + avatarCircle(m.advisee,34) +
-        '<div style="flex:1"><div style="font-weight:600;font-size:14px">' + m.advisee + ' · ' + m.type + '</div><div style="font-size:12px;color:var(--muted)">' + m.advisor + ' · ' + m.time + '</div></div>' +
-        '<button class="update-btn" onclick="closeModal();showMeetingDetail(' + idx + ')">Chi tiết</button></div>';
+    list.slice().sort(function(a,b){ return (a.time||'').localeCompare(b.time||''); }).forEach(function(m){
+      html += '<div class="day-meeting-item">' + avatarCircle(m.advisee, 34) +
+        '<div style="flex:1"><div style="font-weight:600;font-size:14px">' + (m.advisee||'—') + ' · ' + m.type + '</div>' +
+        '<div style="font-size:12px;color:var(--muted)">' + (m.advisor||'') + ' · ' + (m.time||'') + '</div></div>';
+      if (m.meet_link) html += '<a href="' + m.meet_link + '" target="_blank" class="detail-btn" style="margin-right:6px">🎥 Meet</a>';
+      html += '</div>';
     });
   }
   document.getElementById('modal-body').innerHTML = html;
