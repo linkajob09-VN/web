@@ -1404,7 +1404,15 @@ function assignRegToStaff(idx, staffName) {
     toast('Lỗi kết nối: ' + err.message, 'error');
   });
 }
-
+  
+MOCK.leads = [];
+  function loadStaffLeadsAsync(staffName, cb) {
+  apiGet('getLeads').then(function(res){
+    MOCK.leads = (res && res.data) ? res.data.filter(function(l){ return l.assigned_staff === staffName; }) : [];
+    if (cb) cb();
+  }).catch(function(err){ toast('Không tải được leads: ' + err.message, 'error'); });
+}
+  
 function loadMeetingCalendarAsync() {
   _calendarContext = 'meetings';
   var mc = document.getElementById('main-content');
