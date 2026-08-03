@@ -1,0 +1,1201 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Land Your Dream Job · LinkaJob</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600;700;800&display=swap');
+:root{
+  --dark:#0D0D0D;
+  --dark-card:#1A1A1A;
+  --paper:#F5F4F1;
+  --paper-2:#FFFFFF;
+  --orange:#fc5229;
+  --orange-tint:rgba(252,82,41,.1);
+  --orange-tint-2:rgba(252,82,41,.06);
+  --text:#1C1C1C;
+  --text-dark:#F0F0F0;
+  --muted:rgba(28,28,28,.45);
+  --muted-2:rgba(28,28,28,.3);
+  --muted-dark:rgba(240,240,240,.4);
+  --muted-dark-2:rgba(240,240,240,.28);
+  --line:rgba(28,28,28,.1);
+  --line-dark:rgba(255,255,255,.09);
+  --success:#3ecf8e;
+}
+*,*::before,*::after{box-sizing:border-box; margin:0; padding:0;}
+html{scroll-behavior:smooth;}
+body{font-family:'Inter',sans-serif; background:var(--paper); color:var(--text); line-height:1.55; -webkit-font-smoothing:antialiased;}
+a{color:inherit; text-decoration:none;}
+.wrap{max-width:1120px; margin:0 auto; padding:0 32px;}
+h1,h2,h3,h4{font-family:'Space Grotesk',sans-serif; font-weight:700; letter-spacing:-0.02em; line-height:1.15;}
+
+.eyebrow{
+  display:inline-flex; align-items:center; gap:7px;
+  font-family:'Space Grotesk',sans-serif; font-size:12px; font-weight:600;
+  background:var(--orange-tint); color:var(--orange);
+  border:.5px solid rgba(252,82,41,.18); border-radius:100px; padding:5px 14px;
+}
+.eyebrow-dot{width:5px; height:5px; border-radius:50%; background:var(--orange); flex:none;}
+.eyebrow.on-dark{ background:#1A1A1A; color:var(--muted-dark); border-color:var(--line-dark);}
+.eyebrow.on-dark .eyebrow-dot{background:var(--orange);}
+
+/* buttons */
+.btn{ display:inline-flex; align-items:center; justify-content:center; gap:8px; padding:13px 26px; border-radius:100px; font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:14px; cursor:pointer; border:none; transition:opacity .2s, transform .15s;}
+.btn-orange{ background:var(--orange); color:#fff;}
+.btn-orange:hover{ opacity:.88; transform:translateY(-1px);}
+.btn-ghost-dark{ background:transparent; color:var(--muted-dark); border:.5px solid var(--line-dark);}
+.btn-ghost-dark:hover{ color:var(--text-dark); border-color:rgba(252,82,41,.4);}
+.btn-ghost-light{ background:#fff; color:var(--text); border:.5px solid var(--line);}
+.btn-ghost-light:hover{ border-color:rgba(252,82,41,.4); color:var(--orange);}
+
+/* nav — matching LinkaJob homepage */
+.lj-nav{ position:sticky; top:0; z-index:200; display:flex; align-items:center; justify-content:space-between; padding:16px 32px; background:var(--dark); border-bottom:.5px solid var(--line-dark);}
+.lj-logo{ font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:18px; color:var(--orange); letter-spacing:-.5px; text-decoration:none; cursor:pointer;}
+.lj-nav-links{ display:flex; gap:4px; align-items:center;}
+.lj-nav-item{ position:relative;}
+.lj-nav-links a, .lj-nav-btn-plain{ font-size:13px; color:var(--muted-dark); text-decoration:none; font-family:'Space Grotesk',sans-serif; font-weight:500; transition:color .2s, background .2s; padding:8px 14px; border-radius:8px; display:inline-flex; align-items:center; gap:5px; cursor:pointer; background:transparent; border:none;}
+.lj-nav-links a:hover, .lj-nav-btn-plain:hover{ color:var(--text-dark); background:rgba(255,255,255,.05);}
+.lj-nav-chevron{ font-size:11px; transition:transform .2s; color:var(--muted-dark-2);}
+.lj-nav-item.open .lj-nav-chevron{ transform:rotate(180deg); color:rgba(240,240,240,.6);}
+.lj-btn-nav{ background:var(--orange); color:#fff; font-size:13px; font-weight:500; font-family:'Space Grotesk',sans-serif; padding:8px 20px; border-radius:100px; border:none; cursor:pointer; white-space:nowrap; margin-left:8px;}
+.lj-dropdown{ position:absolute; top:calc(100% + 8px); left:50%; transform:translateX(-50%) translateY(-6px); background:#161616; border:.5px solid rgba(255,255,255,.1); border-radius:14px; padding:8px; min-width:230px; opacity:0; pointer-events:none; transition:opacity .18s ease, transform .18s ease; z-index:300; box-shadow:0 12px 32px rgba(0,0,0,.35);}
+.lj-nav-item:hover .lj-dropdown, .lj-nav-item.open .lj-dropdown{ opacity:1; pointer-events:auto; transform:translateX(-50%) translateY(0);}
+.lj-di{ display:flex; align-items:flex-start; gap:11px; padding:10px 12px; border-radius:10px; text-decoration:none; transition:background .15s;}
+.lj-di:hover{ background:rgba(255,255,255,.05);}
+.lj-di-icon{ width:32px; height:32px; border-radius:9px; background:rgba(252,82,41,.1); display:flex; align-items:center; justify-content:center; flex-shrink:0; margin-top:1px;}
+.lj-di-icon i{ font-size:16px; color:var(--orange);}
+.lj-di-title{ font-family:'Space Grotesk',sans-serif; font-size:13px; font-weight:600; color:var(--text-dark); margin-bottom:2px;}
+.lj-di-sub{ font-size:11px; color:rgba(240,240,240,.38); line-height:1.45;}
+.lj-dropdown-divider{ height:.5px; background:rgba(255,255,255,.07); margin:6px 0;}
+.lj-dropdown-badge{ display:inline-block; font-size:9px; font-weight:700; font-family:'Space Grotesk',sans-serif; letter-spacing:.06em; text-transform:uppercase; background:rgba(252,82,41,.15); color:var(--orange); padding:2px 7px; border-radius:4px; margin-left:6px; vertical-align:middle;}
+
+/* consult widget */
+.cw-overlay{ position:fixed; inset:0; background:transparent; z-index:998; display:none;}
+.cw-overlay.show{ display:block;}
+.cw-box{ position:fixed; bottom:20px; right:20px; width:360px; max-width:calc(100vw - 32px); max-height:calc(100vh - 40px); background:#161616; border:.5px solid rgba(255,255,255,.1); border-radius:18px; box-shadow:0 20px 60px rgba(0,0,0,.5); z-index:999; display:flex; flex-direction:column; overflow:hidden;}
+.cw-head{ display:flex; align-items:flex-start; justify-content:space-between; padding:18px 20px 14px; border-bottom:.5px solid rgba(255,255,255,.08); flex-shrink:0;}
+.cw-title{ font-family:'Space Grotesk',sans-serif; font-size:15px; font-weight:700; color:var(--text-dark);}
+.cw-sub{ font-size:12px; color:rgba(240,240,240,.4); margin-top:3px;}
+.cw-close{ background:rgba(255,255,255,.06); border:none; width:28px; height:28px; border-radius:8px; color:rgba(240,240,240,.6); cursor:pointer; display:flex; align-items:center; justify-content:center; flex-shrink:0;}
+.cw-close:hover{ background:rgba(255,255,255,.12); color:var(--text-dark);}
+.cw-close i{ font-size:15px;}
+.cw-step{ padding:18px 20px 20px; overflow-y:auto;}
+.cw-field{ margin-bottom:14px;}
+.cw-field label{ display:block; font-size:12px; color:rgba(240,240,240,.55); font-family:'Space Grotesk',sans-serif; font-weight:500; margin-bottom:6px;}
+.cw-field label span{ color:var(--orange);}
+.cw-field input, .cw-field select, .cw-field textarea{ width:100%; background:var(--dark); border:.5px solid rgba(255,255,255,.12); border-radius:9px; padding:10px 12px; color:var(--text-dark); font-size:13px; font-family:'Inter',sans-serif; outline:none; box-sizing:border-box;}
+.cw-field input:focus, .cw-field select:focus, .cw-field textarea:focus{ border-color:var(--orange);}
+.cw-field textarea{ resize:none; line-height:1.5;}
+.cw-field select{ appearance:none;}
+.cw-note{ display:flex; gap:8px; align-items:flex-start; font-size:11.5px; color:rgba(240,240,240,.5); line-height:1.6; background:var(--orange-tint-2); border:.5px solid rgba(252,82,41,.15); border-radius:10px; padding:10px 12px; margin-bottom:16px;}
+.cw-note i{ color:var(--orange); font-size:14px; flex-shrink:0; margin-top:1px;}
+.cw-next{ width:100%; background:var(--orange); color:#fff; font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:13.5px; padding:12px; border-radius:100px; border:none; cursor:pointer;}
+.cw-next:disabled{ opacity:.35; cursor:not-allowed;}
+.cw-back{ background:transparent; color:rgba(240,240,240,.5); font-family:'Space Grotesk',sans-serif; font-weight:500; font-size:12.5px; border:none; cursor:pointer; padding:12px 4px; white-space:nowrap;}
+.cw-nav-row{ display:flex; align-items:center; gap:10px; margin-top:4px;}
+.cw-nav-row .cw-next{ flex:1;}
+.cw-cal-title{ font-family:'Space Grotesk',sans-serif; font-size:13px; font-weight:700; color:var(--text-dark); margin-bottom:10px; text-align:center; text-transform:capitalize;}
+.cw-cal-days-lbl{ display:grid; grid-template-columns:repeat(7,1fr); margin-bottom:4px;}
+.cw-cal-days-lbl span{ text-align:center; font-size:10px; color:rgba(240,240,240,.35); font-family:'Space Grotesk',sans-serif;}
+.cw-cal-grid{ display:grid; grid-template-columns:repeat(7,1fr); gap:3px; margin-bottom:16px;}
+.cw-day{ height:32px; display:flex; align-items:center; justify-content:center; font-size:12.5px; color:rgba(240,240,240,.6); border-radius:8px; cursor:default; position:relative;}
+.cw-day.empty{ visibility:hidden;}
+.cw-day.past{ opacity:.25;}
+.cw-day.no-slots{ opacity:.3;}
+.cw-day.has-slots{ color:var(--text-dark); font-weight:500; cursor:pointer;}
+.cw-day.has-slots:hover{ background:rgba(255,255,255,.06);}
+.cw-day.has-slots::after{ content:''; position:absolute; bottom:3px; left:50%; transform:translateX(-50%); width:4px; height:4px; border-radius:50%; background:var(--orange);}
+.cw-day.selected{ background:var(--orange); color:#fff;}
+.cw-day.selected::after{ display:none;}
+.cw-ts-label{ font-size:11px; color:rgba(240,240,240,.4); margin-bottom:10px;}
+.cw-ts-slots{ display:flex; flex-wrap:wrap; gap:8px; margin-bottom:18px; min-height:36px;}
+.cw-ts-slot{ padding:8px 14px; border-radius:100px; border:.5px solid rgba(255,255,255,.12); background:transparent; color:var(--text-dark); font-size:12px; font-family:'Space Grotesk',sans-serif; font-weight:500; cursor:pointer;}
+.cw-ts-slot:hover{ border-color:rgba(252,82,41,.5); color:var(--orange);}
+.cw-ts-slot.on{ background:var(--orange); border-color:var(--orange); color:#fff;}
+.cw-success-icon{ width:52px; height:52px; border-radius:50%; background:var(--orange-tint); display:flex; align-items:center; justify-content:center; margin:6px auto 16px;}
+.cw-success-icon i{ font-size:26px; color:var(--orange);}
+.cw-success-title{ font-family:'Space Grotesk',sans-serif; font-size:16px; font-weight:700; color:var(--text-dark); text-align:center; margin-bottom:8px;}
+.cw-success-sub{ font-size:12.5px; color:rgba(240,240,240,.5); text-align:center; line-height:1.7; margin-bottom:20px;}
+@media(max-width:480px){ .cw-box{ left:16px; right:16px; bottom:16px; width:auto;} }
+
+/* hero */
+.hero{ background:var(--dark); padding:64px 0 44px; text-align:center;}
+.hero .eyebrow{ margin-bottom:20px;}
+.hero h1{ font-size:40px; color:var(--text-dark); letter-spacing:-1.6px; margin-bottom:14px; white-space:nowrap;}
+@media(max-width:640px){ .hero h1{ font-size:26px; white-space:normal;} }
+.hero h1 em{ color:var(--orange); font-style:normal;}
+.hero .sub{ font-size:15px; color:var(--muted-dark); max-width:480px; margin:0 auto 30px; line-height:1.7;}
+.hero-cta{ display:flex; gap:12px; justify-content:center; flex-wrap:wrap; margin-bottom:36px;}
+.hero-stats{ display:flex; justify-content:center; border:.5px solid var(--line-dark); border-radius:14px; overflow:hidden; max-width:560px; margin:0 auto;}
+.hstat{ flex:1; padding:16px 10px; text-align:center; border-right:.5px solid var(--line-dark);}
+.hstat:last-child{ border-right:none;}
+.hstat-num{ font-family:'Space Grotesk',sans-serif; font-size:22px; font-weight:700; color:var(--orange); line-height:1;}
+.hstat-lbl{ font-size:10px; color:var(--muted-dark-2); margin-top:5px; text-transform:uppercase; letter-spacing:.06em;}
+
+/* wave divider */
+.wave{ background:var(--dark); line-height:0;}
+.wave svg{ width:100%; height:36px; display:block;}
+
+/* sections */
+section{ padding:80px 0;}
+.section-head{ max-width:620px; margin-bottom:44px;}
+.section-head h2{ font-size:30px; color:var(--text); margin-top:14px; letter-spacing:-1px;}
+.section-head p{ margin-top:14px; font-size:15px; color:var(--muted); line-height:1.7;}
+.on-dark .section-head h2{ color:var(--text-dark);}
+.on-dark .section-head p{ color:var(--muted-dark);}
+
+/* problem cards */
+.problem-grid{ display:grid; grid-template-columns:repeat(4,1fr); gap:14px;}
+.problem-card{ background:var(--paper-2); border:.5px solid var(--line); border-radius:16px; padding:24px 20px; transition:border-color .2s, transform .2s;}
+.problem-card:hover{ border-color:rgba(252,82,41,.3); transform:translateY(-3px);}
+.problem-card .num{ font-family:'Space Grotesk',sans-serif; font-size:12px; color:var(--orange); font-weight:700; letter-spacing:.04em;}
+.problem-card h3{ font-size:16px; margin:14px 0 8px; letter-spacing:-0.3px;}
+.problem-card p{ font-size:13.5px; color:var(--muted); line-height:1.6;}
+
+/* solution dark strip */
+.solution{ background:var(--dark); text-align:center;}
+.solution h2{ font-size:28px; max-width:720px; margin:0 auto 16px; color:var(--text-dark); letter-spacing:-0.8px;}
+.solution p.lead{ max-width:560px; margin:0 auto 30px; color:var(--muted-dark); font-size:15px;}
+.pill-row{ display:flex; gap:10px; justify-content:center; flex-wrap:wrap;}
+.pill{ background:var(--orange-tint); border:.5px solid rgba(252,82,41,.25); color:var(--orange); padding:9px 18px; border-radius:100px; font-family:'Space Grotesk',sans-serif; font-size:13px; font-weight:600;}
+
+/* before/after */
+.transform-table{ display:grid; grid-template-columns:1fr 1fr; border-radius:18px; overflow:hidden; border:.5px solid var(--line);}
+.col-before, .col-after{ padding:30px 26px;}
+.col-before{ background:#fff;}
+.col-after{ background:var(--dark);}
+.col-head{ font-family:'Space Grotesk',sans-serif; font-size:12px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; margin-bottom:20px; display:flex; align-items:center; gap:8px;}
+.col-before .col-head{ color:var(--muted-2);}
+.col-after .col-head{ color:var(--orange);}
+.transform-row{ display:flex; gap:12px; padding:12px 0; border-top:.5px solid var(--line);}
+.col-after .transform-row{ border-top:.5px solid var(--line-dark);}
+.transform-row:first-of-type{ border-top:none;}
+.transform-row .mark{ flex:none; width:18px; height:18px; border-radius:50%; margin-top:2px; display:flex; align-items:center; justify-content:center; font-size:10px; font-weight:700;}
+.col-before .mark{ background:rgba(28,28,28,.06); color:var(--muted);}
+.col-after .mark{ background:var(--orange); color:#fff;}
+.transform-row span{ font-size:14px;}
+.col-before .transform-row span{ color:var(--text);}
+.col-after .transform-row span{ color:var(--muted-dark);}
+
+/* curriculum modules - accordion */
+.module{ border-top:.5px solid var(--line);}
+.module:last-child{ border-bottom:.5px solid var(--line);}
+.module-q{ display:flex; align-items:flex-start; gap:18px; padding:20px 0; cursor:pointer;}
+.module-num{ font-family:'Space Grotesk',sans-serif; font-size:22px; color:rgba(28,28,28,.18); font-weight:700; flex:none; width:36px;}
+.module-head{ flex:1;}
+.module-head h3{ font-size:16.5px; letter-spacing:-0.3px; margin-bottom:5px;}
+.module-outcome{ display:flex; align-items:center; gap:6px; font-size:12.5px; color:var(--orange); font-weight:600; font-family:'Space Grotesk',sans-serif;}
+.module-outcome-dot{ width:4px; height:4px; border-radius:50%; background:var(--orange); flex:none;}
+.module-plus{ font-family:'Space Grotesk',sans-serif; font-size:18px; color:var(--orange); flex:none; transition:transform .2s ease; margin-top:2px;}
+.module.open .module-plus{ transform:rotate(45deg);}
+.module-a{ max-height:0; overflow:hidden; transition:max-height .25s ease;}
+.module-a ul{ list-style:none; display:flex; flex-direction:column; gap:7px; padding:0 0 22px 54px;}
+.module-a li{ font-size:13.5px; color:var(--muted); padding-left:16px; position:relative;}
+.module-a li::before{ content:"—"; position:absolute; left:0; color:var(--orange);}
+
+/* audience */
+.audience-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:16px;}
+.audience-card{ background:var(--paper-2); border:.5px solid var(--line); border-radius:16px; padding:26px;}
+.audience-card .eyebrow{ margin-bottom:16px;}
+.audience-card p{ font-size:14px; color:var(--muted); line-height:1.6;}
+
+/* instructor cards - matching brand avatar+verified style */
+.instructor-grid{ display:grid; grid-template-columns:1fr 1fr; gap:16px;}
+.instructor-card{ background:var(--dark-card); border:.5px solid var(--line-dark); border-radius:16px; padding:26px; display:flex; gap:18px;}
+.avatar{ position:relative; flex:none; width:60px; height:60px; border-radius:50%; background:linear-gradient(135deg,#252525,#1a1a1a); border:.5px solid rgba(252,82,41,.2); display:flex; align-items:center; justify-content:center; font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:19px; color:var(--orange);}
+.avatar .verified{ position:absolute; bottom:-1px; right:-1px; width:18px; height:18px; background:var(--orange); border-radius:50%; display:flex; align-items:center; justify-content:center; border:2px solid var(--dark-card); font-size:9px; color:#fff;}
+.avatar.on-light{ background:linear-gradient(135deg,#fdf1ee,#fce8e2); border-color:rgba(252,82,41,.15);}
+.avatar.on-light .verified{ border-color:#fff;}
+.instructor-card h3{ font-size:17px; color:var(--text-dark); margin-bottom:4px; letter-spacing:-0.3px;}
+.instructor-card .role{ font-size:12.5px; color:var(--orange); font-weight:600; margin-bottom:12px; font-family:'Space Grotesk',sans-serif;}
+.instructor-card ul{ list-style:none; display:flex; flex-direction:column; gap:6px;}
+.instructor-card li{ font-size:13px; color:var(--muted-dark); padding-left:14px; position:relative;}
+.instructor-card li::before{ content:"—"; position:absolute; left:0; color:var(--orange);}
+
+/* gift / benefit cards */
+.gift-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:16px;}
+.gift-card{ background:var(--paper-2); border:.5px solid var(--line); border-radius:16px; padding:24px;}
+.gift-top{ display:flex; align-items:flex-start; justify-content:space-between; margin-bottom:16px;}
+.gift-icon{ width:42px; height:42px; border-radius:10px; background:var(--orange-tint); display:flex; align-items:center; justify-content:center; color:var(--orange); font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:12px;}
+.gift-value{ font-family:'Space Grotesk',sans-serif; font-size:11px; font-weight:600; color:var(--orange); background:var(--orange-tint-2); border:.5px solid rgba(252,82,41,.15); padding:4px 9px; border-radius:100px; white-space:nowrap;}
+.gift-card h3{ font-size:15.5px; margin-bottom:8px; letter-spacing:-0.2px;}
+.gift-card p{ font-size:13px; color:var(--muted); line-height:1.6;}
+
+/* perforated divider - brand ticket motif */
+.perf{ height:.5px; background:repeating-linear-gradient(90deg, rgba(28,28,28,.14) 0, rgba(28,28,28,.14) 4px, transparent 4px, transparent 8px); margin:20px 0;}
+.perf.on-dark{ background:repeating-linear-gradient(90deg, rgba(255,255,255,.14) 0, rgba(255,255,255,.14) 4px, transparent 4px, transparent 8px);}
+
+/* pricing */
+.pricing{ background:var(--dark); text-align:center;}
+.price-grid{ display:grid; grid-template-columns:1fr 1fr; gap:18px; max-width:780px; margin:0 auto;}
+.price-box{ background:var(--dark-card); border:.5px solid var(--line-dark); border-radius:20px; padding:32px 28px; text-align:left;}
+.price-box.advisee{ border-color:rgba(252,82,41,.4); background:linear-gradient(180deg, rgba(252,82,41,.08), var(--dark-card) 55%);}
+.price-box .eyebrow{ margin-bottom:18px;}
+.price-old{ font-family:'Space Grotesk',sans-serif; font-size:13px; color:var(--muted-dark-2); text-decoration:line-through; margin-bottom:6px;}
+.price-new{ font-family:'Space Grotesk',sans-serif; font-size:38px; color:var(--orange); font-weight:700; letter-spacing:-1.3px; margin-bottom:6px;}
+.price-note{ font-size:12px; color:var(--muted-dark-2); margin-bottom:8px;}
+.price-list{ list-style:none; display:flex; flex-direction:column; gap:9px; margin:18px 0 22px;}
+.price-list li{ font-size:12.8px; color:var(--muted-dark); padding-left:20px; position:relative;}
+.price-list li::before{ content:"✓"; position:absolute; left:0; color:var(--orange); font-weight:700;}
+.scarcity{ margin-top:24px; font-size:12px; color:var(--orange); font-family:'Space Grotesk',sans-serif; font-weight:600; text-align:center;}
+
+/* testimonials - matching brand feedback card style */
+.testi-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:14px;}
+.testi-card{ background:var(--paper-2); border:.5px solid var(--line); border-radius:14px; padding:22px; display:flex; flex-direction:column; gap:12px;}
+.stars{ color:var(--orange); font-size:12px; letter-spacing:2px;}
+.testi-card p{ font-size:13.3px; color:var(--text); line-height:1.6; flex:1;}
+.testi-who{ display:flex; align-items:center; gap:10px; border-top:.5px solid var(--line); padding-top:12px;}
+.testi-who .avatar{ width:34px; height:34px; font-size:12px;}
+.testi-who .avatar .verified{ width:13px; height:13px;}
+.testi-who strong{ display:block; font-size:13px; font-family:'Space Grotesk',sans-serif;}
+.testi-who span{ display:block; font-size:11.5px; color:var(--muted);}
+
+/* FAQ */
+.faq-item{ border-top:.5px solid var(--line); padding:20px 0;}
+.faq-item:last-child{ border-bottom:.5px solid var(--line);}
+.faq-q{ display:flex; justify-content:space-between; align-items:center; cursor:pointer; gap:16px;}
+.faq-q h4{ font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:15px; letter-spacing:-0.2px;}
+.faq-q .plus{ font-family:'Space Grotesk',sans-serif; font-size:18px; color:var(--orange); transition:transform .2s ease; flex:none;}
+.faq-item.open .plus{ transform:rotate(45deg);}
+.faq-a{ max-height:0; overflow:hidden; transition:max-height .25s ease;}
+.faq-a p, .faq-a ul{ font-size:13.5px; color:var(--muted); padding-top:14px; line-height:1.65;}
+.faq-a ul{ list-style:none; display:flex; flex-direction:column; gap:6px;}
+.faq-a li{ padding-left:16px; position:relative;}
+.faq-a li::before{ content:"—"; position:absolute; left:0; color:var(--orange);}
+
+/* final CTA */
+.final{ background:var(--dark); text-align:center;}
+.final h2{ font-size:32px; color:var(--text-dark); max-width:620px; margin:0 auto 14px; letter-spacing:-1px;}
+.final p{ color:var(--muted-dark); max-width:500px; margin:0 auto 32px; font-size:14.5px;}
+.form-box{ max-width:540px; margin:0 auto; background:var(--dark-card); border:.5px solid var(--line-dark); border-radius:18px; padding:30px; text-align:left;}
+.form-row{ display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:10px;}
+.form-box input, .form-box select, .form-box textarea{ width:100%; padding:12px 14px; border-radius:9px; border:.5px solid var(--line-dark); background:#141414; color:var(--text-dark); font-family:'Inter'; font-size:13.5px; outline:none;}
+.form-box input:focus, .form-box select:focus, .form-box textarea:focus{ border-color:var(--orange);}
+.form-box input::placeholder, .form-box textarea::placeholder{ color:var(--muted-dark-2);}
+.form-box textarea{ margin-bottom:16px; resize:vertical; min-height:66px;}
+.form-box .btn{ width:100%;}
+
+footer{ background:var(--dark); color:var(--muted-dark-2); padding:28px 0; text-align:center; font-size:12.5px; border-top:.5px solid var(--line-dark);}
+footer span{ color:var(--orange);}
+
+@media(max-width:900px){
+  .hero h1{ font-size:34px;}
+  .problem-grid, .audience-grid, .gift-grid, .testi-grid{ grid-template-columns:repeat(2,1fr);}
+  .instructor-grid{ grid-template-columns:1fr;}
+  .form-row{ grid-template-columns:1fr;}
+}
+@media(max-width:760px){
+  .col-before, .col-after{ padding:20px 16px;}
+  .col-head{ font-size:10.5px; margin-bottom:14px;}
+  .transform-row{ padding:9px 0; gap:9px;}
+  .transform-row span{ font-size:12.5px; line-height:1.4;}
+  .price-box{ padding:22px 16px;}
+  .price-new{ font-size:26px;}
+  .price-list li{ font-size:11.5px;}
+  .price-box .btn{ padding:11px 10px; font-size:12px;}
+}
+@media(max-width:480px){
+  .transform-table{ grid-template-columns:1fr;}
+  .price-grid{ grid-template-columns:1fr;}
+}
+@media(max-width:560px){
+  .problem-grid, .audience-grid, .gift-grid, .testi-grid{ grid-template-columns:1fr;}
+  section{ padding:56px 0;}
+  .wrap{ padding:0 20px;}
+}
+</style>
+</head>
+<body>
+
+<nav class="lj-nav">
+  <a href="index.html" class="lj-logo">LinkaJob</a>
+  <div class="lj-nav-links">
+
+    <div class="lj-nav-item">
+      <button class="lj-nav-btn-plain" onclick="toggleNavDropdown(this)">Cố vấn 1-1 <i class="ti ti-chevron-down lj-nav-chevron" aria-hidden="true"></i></button>
+      <div class="lj-dropdown">
+        <a class="lj-di" href="advisor.html">
+          <div class="lj-di-icon"><i class="ti ti-user-star" aria-hidden="true"></i></div>
+          <div>
+            <div class="lj-di-title">Profile Advisor</div>
+            <div class="lj-di-sub">Tìm advisor phù hợp với định hướng của bạn</div>
+          </div>
+        </a>
+        <div class="lj-dropdown-divider"></div>
+        <a class="lj-di" href="linkajob_pricing.html">
+          <div class="lj-di-icon"><i class="ti ti-calendar-event" aria-hidden="true"></i></div>
+          <div>
+            <div class="lj-di-title">Các gói meeting 1-1 <span class="lj-dropdown-badge">Phổ biến</span></div>
+            <div class="lj-di-sub">Buổi đầu miễn phí · 3–7 sessions/gói</div>
+          </div>
+        </a>
+      </div>
+    </div>
+
+    <div class="lj-nav-item">
+      <button class="lj-nav-btn-plain" onclick="toggleNavDropdown(this)">Khoá học <i class="ti ti-chevron-down lj-nav-chevron" aria-hidden="true"></i></button>
+      <div class="lj-dropdown">
+        <a class="lj-di" href="land_your_dream_job.html">
+          <div class="lj-di-icon"><i class="ti ti-rocket" aria-hidden="true"></i></div>
+          <div>
+            <div class="lj-di-title">Land Your Dream Job <span class="lj-dropdown-badge">Đang xem</span></div>
+            <div class="lj-di-sub">Marketing · Sales · FMCG · Fields · Case Study</div>
+          </div>
+        </a>
+        <div class="lj-dropdown-divider"></div>
+        <a class="lj-di" href="logistics_operation_cracking.html">
+          <div class="lj-di-icon"><i class="ti ti-truck-delivery" aria-hidden="true"></i></div>
+          <div>
+            <div class="lj-di-title">Logistics Operation Cracking</div>
+            <div class="lj-di-sub">Logistics Operation · E-Logistics · FMCG · Case Study</div>
+          </div>
+        </a>
+        <div class="lj-dropdown-divider"></div>
+        <a class="lj-di" href="supply_chain_principles.html">
+          <div class="lj-di-icon"><i class="ti ti-topology-star-3" aria-hidden="true"></i></div>
+          <div>
+            <div class="lj-di-title">Supply Chain Principles</div>
+            <div class="lj-di-sub">Planning · Sourcing · Procurement · Manufacturing · Logistics</div>
+          </div>
+        </a>
+      </div>
+    </div>
+
+    <div class="lj-nav-item">
+      <button class="lj-nav-btn-plain" onclick="toggleNavDropdown(this)">Thành công <i class="ti ti-chevron-down lj-nav-chevron" aria-hidden="true"></i></button>
+      <div class="lj-dropdown">
+        <a class="lj-di" href="success-stories.html">
+          <div class="lj-di-icon"><i class="ti ti-trophy" aria-hidden="true"></i></div>
+          <div>
+            <div class="lj-di-title">Câu chuyện thành công</div>
+            <div class="lj-di-sub">Hành trình vào MNC từ sinh viên thật</div>
+          </div>
+        </a>
+        <div class="lj-dropdown-divider"></div>
+        <a class="lj-di" href="feedback.html">
+          <div class="lj-di-icon"><i class="ti ti-message-circle-2" aria-hidden="true"></i></div>
+          <div>
+            <div class="lj-di-title">Feedback dịch vụ</div>
+            <div class="lj-di-sub">~80% advisee nhận offer sau khi hoàn thành</div>
+          </div>
+        </a>
+      </div>
+    </div>
+
+    <a href="blog.html">Blog</a>
+    <button class="lj-btn-nav" onclick="openConsultWidget()">Đăng ký tư vấn</button>
+  </div>
+</nav>
+
+<section class="hero">
+  <div class="wrap">
+    <span class="eyebrow on-dark"><span class="eyebrow-dot"></span>Khoá học FMCG · LinkaJob</span>
+    <h1>Land Your <em>Dream Job</em></h1>
+    <p class="sub">Chiến lược ứng tuyển 5W — biến CV "tay trắng" thành ứng viên FMCG được săn đón, nhận lời mời phỏng vấn tại các tập đoàn đa quốc gia trong vòng 45 ngày.</p>
+    <div class="hero-cta">
+      <button class="btn btn-orange" onclick="openConsultWidget()">Đăng ký tư vấn miễn phí</button>
+      <a href="#lotrinh" class="btn btn-ghost-dark">Xem lộ trình học</a>
+    </div>
+    <div class="hero-stats">
+      <div class="hstat"><div class="hstat-num">90%</div><div class="hstat-lbl">Nhận offer tại MNC</div></div>
+      <div class="hstat"><div class="hstat-num">5</div><div class="hstat-lbl">Học viên / khoá</div></div>
+      <div class="hstat"><div class="hstat-num">2</div><div class="hstat-lbl">Advisor đứng lớp</div></div>
+      <div class="hstat"><div class="hstat-num">1:1</div><div class="hstat-lbl">Buổi meeting riêng</div></div>
+    </div>
+  </div>
+</section>
+
+<div class="wave"><svg viewBox="0 0 1440 40" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none"><path d="M0,40 C360,0 1080,0 1440,40 L1440,40 L0,40 Z" fill="#F5F4F1"/></svg></div>
+
+<section>
+  <div class="wrap">
+    <div class="section-head">
+      <span class="eyebrow"><span class="eyebrow-dot"></span>Vấn đề cốt lõi</span>
+      <h2>Vì sao apply mãi mà vẫn không có offer FMCG?</h2>
+      <p>Phần lớn ứng viên trẻ không thua vì thiếu năng lực, mà vì thiếu chiến lược và người chỉ đường trong ngành.</p>
+    </div>
+    <div class="problem-grid">
+      <div class="problem-card">
+        <span class="num">01</span>
+        <h3>Apply tràn lan, không chiến lược</h3>
+        <p>Gửi CV hàng chục nơi nhưng không hiểu nhà tuyển dụng thực sự tìm gì → bị loại ngay từ vòng CV.</p>
+      </div>
+      <div class="problem-card">
+        <span class="num">02</span>
+        <h3>Không hiểu cấu trúc ngành</h3>
+        <p>Không phân biệt được Sales, Marketing, Trade Marketing vận hành ra sao → trả lời phỏng vấn mơ hồ.</p>
+      </div>
+      <div class="problem-card">
+        <span class="num">03</span>
+        <h3>Tự học một mình</h3>
+        <p>Không có ai trong ngành chỉ ra điểm mù trong CV, trong cách trình bày và tư duy ứng tuyển.</p>
+      </div>
+      <div class="problem-card">
+        <span class="num">04</span>
+        <h3>Rớt liên tục, mất tự tin</h3>
+        <p>Không rõ điểm yếu thật sự nằm ở đâu, dễ burn-out và bỏ cuộc giữa hành trình ứng tuyển.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="solution">
+  <div class="wrap">
+    <span class="eyebrow on-dark"><span class="eyebrow-dot"></span>Giải pháp</span>
+    <h2 style="margin-top:16px;">Kết nối tư duy ngành, kỹ năng ứng tuyển và trải nghiệm thực chiến thành một lộ trình duy nhất — giảng dạy trực tiếp bởi 2 Advisor đang làm việc tại Unilever và Lactalis, trong một lớp học chỉ 5 học viên.</h2>
+    <p class="lead">5 học phần, 3 business case, 1 buổi đi field thực tế — tất cả trong 5 tuần.</p>
+    <div class="pill-row">
+      <span class="pill">Đi field thực tế tại kênh MT</span>
+      <span class="pill">Lớp học nhóm nhỏ, 5 học viên</span>
+      <span class="pill">3 business case thực chiến</span>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <div class="section-head">
+      <span class="eyebrow"><span class="eyebrow-dot"></span>Chuyển đổi</span>
+      <h2>Hành trình của bạn sẽ khác đi thế nào?</h2>
+    </div>
+    <div class="transform-table">
+      <div class="col-before">
+        <div class="col-head">Before — Chưa tham gia LYDJ</div>
+        <div class="transform-row"><span class="mark">✕</span><span>Apply hàng chục nơi, không rõ vì sao liên tục bị loại</span></div>
+        <div class="transform-row"><span class="mark">✕</span><span>Không hiểu cấu trúc Sales – Marketing – Trade Marketing trong FMCG</span></div>
+        <div class="transform-row"><span class="mark">✕</span><span>CV giống hàng trăm ứng viên khác, không có điểm nhấn</span></div>
+        <div class="transform-row"><span class="mark">✕</span><span>Trả lời phỏng vấn chung chung, thiếu case thực tế</span></div>
+        <div class="transform-row"><span class="mark">✕</span><span>Tự apply một mình, không ai chỉ ra điểm mù</span></div>
+      </div>
+      <div class="col-after">
+        <div class="col-head">After — Hoàn thành LYDJ</div>
+        <div class="transform-row"><span class="mark">✓</span><span>Có chiến lược ứng tuyển 5W rõ ràng cho từng vị trí, từng công ty</span></div>
+        <div class="transform-row"><span class="mark">✓</span><span>Hiểu vận hành FMCG qua trải nghiệm field thực tế tại kênh siêu thị</span></div>
+        <div class="transform-row"><span class="mark">✓</span><span>CV & portfolio được chỉnh sửa trong buổi 1:1 riêng với Advisor bạn chọn</span></div>
+        <div class="transform-row"><span class="mark">✓</span><span>Trả lời phỏng vấn bằng case thực chiến, tư duy như người trong ngành</span></div>
+        <div class="transform-row"><span class="mark">✓</span><span>Có cộng đồng LinkaJob, network FMCG và cơ hội giới thiệu việc làm</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="lotrinh">
+  <div class="wrap">
+    <div class="section-head">
+      <span class="eyebrow"><span class="eyebrow-dot"></span>Lộ trình học</span>
+      <h2>5 học phần chuyên môn · 3 business case · 1 buổi đi field</h2>
+      <p>Mỗi học phần đều có một kết quả cụ thể bạn mang theo vào hồ sơ ứng tuyển. Bấm vào từng học phần để xem chi tiết.</p>
+    </div>
+
+    <div id="module-list">
+      <div class="module">
+        <div class="module-q">
+          <div class="module-num">01</div>
+          <div class="module-head">
+            <h3>Định vị bản thân — chọn đúng vai, đi đúng đường</h3>
+            <div class="module-outcome"><span class="module-outcome-dot"></span>Chọn đúng vai trò phù hợp, tránh apply lan man mất thời gian</div>
+          </div>
+          <span class="module-plus">+</span>
+        </div>
+        <div class="module-a">
+          <ul>
+            <li>Vì sao apply tràn lan mà vẫn "fail"?</li>
+            <li>Hiểu cấu trúc công ty FMCG từ trong ra ngoài</li>
+            <li>Xu hướng tuyển dụng FMCG 2026</li>
+            <li>Tư duy ứng tuyển bền vững, tránh burn-out</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="module">
+        <div class="module-q">
+          <div class="module-num">02</div>
+          <div class="module-head">
+            <h3>FMCG Map — kiến thức bắt buộc để trúng tuyển</h3>
+            <div class="module-outcome"><span class="module-outcome-dot"></span>Nắm chắc KPI & quy trình FMCG, tự tin trả lời mọi câu hỏi phỏng vấn</div>
+          </div>
+          <span class="module-plus">+</span>
+        </div>
+        <div class="module-a">
+          <ul>
+            <li>KPI trong Sales & Marketing: doanh số, thị phần, brand health, trade coverage</li>
+            <li>Quy trình từ ý tưởng marketing đến sản phẩm trên kệ hàng</li>
+            <li>Các kênh bán hàng chính: MT, GT, E-commerce</li>
+            <li>Mini case thực chiến rèn problem-solving</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="module">
+        <div class="module-q">
+          <div class="module-num">03</div>
+          <div class="module-head">
+            <h3>Đi field — thấu hiểu FMCG qua trải nghiệm thực tế</h3>
+            <div class="module-outcome"><span class="module-outcome-dot"></span>Hiểu FMCG bằng trải nghiệm thật, không chỉ lý thuyết trên giấy</div>
+          </div>
+          <span class="module-plus">+</span>
+        </div>
+        <div class="module-a">
+          <ul>
+            <li>Trải nghiệm thực chiến tại kênh Modern Trade cùng Advisor từ Unilever</li>
+            <li>Quan sát cách trưng bày, chạy khuyến mãi tại điểm bán</li>
+            <li>Hiểu mối liên kết giữa Sales – Trade – Brand</li>
+            <li>Hỏi đáp trực tiếp cùng Advisor về chiến lược trưng bày</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="module">
+        <div class="module-q">
+          <div class="module-num">04</div>
+          <div class="module-head">
+            <h3>Trình bày & phản biện case nhóm</h3>
+            <div class="module-outcome"><span class="module-outcome-dot"></span>Thuyết trình & bảo vệ chiến lược tự tin như người trong ngành</div>
+          </div>
+          <span class="module-plus">+</span>
+        </div>
+        <div class="module-a">
+          <ul>
+            <li>Nhập vai Brand / Sales / Trade Marketing, trình bày chiến lược như một buổi pitching thật</li>
+            <li>Được Advisor phản biện trực diện, chỉ rõ điểm mạnh – điểm yếu</li>
+            <li>Rèn storytelling: biến số liệu khô khan thành câu chuyện thuyết phục</li>
+            <li>Thực hành xử lý câu hỏi phản biện trực tiếp</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="module">
+        <div class="module-q">
+          <div class="module-num">05</div>
+          <div class="module-head">
+            <h3>Personal Case & 1:1 Feedback</h3>
+            <div class="module-outcome"><span class="module-outcome-dot"></span>Sở hữu Personal Growth Plan — tài sản thực chiến để đem đi apply</div>
+          </div>
+          <span class="module-plus">+</span>
+        </div>
+        <div class="module-a">
+          <ul>
+            <li>Áp dụng toàn bộ kiến thức: phân tích thị trường, insight, định vị, chiến lược</li>
+            <li>Trình bày case cá nhân, nhận feedback 1:1 từ Advisor đang làm trong FMCG</li>
+            <li>Advisor chỉ rõ "blind spot" cần cải thiện</li>
+            <li>Hoàn thiện Personal Growth Plan làm portfolio ứng tuyển</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <div class="section-head">
+      <span class="eyebrow"><span class="eyebrow-dot"></span>Đối tượng</span>
+      <h2>Khoá học này dành cho ai</h2>
+    </div>
+    <div class="audience-grid">
+      <div class="audience-card">
+        <span class="eyebrow"><span class="eyebrow-dot"></span>Người trẻ FMCG</span>
+        <p>Muốn ứng tuyển phòng ban Marketing, Sales, Trade Marketing tại các công ty FMCG đa quốc gia.</p>
+      </div>
+      <div class="audience-card">
+        <span class="eyebrow"><span class="eyebrow-dot"></span>Sinh viên năm 3–4</span>
+        <p>Đang học Marketing, Kinh tế… muốn apply vị trí Intern, Fresh, Executive tại FMCG.</p>
+      </div>
+      <div class="audience-card">
+        <span class="eyebrow"><span class="eyebrow-dot"></span>Từng apply chưa đạt</span>
+        <p>Đã thử apply FMCG nhưng chưa có kết quả, cần kiến thức thực tế và người chỉ đường.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section style="background:var(--dark)" class="on-dark">
+  <div class="wrap">
+    <div class="section-head">
+      <span class="eyebrow on-dark"><span class="eyebrow-dot"></span>Giảng viên</span>
+      <h2>2 Advisor trực tiếp đứng lớp, đến từ Unilever và Lactalis</h2>
+      <p>Lớp học chỉ 5 học viên, giảng dạy trực tiếp bởi 2 Advisor dưới đây. Riêng buổi meeting 1:1, bạn có thể chọn bất kỳ Advisor nào trong mạng lưới LinkaJob — không giới hạn ở 2 giảng viên đứng lớp.</p>
+    </div>
+    <div class="instructor-grid">
+      <div class="instructor-card">
+        <div class="avatar">HO<span class="verified"><i class="ti ti-check"></i></span></div>
+        <div>
+          <h3>Advisor Hoàng Oanh</h3>
+          <div class="role">Regional Marketing Manager @ Lactalis</div>
+          <ul>
+            <li>10+ năm kinh nghiệm Brand Growth trong FMCG</li>
+            <li>Từng là Marketing Management Trainee tại Nestlé</li>
+            <li>Chuyên môn: Brand Marketing, MT Program, Brand Management, Marketing Strategy</li>
+          </ul>
+        </div>
+      </div>
+      <div class="instructor-card">
+        <div class="avatar">HP<span class="verified"><i class="ti ti-check"></i></span></div>
+        <div>
+          <h3>Advisor Hải Phong</h3>
+          <div class="role">Key Account Assistant Manager @ Unilever</div>
+          <ul>
+            <li>4+ năm kinh nghiệm Trade Marketing và Sales</li>
+            <li>Từng là Sales Management Trainee tại Nestlé</li>
+            <li>Chuyên môn: Trade Marketing, Sales Planning, Retail Operation, MT Program</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <div class="section-head">
+      <span class="eyebrow"><span class="eyebrow-dot"></span>Quyền lợi học viên</span>
+      <h2>Bạn nhận được gì khi tham gia LYDJ</h2>
+    </div>
+    <div class="gift-grid">
+      <div class="gift-card">
+        <div class="gift-top"><div class="gift-icon">3M</div><span class="gift-value">1.000.000đ</span></div>
+        <h3>3 tháng truy cập cộng đồng LinkaJob</h3>
+        <p>Kết nối, hỏi đáp và cập nhật cơ hội việc làm cùng cộng đồng học viên & Advisor.</p>
+      </div>
+      <div class="gift-card">
+        <div class="gift-top"><div class="gift-icon">DOC</div><span class="gift-value">1.000.000đ</span></div>
+        <h3>Trọn bộ tài liệu ứng tuyển</h3>
+        <p>Template CV, khung trả lời phỏng vấn và tài liệu FMCG dùng lại cho mọi lần apply sau này.</p>
+      </div>
+      <div class="gift-card">
+        <div class="gift-top"><div class="gift-icon">1:1</div><span class="gift-value">1.500.000đ</span></div>
+        <h3>1 buổi meeting 1:1 với Advisor bất kỳ</h3>
+        <p>Chọn Advisor phù hợp trong mạng lưới LinkaJob để sửa CV hoặc luyện phỏng vấn riêng cho bạn.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="pricing">
+  <div class="wrap">
+    <span class="eyebrow on-dark"><span class="eyebrow-dot"></span>Học phí</span>
+    <h2 style="color:var(--text-dark); font-size:28px; margin:16px 0 36px; letter-spacing:-0.8px;">Đầu tư cho bước ngoặt sự nghiệp FMCG</h2>
+    <div class="price-grid">
+      <div class="price-box">
+        <span class="eyebrow" style="display:inline-flex;">Học viên mới</span>
+        <div class="price-old">Giá trị thực tế ~12.000.000đ</div>
+        <div class="price-new">5.000.000đ</div>
+        <div class="price-note">Gồm: 5 buổi học + 1 buổi field + 1 buổi 1:1 + cộng đồng 3 tháng</div>
+        <div class="perf on-dark"></div>
+        <ul class="price-list">
+          <li>5 học phần chuyên môn + 3 business case thực chiến</li>
+          <li>1 buổi đi field kênh siêu thị cùng Advisor Unilever</li>
+          <li>1 buổi meeting 1:1 với Advisor bất kỳ: sửa CV hoặc phỏng vấn thử</li>
+          <li>Trọn bộ tài liệu ứng tuyển FMCG — miễn phí</li>
+          <li>3 tháng truy cập cộng đồng LinkaJob + record đầy đủ buổi học</li>
+        </ul>
+        <a href="#dangky" class="btn btn-orange" style="width:100%">Đăng ký tư vấn ngay</a>
+      </div>
+      <div class="price-box advisee">
+        <span class="eyebrow" style="display:inline-flex;">Advisee cũ · Giảm 10%</span>
+        <div class="price-old">Giá gốc 5.000.000đ</div>
+        <div class="price-new">4.500.000đ</div>
+        <div class="price-note">Dành riêng cho Advisee đã từng đặt lịch 1:1 với LinkaJob</div>
+        <div class="perf on-dark"></div>
+        <ul class="price-list">
+          <li>Toàn bộ quyền lợi như gói Học viên mới</li>
+          <li>Giảm thẳng 500.000đ trên học phí</li>
+          <li>Ưu tiên xác nhận suất học do chỉ nhận 5 học viên/khoá</li>
+        </ul>
+        <a href="#dangky" class="btn btn-orange" style="width:100%">Đăng ký với ưu đãi Advisee</a>
+      </div>
+    </div>
+    <div class="scarcity">⚠ Chỉ nhận 5 học viên / khoá để đảm bảo chất lượng đào tạo</div>
+  </div>
+</section>
+
+<section style="background:var(--paper-2)">
+  <div class="wrap">
+    <div class="section-head">
+      <span class="eyebrow"><span class="eyebrow-dot"></span>Học viên nói gì</span>
+      <h2>Kết quả từ cộng đồng học viên</h2>
+    </div>
+    <div class="testi-grid">
+      <div class="testi-card">
+        <div class="stars">★★★★★</div>
+        <p>"Nội dung tinh gọn, không bị ngợp. Buổi đi field giúp mình hiểu kiến thức áp dụng thực tế thế nào — mình đã đậu Online Marketing Intern tại LOTTE."</p>
+        <div class="testi-who"><div class="avatar on-light">NH<span class="verified"><i class="ti ti-check"></i></span></div><div><strong>Ngọc Hà</strong><span>Online Marketing Intern, Lotte</span></div></div>
+      </div>
+      <div class="testi-card">
+        <div class="stars">★★★★★</div>
+        <p>"Những insight về vận hành thực tế, nhà tuyển dụng thật sự tìm kiếm gì trong CV — điều không lớp học lý thuyết nào nói rõ. Mình đã nhận offer thật sự thích."</p>
+        <div class="testi-who"><div class="avatar on-light">PV<span class="verified"><i class="ti ti-check"></i></span></div><div><strong>Phương Vy</strong><span>Junior KAM, Intrepid</span></div></div>
+      </div>
+      <div class="testi-card">
+        <div class="stars">★★★★★</div>
+        <p>"Buổi đi field ấn tượng nhất — vừa xem vừa hiểu thuật ngữ ngành. Buổi phỏng vấn thử tiếng Anh 1:1 giúp mình onboard thành công tại Mondelez."</p>
+        <div class="testi-who"><div class="avatar on-light">KL<span class="verified"><i class="ti ti-check"></i></span></div><div><strong>Khánh Linh</strong><span>PE Sales Intern, Mondelez</span></div></div>
+      </div>
+      <div class="testi-card">
+        <div class="stars">★★★★★</div>
+        <p>"Các Advisor không chỉ dạy chuyên môn mà còn đào sâu về con người, giúp mình kể đúng câu chuyện của chính mình. Xứng đáng đến từng xu."</p>
+        <div class="testi-who"><div class="avatar on-light">HT<span class="verified"><i class="ti ti-check"></i></span></div><div><strong>Đức Thịnh</strong><span>Sales Trainee, Mondelez</span></div></div>
+      </div>
+      <div class="testi-card">
+        <div class="stars">★★★★★</div>
+        <p>"Feedback rất chi tiết, tranh luận đến cùng trong các buổi Group Case đã tạo nên một bộ khung tư duy vững chắc cho mình."</p>
+        <div class="testi-who"><div class="avatar on-light">HT<span class="verified"><i class="ti ti-check"></i></span></div><div><strong>Huyền Trang</strong><span>Marketing Intern, ACFC</span></div></div>
+      </div>
+      <div class="testi-card">
+        <div class="stars">★★★★★</div>
+        <p>"Không còn 'đánh cược' nữa — mình ra quyết định có cơ sở cho tương lai. Đã tìm được con đường tới ACCESSTRADE Vietnam."</p>
+        <div class="testi-who"><div class="avatar on-light">DM<span class="verified"><i class="ti ti-check"></i></span></div><div><strong>Đức Minh</strong><span>Business Planner, ACCESSTRADE</span></div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap" style="max-width:740px;">
+    <div class="section-head">
+      <span class="eyebrow"><span class="eyebrow-dot"></span>FAQ</span>
+      <h2>Câu hỏi thường gặp</h2>
+    </div>
+    <div id="faq-list">
+      <div class="faq-item">
+        <div class="faq-q"><h4>Khoá học này phù hợp với ai?</h4><span class="plus">+</span></div>
+        <div class="faq-a"><p>Dành cho sinh viên năm 3–4 và fresh graduate (0–2 năm kinh nghiệm) muốn apply vào các tập đoàn FMCG/MNC như Unilever, P&G, Mondelez, Heineken, Nestlé, Vinamilk. Nếu chưa có kinh nghiệm, bạn sẽ học tư duy nền tảng; nếu đã apply nhưng chưa đậu, bạn sẽ được kèm 1:1 để chỉnh CV và luyện phỏng vấn.</p></div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q"><h4>Mình chưa có kinh nghiệm FMCG thì học được không?</h4><span class="plus">+</span></div>
+        <div class="faq-a"><p>Có — hơn 70% học viên trước đây chưa từng làm FMCG. Khoá học thiết kế theo mô hình foundation + practice, xây dựng từ tư duy, kỹ năng ứng tuyển đến phỏng vấn, không cần background FMCG.</p></div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q"><h4>Nếu mình đã có internship rồi thì tham gia khoá có ích gì?</h4><span class="plus">+</span></div>
+        <div class="faq-a"><ul>
+          <li>Biết cách chuyển internship thành lợi thế cạnh tranh trong CV</li>
+          <li>Được Advisor chỉ ra các "lỗ hổng" trong trải nghiệm để bù lại</li>
+          <li>Chuẩn bị apply lên Management Trainee hoặc vị trí full-time</li>
+        </ul></div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q"><h4>Khác gì so với học trên mạng/YouTube?</h4><span class="plus">+</span></div>
+        <div class="faq-a"><p>Thông tin trên mạng thường rời rạc, chung chung. Ở đây bạn có lộ trình rõ ràng, lớp học nhóm nhỏ chỉ 5 người cùng 2 Advisor trực tiếp giảng dạy, và một buổi 1:1 riêng để sửa CV hoặc luyện phỏng vấn — không chỉ học kiến thức suông.</p></div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q"><h4>Thời gian và hình thức học thế nào?</h4><span class="plus">+</span></div>
+        <div class="faq-a"><ul>
+          <li>5 buổi học online (Zoom) — mỗi buổi 2 tiếng, kết hợp training + case thực tế, dạy trực tiếp bởi 2 Advisor</li>
+          <li>1 buổi đi field tại kênh siêu thị ở TP.HCM</li>
+          <li>Lớp học chỉ 5 học viên, record đầy đủ các buổi để xem lại và ôn tập</li>
+          <li>3 tháng truy cập cộng đồng LinkaJob để hỏi đáp và networking</li>
+        </ul></div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q"><h4>Advisor trong buổi sửa CV, phỏng vấn thử là ai?</h4><span class="plus">+</span></div>
+        <div class="faq-a"><p>Bạn được tặng kèm 1 buổi meeting 1:1 (sửa CV hoặc phỏng vấn thử) với Advisor tự chọn — không giới hạn ở 2 Advisor đứng lớp mà có thể chọn bất kỳ ai trong mạng lưới LinkaJob, đang làm việc tại các tập đoàn đa quốc gia như Nestlé, Fonterra, Suntory PepsiCo — từng đi qua chính con đường bạn đang tìm kiếm.</p></div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q"><h4>Mình muốn đăng ký thì làm thế nào?</h4><span class="plus">+</span></div>
+        <div class="faq-a"><p>Bước 1: Đăng ký tư vấn cùng LinkaJob để team hiểu background, mục tiêu của bạn. Bước 2: Hoàn tất đăng ký, thanh toán học phí và chính thức bắt đầu hành trình Land Your Dream Job.</p></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="final" id="dangky">
+  <div class="wrap">
+    <span class="eyebrow on-dark"><span class="eyebrow-dot"></span>Bắt đầu ngay</span>
+    <h2 style="margin-top:16px;">Sẵn sàng cho bước ngoặt sự nghiệp FMCG của bạn?</h2>
+    <p>Trong vòng 12 giờ, LinkaJob sẽ liên hệ hỗ trợ bạn tìm hiểu về khoá học qua số điện thoại.</p>
+    <div class="form-box">
+      <div class="form-row">
+        <input type="text" placeholder="Họ tên của bạn">
+        <input type="tel" placeholder="Số điện thoại">
+      </div>
+      <div class="form-row">
+        <input type="email" placeholder="Email">
+        <select>
+          <option>Bạn đang là?</option>
+          <option>Sinh viên năm 1 – năm 2</option>
+          <option>Sinh viên năm 3 – năm 4</option>
+          <option>Đã tốt nghiệp &lt; 2 năm</option>
+          <option>Khác</option>
+        </select>
+      </div>
+      <textarea placeholder="Lý do bạn muốn tham gia khoá học này là?"></textarea>
+      <button class="btn btn-orange" type="button">Gửi form đăng ký</button>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">Linka<span>Job</span> — Giúp bạn vượt qua thử thách và đạt được mục tiêu nghề nghiệp FMCG của mình.</div>
+</footer>
+
+<script>
+  document.querySelectorAll('.faq-item').forEach(item=>{
+    const q = item.querySelector('.faq-q');
+    const a = item.querySelector('.faq-a');
+    q.addEventListener('click', ()=>{
+      const isOpen = item.classList.contains('open');
+      document.querySelectorAll('.faq-item.open').forEach(o=>{
+        o.classList.remove('open');
+        o.querySelector('.faq-a').style.maxHeight = null;
+      });
+      if(!isOpen){
+        item.classList.add('open');
+        a.style.maxHeight = a.scrollHeight + 'px';
+      }
+    });
+  });
+  document.querySelectorAll('.module').forEach(item=>{
+    const q = item.querySelector('.module-q');
+    const a = item.querySelector('.module-a');
+    q.addEventListener('click', ()=>{
+      const isOpen = item.classList.contains('open');
+      item.classList.toggle('open', !isOpen);
+      a.style.maxHeight = isOpen ? null : a.scrollHeight + 'px';
+    });
+  });
+</script>
+
+<!-- CONSULT WIDGET -->
+<div class="cw-overlay" id="cwOverlay" onclick="if(event.target===this)closeConsultWidget()">
+  <div class="cw-box" id="cwBox">
+    <div class="cw-head">
+      <div>
+        <div class="cw-title">Đăng ký tư vấn</div>
+        <div class="cw-sub" id="cwSub">Điền thông tin để được tư vấn miễn phí</div>
+      </div>
+      <button class="cw-close" onclick="closeConsultWidget()"><i class="ti ti-x" aria-hidden="true"></i></button>
+    </div>
+
+    <div class="cw-step" id="cwStep1">
+      <div class="cw-field">
+        <label>Họ và tên <span>*</span></label>
+        <input type="text" id="cwName" placeholder="Nguyễn Văn A" oninput="cwCheckStep1()">
+      </div>
+      <div class="cw-field">
+        <label>Số điện thoại (Zalo) <span>*</span></label>
+        <input type="tel" id="cwPhone" placeholder="09xx xxx xxx" oninput="cwCheckStep1()">
+      </div>
+      <div class="cw-field">
+        <label>Email <span>*</span></label>
+        <input type="email" id="cwEmail" placeholder="email@example.com" oninput="cwCheckStep1()">
+      </div>
+      <div class="cw-field">
+        <label>Quan tâm dịch vụ</label>
+        <select id="cwService">
+          <option value="Khoá học Land Your Dream Job" selected>Khoá học Land Your Dream Job</option>
+          <option value="Cố vấn 1-1">Cố vấn 1-1</option>
+          <option value="Chưa rõ — cần tư vấn thêm">Chưa rõ — cần tư vấn thêm</option>
+        </select>
+      </div>
+      <div class="cw-field">
+        <label>Câu hỏi muốn tư vấn</label>
+        <textarea id="cwQuestion" rows="3" placeholder="VD: Mình muốn hỏi thêm về khoá Land Your Dream Job..."></textarea>
+      </div>
+      <div class="cw-note"><i class="ti ti-video" aria-hidden="true"></i> Chúng tôi sẽ tư vấn qua Google Meet — bạn vui lòng chọn khung giờ phù hợp ở bước tiếp theo.</div>
+      <button class="cw-next" id="cwBtn1" onclick="cwProceedToStep2()" disabled>Tiếp theo →</button>
+    </div>
+
+    <div class="cw-step" id="cwStep2" style="display:none;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+        <button onclick="cwChangeMonth(-1)" style="background:rgba(255,255,255,0.06);border:none;width:26px;height:26px;border-radius:7px;color:#F0F0F0;cursor:pointer;font-size:14px;">‹</button>
+        <div class="cw-cal-title" id="cwCalTitle" style="margin-bottom:0;">—</div>
+        <button onclick="cwChangeMonth(1)" style="background:rgba(255,255,255,0.06);border:none;width:26px;height:26px;border-radius:7px;color:#F0F0F0;cursor:pointer;font-size:14px;">›</button>
+      </div>
+      <div class="cw-cal-days-lbl">
+        <span>CN</span><span>T2</span><span>T3</span><span>T4</span><span>T5</span><span>T6</span><span>T7</span>
+      </div>
+      <div class="cw-cal-grid" id="cwCalGrid"></div>
+      <div class="cw-ts-label" id="cwTsLabel">Chọn ngày có chấm cam để xem giờ trống</div>
+      <div class="cw-ts-slots" id="cwTsSlots"></div>
+      <div class="cw-nav-row">
+        <button class="cw-back" onclick="cwGoStep(1)">← Quay lại</button>
+        <button class="cw-next" id="cwBtn2" onclick="cwConfirm()" disabled>Xác nhận đặt lịch</button>
+      </div>
+    </div>
+
+    <div class="cw-step" id="cwStep3" style="display:none;">
+      <div class="cw-success-icon"><i class="ti ti-check" aria-hidden="true"></i></div>
+      <div class="cw-success-title">Đã ghi nhận lịch tư vấn!</div>
+      <div class="cw-success-sub" id="cwSuccessDetail">—</div>
+      <button class="cw-next" onclick="closeConsultWidget()">Đóng</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ─── CONSULT WIDGET ─── */
+var CW_WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbx7Bd9VvoyzfiiezQV9huoY2BKHH_Br1RAFIz00mjdyKeis-Zv-38a0gf_b-fMlul2C/exec';
+var CW_STAFF_IDENTITY = 'LinkaJob Team';
+
+var CW_TIME_GRID = ['09:00','09:30','10:00','10:30','11:00','11:30','12:00','12:30',
+                     '13:00','13:30','14:00','14:30','15:00','15:30','16:00','16:30','17:00','17:30'];
+
+var cwRealSlots = {};
+var cwSlotsLoaded = false;
+var cwSelectedDate = null, cwSelectedDateKey = null, cwSelectedTime = null;
+var cwLeadSessionId = null;
+var cwLeadCaptured = false;
+var cwMonthNames = ['Tháng 1','Tháng 2','Tháng 3','Tháng 4','Tháng 5','Tháng 6','Tháng 7','Tháng 8','Tháng 9','Tháng 10','Tháng 11','Tháng 12'];
+var cwViewYear = null, cwViewMonth = null;
+function cwPad2(n){ return (n<10?'0':'')+n; }
+
+function openConsultWidget(){
+  document.getElementById('cwOverlay').classList.add('show');
+  var t = new Date();
+  cwViewYear = t.getFullYear();
+  cwViewMonth = t.getMonth();
+  cwSlotsLoaded = false;
+  cwRealSlots = {};
+  cwLeadSessionId = null;
+  cwLeadCaptured = false;
+  ['cwName','cwPhone','cwEmail','cwQuestion'].forEach(function(id){
+    var el = document.getElementById(id); if(el) el.value = '';
+  });
+  var s = document.getElementById('cwService'); if(s) s.selectedIndex = 0;
+  var b = document.getElementById('cwBtn1'); if(b) b.disabled = true;
+  cwGoStep(1);
+}
+function closeConsultWidget(){
+  document.getElementById('cwOverlay').classList.remove('show');
+}
+function cwGoStep(n){
+  [1,2,3].forEach(function(i){
+    document.getElementById('cwStep'+i).style.display = (i===n?'block':'none');
+  });
+  var subs = {1:'Điền thông tin để được tư vấn miễn phí', 2:'Chọn khung giờ phù hợp với bạn', 3:'Cảm ơn bạn đã đăng ký'};
+  document.getElementById('cwSub').textContent = subs[n];
+  if(n===2) cwRenderCalendar();
+}
+function cwCheckStep1(){
+  var name  = document.getElementById('cwName').value.trim();
+  var phone = document.getElementById('cwPhone').value.trim();
+  var email = document.getElementById('cwEmail').value.trim();
+  var validEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  document.getElementById('cwBtn1').disabled = !(name && phone && validEmail);
+}
+
+function cwProceedToStep2(){
+  cwGoStep(2);
+  cwCaptureLeadIfNeeded();
+}
+
+function cwCaptureLeadIfNeeded(){
+  if (cwLeadCaptured) return;
+  var name     = document.getElementById('cwName').value.trim();
+  var phone    = document.getElementById('cwPhone').value.trim();
+  var email    = document.getElementById('cwEmail').value.trim();
+  var service  = document.getElementById('cwService').value;
+  var question = document.getElementById('cwQuestion').value.trim();
+  if (!name || !phone) return;
+
+  cwLeadCaptured = true;
+
+  fetch(CW_WEBAPP_URL, {
+    method : 'POST',
+    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+    body   : JSON.stringify({
+      action: 'captureLead',
+      name: name, phone: phone, email: email, service: service, question: question
+    })
+  })
+  .then(function(r){ return r.json(); })
+  .then(function(data){
+    if (data && data.success) cwLeadSessionId = data.session_id;
+  })
+  .catch(function(){});
+}
+
+function cwLoadSlots(callback) {
+  if (cwSlotsLoaded) { if(callback) callback(); return; }
+  fetch(CW_WEBAPP_URL + '?action=getSlots&advisor=' + encodeURIComponent(CW_STAFF_IDENTITY) + '&only_available=1')
+    .then(function(r){ return r.json(); })
+    .then(function(res){
+      cwRealSlots = {};
+      if (res && res.data) {
+        res.data.forEach(function(s){
+          var d = String(s.date || s.scheduled_date || '').slice(0,10);
+          if (!d || d.length < 10) return;
+          var rawTime = String(s.time_start || '');
+          var timeStr = '';
+          if (rawTime.indexOf('T') > -1 || rawTime.indexOf('1899') > -1) {
+            var td = new Date(rawTime);
+            timeStr = cwPad2(td.getUTCHours() + 7 >= 24 ? td.getUTCHours() + 7 - 24 : td.getUTCHours() + 7) + ':' + cwPad2(td.getUTCMinutes());
+          } else {
+            timeStr = rawTime.slice(0,5);
+          }
+          if (!timeStr) return;
+          if (CW_TIME_GRID.indexOf(timeStr) === -1) return;
+          if (!cwRealSlots[d]) cwRealSlots[d] = {};
+          cwRealSlots[d][timeStr] = true;
+        });
+      }
+      cwSlotsLoaded = true;
+      if(callback) callback();
+    })
+    .catch(function(){
+      cwSlotsLoaded = true;
+      if(callback) callback();
+    });
+}
+
+function cwChangeMonth(dir){
+  cwViewMonth += dir;
+  if(cwViewMonth < 0){ cwViewMonth = 11; cwViewYear--; }
+  if(cwViewMonth > 11){ cwViewMonth = 0; cwViewYear++; }
+  cwRenderCalendar();
+}
+
+function cwRenderCalendar(){
+  var today = new Date();
+  if(cwViewYear === null){ cwViewYear = today.getFullYear(); cwViewMonth = today.getMonth(); }
+  var y = cwViewYear, m = cwViewMonth;
+
+  var calTitle = document.getElementById('cwCalTitle');
+  var grid = document.getElementById('cwCalGrid');
+  if(!calTitle || !grid) return;
+
+  calTitle.textContent = cwMonthNames[m]+', '+y;
+
+  if(!cwSlotsLoaded){
+    grid.innerHTML = '<div style="grid-column:1/-1;padding:24px;text-align:center;color:rgba(240,240,240,0.4);font-size:13px;">Đang tải lịch trống...</div>';
+    cwLoadSlots(function(){ cwRenderCalendar(); });
+    return;
+  }
+
+  var startOffset = new Date(y,m,1).getDay();
+  var daysInMonth = new Date(y,m+1,0).getDate();
+  var todayStart = new Date(today.getFullYear(),today.getMonth(),today.getDate());
+  var html = '';
+  for(var i=0;i<startOffset;i++) html += '<div class="cw-day empty"></div>';
+  for(var d=1; d<=daysInMonth; d++){
+    var dateObj = new Date(y,m,d);
+    var dateKey = y+'-'+cwPad2(m+1)+'-'+cwPad2(d);
+    var isPast = dateObj < todayStart;
+    var timesMap = cwRealSlots[dateKey];
+    var hasSlots = !isPast && timesMap && Object.keys(timesMap).length > 0;
+    var cls = 'cw-day'+(isPast?' past':(hasSlots?' has-slots':' no-slots'));
+    html += '<div class="'+cls+'"'+(hasSlots?' onclick="cwSelectDay(this,\''+dateKey+'\','+y+','+m+','+d+')"':'')+'>'+d+'</div>';
+  }
+  grid.innerHTML = html;
+  document.getElementById('cwTsLabel').textContent = 'Chọn ngày có chấm cam để xem giờ trống';
+  document.getElementById('cwTsSlots').innerHTML = '';
+  cwSelectedDate = null; cwSelectedDateKey = null; cwSelectedTime = null;
+  document.getElementById('cwBtn2').disabled = true;
+}
+
+function cwSelectDay(el, dateKey, y, m, d){
+  document.querySelectorAll('.cw-day').forEach(function(x){ x.classList.remove('selected'); });
+  el.classList.add('selected');
+  cwSelectedDate = new Date(y,m,d);
+  cwSelectedDateKey = dateKey;
+  cwSelectedTime = null;
+  var timesMap = cwRealSlots[dateKey] || {};
+  document.getElementById('cwTsLabel').textContent = 'Giờ trống — ' + d+'/'+(m+1)+'/'+y;
+
+  var html = '';
+  CW_TIME_GRID.forEach(function(t){
+    if (!timesMap[t]) return;
+    html += '<button class="cw-ts-slot" onclick="cwSelectTime(this,\''+t+'\')">'+t+'</button>';
+  });
+  document.getElementById('cwTsSlots').innerHTML = html || '<span style="color:rgba(240,240,240,0.4);font-size:13px;">Không còn slot trống ngày này.</span>';
+  document.getElementById('cwBtn2').disabled = true;
+}
+
+function cwSelectTime(el, t){
+  document.querySelectorAll('.cw-ts-slot').forEach(function(x){ x.classList.remove('on'); });
+  el.classList.add('on');
+  cwSelectedTime = t;
+  document.getElementById('cwBtn2').disabled = false;
+}
+
+function cwConfirm(){
+  var btn = document.getElementById('cwBtn2');
+  if(btn.dataset.sending) return;
+  if(!cwSelectedDateKey || !cwSelectedTime){ alert('Vui lòng chọn giờ.'); return; }
+
+  var name     = document.getElementById('cwName').value.trim();
+  var phone    = document.getElementById('cwPhone').value.trim();
+  var email    = document.getElementById('cwEmail').value.trim();
+  var service  = document.getElementById('cwService').value;
+  var question = document.getElementById('cwQuestion').value.trim();
+
+  var payload = {
+    action  : 'bookFreeConsultByTime',
+    date    : cwSelectedDateKey,
+    time    : cwSelectedTime,
+    name    : name,
+    phone   : phone,
+    email   : email,
+    service : service,
+    question: question,
+    lead_session_id: cwLeadSessionId
+  };
+
+  btn.dataset.sending = '1';
+  btn.disabled = true;
+  btn.textContent = 'Đang đặt lịch...';
+
+  fetch(CW_WEBAPP_URL, {
+    method : 'POST',
+    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+    body   : JSON.stringify(payload)
+  })
+  .then(function(r){ return r.json(); })
+  .then(function(data){
+    if(!data.success) throw new Error(data.error || 'Lỗi không xác định');
+    var d = cwSelectedDate;
+    var dateStr = d.getDate()+'/'+(d.getMonth()+1)+'/'+d.getFullYear();
+    document.getElementById('cwSuccessDetail').innerHTML =
+      'Cảm ơn <strong>'+name+'</strong>! Lịch tư vấn của bạn đã được xác nhận:<br>' +
+      '<strong>'+dateStr+' · '+cwSelectedTime+'</strong><br><br>' +
+      'Link Google Meet sẽ được gửi qua Zalo/SMS (<strong>'+phone+'</strong>) trước giờ hẹn.';
+    cwGoStep(3);
+    btn.dataset.sending = '';
+    btn.disabled = false;
+    btn.textContent = 'Xác nhận đặt lịch';
+    cwSlotsLoaded = false;
+  })
+  .catch(function(err){
+    btn.dataset.sending = '';
+    btn.disabled = false;
+    btn.textContent = 'Xác nhận đặt lịch';
+    document.getElementById('cwTsLabel').innerHTML =
+      '<span style="color:#fc5229">⚠ '+err.message+'. Vui lòng thử lại hoặc liên hệ contact@linkajob.vn</span>';
+    cwSlotsLoaded = false;
+    cwLoadSlots(function(){
+      if (cwSelectedDateKey) {
+        var timesMap = cwRealSlots[cwSelectedDateKey] || {};
+        if (!timesMap[cwSelectedTime]) {
+          var dObj = cwSelectedDate;
+          var elDay = document.querySelector('.cw-day.selected');
+          if (elDay) cwSelectDay(elDay, cwSelectedDateKey, dObj.getFullYear(), dObj.getMonth(), dObj.getDate());
+        }
+      }
+    });
+  });
+}
+
+function toggleNavDropdown(btn) {
+  var item = btn.closest('.lj-nav-item');
+  var wasOpen = item.classList.contains('open');
+  document.querySelectorAll('.lj-nav-item.open').forEach(function(el){ el.classList.remove('open'); });
+  if (!wasOpen) item.classList.add('open');
+}
+document.addEventListener('click', function(e){
+  if (!e.target.closest('.lj-nav-item')) {
+    document.querySelectorAll('.lj-nav-item.open').forEach(function(el){ el.classList.remove('open'); });
+  }
+});
+document.addEventListener('keydown', function(e){
+  if (e.key === 'Escape') {
+    document.querySelectorAll('.lj-nav-item.open').forEach(function(el){ el.classList.remove('open'); });
+  }
+});
+</script>
+
+</body>
+</html>
