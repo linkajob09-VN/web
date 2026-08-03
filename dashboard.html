@@ -2310,16 +2310,17 @@ function scheduleConsultation(cid) {
   toast('Đã chốt lịch tư vấn cho ' + c.name + ' ✅', 'success');
   navToConsultationDetail(cid);
 
+  var staffObjSC = MOCK.staffList.find(function(x){ return x.name === c.staff; });
+  var staffEmailSC = staffObjSC ? staffObjSC.email : '';
   apiPost({
     action: 'createMeetLink',
     type: 'sale',
-    date: d,          // '2026-07-31'
-    time: t,           // '15:00'
+    date: d, time: t,
     guest_name: c.name,
-    guests: [c.email, staffEmail],   // staffEmail lấy từ MOCK.staffList tương ứng
+    guests: [c.email, staffEmailSC].filter(Boolean),
   }).then(function(res){
-  if (res.success) c.meetLink = res.meetLink;
-});
+    if (res && res.success) c.meetLink = res.meetLink;
+  }).catch(function(){ /* không chặn luồng chính nếu tạo Meet lỗi */ });
 }
 
 function saveConsultProgress(cid) {
@@ -2754,12 +2755,7 @@ function loadStaffSchedulePageAsync() {
     mc.innerHTML = renderStaffSchedulePage();
   });
 }
-    mc.innerHTML = renderStaffSchedulePage();
-  }).catch(function(err){
-    toast('Không tải được lịch thật từ Sheet: ' + err.message, 'error');
-    mc.innerHTML = renderStaffSchedulePage();
-  });
-}
+    
 
 function renderStaffSchedulePage() {
   const saleStaff = MOCK.staffList.filter(function(s){ return s.role === 'Sale' && s.active; });
