@@ -1195,7 +1195,7 @@ function loadNewRegistrationsPage() {
     var sessions = (res && res.data) ? res.data : [];
     // Mới nhất lên đầu
     sessions.sort(function(a,b){
-      return String(b.scheduled_date||'') + String(b.scheduled_time||'') > String(a.scheduled_date||'') + String(a.scheduled_time||'') ? 1 : -1;
+      return extractSessionTimestamp(b.session_id) > extractSessionTimestamp(a.session_id) ? 1 : -1;
     });
     window._newRegSessions = sessions;
     c.innerHTML = renderNewRegistrationsList(sessions);
@@ -1209,7 +1209,14 @@ function loadNewRegistrationsPage() {
 function stripDiacritics(s) {
   return String(s||'').normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/đ/gi, 'd').toLowerCase();
 }
-
+  
+// session_id luôn có dạng "...-yyyyMMddHHmmss" ở cuối — dùng để biết
+// dòng nào được tạo mới nhất, bất kể đã đặt lịch hay chưa.
+function extractSessionTimestamp(sessionId) {
+  var m = /(\d{14})$/.exec(String(sessionId || ''));
+  return m ? m[1] : '00000000000000';
+}
+  
 // ════════════════════════════════════════════════════════════
 //  SOP VẬN HÀNH SALE — tải/giới hạn lead, nhịp SLA Ngày 0-1-2-3
 // ════════════════════════════════════════════════════════════
