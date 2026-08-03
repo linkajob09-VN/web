@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>LinkaJob Dashboard</title>
+<title>LinkaJob Staff Dashboard</title>
 <style>
 * { margin: 0; padding: 0; box-sizing: border-box; }
 :root {
@@ -395,7 +395,7 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
 
   <div class="login-card">
     <h2>Đăng nhập</h2>
-    <p class="subtitle">Chọn vai trò để truy cập dashboard phù hợp</p>
+    <p class="subtitle">Dành cho Staff & Admin LinkaJob</p>
 
     <div class="field-group">
       <div class="field-label">Email</div>
@@ -405,17 +405,10 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
       <div class="field-label">Mật khẩu</div>
       <input class="field-input" type="password" id="login-password" placeholder="Mật khẩu" autocomplete="current-password">
     </div>
-    <div class="field-group">
-      <div class="field-label">Vai trò</div>
-      <div class="role-row">
-        <button class="role-btn" onclick="selectRole('Staff',this)">Staff</button>
-        <button class="role-btn active" onclick="selectRole('Advisor',this)">Advisor</button>
-        <button class="role-btn" onclick="selectRole('Advisee',this)">Advisee</button>
-      </div>
-    </div>
 
     <button class="login-btn" id="login-btn" onclick="doLogin()">Đăng nhập</button>
     <div class="login-error" id="login-error">Email hoặc mật khẩu không đúng</div>
+    <div style="text-align:center;font-size:12.5px;color:var(--muted);margin-top:16px">Là Advisor hoặc Advisee? <a href="advisor-advisee.html" style="color:var(--brand);font-weight:600">Đăng nhập tại đây</a></div>
   </div>
 </div>
 
@@ -474,12 +467,10 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
 const API = 'https://script.google.com/macros/s/AKfycbx7Bd9VvoyzfiiezQV9huoY2BKHH_Br1RAFIz00mjdyKeis-Zv-38a0gf_b-fMlul2C/exec';
 
 const DEMO_ACCOUNTS = [
-  { email: 'kien@linkajob.vn',    password: '123456', role: 'Advisor', name: 'Nguyễn Vũ Trí Kiên', initials: 'KV' },
   { email: 'phuong@linkajob.vn',  password: '123456', role: 'Staff',   name: 'Phương Staff',        initials: 'PS', subRole: 'Admin' },
   { email: 'khoa@linkajob.vn',    password: '123456', role: 'Staff',   name: 'Trần Minh Khoa',       initials: 'TK', subRole: 'Sale', staffId: 's2' },
   { email: 'chau@linkajob.vn',    password: '123456', role: 'Staff',   name: 'Lê Thị Bảo Châu',      initials: 'LC', subRole: 'CourseManager', staffId: 's3' },
   { email: 'thanh@linkajob.vn',   password: '123456', role: 'Staff',   name: 'Đinh Văn Thành',       initials: 'DT', subRole: 'AdvisorManager', staffId: 's4' },
-  { email: 'advisee@linkajob.vn', password: '123456', role: 'Advisee', name: 'Trần Gia Hân',         initials: 'GH' },
 ];
 
 const PACKAGES = {
@@ -498,7 +489,7 @@ const DAYS_VI = ['CN','T2','T3','T4','T5','T6','T7'];
 const STAFF_SLOT_IDENTITY = 'LinkaJob Team';
 
 let currentUser = null;
-let selectedRole = 'Advisor';
+let selectedRole = 'Staff'; // Trang này chỉ dành cho Staff/Admin
 let weekOffset = 0;
 let selectedSlots = new Set();
 let sheetData = { bookings: [], slots: [] };
@@ -2175,18 +2166,6 @@ function confirmCreateAdviseeFromConsult(cid) {
   toast('Đã tạo hồ sơ Advisee cho ' + c.name + ' — doanh thu ghi nhận cho ' + c.staff + ' ✅', 'success');
   closeModal();
   refreshStaffTab();
-
-  apiPost({
-    action: 'createMeetLink',
-    type: 'advisor',
-    date: sessionDate,
-    time: sessionTime,
-    guest_name: adviseeName,
-    guests: [advisorEmail, adviseeEmail],
-    }).then(function(res){
-    if (res.success) session.meetLink = res.meetLink;
-    });
-}
   
 // ── Tab: Khách chưa đặt lịch — cần liên hệ ──
 function renderStaffLeadsTab(s) {
@@ -2318,7 +2297,10 @@ function renderConsultationDetail(cid) {
     html += '<div style="display:grid;grid-template-columns:1fr 1fr 2fr;gap:10px">';
     html += '<div><div class="form-label">Ngày</div><input class="form-input" id="cv-newdate" type="date" style="margin-top:4px"></div>';
     html += '<div><div class="form-label">Giờ</div><input class="form-input" id="cv-newtime" type="time" style="margin-top:4px"></div>';
-    html += '<div><div class="form-label">Link Meet (tuỳ chọn)</div><input class="form-input" id="cv-newlink" placeholder="https://meet.google.com/..." style="margin-top:4px"></div>';
+    html += '<div><div class="form-label">Link Meet</div><div style="display:flex;gap:6px;margin-top:4px">';
+    html += '<input class="form-input" id="cv-newlink" placeholder="Bấm nút bên phải để tạo tự động, hoặc dán link tay" style="flex:1">';
+    html += '<button type="button" class="update-btn" style="flex-shrink:0;white-space:nowrap" id="cv-genmeet-btn" onclick="generateMeetForConsult(\'' + c.id + '\')">🎥 Tạo Meet</button>';
+    html += '</div></div>';
     html += '</div>';
     html += '<button class="login-btn" style="width:auto;padding:9px 20px;margin-top:12px;font-size:13px" onclick="scheduleConsultation(\'' + c.id + '\')">Xác nhận đặt lịch</button>';
     html += '</div>';
@@ -2367,6 +2349,45 @@ function renderConsultationDetail(cid) {
   return html;
 }
 
+function generateMeetForConsult(cid) {
+  var c = MOCK.consultations.find(function(x){ return x.id === cid; });
+  if (!c) return;
+  var d = document.getElementById('cv-newdate').value;
+  var t = document.getElementById('cv-newtime').value;
+  if (!d || !t) { toast('Chọn ngày và giờ trước khi tạo Meet', 'error'); return; }
+
+  var btn = document.getElementById('cv-genmeet-btn');
+  var linkInput = document.getElementById('cv-newlink');
+  var oldLabel = btn.textContent;
+  btn.textContent = '⏳ Đang tạo...';
+  btn.disabled = true;
+
+  var staffObj = MOCK.staffList.find(function(x){ return x.name === c.staff; });
+  var staffEmail = staffObj ? staffObj.email : '';
+
+  apiPost({
+    action: 'createMeetLink',
+    date: d, time: t, duration_minutes: 20,
+    title: 'Tư vấn LinkaJob — ' + c.name,
+    guest_name: c.name,
+    guests: [c.email, staffEmail].filter(Boolean),
+  }).then(function(res){
+    btn.disabled = false;
+    if (res && res.success && res.meetLink) {
+      linkInput.value = res.meetLink;
+      btn.textContent = '✓ Đã tạo';
+      toast('Đã tạo Google Meet tự động ✅', 'success');
+    } else {
+      btn.textContent = oldLabel;
+      toast('Không tạo được Meet tự động — dán link tay vào ô bên cạnh nhé', 'error');
+    }
+  }).catch(function(err){
+    btn.disabled = false;
+    btn.textContent = oldLabel;
+    toast('Lỗi kết nối: ' + err.message + ' — dán link tay vào ô bên cạnh nhé', 'error');
+  });
+}
+
 function scheduleConsultation(cid) {
   var c = MOCK.consultations.find(function(x){ return x.id === cid; });
   if (!c) return;
@@ -2380,18 +2401,6 @@ function scheduleConsultation(cid) {
   c.log.push({ time: pad(now.getDate())+'/'+pad(now.getMonth()+1)+'/'+now.getFullYear()+' '+pad(now.getHours())+':'+pad(now.getMinutes()), text: 'Đã chốt lịch tư vấn: ' + fmtDateStr(d) + ' · ' + t + (c.meetLink?' — Link: ' + c.meetLink:'') });
   toast('Đã chốt lịch tư vấn cho ' + c.name + ' ✅', 'success');
   navToConsultationDetail(cid);
-
-  var staffObjSC = MOCK.staffList.find(function(x){ return x.name === c.staff; });
-  var staffEmailSC = staffObjSC ? staffObjSC.email : '';
-  apiPost({
-    action: 'createMeetLink',
-    type: 'sale',
-    date: d, time: t,
-    guest_name: c.name,
-    guests: [c.email, staffEmailSC].filter(Boolean),
-  }).then(function(res){
-    if (res && res.success) c.meetLink = res.meetLink;
-  }).catch(function(){ /* không chặn luồng chính nếu tạo Meet lỗi */ });
 }
 
 function saveConsultProgress(cid) {
@@ -3975,11 +3984,6 @@ function showCourseDetail(id) {
   document.getElementById('modal-overlay').classList.add('open');
 }
 
-function renderAdvisee(tab) {
-  const c = document.getElementById('main-content');
-  if (tab === 'my-bookings') c.innerHTML = renderMyBookings();
-  else c.innerHTML = renderNewBookingForm();
-}
 function renderNewBookingForm() {
   return '<div class="card"><div class="empty-state"><div class="icon">🛠</div>Tính năng đặt lịch mới đang được hoàn thiện.<br><small style="color:var(--muted)">Vui lòng liên hệ đội LinkaJob để được hỗ trợ đặt gói mới.</small></div></div>';
 }
@@ -4045,8 +4049,6 @@ function renderMyBookings() {
   html += '</div>';
   return html;
 }
-
-var adviseeStarState = {};
 
 function openAdviseeSessionModal(sessionNo) {
   var ae = MOCK.advisees.find(function(x){ return x.name === currentUser.name || x.email === currentUser.email; });
