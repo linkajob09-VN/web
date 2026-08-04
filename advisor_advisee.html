@@ -949,20 +949,131 @@ function switchRoleTab(tabId) {
 function switchTab(tabId) { switchRoleTab(tabId); }
 
 
+  // ── Tải dữ liệu THẬT từ Sheet cho Advisor đang đăng nhập, ghi đè vào
+//    MOCK.advisees (chỉ phần của advisor này) để tái dùng toàn bộ các
+//    hàm render sẵn có (renderAdvisorOverview, v.v.) không cần viết lại. ──
+function loadAdvisorRealDataAsync() {
+  return Promise.all([
+    apiGet('getBookings', { advisor: currentUser.name }),
+    apiGet('getSessions', { advisor: currentUser.name }),
+  ]).then(function(results){
+    var bookings = (results[0] && results[0].data) ? results[0].data : [];
+    var sessions = (results[1] && results[1].data) ? results[1].data : [];
+
+    var realAdvisees = bookings
+      .filter(function(b){ return b.status === 'confirmed'; })
+      .map(function(b){ return buildAdviseeFromBooking(b, sessions); });
+
+    // Bỏ dữ liệu demo/advisee cũ của advisor này, thay bằng dữ liệu thật
+    MOCK.advisees = MOCK.advisees.filter(function(ae){ return ae.advisor !== currentUser.name; });
+    MOCK.advisees = MOCK.advisees.concat(realAdvisees);
+  }).catch(function(err){
+    console.warn('Không tải được dữ liệu advisee thật:', err.message);
+  });
+}
+
+// ── Tương tự, cho Advisee đang đăng nhập ──
+function loadAdviseeRealDataAsync() {
+  return apiGet('getBookings', { advisee_email: currentUser.email }).then(function(res){
+    var bookings = (res && res.data) ? res.data : [];
+    var confirmed = bookings.filter(function(b){ return b.status === 'confirmed'; });
+    if (confirmed.length === 0) { MOCK.advisees = MOCK.advisees.filter(function(ae){ return ae.email !== currentUser.email; }); return; }
+
+    // Sessions không có cột advisee_email, nên lấy hết rồi lọc theo booking_id ở client
+    return apiGet('getSessions', {}).then(function(sesRes){
+      var allSessions = (sesRes && sesRes.data) ? sesRes.data : [];
+      var bookingIds = confirmed.map(function(b){ return b.booking_id; });
+      var mySessions = allSessions.filter(function(s){ return bookingIds.indexOf(s.booking_id) > -1; });
+
+      var realAdvisees = confirmed.map(function(b){ return buildAdviseeFromBooking(b, mySessions); });
+      MOCK.advisees = MOCK.advisees.filter(function(ae){ return ae.email !== currentUser.email; });
+      MOCK.advisees = MOCK.advisees.concat(realAdvisees);
+    });
+  }).catch(function(err){
+    console.warn('Không tải được dữ liệu booking thật:', err.message);
+  });
+}
+
+// ── Ghép 1 dòng Booking + các dòng Sessions liên quan thành 1 object
+//    "advisee" đúng shape mà renderAdvisorOverview / renderMyBookings đang cần ──
+function buildAdviseeFromBooking(b, allSessions) {
+  var mySessions = allSessions.filter(function(s){ return s.booking_id === b.booking_id; });
+  var sessionsTotal = Number(b.sessions_total) || 0;
+  var today = new Date();
+
+  var sessions = [];
+  for (var no = 1; no <= sessionsTotal; no++) {
+    var row = mySessions.find(function(s){ return Number(s.session_number) === no; });
+
+    if (!row) {
+      // Chưa từng có dòng Session cho buổi này — chỉ buổi 1 mở sẵn, còn lại khoá
+      sessions.push({
+        no: no, date: null, timeStart: null, timeEnd: null,
+        status: no === 1 ? 'upcoming' : 'locked',
+        lockedReason: no === 1 ? undefined : 'Hoàn thành buổi trước để mở khoá',
+        feedback: null, meetLink: '', prepInfo: null, advisorNotes: null, session_id: null,
+      });
+      continue;
+    }
+
+    var timeEnd = '';
+    if (row.scheduled_time) {
+      var parts = String(row.scheduled_time).split(':');
+      var mins = (Number(parts[0])||0) * 60 + (Number(parts[1])||0) + (Number(row.duration_minutes) || 20);
+      timeEnd = (Math.floor(mins/60)%24 < 10 ? '0':'') + (Math.floor(mins/60)%24) + ':' + (mins%60 < 10 ? '0':'') + (mins%60);
+    }
+
+    var status;
+    if (row.status === 'completed') status = 'done';
+    else {
+      var sessDate = row.scheduled_date ? new Date(row.scheduled_date + 'T' + (row.scheduled_time||'00:00')) : null;
+      status = (sessDate && sessDate < today) ? 'feedback' : 'upcoming';
+    }
+
+    sessions.push({
+      no: no, date: row.scheduled_date || null, timeStart: row.scheduled_time || null, timeEnd: timeEnd,
+      status: status, feedback: null, meetLink: row.meet_link || '', prepInfo: null, advisorNotes: null,
+      session_id: row.session_id,
+    });
+  }
+
+  var sessionsDone = sessions.filter(function(s){ return s.status === 'done'; }).length;
+
+  return {
+    id: b.booking_id,
+    name: b.advisee_name, email: b.advisee_email, phone: b.advisee_phone,
+    pkg: b.package_name, bookingId: b.booking_id,
+    advisorTitle: '', sessionsTotal: sessionsTotal, sessionsDone: sessionsDone,
+    progress: sessionsDone + '/' + sessionsTotal,
+    paid: Number(b.package_price) || 0,
+    registeredAt: b.created_at ? String(b.created_at).slice(0,10) : '',
+    expiry: b.expiry_date ? String(b.expiry_date).slice(0,10) : '',
+    advisor: b.advisor_name, sessions: sessions,
+  };
+}
+  
+
 function renderAdvisor(tab) {
   var c = document.getElementById('main-content');
   c.className = 'content narrow';
-  if (tab === 'overview') c.innerHTML = renderAdvisorOverview();
-  else if (tab === 'schedule') c.innerHTML = renderSchedulePicker();
-  else c.innerHTML = renderAdvisorOverview();
+  c.innerHTML = skeletonRows(3);
+  loadAdvisorRealDataAsync().then(function(){
+    if (tab === 'overview') c.innerHTML = renderAdvisorOverview();
+    else if (tab === 'schedule') c.innerHTML = renderSchedulePicker();
+    else c.innerHTML = renderAdvisorOverview();
+  });
 }
 
 function renderAdvisee(tab) {
   var c = document.getElementById('main-content');
   c.className = 'content narrow';
-  if (tab === 'my-bookings') c.innerHTML = renderMyBookings();
-  else c.innerHTML = renderNewBookingForm();
+  c.innerHTML = skeletonRows(3);
+  loadAdviseeRealDataAsync().then(function(){
+    if (tab === 'my-bookings') c.innerHTML = renderMyBookings();
+    else c.innerHTML = renderNewBookingForm();
+  });
 }
+  
 function renderAdvisorOverview() {
   var myAdvisees = MOCK.advisees.filter(function(ae){ return ae.advisor === currentUser.name; });
   var totalDone  = myAdvisees.reduce(function(sum,ae){ return sum + ae.sessionsDone; }, 0);
