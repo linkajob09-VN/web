@@ -149,6 +149,7 @@ section{ padding:80px 0;}
 
 /* problem cards */
 .problem-grid{ display:grid; grid-template-columns:repeat(4,1fr); gap:14px;}
+.problem-grid.cols-3{ grid-template-columns:repeat(3,1fr);}
 .problem-card{ background:var(--paper-2); border:.5px solid var(--line); border-radius:16px; padding:24px 20px; transition:border-color .2s, transform .2s;}
 .problem-card:hover{ border-color:rgba(252,82,41,.3); transform:translateY(-3px);}
 .problem-card .num{ font-family:'Space Grotesk',sans-serif; font-size:12px; color:var(--orange); font-weight:700; letter-spacing:.04em;}
@@ -283,7 +284,7 @@ footer span{ color:var(--orange);}
 
 @media(max-width:900px){
   .hero h1{ font-size:34px;}
-  .problem-grid, .audience-grid, .gift-grid, .testi-grid{ grid-template-columns:repeat(2,1fr);}
+  .problem-grid, .problem-grid.cols-3, .audience-grid, .gift-grid, .testi-grid{ grid-template-columns:repeat(2,1fr);}
   .instructor-grid{ grid-template-columns:1fr;}
   .form-row{ grid-template-columns:1fr;}
 }
@@ -302,13 +303,14 @@ footer span{ color:var(--orange);}
   .price-grid{ grid-template-columns:1fr;}
 }
 @media(max-width:560px){
-  .problem-grid, .audience-grid, .gift-grid, .testi-grid{ grid-template-columns:1fr;}
+  .problem-grid, .problem-grid.cols-3, .audience-grid, .gift-grid, .testi-grid{ grid-template-columns:1fr;}
   section{ padding:56px 0;}
   .wrap{ padding:0 20px;}
 }
 </style>
 </head>
 <body>
+
 <nav class="lj-nav">
   <a href="index.html" class="lj-logo">LinkaJob</a>
   <div class="lj-nav-links">
@@ -388,26 +390,24 @@ footer span{ color:var(--orange);}
     <button class="lj-btn-nav" onclick="openConsultWidget()">Đăng ký tư vấn</button>
   </div>
 </nav>
+
 <section class="hero">
   <div class="wrap">
     <span class="eyebrow on-dark"><span class="eyebrow-dot"></span>Khoá học Supply Chain & Logistics · LinkaJob</span>
-    <h1 style="white-space:normal; font-size:clamp(26px,4.6vw,42px); margin-top:16px;">Hiểu toàn diện <em>Supply Chain</em> từ nền tảng đến thực chiến</h1>
-    <p class="sub">Khoá học giúp bạn nắm vững 11 thành phần chuỗi cung ứng, từ Raw Materials đến Reverse Logistics — đào tạo trực tiếp bởi chuyên gia 10+ năm tại Lazada, Maersk, OnPoint.</p>
+    <h1>Supply Chain Principles</h1>
+    <p class="sub">Nắm vững 11 thành phần chuỗi cung ứng, từ Raw Materials đến Reverse Logistics — đào tạo trực tiếp bởi chuyên gia 10+ năm tại Lazada, Maersk, OnPoint.</p>
     <div class="pill-row" style="margin-bottom:28px;">
-      <span class="pill">4 tuần / 8 buổi</span>
-      <span class="pill">Học qua Zoom</span>
-      <span class="pill">Số lượng có hạn</span>
-      <span class="pill">Khai giảng 01/07/2026</span>
+      <span class="pill">Khai giảng 15/8</span>
     </div>
     <div class="hero-cta">
-      <button class="btn btn-orange" onclick="openConsultWidget()">Đăng ký tư vấn ngay</button>
-      <a href="#noidung" class="btn btn-ghost-dark">Xem nội dung khoá ↓</a>
+      <button class="btn btn-orange" onclick="openConsultWidget()">Đăng ký tư vấn miễn phí</button>
+      <a href="#lotrinh" class="btn btn-ghost-dark">Xem nội dung khoá ↓</a>
     </div>
     <div class="hero-stats">
-      <div class="hstat"><div class="hstat-num">8</div><div class="hstat-lbl">Modules</div></div>
-      <div class="hstat"><div class="hstat-num">13</div><div class="hstat-lbl">Kỹ năng</div></div>
-      <div class="hstat"><div class="hstat-num">10+</div><div class="hstat-lbl">Năm KN giảng viên</div></div>
-      <div class="hstat"><div class="hstat-num">5M</div><div class="hstat-lbl">Học phí trọn khoá</div></div>
+      <div class="hstat"><div class="hstat-num">8</div><div class="hstat-lbl">Buổi học</div></div>
+      <div class="hstat"><div class="hstat-num">5</div><div class="hstat-lbl">Học viên / khoá</div></div>
+      <div class="hstat"><div class="hstat-num">6</div><div class="hstat-lbl">Phòng ban Logistics & Supply Chain</div></div>
+      <div class="hstat"><div class="hstat-num">13</div><div class="hstat-lbl">Kỹ năng đạt được</div></div>
     </div>
   </div>
 </section>
@@ -417,30 +417,40 @@ footer span{ color:var(--orange);}
 <section>
   <div class="wrap">
     <div class="section-head">
-      <span class="eyebrow"><span class="eyebrow-dot"></span>Vấn đề cốt lõi</span>
-      <h2>Vì sao nhiều bạn học đúng ngành vẫn apply mà không trúng?</h2>
-      <p>Supply Chain là một bức tranh lớn với nhiều mắt xích — thiếu nền tảng tổng thể khiến việc định hướng và ứng tuyển trở nên mơ hồ.</p>
+      <span class="eyebrow"><span class="eyebrow-dot"></span>Bạn đang phân vân?</span>
+      <h2>Supply Chain hay Logistics — đâu là phòng ban phù hợp với mình?</h2>
+      <p>Chuỗi cung ứng có 6 phòng ban chính, mỗi nơi cần một kiểu tư duy khác nhau. Khoá học giúp bạn hiểu rõ từng vai trò trước khi chọn hướng đi.</p>
     </div>
-    <div class="problem-grid">
+    <div class="problem-grid cols-3">
       <div class="problem-card">
         <span class="num">01</span>
-        <h3>Chưa nắm được bức tranh tổng thể</h3>
-        <p>Học rời rạc từng phần mà chưa hiểu 11 thành phần chuỗi cung ứng liên kết với nhau như thế nào.</p>
+        <h3>Planning</h3>
+        <p>Dự đoán nhu cầu, lập kế hoạch sản xuất & cung ứng. Phù hợp nếu bạn thích phân tích số liệu và nhìn bức tranh tổng thể.</p>
       </div>
       <div class="problem-card">
         <span class="num">02</span>
-        <h3>Không biết mình phù hợp vai trò nào</h3>
-        <p>Có CV nhưng chưa rõ nên nhắm tới Planner, Buyer, Logistics Coordinator hay Warehouse Supervisor.</p>
+        <h3>Sourcing</h3>
+        <p>Tìm kiếm, đánh giá và lựa chọn nhà cung cấp. Phù hợp nếu bạn thích đàm phán và xây dựng quan hệ đối tác.</p>
       </div>
       <div class="problem-card">
         <span class="num">03</span>
-        <h3>Muốn chuyển ngành nhưng không biết bắt đầu từ đâu</h3>
-        <p>Đang làm lĩnh vực khác, muốn sang Supply Chain nhưng thiếu nền tảng kiến thức để tự tin apply.</p>
+        <h3>Procurement</h3>
+        <p>Mua hàng chiến lược, tối ưu chi phí. Phù hợp nếu bạn tỉ mỉ, giỏi quản lý hợp đồng và ngân sách.</p>
       </div>
       <div class="problem-card">
         <span class="num">04</span>
-        <h3>Lý thuyết trên trường xa rời thực tế</h3>
-        <p>Chưa hiểu Supply Chain vận hành thế nào trong doanh nghiệp thật ở E-commerce, Sản xuất, Bán lẻ.</p>
+        <h3>Manufacturing</h3>
+        <p>Vận hành sản xuất, kiểm soát công suất & chất lượng. Phù hợp nếu bạn thích quy trình và vận hành nhà máy.</p>
+      </div>
+      <div class="problem-card">
+        <span class="num">05</span>
+        <h3>Logistics Operations</h3>
+        <p>Vận tải, kho vận, giao nhận hàng hoá. Phù hợp nếu bạn thích thực địa và xử lý tình huống nhanh.</p>
+      </div>
+      <div class="problem-card">
+        <span class="num">06</span>
+        <h3>Reverse Logistics</h3>
+        <p>Xử lý hàng hoàn, tồn kho, thu hồi giá trị. Phù hợp nếu bạn thích tối ưu quy trình và giảm lãng phí.</p>
       </div>
     </div>
   </div>
@@ -449,12 +459,12 @@ footer span{ color:var(--orange);}
 <section class="solution">
   <div class="wrap">
     <span class="eyebrow on-dark"><span class="eyebrow-dot"></span>Giải pháp</span>
-    <h2 style="margin-top:16px;">Nền tảng Supply Chain vững chắc, đi thẳng vào thực chiến</h2>
-    <p class="lead">Giảng dạy trực tiếp bởi ThS. Trần Quốc Toản — 10+ năm kinh nghiệm tại Lazada, Maersk, OnPoint — qua 8 module trong 4 tuần, học trực tiếp qua Zoom, số lượng học viên có hạn để đảm bảo chất lượng tương tác 1-1.</p>
+    <h2 style="margin-top:16px; font-size:32px;">Từ bức tranh tổng thể đến từng mắt xích vận hành.</h2>
+    <p class="lead">Giảng dạy trực tiếp bởi chuyên gia 10+ năm tại Lazada, Maersk, OnPoint, trong một lớp học chỉ 5 học viên. 8 buổi học, 11 thành phần chuỗi cung ứng, 13 kỹ năng thực chiến — tất cả trong 4 tuần.</p>
     <div class="pill-row">
-      <span class="pill">8 module từ tổng thể đến vận hành</span>
-      <span class="pill">13 kỹ năng thực chiến</span>
-      <span class="pill">Tư vấn 1-1 xuyên suốt khoá học</span>
+      <span class="pill">Học trực tiếp qua Zoom cùng Advisor</span>
+      <span class="pill">Lớp học nhóm nhỏ, 5 học viên</span>
+      <span class="pill">Nắm rõ 6 phòng ban Supply Chain</span>
     </div>
   </div>
 </section>
@@ -467,46 +477,46 @@ footer span{ color:var(--orange);}
     </div>
     <div class="transform-table">
       <div class="col-before">
-        <div class="col-head">Before — Chưa tham gia SCP</div>
-        <div class="transform-row"><span class="mark">✕</span><span>Chưa nắm đủ 11 thành phần chuỗi cung ứng, hiểu rời rạc từng mảng</span></div>
-        <div class="transform-row"><span class="mark">✕</span><span>Mông lung không biết mình phù hợp vai trò Planner, Buyer hay Logistics</span></div>
-        <div class="transform-row"><span class="mark">✕</span><span>Chưa phân biệt được vận hành Supply Chain giữa B2B và B2C</span></div>
-        <div class="transform-row"><span class="mark">✕</span><span>CV chưa thể hiện được nền tảng kiến thức chuyên ngành</span></div>
-        <div class="transform-row"><span class="mark">✕</span><span>Tự học một mình, không ai định hướng vai trò phù hợp</span></div>
+        <div class="col-head">Before — Chưa tham gia khoá học</div>
+        <div class="transform-row"><span class="mark">✕</span><span>Nhầm lẫn giữa Supply Chain, Logistics, Procurement — không biết mình hợp phòng ban nào</span></div>
+        <div class="transform-row"><span class="mark">✕</span><span>Chỉ biết lý thuyết sách vở, không hiểu vận hành thực tế trong doanh nghiệp</span></div>
+        <div class="transform-row"><span class="mark">✕</span><span>CV chung chung, không thể hiện được kỹ năng chuyên môn cụ thể</span></div>
+        <div class="transform-row"><span class="mark">✕</span><span>Trả lời phỏng vấn mơ hồ khi được hỏi về quy trình, KPI ngành</span></div>
+        <div class="transform-row"><span class="mark">✕</span><span>Tự học một mình, không ai chỉ ra mình hợp vai trò nào</span></div>
       </div>
       <div class="col-after">
-        <div class="col-head">After — Hoàn thành SCP</div>
-        <div class="transform-row"><span class="mark">✓</span><span>Nắm vững 11 thành phần chuỗi cung ứng từ Raw Materials đến Reverse Logistics</span></div>
-        <div class="transform-row"><span class="mark">✓</span><span>Hiểu rõ mình phù hợp vai trò nào và xây được lộ trình sự nghiệp rõ ràng</span></div>
-        <div class="transform-row"><span class="mark">✓</span><span>Phân biệt thành thạo vận hành Planning, Sourcing, Manufacturing, Logistics B2B/B2C</span></div>
-        <div class="transform-row"><span class="mark">✓</span><span>Có bộ tài liệu ứng tuyển công ty đa quốc gia trong ngành Supply Chain</span></div>
-        <div class="transform-row"><span class="mark">✓</span><span>Được Advisor tư vấn 1-1 xuyên suốt khoá học, định hướng đúng vai trò</span></div>
+        <div class="col-head">After — Hoàn thành khoá học</div>
+        <div class="transform-row"><span class="mark">✓</span><span>Hiểu rõ 6 phòng ban và tự tin chọn hướng đi phù hợp với bản thân</span></div>
+        <div class="transform-row"><span class="mark">✓</span><span>Nắm vững 11 thành phần chuỗi cung ứng từ trải nghiệm giảng dạy thực chiến</span></div>
+        <div class="transform-row"><span class="mark">✓</span><span>Sở hữu bộ tài liệu ứng tuyển thể hiện đúng kỹ năng chuyên môn theo từng vai trò</span></div>
+        <div class="transform-row"><span class="mark">✓</span><span>Trả lời phỏng vấn bằng kiến thức quy trình & KPI thực tế của ngành</span></div>
+        <div class="transform-row"><span class="mark">✓</span><span>Có Advisor đồng hành, network Supply Chain và cơ hội giới thiệu việc làm</span></div>
       </div>
     </div>
   </div>
 </section>
 
-<section id="noidung">
+<section id="lotrinh">
   <div class="wrap">
     <div class="section-head">
-      <span class="eyebrow"><span class="eyebrow-dot"></span>Nội dung khoá học</span>
-      <h2>4 tuần — 8 modules</h2>
-      <p>Từ bức tranh tổng thể đến từng mắt xích vận hành, bạn sẽ hiểu chuỗi cung ứng hoạt động như thế nào trong doanh nghiệp thực tế. Bấm vào từng module để xem chi tiết.</p>
+      <span class="eyebrow"><span class="eyebrow-dot"></span>Lộ trình học</span>
+      <h2>8 buổi học · 11 thành phần chuỗi cung ứng · 4 tuần</h2>
+      <p>Từ bức tranh tổng thể đến từng mắt xích vận hành. Bấm vào từng buổi học để xem chi tiết.</p>
     </div>
 
     <div id="module-list">
       <div class="module">
         <div class="module-q">
-          <div class="module-num">M1</div>
+          <div class="module-num">01</div>
           <div class="module-head">
             <h3>Bức tranh tổng thể của Supply Chain & Logistics</h3>
-            <div class="module-outcome"><span class="module-outcome-dot"></span>Nắm đủ 11 thành phần chuỗi cung ứng, nhìn được bức tranh tổng thể</div>
+            <div class="module-outcome"><span class="module-outcome-dot"></span>Nắm đủ 11 thành phần chuỗi cung ứng, nhìn được bức tranh toàn ngành</div>
           </div>
           <span class="module-plus">+</span>
         </div>
         <div class="module-a">
           <ul>
-            <li>Xác định đầy đủ 11 thành phần chuỗi cung ứng từ Raw Materials đến Reverse Logistics</li>
+            <li>Xác định đầy đủ 11 thành phần chuỗi cung ứng từ Raw Materials đến Reverse</li>
             <li>Phân tích Supply Chain trong 3 ngành: E-commerce, Sản xuất, Bán lẻ</li>
           </ul>
         </div>
@@ -514,7 +524,7 @@ footer span{ color:var(--orange);}
 
       <div class="module">
         <div class="module-q">
-          <div class="module-num">M2</div>
+          <div class="module-num">02</div>
           <div class="module-head">
             <h3>What's in Supply Chain?</h3>
             <div class="module-outcome"><span class="module-outcome-dot"></span>Hiểu vì sao Supply Chain là xương sống của mọi doanh nghiệp</div>
@@ -524,34 +534,34 @@ footer span{ color:var(--orange);}
         <div class="module-a">
           <ul>
             <li>Hiểu sức cạnh tranh và xu hướng chuyển đổi số trong Supply Chain hiện đại</li>
-            <li>Nắm được lý do Supply Chain là xương sống của mọi doanh nghiệp</li>
+            <li>Vì sao Supply Chain quyết định năng lực cạnh tranh của doanh nghiệp</li>
           </ul>
         </div>
       </div>
 
       <div class="module">
         <div class="module-q">
-          <div class="module-num">M3</div>
+          <div class="module-num">03</div>
           <div class="module-head">
             <h3>Planning — Nghệ thuật dự đoán & lập kế hoạch</h3>
-            <div class="module-outcome"><span class="module-outcome-dot"></span>Phân biệt MTS, MTO, ETO và vai trò của Demand/Supply Planning</div>
+            <div class="module-outcome"><span class="module-outcome-dot"></span>Nắm vai trò cốt lõi của Demand & Supply Planning trong vận hành thực tế</div>
           </div>
           <span class="module-plus">+</span>
         </div>
         <div class="module-a">
           <ul>
             <li>Phân biệt 3 mô hình MTS, MTO, ETO</li>
-            <li>Nắm vai trò cốt lõi của Demand Planning & Supply Planning trong vận hành thực tế</li>
+            <li>Vai trò cốt lõi của Demand Planning & Supply Planning</li>
           </ul>
         </div>
       </div>
 
       <div class="module">
         <div class="module-q">
-          <div class="module-num">M4</div>
+          <div class="module-num">04</div>
           <div class="module-head">
             <h3>Sourcing — Tìm kiếm & đánh giá nguồn cung</h3>
-            <div class="module-outcome"><span class="module-outcome-dot"></span>Thành thạo quy trình Tender/RFQ và đánh giá nhà cung cấp</div>
+            <div class="module-outcome"><span class="module-outcome-dot"></span>Xây dựng được bảng tiêu chí chọn nhà cung cấp cho riêng mình</div>
           </div>
           <span class="module-plus">+</span>
         </div>
@@ -559,41 +569,39 @@ footer span{ color:var(--orange);}
           <ul>
             <li>Toàn bộ quy trình Tender/RFQ</li>
             <li>Đánh giá supplier theo 5 mô hình sourcing</li>
-            <li>Xây dựng bảng tiêu chí chọn nhà cung cấp</li>
           </ul>
         </div>
       </div>
 
       <div class="module">
         <div class="module-q">
-          <div class="module-num">M5</div>
+          <div class="module-num">05</div>
           <div class="module-head">
             <h3>Procurement & Purchasing — Mua hàng chiến lược</h3>
-            <div class="module-outcome"><span class="module-outcome-dot"></span>Nắm kỹ thuật mua hàng chiến lược, tối ưu chi phí và rủi ro</div>
+            <div class="module-outcome"><span class="module-outcome-dot"></span>Nắm kỹ thuật tối ưu chi phí và quản lý quan hệ nhà cung cấp</div>
           </div>
           <span class="module-plus">+</span>
         </div>
         <div class="module-a">
           <ul>
-            <li>Kỹ thuật, quy trình và công cụ tối ưu chi phí</li>
-            <li>Giảm rủi ro và quản lý quan hệ nhà cung cấp hiệu quả</li>
+            <li>Kỹ thuật, quy trình và công cụ tối ưu chi phí, giảm rủi ro</li>
+            <li>Quản lý quan hệ nhà cung cấp hiệu quả</li>
           </ul>
         </div>
       </div>
 
       <div class="module">
         <div class="module-q">
-          <div class="module-num">M6</div>
+          <div class="module-num">06</div>
           <div class="module-head">
             <h3>Manufacturing — Từ nguyên liệu đến sản phẩm</h3>
-            <div class="module-outcome"><span class="module-outcome-dot"></span>Hiểu Production Plan và so sánh các mô hình sản xuất</div>
+            <div class="module-outcome"><span class="module-outcome-dot"></span>Biết cách đánh giá công suất và so sánh mô hình sản xuất</div>
           </div>
           <span class="module-plus">+</span>
         </div>
         <div class="module-a">
           <ul>
-            <li>Phân tích Production Plan hoàn chỉnh</li>
-            <li>Đánh giá công suất sản xuất</li>
+            <li>Phân tích Production Plan hoàn chỉnh, đánh giá công suất</li>
             <li>So sánh mô hình Discontinuous vs Continuous Manufacturing</li>
           </ul>
         </div>
@@ -601,34 +609,33 @@ footer span{ color:var(--orange);}
 
       <div class="module">
         <div class="module-q">
-          <div class="module-num">M7</div>
+          <div class="module-num">07</div>
           <div class="module-head">
             <h3>B2B & B2C — Logistics & 5 phương thức vận tải</h3>
-            <div class="module-outcome"><span class="module-outcome-dot"></span>Phân biệt rõ logistics B2B và B2C qua 5 phương thức vận tải</div>
+            <div class="module-outcome"><span class="module-outcome-dot"></span>Nắm rõ sự khác biệt trong logistics B2B vs B2C</div>
           </div>
           <span class="module-plus">+</span>
         </div>
         <div class="module-a">
           <ul>
-            <li>Nắm các khái niệm Bulk/Break Bulk, LCL/LTL, FCL/FTL</li>
-            <li>Hiểu sự khác biệt trong logistics B2B vs B2C</li>
+            <li>Các khái niệm Bulk/Break Bulk, LCL/LTL, FCL/FTL</li>
+            <li>Sự khác biệt trong logistics B2B vs B2C</li>
           </ul>
         </div>
       </div>
 
       <div class="module">
         <div class="module-q">
-          <div class="module-num">M8</div>
+          <div class="module-num">08</div>
           <div class="module-head">
             <h3>Reverse Logistics — Hành trình ngược & giá trị thu hồi</h3>
-            <div class="module-outcome"><span class="module-outcome-dot"></span>Hiểu mô hình Closed-loop và 7 vai trò của logistics ngược</div>
+            <div class="module-outcome"><span class="module-outcome-dot"></span>Hiểu 7 vai trò của logistics ngược và mô hình Closed-loop</div>
           </div>
           <span class="module-plus">+</span>
         </div>
         <div class="module-a">
           <ul>
-            <li>Mô hình Closed-loop Supply Chain</li>
-            <li>Tác động môi trường của logistics ngược</li>
+            <li>Mô hình Closed-loop Supply Chain, tác động môi trường</li>
             <li>7 vai trò của logistics ngược: Return, Recycling, Refurbishing...</li>
           </ul>
         </div>
@@ -641,74 +648,20 @@ footer span{ color:var(--orange);}
   <div class="wrap">
     <div class="section-head">
       <span class="eyebrow"><span class="eyebrow-dot"></span>Đối tượng</span>
-      <h2>Bạn là ai trong bức tranh này?</h2>
-      <p>Khoá học phù hợp với những ai muốn bước vào ngành Supply Chain & Logistics với nền tảng vững chắc.</p>
+      <h2>Khoá học này dành cho ai</h2>
     </div>
-    <div class="audience-grid" style="grid-template-columns:repeat(3,1fr);">
+    <div class="audience-grid">
       <div class="audience-card">
-        <span class="eyebrow"><span class="eyebrow-dot"></span>🎓 Sinh viên</span>
+        <span class="eyebrow"><span class="eyebrow-dot"></span>Sinh viên</span>
         <p>Đang học Kinh tế, Logistics, Quản trị kinh doanh và muốn apply vị trí Intern, Fresh Graduate tại các công ty đa quốc gia.</p>
       </div>
       <div class="audience-card">
-        <span class="eyebrow"><span class="eyebrow-dot"></span>🔄 Người chuyển ngành</span>
+        <span class="eyebrow"><span class="eyebrow-dot"></span>Người chuyển ngành</span>
         <p>Đang làm ở lĩnh vực khác nhưng muốn hiểu Supply Chain để chuyển sang vị trí phù hợp trong chuỗi cung ứng.</p>
       </div>
       <div class="audience-card">
-        <span class="eyebrow"><span class="eyebrow-dot"></span>📈 Fresher muốn định hướng đúng</span>
-        <p>Đã có CV nhưng chưa hiểu rõ mình phù hợp vai trò nào: Planner, Buyer, Logistics Coordinator hay Warehouse Supervisor.</p>
-      </div>
-    </div>
-  </div>
-</section>
-
-<section style="background:var(--paper-2)">
-  <div class="wrap">
-    <div class="section-head">
-      <span class="eyebrow"><span class="eyebrow-dot"></span>Kỹ năng đạt được</span>
-      <h2>13 kỹ năng bạn sẽ sở hữu</h2>
-      <p>Mỗi kỹ năng được xây dựng từ bài học thực tế, không chỉ lý thuyết — để bạn tự tin ứng tuyển ngay sau khoá.</p>
-    </div>
-    <div class="pill-row" style="justify-content:flex-start;">
-      <span class="pill">Supply Chain Fundamentals</span>
-      <span class="pill">Demand Planning</span>
-      <span class="pill">Supply Planning</span>
-      <span class="pill">Sourcing</span>
-      <span class="pill">Logistics Operations</span>
-      <span class="pill">Quality Control</span>
-      <span class="pill">Reverse Logistics</span>
-      <span class="pill">Tender Process</span>
-      <span class="pill">Inventory Management</span>
-      <span class="pill">Procurement</span>
-      <span class="pill">Warehouse Management</span>
-      <span class="pill">Transportation</span>
-      <span class="pill">Manufacturing Planning</span>
-    </div>
-  </div>
-</section>
-
-<section>
-  <div class="wrap">
-    <div class="section-head">
-      <span class="eyebrow"><span class="eyebrow-dot"></span>Sau khoá học</span>
-      <h2>Bạn nhận được gì?</h2>
-      <p>Không chỉ kiến thức — bạn có một bộ công cụ thực chiến để bước vào thị trường lao động với lợi thế rõ ràng.</p>
-    </div>
-    <div class="gift-grid">
-      <div class="gift-card">
-        <h3>Nền tảng kiến thức vững chắc</h3>
-        <p>Hiểu rõ cách doanh nghiệp Supply Chain & Logistics vận hành — từ tổng thể đến từng mắt xích.</p>
-      </div>
-      <div class="gift-card">
-        <h3>Làm chủ kỹ năng phân tích</h3>
-        <p>Thành thạo Planning, Sourcing, Data Analysis và Process Mapping — những kỹ năng được nhà tuyển dụng tìm kiếm nhất.</p>
-      </div>
-      <div class="gift-card">
-        <h3>Định hướng đúng vai trò</h3>
-        <p>Hiểu rõ mình phù hợp vị trí nào trong chuỗi cung ứng và xây dựng lộ trình sự nghiệp phù hợp.</p>
-      </div>
-      <div class="gift-card">
-        <h3>Tài liệu ứng tuyển đa quốc gia</h3>
-        <p>Nhận bộ tài liệu hỗ trợ ứng tuyển vào các công ty đa quốc gia trong ngành Supply Chain & Logistics.</p>
+        <span class="eyebrow"><span class="eyebrow-dot"></span>Fresher muốn định hướng đúng</span>
+        <p>Đã có CV nhưng chưa hiểu rõ mình phù hợp vai trò nào: Planner, Buyer, Logistics Coordinator hay Warehouse Supervisor?</p>
       </div>
     </div>
   </div>
@@ -718,20 +671,20 @@ footer span{ color:var(--orange);}
   <div class="wrap">
     <div class="section-head">
       <span class="eyebrow on-dark"><span class="eyebrow-dot"></span>Giảng viên</span>
-      <h2>ThS. Trần Quốc Toản — Senior Operation Manager tại Lazada E-logistics</h2>
-      <p>Từ sản xuất, chuỗi cung ứng, thương mại điện tử đến logistics quốc tế — hơn 10 năm làm việc thực chiến tại các tập đoàn đa quốc gia. Hiểu rõ từng vai trò trong chuỗi cung ứng và biết cách đào tạo để học viên ứng dụng được ngay vào công việc thực tế.</p>
+      <h2>ThS. Trần Quốc Toản — 10+ năm kinh nghiệm Supply Chain</h2>
+      <p>Lớp học chỉ 5 học viên, giảng dạy trực tiếp bởi Advisor dưới đây, đang làm việc thực chiến tại các tập đoàn đa quốc gia.</p>
     </div>
-    <div class="instructor-grid" style="grid-template-columns:1fr;">
+    <div class="instructor-grid" style="grid-template-columns:1fr; max-width:600px;">
       <div class="instructor-card">
         <div class="avatar">TQT<span class="verified"><i class="ti ti-check"></i></span></div>
         <div>
           <h3>ThS. Trần Quốc Toản</h3>
-          <div class="role">Senior Operation Manager @ Lazada E-logistics · 05/2026 – Hiện tại</div>
+          <div class="role">Senior Operation Manager @ Lazada E-logistics</div>
           <ul>
-            <li>Senior Business Solutions Manager @ A.P. Moller – Maersk · 06/2025 – 01/2026</li>
-            <li>Supply Chain & Logistics Manager @ OnPoint E-commerce · 12/2021 – 10/2022</li>
-            <li>Inventory Manager → Outbound Manager @ Lazada eLogistics Vietnam · 01/2019 – 12/2021</li>
-            <li>Advisor tại LinkaJob · 10+ năm kinh nghiệm Supply Chain</li>
+            <li>10+ năm kinh nghiệm thực chiến từ sản xuất, chuỗi cung ứng, thương mại điện tử đến logistics quốc tế</li>
+            <li>Senior Business Solutions Manager · A.P. Moller – Maersk (06/2025 – 01/2026)</li>
+            <li>Supply Chain & Logistics Manager · OnPoint E-commerce (12/2021 – 10/2022)</li>
+            <li>Inventory Manager → Outbound Manager · Lazada eLogistics Vietnam (01/2019 – 12/2021)</li>
           </ul>
         </div>
       </div>
@@ -739,23 +692,27 @@ footer span{ color:var(--orange);}
   </div>
 </section>
 
-<section style="background:var(--paper-2)">
+<section>
   <div class="wrap">
     <div class="section-head">
-      <span class="eyebrow"><span class="eyebrow-dot"></span>Quy trình đăng ký</span>
-      <h2>2 bước để bắt đầu hành trình</h2>
-      <p>Đơn giản, nhanh chóng — chúng tôi sẽ đồng hành cùng bạn từ bước đầu tiên.</p>
+      <span class="eyebrow"><span class="eyebrow-dot"></span>Quyền lợi học viên</span>
+      <h2>Bạn nhận được gì sau khoá học</h2>
     </div>
-    <div class="audience-grid" style="grid-template-columns:repeat(2,1fr);">
-      <div class="audience-card">
-        <span class="eyebrow">1</span>
-        <h3 style="font-size:16.5px; margin-top:14px;">Đăng ký tư vấn</h3>
-        <p>Điền form để LinkaJob liên hệ tư vấn lộ trình phù hợp với mục tiêu của bạn.</p>
+    <div class="gift-grid">
+      <div class="gift-card">
+        <div class="gift-top"><div class="gift-icon">DOC</div><span class="gift-value">1.000.000đ</span></div>
+        <h3>Tài liệu ứng tuyển đa quốc gia</h3>
+        <p>Nhận bộ tài liệu hỗ trợ ứng tuyển vào các công ty đa quốc gia trong ngành Supply Chain & Logistics.</p>
       </div>
-      <div class="audience-card">
-        <span class="eyebrow">2</span>
-        <h3 style="font-size:16.5px; margin-top:14px;">Xác nhận & học thôi!</h3>
-        <p>Hoàn tất đăng ký, thanh toán và chuẩn bị cho ngày khai giảng 01/07/2026.</p>
+      <div class="gift-card">
+        <div class="gift-top"><div class="gift-icon">CV</div><span class="gift-value">1.000.000đ</span></div>
+        <h3>Review CV & định hướng vai trò</h3>
+        <p>Được Advisor review CV và định hướng đúng vai trò phù hợp: Planner, Buyer, Logistics Coordinator hay Warehouse Supervisor.</p>
+      </div>
+      <div class="gift-card">
+        <div class="gift-top"><div class="gift-icon">JOB</div><span class="gift-value">1.500.000đ</span></div>
+        <h3>Giới thiệu cơ hội việc làm</h3>
+        <p>LinkaJob giới thiệu cơ hội việc làm từ đối tác trực tiếp trong mạng lưới doanh nghiệp Supply Chain & Logistics.</p>
       </div>
     </div>
   </div>
@@ -764,23 +721,21 @@ footer span{ color:var(--orange);}
 <section class="pricing">
   <div class="wrap">
     <span class="eyebrow on-dark"><span class="eyebrow-dot"></span>Học phí</span>
-    <h2 style="color:var(--text-dark); font-size:28px; margin:16px 0 8px; letter-spacing:-0.8px;">Sẵn sàng bắt đầu hành trình Supply Chain?</h2>
-    <p style="color:var(--muted-dark); font-size:13.5px; margin-bottom:36px;">Khai giảng 01/07/2026 · Số lượng học viên có hạn để đảm bảo chất lượng đào tạo 1-1 với Advisor.</p>
+    <h2 style="color:var(--text-dark); font-size:28px; margin:16px 0 36px; letter-spacing:-0.8px;">Đầu tư cho nền tảng Supply Chain vững chắc</h2>
     <div class="price-grid">
       <div class="price-box">
         <span class="eyebrow" style="display:inline-flex;">Học viên mới</span>
         <div class="price-new">5.000.000đ</div>
-        <div class="price-note">Trọn khoá · 4 tuần / 8 buổi</div>
+        <div class="price-note">Trọn khoá 8 buổi · 4 tuần · Khai giảng 15/8</div>
         <div class="perf on-dark"></div>
         <ul class="price-list">
-          <li>8 modules thực chiến với chuyên gia Lazada, Maersk</li>
-          <li>Định hướng vai trò phù hợp trong Supply Chain</li>
-          <li>Tài liệu ứng tuyển công ty đa quốc gia</li>
-          <li>Tư vấn 1-1 với Advisor trong suốt khoá học</li>
+          <li>8 buổi học trực tiếp qua Zoom cùng Advisor</li>
+          <li>Review CV & định hướng vai trò phù hợp</li>
+          <li>Trọn bộ tài liệu ứng tuyển đa quốc gia</li>
           <li>Giới thiệu cơ hội việc làm từ đối tác LinkaJob</li>
-          <li>Thanh toán linh hoạt — trao đổi thêm với Advisor</li>
+          <li>Record đầy đủ buổi học để ôn tập sau khoá</li>
         </ul>
-        <button class="btn btn-orange" style="width:100%" onclick="openConsultWidget()">Đăng ký tư vấn ngay</button>
+        <a href="#dangky" class="btn btn-orange" style="width:100%">Đăng ký tư vấn ngay</a>
       </div>
       <div class="price-box advisee">
         <span class="eyebrow" style="display:inline-flex;">Advisee cũ · Giảm 10%</span>
@@ -791,12 +746,12 @@ footer span{ color:var(--orange);}
         <ul class="price-list">
           <li>Toàn bộ quyền lợi như gói Học viên mới</li>
           <li>Giảm thẳng 500.000đ trên học phí</li>
-          <li>Ưu tiên xác nhận suất học do số lượng có hạn</li>
+          <li>Ưu tiên xác nhận suất học do chỉ nhận 5 học viên/khoá</li>
         </ul>
-        <button class="btn btn-orange" style="width:100%" onclick="openConsultWidget()">Đăng ký với ưu đãi Advisee</button>
+        <a href="#dangky" class="btn btn-orange" style="width:100%">Đăng ký với ưu đãi Advisee</a>
       </div>
     </div>
-    <div class="scarcity">⚠ Số lượng học viên có hạn để đảm bảo chất lượng tương tác 1-1</div>
+    <div class="scarcity">⚠ Chỉ nhận 5 học viên / khoá để đảm bảo chất lượng đào tạo</div>
   </div>
 </section>
 
@@ -804,8 +759,7 @@ footer span{ color:var(--orange);}
   <div class="wrap" style="max-width:740px;">
     <div class="section-head">
       <span class="eyebrow"><span class="eyebrow-dot"></span>FAQ</span>
-      <h2>Bạn đang thắc mắc điều gì?</h2>
-      <p>Những câu hỏi phổ biến nhất từ học viên trước khi đăng ký khoá Supply Chain Principles.</p>
+      <h2>Câu hỏi thường gặp</h2>
     </div>
     <div id="faq-list">
       <div class="faq-item">
@@ -814,27 +768,27 @@ footer span{ color:var(--orange);}
       </div>
       <div class="faq-item">
         <div class="faq-q"><h4>Học theo hình thức nào?</h4><span class="plus">+</span></div>
-        <div class="faq-a"><p>Học trực tiếp với giảng viên qua Zoom, kéo dài 4 tuần với 8 buổi. Lịch học sẽ được thống nhất với học viên để phù hợp với thời gian của bạn.</p></div>
+        <div class="faq-a"><p>Học trực tiếp với giảng viên qua Zoom. Khoá học kéo dài 4 tuần với 8 buổi. Lịch học sẽ được thống nhất với học viên để phù hợp với thời gian của bạn.</p></div>
       </div>
       <div class="faq-item">
-        <div class="faq-q"><h4>Học phí bao nhiêu và có thanh toán linh hoạt không?</h4><span class="plus">+</span></div>
-        <div class="faq-a"><p>Học phí khoá học là 5.000.000đ. LinkaJob hỗ trợ thanh toán linh hoạt — bạn có thể trao đổi thêm với Advisor trong buổi tư vấn để biết các hình thức phù hợp.</p></div>
+        <div class="faq-q"><h4>Học phí là bao nhiêu và có thanh toán linh hoạt không?</h4><span class="plus">+</span></div>
+        <div class="faq-a"><p>Học phí khoá học là 5.000.000đ cho học viên mới. Nếu bạn từng đặt lịch tư vấn 1:1 với LinkaJob (Advisee cũ), học phí chỉ còn 4.500.000đ (giảm 10%). LinkaJob cũng hỗ trợ thanh toán linh hoạt — bạn có thể trao đổi thêm với Advisor trong buổi tư vấn.</p></div>
       </div>
       <div class="faq-item">
         <div class="faq-q"><h4>Khoá học khai giảng khi nào? Còn bao nhiêu chỗ?</h4><span class="plus">+</span></div>
-        <div class="faq-a"><p>Khoá học khai giảng ngày 01/07/2026. Số lượng học viên có hạn để đảm bảo chất lượng tương tác 1-1 với Advisor — nên đăng ký sớm để giữ chỗ trước khi khoá đầy.</p></div>
+        <div class="faq-a"><p>Khoá học khai giảng ngày 15/8. Số lượng học viên có hạn (5 học viên/khoá) để đảm bảo chất lượng tương tác trực tiếp với Advisor. Bạn nên đăng ký sớm để giữ chỗ trước khi khoá đầy.</p></div>
       </div>
       <div class="faq-item">
         <div class="faq-q"><h4>Sau khoá học, tôi có thể ứng tuyển vị trí nào?</h4><span class="plus">+</span></div>
-        <div class="faq-a"><p>Bạn sẽ có đủ nền tảng để ứng tuyển các vị trí như Supply Chain Analyst, Demand Planner, Sourcing Executive, Procurement Officer, Logistics Coordinator, Inventory Analyst, Warehouse Supervisor... tại các công ty Việt Nam và đa quốc gia.</p></div>
+        <div class="faq-a"><p>Bạn sẽ có đủ nền tảng để ứng tuyển các vị trí như: Supply Chain Analyst, Demand Planner, Sourcing Executive, Procurement Officer, Logistics Coordinator, Inventory Analyst, Warehouse Supervisor... tại các công ty Việt Nam và đa quốc gia.</p></div>
       </div>
       <div class="faq-item">
         <div class="faq-q"><h4>LinkaJob có hỗ trợ tìm việc sau khoá học không?</h4><span class="plus">+</span></div>
-        <div class="faq-a"><p>Có. Học viên nhận được bộ tài liệu hỗ trợ ứng tuyển vào các công ty đa quốc gia, được Advisor review CV và định hướng vai trò phù hợp. LinkaJob cũng giới thiệu cơ hội việc làm từ đối tác trực tiếp.</p></div>
+        <div class="faq-a"><p>Có. Học viên sẽ nhận được bộ tài liệu hỗ trợ ứng tuyển vào các công ty đa quốc gia, được Advisor review CV và định hướng vai trò phù hợp. Ngoài ra, LinkaJob cũng giới thiệu cơ hội việc làm từ đối tác trực tiếp.</p></div>
       </div>
       <div class="faq-item">
         <div class="faq-q"><h4>Tôi có thể xem lại bài giảng sau buổi học không?</h4><span class="plus">+</span></div>
-        <div class="faq-a"><p>Buổi học qua Zoom được ghi lại và chia sẻ cho học viên để ôn tập. Bạn còn nhận được tài liệu kèm theo từng module để tham khảo sau khoá học.</p></div>
+        <div class="faq-a"><p>Buổi học qua Zoom sẽ được ghi lại và chia sẻ cho học viên để ôn tập. Ngoài ra bạn còn nhận được tài liệu kèm theo từng module để tham khảo sau khoá học.</p></div>
       </div>
     </div>
   </div>
@@ -842,26 +796,23 @@ footer span{ color:var(--orange);}
 
 <section class="final" id="dangky">
   <div class="wrap">
-    <span class="eyebrow on-dark"><span class="eyebrow-dot"></span>Đăng ký ngay</span>
+    <span class="eyebrow on-dark"><span class="eyebrow-dot"></span>Bắt đầu ngay</span>
     <h2 style="margin-top:16px;">Sẵn sàng bắt đầu hành trình Supply Chain của bạn?</h2>
-    <p>Khai giảng 01/07/2026 — số lượng học viên có hạn để đảm bảo chất lượng đào tạo 1-1. Đăng ký tư vấn miễn phí ngay hôm nay.</p>
+    <p>Khai giảng 15/8 — chọn khung giờ phù hợp, LinkaJob tư vấn trực tiếp qua Google Meet, không cần chờ callback.</p>
     <div class="form-box" style="text-align:center;">
-      <ul class="price-list" style="text-align:left; max-width:400px; margin:0 auto 24px;">
-        <li>8 modules thực chiến với chuyên gia Lazada, Maersk</li>
-        <li>Định hướng vai trò phù hợp trong Supply Chain</li>
-        <li>Tài liệu ứng tuyển công ty đa quốc gia</li>
-        <li>Tư vấn 1-1 với Advisor trong suốt khoá học</li>
-        <li>Giới thiệu cơ hội việc làm từ đối tác LinkaJob</li>
+      <ul class="price-list" style="text-align:left; max-width:360px; margin:0 auto 24px;">
+        <li>Chọn ngày giờ rảnh của bạn ngay trên lịch</li>
+        <li>Tư vấn miễn phí qua Google Meet với đội ngũ LinkaJob</li>
+        <li>Link Google Meet gửi qua Zalo/SMS trước giờ hẹn</li>
       </ul>
-      <button class="btn btn-orange" style="width:100%" onclick="openConsultWidget()">Đăng ký tư vấn</button>
+      <button class="btn btn-orange" style="width:100%" onclick="openConsultWidget()">Đăng ký tư vấn miễn phí</button>
     </div>
   </div>
 </section>
 
 <footer>
-  <div class="wrap">Linka<span>Job</span> — Giảng viên ThS. Trần Quốc Toản · Senior Operation Manager tại Lazada E-logistics · 10+ năm kinh nghiệm Supply Chain.</div>
+  <div class="wrap">Linka<span>Job</span> — Giúp bạn xây dựng nền tảng vững chắc cho sự nghiệp Supply Chain & Logistics.</div>
 </footer>
-
 
 <script>
   document.querySelectorAll('.faq-item').forEach(item=>{
