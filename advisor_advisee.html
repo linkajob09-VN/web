@@ -604,19 +604,19 @@ function doLogin() {
 
   btn.innerHTML = '<span class="spinner"></span>';
   btn.disabled = true;
-  apiGet('auth', { email: email, role: selectedRole }).then(function(res){
-    btn.innerHTML = 'Đăng nhập';
-    btn.disabled = false;
-    if (res && res.success) {
-      finishLogin({
-        email: email, role: selectedRole, name: res.name || email,
-        initials: mkInitials(res.name || email),
-        subRole: res.sub_role || null,
-        staffId: res.staff_id || null,
-      });
-    } else {
-      finishLogin(null);
-    }
+  apiGet('login', { email: email, password: password }).then(function(res){
+  btn.innerHTML = 'Đăng nhập'; btn.disabled = false;
+  if (res && res.success) {
+    finishLogin({
+      email: email, role: res.role, name: res.name || email,
+      initials: mkInitials(res.name || email),
+      subRole: res.sub_role || null,
+      staffId: res.staff_id || null,
+    });
+  } else {
+    errEl.textContent = res && res.error ? res.error : 'Email hoặc mật khẩu không đúng';
+    errEl.style.display = 'block';
+  }
   }).catch(function(){
     btn.innerHTML = 'Đăng nhập';
     btn.disabled = false;
