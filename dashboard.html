@@ -1381,8 +1381,7 @@ function assignRegToStaff(idx, staffName) {
     var now = new Date();
     var nowStr = pad(now.getDate())+'/'+pad(now.getMonth()+1)+'/'+now.getFullYear()+' '+pad(now.getHours())+':'+pad(now.getMinutes());
 
-    MOCK.consultations.push({
-      id: 'fc-' + s.session_id,
+    var newLead = {
       staff: staffName,
       name: lead.name || s.advisee_name || 'Khách hàng',
       phone: lead.phone || '',
@@ -1395,24 +1394,21 @@ function assignRegToStaff(idx, staffName) {
       status: s.scheduled_date ? 'Đã chốt lịch' : 'Chưa liên hệ',
       result: '', nextStep: '', nextStepDeadline: '',
       profile: { education:'', experience:'', desire:'', barrier:'', followUp:'' },
+      sessionId: s.session_id,
       log: [{ time: nowStr, text: 'Khách đăng ký tư vấn miễn phí qua website' + (lead.question ? ' — câu hỏi: ' + lead.question : '') + '. Được phân công cho ' + staffName + '.' }],
-    });
+    };
+    MOCK.consultations.push(newLead);
 
     toast('Đã phân công cho ' + staffName + ' ✅', 'success');
     loadNewRegistrationsPage();
+
+    // Tạo hẳn 1 dòng thật trong tab Leads trên Sheet, kèm dòng nhật ký đầu tiên
+    persistLead(newLead).then(function(){ persistLeadLog(newLead.id, newLead.log[0]); });
   }).catch(function(err){
     toast('Lỗi kết nối: ' + err.message, 'error');
   });
 }
-  
-MOCK.leads = [];
-  function loadStaffLeadsAsync(staffName, cb) {
-  apiGet('getLeads').then(function(res){
-    MOCK.leads = (res && res.data) ? res.data.filter(function(l){ return l.assigned_staff === staffName; }) : [];
-    if (cb) cb();
-  }).catch(function(err){ toast('Không tải được leads: ' + err.message, 'error'); });
-}
-  
+
 function loadMeetingCalendarAsync() {
   _calendarContext = 'meetings';
   var mc = document.getElementById('main-content');
@@ -1897,6 +1893,7 @@ function navToStaffMemberDetail(staffId, tab) {
   _staffDetailTab = tab || 'consult';
   _staffDetailSelfView = false;
   document.getElementById('main-content').innerHTML = renderStaffMemberDetail(staffId, _staffDetailTab, false);
+  if (_staffDetailTab === 'consult' || _staffDetailTab === 'leads') loadStaffLeadsAsync();
 }
 
 // Điểm vào riêng cho tài khoản Sale — dashboard cá nhân, không có sidebar quản trị
@@ -1936,12 +1933,94 @@ function loadSaleSelfDashboard() {
   _staffDetailTab = 'consult';
   _staffDetailSelfView = true;
   mc.innerHTML = renderStaffMemberDetail(s.id, 'consult', true);
+  loadStaffLeadsAsync();
 }
 
 function switchStaffDetailTab(tab) {
   _staffDetailTab = tab;
   if (tab === 'schedule') { loadStaffScheduleTabAsync(); return; }
+  if (tab === 'consult' || tab === 'leads') { loadStaffLeadsAsync(); return; }
   document.getElementById('main-content').innerHTML = renderStaffMemberDetail(_staffDetailId, tab, _staffDetailSelfView);
+}
+
+// ════════════════════════════════════════════════════════════
+//  KẾT NỐI THẬT "Tiến trình tư vấn" + "Hồ sơ khách hàng" ↔ Sheet
+//  Tab Leads (1 dòng / khách) + tab LeadLogs (nhật ký, nhiều dòng / khách)
+// ════════════════════════════════════════════════════════════
+
+// Tải danh sách lead thật từ Sheet cho đúng nhân viên đang xem, merge vào
+// MOCK.consultations (không xoá sạch, để không mất optimistic update đang chờ lưu).
+function loadStaffLeadsAsync() {
+  var s = MOCK.staffList.find(function(x){ return x.id === _staffDetailId; });
+  if (!s) return;
+
+  apiGet('getLeads', { staff: s.name }).then(function(res){
+    var rows = (res && res.data) ? res.data : [];
+    rows.forEach(function(r){
+      if (!r.lead_id) return;
+      var existing = MOCK.consultations.find(function(c){ return c.id === r.lead_id; });
+      var obj = existing || { id: r.lead_id, log: [] };
+      obj.staff = r.staff || s.name;
+      obj.name = r.name || ''; obj.phone = r.phone || ''; obj.email = r.email || '';
+      obj.source = r.source || ''; obj.consultAbout = r.consult_about || '';
+      obj.date = r.date ? String(r.date).slice(0,10) : '';
+      obj.time = r.time || '';
+      obj.meetLink = r.meet_link || '';
+      obj.status = r.status || 'Chưa liên hệ';
+      obj.result = r.result || '';
+      obj.nextStep = r.next_step || '';
+      obj.nextStepDeadline = r.next_step_deadline ? String(r.next_step_deadline).slice(0,10) : '';
+      obj.contactedDate = r.contacted_date ? String(r.contacted_date).slice(0,10) : '';
+      obj.contactedTime = r.contacted_time || '';
+      obj.profile = {
+        education: r.education || '', experience: r.experience || '',
+        desire: r.desire || '', barrier: r.barrier || '', followUp: r.follow_up || '',
+      };
+      if (!existing) MOCK.consultations.push(obj);
+    });
+
+    if (_staffDetailTab === 'consult' || _staffDetailTab === 'leads') {
+      document.getElementById('main-content').innerHTML = renderStaffMemberDetail(_staffDetailId, _staffDetailTab, _staffDetailSelfView);
+    }
+  }).catch(function(err){
+    console.warn('Không tải được leads từ Sheet:', err.message);
+    if (_staffDetailTab === 'consult' || _staffDetailTab === 'leads') {
+      document.getElementById('main-content').innerHTML = renderStaffMemberDetail(_staffDetailId, _staffDetailTab, _staffDetailSelfView);
+    }
+  });
+}
+
+// Ghi 1 lead (tạo mới nếu chưa có id, cập nhật nếu đã có) lên Sheet.
+// Optimistic: UI đã cập nhật trước khi gọi hàm này, chỉ cần đồng bộ nền.
+function persistLead(c) {
+  var isNew = !c.id;
+  return apiPost({
+    action: 'saveLead',
+    lead_id: c.id || '',
+    staff: c.staff || '', name: c.name || '', phone: c.phone || '', email: c.email || '',
+    source: c.source || '', consult_about: c.consultAbout || '',
+    date: c.date || '', time: c.time || '', meet_link: c.meetLink || '',
+    status: c.status || '', result: c.result || '',
+    next_step: c.nextStep || '', next_step_deadline: c.nextStepDeadline || '',
+    contacted_date: c.contactedDate || '', contacted_time: c.contactedTime || '',
+    education: (c.profile && c.profile.education) || '',
+    experience: (c.profile && c.profile.experience) || '',
+    desire: (c.profile && c.profile.desire) || '',
+    barrier: (c.profile && c.profile.barrier) || '',
+    follow_up: (c.profile && c.profile.followUp) || '',
+    session_id: c.sessionId || '',
+  }).then(function(res){
+    if (res && res.success && isNew && res.lead_id) c.id = res.lead_id;
+    if (!res || !res.success) console.warn('Lưu lead lên Sheet thất bại:', res && res.error);
+    return res;
+  }).catch(function(err){ console.warn('Lỗi kết nối khi lưu lead:', err.message); });
+}
+
+// Ghi 1 dòng nhật ký cho lead lên Sheet (tab LeadLogs).
+function persistLeadLog(leadId, entry) {
+  if (!leadId) return; // lead chưa có id thật (chưa lưu xong) — bỏ qua, log vẫn còn trong bộ nhớ tạm
+  apiPost({ action: 'addLeadLog', lead_id: leadId, time_label: entry.time, text: entry.text })
+    .catch(function(err){ console.warn('Lỗi lưu nhật ký:', err.message); });
 }
 
 // Tải lịch trống THẬT từ Sheet (AvailableSlots) cho 1 nhân viên, thay vì chỉ đọc MOCK.saleSlots trong bộ nhớ.
@@ -2091,6 +2170,7 @@ function handleConsultResultChange(cid, value) {
   if (!c) return;
   var newResult = value === '— Chưa có —' ? '' : value;
   c.result = newResult;
+  persistLead(c);
 
   if (newResult === 'Đăng ký') {
     // Nếu khách đã tự đăng ký trên web trùng tên/email → tự động tính doanh thu
@@ -2171,20 +2251,13 @@ function confirmCreateAdviseeFromConsult(cid) {
     sessions: sessions,
   });
 
+  c.status = 'Đã tư vấn xong';
+  c.convertedToAdvisee = true;
+  persistLead(c);
+
   toast('Đã tạo hồ sơ Advisee cho ' + c.name + ' — doanh thu ghi nhận cho ' + c.staff + ' ✅', 'success');
   closeModal();
   refreshStaffTab();
-
-  apiPost({
-    action: 'createMeetLink',
-    type: 'advisor',
-    date: sessionDate,
-    time: sessionTime,
-    guest_name: adviseeName,
-    guests: [advisorEmail, adviseeEmail],
-    }).then(function(res){
-    if (res.success) session.meetLink = res.meetLink;
-    });
 }
   
 // ── Tab: Khách chưa đặt lịch — cần liên hệ ──
@@ -2240,6 +2313,7 @@ function updateLeadContactedInline(cid, field, value) {
   if (!c) return;
   c[field] = value;
   toast('Đã lưu thời gian liên hệ', 'success');
+  persistLead(c);
 }
 
 // Lưu ngay khi đổi Status tư vấn trên list, không cần vào trang chi tiết
@@ -2248,6 +2322,7 @@ function updateLeadStatusInline(cid, newStatus) {
   if (!c) return;
   c.status = newStatus;
   toast('Đã cập nhật status cho ' + c.name, 'success');
+  persistLead(c);
   // re-render đúng tab đang xem (leads) để badge/SLA cập nhật lại
   if (_staffDetailId) document.getElementById('main-content').innerHTML = renderStaffMemberDetail(_staffDetailId, 'leads', _staffDetailSelfView);
 }
@@ -2257,6 +2332,7 @@ function updateLeadResultInline(cid, newResult) {
   if (!c) return;
   c.result = newResult === '— Chưa có —' ? '' : newResult;
   toast('Đã cập nhật kết quả cho ' + c.name, 'success');
+  persistLead(c);
 }
 
 // field: 'nextStep' | 'nextStepDeadline' | 'noteBlock'
@@ -2271,6 +2347,7 @@ function updateLeadNoteInline(cid, field, value) {
     c.profile.followUp = value.trim();
   }
   toast('Đã lưu', 'success');
+  persistLead(c);
 }
 
 const CONSULT_STATUS = ['Chưa liên hệ','Đang liên hệ','Đã chốt lịch','Đã tư vấn xong','Đã đóng','Tạm đóng','Không phù hợp'];
@@ -2280,6 +2357,15 @@ const CONSULT_RESULT = ['','Cân nhắc thêm','Không phản hồi','Từ chố
   
 function navToConsultationDetail(cid) {
   document.getElementById('main-content').innerHTML = renderConsultationDetail(cid);
+  var c = MOCK.consultations.find(function(x){ return x.id === cid; });
+  if (!c || !c.id) return;
+  apiGet('getLeadLogs', { lead_id: c.id }).then(function(res){
+    var rows = (res && res.data) ? res.data : [];
+    if (rows.length === 0) return;
+    c.log = rows.map(function(r){ return { time: r.time_label, text: r.text }; });
+    var mc = document.getElementById('main-content');
+    if (mc) mc.innerHTML = renderConsultationDetail(cid);
+  }).catch(function(err){ console.warn('Không tải được nhật ký:', err.message); });
 }
 
 function renderConsultationDetail(cid) {
@@ -2418,9 +2504,11 @@ function scheduleConsultation(cid) {
   c.meetLink = document.getElementById('cv-newlink').value.trim();
   c.status = 'Đã chốt lịch';
   var now = new Date();
-  c.log.push({ time: pad(now.getDate())+'/'+pad(now.getMonth()+1)+'/'+now.getFullYear()+' '+pad(now.getHours())+':'+pad(now.getMinutes()), text: 'Đã chốt lịch tư vấn: ' + fmtDateStr(d) + ' · ' + t + (c.meetLink?' — Link: ' + c.meetLink:'') });
+  var entry = { time: pad(now.getDate())+'/'+pad(now.getMonth()+1)+'/'+now.getFullYear()+' '+pad(now.getHours())+':'+pad(now.getMinutes()), text: 'Đã chốt lịch tư vấn: ' + fmtDateStr(d) + ' · ' + t + (c.meetLink?' — Link: ' + c.meetLink:'') };
+  c.log.push(entry);
   toast('Đã chốt lịch tư vấn cho ' + c.name + ' ✅', 'success');
   navToConsultationDetail(cid);
+  persistLead(c).then(function(){ persistLeadLog(c.id, entry); });
 }
 
 function saveConsultProgress(cid) {
@@ -2433,6 +2521,7 @@ function saveConsultProgress(cid) {
   c.nextStepDeadline = document.getElementById('cv-deadline').value;
   toast('Đã lưu tiến trình tư vấn', 'success');
   navToConsultationDetail(cid);
+  persistLead(c);
 }
 
 function saveConsultProfile(cid) {
@@ -2447,6 +2536,7 @@ function saveConsultProfile(cid) {
   };
   toast('Đã lưu hồ sơ khách hàng', 'success');
   navToConsultationDetail(cid);
+  persistLead(c);
 }
 
 function addConsultLog(cid) {
@@ -2455,9 +2545,12 @@ function addConsultLog(cid) {
   var text = document.getElementById('cv-newlog').value.trim();
   if (!text) { toast('Vui lòng nhập nội dung ghi chú', 'error'); return; }
   var now = new Date();
-  c.log.push({ time: pad(now.getDate())+'/'+pad(now.getMonth()+1)+'/'+now.getFullYear()+' '+pad(now.getHours())+':'+pad(now.getMinutes()), text: text });
+  var entry = { time: pad(now.getDate())+'/'+pad(now.getMonth()+1)+'/'+now.getFullYear()+' '+pad(now.getHours())+':'+pad(now.getMinutes()), text: text };
+  c.log.push(entry);
   toast('Đã thêm ghi chú vào nhật ký', 'success');
   navToConsultationDetail(cid);
+  if (c.id) persistLeadLog(c.id, entry);
+  else persistLead(c).then(function(){ persistLeadLog(c.id, entry); });
 }
 
 // ── Tab 2: Gửi lịch trống ──
