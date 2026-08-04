@@ -4188,6 +4188,54 @@ function openBookSessionModal(aeId, sessionNo) {
   });
 }
 
+function renderBookSessionModalBody() {
+  var dates = Object.keys(_bookSessionSlots).filter(function(d){ return _bookSessionSlots[d].length > 0; }).sort();
+  var html = '<div style="font-size:13px;color:var(--muted);margin-bottom:14px">Chọn 1 khung giờ trống từ lịch của Advisor <b>' + _bookSessionCtx.advisorName + '</b>.</div>';
+
+  if (dates.length === 0) {
+    html += '<div class="empty-state"><div class="icon">📭</div>Advisor hiện chưa có giờ trống nào. Vui lòng liên hệ đội LinkaJob để được hỗ trợ xếp lịch.</div>';
+  } else {
+    dates.forEach(function(d){
+      var dateObj = new Date(d + 'T00:00:00');
+      var label = DAYS_VI[dateObj.getDay()] + ' ' + dateObj.getDate() + '/' + (dateObj.getMonth()+1) + '/' + dateObj.getFullYear();
+      html += '<div style="font-size:12.5px;font-weight:700;color:var(--text);margin:14px 0 8px">' + label + '</div>';
+      html += '<div style="display:flex;flex-wrap:wrap;gap:8px">';
+      _bookSessionSlots[d].forEach(function(sl){
+        html += '<button class="day-time-chip" onclick="confirmBookSession(\'' + d + '\',\'' + sl.time + '\',\'' + sl.slot_id + '\')">' + sl.time + '</button>';
+      });
+      html += '</div>';
+    });
+  }
+  document.getElementById('modal-body').innerHTML = html;
+}
+
+function confirmBookSession(dateStr, time, slotId) {
+  var ctx = _bookSessionCtx;
+  var ae = MOCK.advisees.find(function(x){ return x.id === ctx.aeId; });
+  if (!ae) return;
+
+  toast('Đang đặt lịch...', '');
+  apiPost({
+    action: 'bookSession',
+    slot_id: slotId,
+    booking_id: ae.bookingId,
+    session_number: ctx.sessionNo,
+    advisee_name: ae.name,
+  }).then(function(res){
+    if (!res || !res.success) {
+      toast('Lỗi: ' + (res && res.error ? res.error : 'không đặt được lịch — slot có thể vừa bị người khác chọn'), 'error');
+      openBookSessionModal(ctx.aeId, ctx.sessionNo);
+      return;
+    }
+    var s = ae.sessions.find(function(x){ return x.no === ctx.sessionNo; });
+    if (s) { s.date = dateStr; s.timeStart = time; }
+    toast('Đã đặt lịch buổi ' + ctx.sessionNo + ' ✅', 'success');
+    closeModal();
+    document.getElementById('main-content').innerHTML = renderMyBookings();
+  }).catch(function(err){
+    toast('Lỗi kết nối: ' + err.message, 'error');
+  });
+}
 
 function aeeHoverStarModal(sessionNo, val) {
   if (!adviseeStarState[sessionNo]) adviseeStarState[sessionNo] = { selected:0, hover:0 };
@@ -4222,15 +4270,30 @@ function submitAdviseeFeedbackModal(sessionNo) {
   var text   = (document.getElementById('m-fbtext-' + sessionNo)||{}).value || '';
   if (!rating) { toast('Vui lòng chọn số sao', 'error'); return; }
   var ae = MOCK.advisees.find(function(x){ return x.name === currentUser.name; });
-  if (ae) {
-    var s = ae.sessions.find(function(x){ return x.no === sessionNo; });
-    if (s) {
-      s.status = 'done'; s.feedback = { rating:rating, text:text };
-      ae.sessionsDone = Math.min(ae.sessionsDone + 1, ae.sessionsTotal);
-      var next = ae.sessions.find(function(x){ return x.no === sessionNo+1 && x.status === 'locked'; });
-      if (next) next.status = 'upcoming';
-    }
-  }
+  if (!ae) return;
+  var s = ae.sessions.find(function(x){ return x.no === sessionNo; });
+  if (!s) return;
+
+  var feedbackSessionId = s.session_id || (ae.bookingId + '-' + sessionNo);
+
+  // Lưu thật lên Sheet (tab AdvisorReviews) — feedback này sẽ hiển thị công khai
+  // trên trang giới thiệu Advisor. Không chặn UI nếu lỗi mạng, chỉ báo toast.
+  apiPost({
+    action: 'submitAdviseeFeedback',
+    session_id: feedbackSessionId,
+    advisor_name: ae.advisor,
+    advisee_name: ae.name,
+    rating: rating,
+    text: text,
+  }).then(function(res){
+    if (!res || !res.success) toast('Đã lưu tạm — lỗi đồng bộ Sheet: ' + (res&&res.error||''), 'error');
+  }).catch(function(err){ toast('Đã lưu tạm — lỗi kết nối: ' + err.message, 'error'); });
+
+  s.status = 'done'; s.feedback = { rating:rating, text:text };
+  ae.sessionsDone = Math.min(ae.sessionsDone + 1, ae.sessionsTotal);
+  var next = ae.sessions.find(function(x){ return x.no === sessionNo+1 && x.status === 'locked'; });
+  if (next) next.status = 'upcoming';
+
   adviseeStarState[sessionNo] = { selected:0, hover:0 };
   toast('Đã gửi feedback buổi ' + sessionNo + '! Buổi ' + (sessionNo+1) + ' đã mở khoá 🎉', 'success');
   closeModal();
@@ -4382,18 +4445,33 @@ function submitAdvisorNotes(aeId, sessionNo) {
   if (!summary.trim() || !feedback.trim()) { toast('Vui lòng điền Nội dung và Nhận xét trước khi gửi', 'error'); return; }
 
   var ae = MOCK.advisees.find(function(x){ return x.id === aeId; });
-  if (ae) {
-    var s = ae.sessions.find(function(x){ return x.no === sessionNo; });
-    if (s) {
-      var now = new Date();
-      s.advisorNotes = {
-        summary: summary.trim(),
-        feedback: feedback.trim(),
-        actionItems: actionItems.trim(),
-        submittedAt: pad(now.getDate()) + '/' + pad(now.getMonth()+1) + '/' + now.getFullYear() + ' ' + pad(now.getHours()) + ':' + pad(now.getMinutes())
-      };
-    }
-  }
+  if (!ae) return;
+  var s = ae.sessions.find(function(x){ return x.no === sessionNo; });
+  if (!s) return;
+
+  var notesSessionId = s.session_id || (ae.bookingId + '-' + sessionNo);
+
+  // Lưu thật lên Sheet (tab AdvisorNotes) — KHÔNG public, chỉ Advisee & Staff xem được.
+  apiPost({
+    action: 'submitAdvisorNotes',
+    session_id: notesSessionId,
+    advisor_name: ae.advisor,
+    advisee_name: ae.name,
+    summary: summary.trim(),
+    feedback: feedback.trim(),
+    action_items: actionItems.trim(),
+  }).then(function(res){
+    if (!res || !res.success) toast('Đã lưu tạm — lỗi đồng bộ Sheet: ' + (res&&res.error||''), 'error');
+  }).catch(function(err){ toast('Đã lưu tạm — lỗi kết nối: ' + err.message, 'error'); });
+
+  var now = new Date();
+  s.advisorNotes = {
+    summary: summary.trim(),
+    feedback: feedback.trim(),
+    actionItems: actionItems.trim(),
+    submittedAt: pad(now.getDate()) + '/' + pad(now.getMonth()+1) + '/' + now.getFullYear() + ' ' + pad(now.getHours()) + ':' + pad(now.getMinutes())
+  };
+
   toast('Đã gửi nhận xét buổi ' + sessionNo + ' ✅', 'success');
   closeModal();
   navToAdviseeDetail(aeId);
