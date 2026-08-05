@@ -3160,6 +3160,7 @@ function saveSaleSlots(staffName) {
     advisor_email: st ? st.email : '',
     created_by: staffName,
     slots: slotsToAdd,
+    duration_minutes: 20,
   }).then(function(res){
     if (res && res.success) {
       // ── Optimistic update: hiện ngay trên UI, không đợi fetch lại Sheet ──
@@ -4948,7 +4949,14 @@ function sendSlots() {
   if (selectedSlots.size === 0) { toast('Chưa chọn giờ nào!', 'error'); return; }
   const btn = document.getElementById('day-send-btn');
   if (btn) { btn.innerHTML = '<span class="spinner"></span> Đang gửi...'; btn.disabled = true; }
-  apiPost({ action: 'addSlots', advisor: currentUser.name, advisor_id: currentUser.advisorId || '', advisor_email: currentUser.email, slots: Array.from(selectedSlots) }).then(function(res){
+  apiPost({
+    action: 'addSlots',
+    advisor: currentUser.name,
+    advisor_id: currentUser.advisorId || '',
+    advisor_email: currentUser.email,
+    slots: Array.from(selectedSlots),
+    duration_minutes: 60,
+  }).then(function(res){
     if (res && res.success) {
       toast('Đã gửi ' + selectedSlots.size + ' slot!', 'success');
       selectedSlots.clear();
