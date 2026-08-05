@@ -1878,10 +1878,6 @@ const MOCK = {
 
 function fmtMoney(n) { return (n||0).toLocaleString('vi-VN') + 'đ'; }
 
-function normName(s) {
-  return String(s || '').trim().toLowerCase().normalize('NFC');
-}
-  
 // ════════════════════════════════════════════════════════════
 //  MODULE STAFF — DANH SÁCH NHÂN VIÊN
 // ════════════════════════════════════════════════════════════
@@ -4924,7 +4920,7 @@ function sendSlots() {
   if (selectedSlots.size === 0) { toast('Chưa chọn giờ nào!', 'error'); return; }
   const btn = document.getElementById('day-send-btn');
   if (btn) { btn.innerHTML = '<span class="spinner"></span> Đang gửi...'; btn.disabled = true; }
-  apiPost({ action: 'addSlots', advisor: currentUser.name, advisor_id: currentUser.advisorId || '', advisor_email: currentUser.email, slots: ... })
+  apiPost({ action: 'addSlots', advisor: currentUser.name, advisor_id: currentUser.advisorId || '', advisor_email: currentUser.email, slots: Array.from(selectedSlots) }).then(function(res){
     if (res && res.success) {
       toast('Đã gửi ' + selectedSlots.size + ' slot!', 'success');
       selectedSlots.clear();
