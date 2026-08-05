@@ -1144,7 +1144,7 @@ function renderAdvisorOverview() {
     html += '<div class="empty-state"><div class="icon">📭</div>Không có buổi nào trong 7 ngày tới</div>';
   } else {
     upcoming.forEach(function(item){
-      var d = new Date(item.s.date + 'T00:00:00');
+      var d = new Date(item.s.date + 'HH:mm');
       var dow = ['CN','T2','T3','T4','T5','T6','T7'][d.getDay()];
       var dateLabel = dow + ' ' + d.getDate() + '/' + (d.getMonth()+1) + ' · ' + item.s.timeStart + '–' + item.s.timeEnd;
       html += '<div class="session-item">' + avatarCircle(item.ae.name,36);
@@ -1166,7 +1166,7 @@ function renderAdvisorOverview() {
       var nextS = ae.sessions.find(function(s){ return s.status === 'upcoming' && s.date; });
       var nextLabel = '—';
       if (nextS) {
-        var d = new Date(nextS.date + 'T00:00:00');
+        var d = new Date(nextS.date + 'HH:mm');
         nextLabel = ['CN','T2','T3','T4','T5','T6','T7'][d.getDay()] + ' ' + d.getDate() + '/' + (d.getMonth()+1) + ' · ' + nextS.timeStart;
       }
       var pct = Math.round(ae.sessionsDone / ae.sessionsTotal * 100);
