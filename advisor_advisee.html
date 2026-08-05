@@ -1068,9 +1068,15 @@ function buildAdviseeFromBooking(b, allSessions) {
       status = (sessDate && sessDate < today) ? 'feedback' : 'upcoming';
     }
 
+    // Backend (action getSessions) đã ghép sẵn prep_cv_link/prep_question/prep_other_links/prep_submitted_at
+    // từ tab SessionPrep vào từng dòng session — chỉ cần đọc lại ra prepInfo ở đây.
+    var prepInfo = row.prep_question
+      ? { cvLink: row.prep_cv_link || '', question: row.prep_question || '', otherLinks: row.prep_other_links || '', submittedAt: row.prep_submitted_at || '' }
+      : null;
+
     sessions.push({
       no: no, date: schedDate || null, timeStart: schedTime || null, timeEnd: timeEnd,
-      status: status, feedback: null, meetLink: row.meet_link || '', prepInfo: null, advisorNotes: null,
+      status: status, feedback: null, meetLink: row.meet_link || '', prepInfo: prepInfo, advisorNotes: null,
       session_id: row.session_id,
     });
   }
@@ -4436,14 +4442,35 @@ function submitPrepInfoModal(sessionNo) {
   var q     = (document.getElementById('m-prep-q-'     + sessionNo)||{}).value || '';
   var links = (document.getElementById('m-prep-links-' + sessionNo)||{}).value || '';
   if (!q.trim()) { toast('Vui lòng điền câu hỏi cho Advisor', 'error'); return; }
-  var ae = MOCK.advisees.find(function(x){ return x.name === currentUser.name; });
-  if (ae) {
-    var s = ae.sessions.find(function(x){ return x.no === sessionNo; });
-    if (s) { var now = new Date(); s.prepInfo = { cvLink:cv.trim(), question:q.trim(), otherLinks:links.trim(), submittedAt:pad(now.getDate())+'/'+pad(now.getMonth()+1)+'/'+now.getFullYear()+' '+pad(now.getHours())+':'+pad(now.getMinutes()) }; }
-  }
-  toast('Đã gửi thông tin chuẩn bị buổi ' + sessionNo + ' ✅', 'success');
-  closeModal();
-  document.getElementById('main-content').innerHTML = renderMyBookings();
+  var ae = MOCK.advisees.find(function(x){ return x.name === currentUser.name || x.email === currentUser.email; });
+  if (!ae) return;
+  var s = ae.sessions.find(function(x){ return x.no === sessionNo; });
+  if (!s) return;
+  if (!s.session_id) { toast('Buổi này chưa có lịch cụ thể — không thể gửi chuẩn bị', 'error'); return; }
+
+  var btn = document.querySelector('#modal-actions .login-btn');
+  if (btn) { btn.innerHTML = '<span class="spinner"></span> Đang gửi...'; btn.disabled = true; }
+
+  apiPost({
+    action: 'submitPrepInfo',
+    session_id: s.session_id,
+    cv_link: cv.trim(),
+    question: q.trim(),
+    other_links: links.trim(),
+  }).then(function(res){
+    if (!res || !res.success) {
+      toast('Lỗi: ' + (res && res.error ? res.error : 'không gửi được, thử lại'), 'error');
+      if (btn) { btn.innerHTML = 'Gửi chuẩn bị →'; btn.disabled = false; }
+      return;
+    }
+    s.prepInfo = { cvLink: cv.trim(), question: q.trim(), otherLinks: links.trim(), submittedAt: res.submitted_at || '' };
+    toast('Đã gửi thông tin chuẩn bị buổi ' + sessionNo + ' ✅', 'success');
+    closeModal();
+    document.getElementById('main-content').innerHTML = renderMyBookings();
+  }).catch(function(err){
+    toast('Lỗi kết nối: ' + err.message, 'error');
+    if (btn) { btn.innerHTML = 'Gửi chuẩn bị →'; btn.disabled = false; }
+  });
 }
 
 function submitAdviseeFeedbackModal(sessionNo) {
