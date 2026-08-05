@@ -956,17 +956,21 @@ function loadAdvisorRealDataAsync() {
   return Promise.all([
     apiGet('getBookings', { advisor: currentUser.name }),
     apiGet('getSessions', { advisor: currentUser.name }),
+    apiGet('getSlots', { advisor: currentUser.name }),
   ]).then(function(results){
     var bookings = (results[0] && results[0].data) ? results[0].data : [];
     var sessions = (results[1] && results[1].data) ? results[1].data : [];
+    var slots    = (results[2] && results[2].data) ? results[2].data : [];
 
     var realAdvisees = bookings
       .filter(function(b){ return b.status === 'confirmed'; })
       .map(function(b){ return buildAdviseeFromBooking(b, sessions); });
 
-    // Bỏ dữ liệu demo/advisee cũ của advisor này, thay bằng dữ liệu thật
-    MOCK.advisees = MOCK.advisees.filter(function(ae){ return ae.advisor === currentUser.name; });
+    MOCK.advisees = MOCK.advisees.filter(function(ae){ return normName(ae.advisor) !== normName(currentUser.name); });
     MOCK.advisees = MOCK.advisees.concat(realAdvisees);
+
+    // Nạp slot thật cho tab "Gửi lịch trống" (renderSchedulePicker/openAdvisorDayModal đọc từ đây)
+    sheetData.slots = slots;
   }).catch(function(err){
     console.warn('Không tải được dữ liệu advisee thật:', err.message);
   });
