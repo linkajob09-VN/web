@@ -618,6 +618,7 @@ function doLogin() {
       initials: mkInitials(res.name || email),
       subRole: res.sub_role || null,
       staffId: res.staff_id || null,
+      advisorId: res.advisor_id || null,  
     });
   } else {
     errEl.textContent = res && res.error ? res.error : 'Email hoặc mật khẩu không đúng';
@@ -4923,7 +4924,7 @@ function sendSlots() {
   if (selectedSlots.size === 0) { toast('Chưa chọn giờ nào!', 'error'); return; }
   const btn = document.getElementById('day-send-btn');
   if (btn) { btn.innerHTML = '<span class="spinner"></span> Đang gửi...'; btn.disabled = true; }
-  apiPost({ action: 'addSlots', advisor: currentUser.name, advisor_email: currentUser.email, slots: Array.from(selectedSlots) }).then(function(res){
+  apiPost({ action: 'addSlots', advisor: currentUser.name, advisor_id: currentUser.advisorId || '', advisor_email: currentUser.email, slots: ... })
     if (res && res.success) {
       toast('Đã gửi ' + selectedSlots.size + ' slot!', 'success');
       selectedSlots.clear();
