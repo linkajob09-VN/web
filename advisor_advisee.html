@@ -501,6 +501,12 @@ let sheetData = { bookings: [], slots: [] };
 sheetData.advisors = [];
 let advisorsLoaded = false;
 
+  
+function normName(s) {
+  return String(s || '').trim().toLowerCase().normalize('NFC');
+}
+
+  
 function normalizeAdvisorFromSheet(a) {
   return {
     id: a.advisor_id,
@@ -1242,7 +1248,7 @@ function renderSchedulePicker() {
   _calendarContext = 'advisor-schedule';
   const slotsByDate = {};
   sheetData.slots.forEach(function(s){
-    if (s.advisor_name !== currentUser.name) return;
+    if (normName(s.advisor_name) !== normName(currentUser.name)) return;
     const d = String(s.date).slice(0,10);
     if (!slotsByDate[d]) slotsByDate[d] = { available: 0, booked: 0 };
     if (s.status === 'booked') slotsByDate[d].booked++;
@@ -1275,7 +1281,7 @@ function openAdvisorDayModal(dateStr) {
   const bookedTimes = {};
   const savedTimes = {};
   sheetData.slots.forEach(function(s){
-    if (s.advisor_name !== currentUser.name) return;
+    if (normName(s.advisor_name) !== normName(currentUser.name)) return;
     if (String(s.date).slice(0,10) !== dateStr) return;
     if (s.status === 'booked') bookedTimes[s.time_start] = true;
     if (s.status === 'available') savedTimes[s.time_start] = true;
@@ -1624,7 +1630,7 @@ function openStaffDayModal(dateStr) {
 
 function renderBookedSessions() {
   // Lấy danh sách advisee đang được match với advisor này (từ MOCK.advisees)
-  const myAdvisees = MOCK.advisees.filter(function(ae){ return ae.advisor === currentUser.name; });
+  const myAdvisees = MOCK.advisees.filter(function(ae){ return normName(ae.advisor) === normName(currentUser.name); });
 
   let html = '<div class="card"><div class="card-header"><div class="card-header-left">Buổi đã book & Chuẩn bị meeting</div><button class="refresh-btn" onclick="loadDashboard(\'Advisor\',\'booked\')">↻ Làm mới</button></div>';
 
@@ -3457,7 +3463,7 @@ function renderAdvisorModule() {
   } else {
     html += '<table class="bookings-table"><thead><tr><th>ADVISOR</th><th>ADVISEE</th><th>TIẾN ĐỘ BUỔI</th><th>EMAIL</th><th></th></tr></thead><tbody>';
     active.forEach(function(a) {
-      var myAdvisees = MOCK.advisees.filter(function(ae){ return ae.advisor === a.name; });
+      var myAdvisees = MOCK.advisees.filter(function(ae){ return normName(ae.advisor) === normName(currentUser.name); });
       var needNote = myAdvisees.some(function(ae){ return ae.sessions.some(function(s){ return s.status === 'done' && !s.advisorNotes; }); });
       html += '<tr>';
       html += '<td><div style="display:flex;align-items:center;gap:10px">' + avatarCircle(a.name, 36) + '<div><div style="font-weight:700">' + a.name + '</div><div style="font-size:12px;color:var(--muted)">' + a.title + '</div></div></div></td>';
