@@ -466,13 +466,6 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
 <script>
 const API = 'https://script.google.com/macros/s/AKfycbx7Bd9VvoyzfiiezQV9huoY2BKHH_Br1RAFIz00mjdyKeis-Zv-38a0gf_b-fMlul2C/exec';
 
-const DEMO_ACCOUNTS = [
-  { email: 'phuong@linkajob.vn',  password: '123456', role: 'Staff',   name: 'Phương Staff',        initials: 'PS', subRole: 'Admin' },
-  { email: 'khoa@linkajob.vn',    password: '123456', role: 'Staff',   name: 'Trần Minh Khoa',       initials: 'TK', subRole: 'Sale', staffId: 's2' },
-  { email: 'chau@linkajob.vn',    password: '123456', role: 'Staff',   name: 'Lê Thị Bảo Châu',      initials: 'LC', subRole: 'CourseManager', staffId: 's3' },
-  { email: 'thanh@linkajob.vn',   password: '123456', role: 'Staff',   name: 'Đinh Văn Thành',       initials: 'DT', subRole: 'AdvisorManager', staffId: 's4' },
-];
-
 const PACKAGES = {
   'Trial':       { price: 419000,  sessions: 1, days: 3  },
   'Cơ Bản':     { price: 799000,  sessions: 2, days: 14 },
@@ -537,6 +530,36 @@ function loadAdvisorsFromSheet(callback) {
     if (callback) callback();
   });
 }
+
+// ── Nhân viên (Sale/CourseManager/AdvisorManager/Admin) — tải THẬT từ tab SalesConfig ──
+sheetData.staffList = [];
+let staffListLoaded = false;
+const STAFF_ROLE_LABELS = { Sale: 'Sale', CourseManager: 'Quản lý lớp học', AdvisorManager: 'Quản lý Advisor', Admin: 'Admin' };
+function normalizeStaffFromSheet(s) {
+  var subRole = s.sub_role || 'Sale';
+  return {
+    id: s.staff_id || '',
+    name: s.name || '',
+    role: STAFF_ROLE_LABELS[subRole] || subRole,
+    subRole: subRole,
+    email: s.email || '',
+    phone: s.phone || '',
+    joinDate: s.join_date || '—',
+    active: s.active === true || s.active === 'TRUE' || s.active === 'true',
+    note: s.note || '',
+    leadLimit: Number(s.lead_limit) || 30,
+  };
+}
+function loadStaffListFromSheet(callback) {
+  apiGet('getStaffList', {}).then(function(res){
+    sheetData.staffList = (res && res.data) ? res.data.map(normalizeStaffFromSheet) : [];
+    staffListLoaded = true;
+    if (callback) callback();
+  }).catch(function(){
+    staffListLoaded = true;
+    if (callback) callback();
+  });
+}
   
 function toast(msg, type) {
   type = type || '';
@@ -576,8 +599,6 @@ function doLogin() {
     errEl.style.display = 'block'; return;
   }
 
-  let user = DEMO_ACCOUNTS.find(function(a){ return a.email === email && a.password === password && a.role === selectedRole; });
-
   function finishLogin(u) {
     if (!u) {
       errEl.textContent = 'Email hoặc mật khẩu không đúng';
@@ -596,27 +617,36 @@ function doLogin() {
     buildTabBar(u.role);
   }
 
-  if (user) { finishLogin(user); return; }
-
   btn.innerHTML = '<span class="spinner"></span>';
   btn.disabled = true;
-  apiGet('auth', { email: email, role: selectedRole }).then(function(res){
+  // Đăng nhập THẬT — kiểm tra email + mật khẩu qua tab Users trên Sheet.
+  // sub_role (Sale/CourseManager/AdvisorManager/Admin) được backend tra thêm
+  // từ tab SalesConfig qua staff_id, không lưu trùng ở Users.
+  apiGet('login', { email: email, password: password }).then(function(res){
     btn.innerHTML = 'Đăng nhập';
     btn.disabled = false;
     if (res && res.success) {
+      if (res.role !== 'Staff') {
+        errEl.textContent = 'Tài khoản này không có quyền truy cập Staff Dashboard.';
+        errEl.style.display = 'block';
+        return;
+      }
       finishLogin({
-        email: email, role: selectedRole, name: res.name || email,
+        email: res.email || email, role: res.role, name: res.name || email,
         initials: mkInitials(res.name || email),
         subRole: res.sub_role || null,
         staffId: res.staff_id || null,
+        leadLimit: res.lead_limit || null,
       });
     } else {
-      finishLogin(null);
+      errEl.textContent = (res && res.error) ? res.error : 'Email hoặc mật khẩu không đúng';
+      errEl.style.display = 'block';
     }
-  }).catch(function(){
+  }).catch(function(err){
     btn.innerHTML = 'Đăng nhập';
     btn.disabled = false;
-    finishLogin(null);
+    errEl.textContent = 'Lỗi kết nối tới Sheet: ' + err.message;
+    errEl.style.display = 'block';
   });
 }
 
@@ -662,22 +692,32 @@ function submitChangePassword() {
   var newPw = (document.getElementById('cp-new')||{}).value || '';
   var confirm = (document.getElementById('cp-confirm')||{}).value || '';
   var errEl = document.getElementById('cp-error');
+  errEl.style.display = 'none';
 
-  // Kiểm tra mật khẩu cũ khớp với tài khoản demo
-  var account = DEMO_ACCOUNTS.find(function(a){ return a.email === currentUser.email; });
-  if (account && oldPw !== account.password) {
-    errEl.textContent = 'Mật khẩu hiện tại không đúng.'; errEl.style.display = 'block'; return;
-  }
+  if (!oldPw) { errEl.textContent = 'Vui lòng nhập mật khẩu hiện tại.'; errEl.style.display = 'block'; return; }
   if (newPw.length < 6) {
     errEl.textContent = 'Mật khẩu mới phải có ít nhất 6 ký tự.'; errEl.style.display = 'block'; return;
   }
   if (newPw !== confirm) {
     errEl.textContent = 'Mật khẩu xác nhận không khớp.'; errEl.style.display = 'block'; return;
   }
-  // Cập nhật trong demo accounts
-  if (account) account.password = newPw;
-  closeModal();
-  toast('Đổi mật khẩu thành công!', 'success');
+
+  var btn = document.querySelector('#modal-actions .login-btn');
+  if (btn) { btn.innerHTML = '<span class="spinner"></span>'; btn.disabled = true; }
+  apiPost({ action: 'changePassword', email: currentUser.email, old_password: oldPw, new_password: newPw }).then(function(res){
+    if (res && res.success) {
+      closeModal();
+      toast('Đổi mật khẩu thành công!', 'success');
+    } else {
+      errEl.textContent = (res && res.error) ? res.error : 'Không đổi được mật khẩu.';
+      errEl.style.display = 'block';
+      if (btn) { btn.innerHTML = 'Đổi mật khẩu'; btn.disabled = false; }
+    }
+  }).catch(function(err){
+    errEl.textContent = 'Lỗi kết nối: ' + err.message;
+    errEl.style.display = 'block';
+    if (btn) { btn.innerHTML = 'Đổi mật khẩu'; btn.disabled = false; }
+  });
 }
 
 // ════════════════════════════════════════════════════════════
@@ -694,6 +734,7 @@ const SIDEBAR_DEF = {
     ]},
     { id: 'stf', icon: '👔', label: 'Staff', children: [
       { id: 'stf-list',     label: 'Danh sách nhân viên' },
+      { id: 'stf-kpi',      label: '📊 So sánh KPI' },
       { id: 'stf-schedule', label: 'Lịch tư vấn (Sale)' },
     ]},
     { id: 'adv', icon: '🎓', label: 'Advisor', children: [
@@ -727,7 +768,8 @@ const ROUTE_MAP = {
   'lj-report':     { fn: function(){ renderStaff('lj-report'); } },
   'lj-meetings':   { fn: function(){ loadMeetingCalendarAsync(); } },
   'lj-products':   { fn: function(){ renderStaff('lj-products'); } },
-  'stf-list':      { fn: function(){ renderStaff('stf-list'); } },
+  'stf-list':      { fn: function(){ loadStaffListFromSheet(function(){ renderStaff('stf-list'); }); } },
+  'stf-kpi':       { fn: function(){ loadStaffKpiComparePageAsync(); } },
   'stf-schedule':  { fn: function(){ loadStaffSchedulePageAsync(); } },
   'adv-list':      { fn: function(){ loadAdvisorsFromSheet(function(){ renderStaff('advisor-mod'); }); } },
   'adv-new':       { fn: function(){ renderStaff('adv-new'); } },
@@ -872,6 +914,7 @@ function buildTabBar(role) {
     if (subRole === 'Admin') {
       tabbar.className  = 'role-tabbar';        // hide tabbar
       sidebar.className = 'sidebar';             // show sidebar
+      loadStaffListFromSheet(); // tải trước danh sách nhân viên thật (dùng cho phân công lead, KPI...)
       buildSidebar(role);
       return;
     }
@@ -892,10 +935,13 @@ function buildTabBar(role) {
     sidebar.className = 'sidebar hidden';
     var mc = document.getElementById('main-content');
     mc.className = 'content';
-    if (subRole === 'Sale') loadSaleSelfDashboard();
-    else if (subRole === 'CourseManager') mc.innerHTML = renderCourseManagerDashboard();
-    else if (subRole === 'AdvisorManager') mc.innerHTML = renderAdvisorManagerDashboard();
-    else mc.innerHTML = '<div class="empty-state">Chưa cấu hình quyền cho vai trò này</div>';
+    mc.innerHTML = skeletonRows(3);
+    loadStaffListFromSheet(function(){
+      if (subRole === 'Sale') loadSaleSelfDashboard();
+      else if (subRole === 'CourseManager') mc.innerHTML = renderCourseManagerDashboard();
+      else if (subRole === 'AdvisorManager') mc.innerHTML = renderAdvisorManagerDashboard();
+      else mc.innerHTML = '<div class="empty-state">Chưa cấu hình quyền cho vai trò này</div>';
+    });
     return;
   }
 
@@ -1254,7 +1300,7 @@ function getStaffLeadLoad(staffName) {
 
 // Tìm Sale đang Active, chưa đầy tải, có tải thấp nhất (mục 4 SOP)
 function findLeastLoadedSale() {
-  var candidates = MOCK.staffList.filter(function(s){ return s.role === 'Sale' && s.active; }).map(function(s){
+  var candidates = sheetData.staffList.filter(function(s){ return s.role === 'Sale' && s.active; }).map(function(s){
     return { staff: s, load: getStaffLeadLoad(s.name), limit: s.leadLimit || Infinity };
   }).filter(function(c){ return c.load < c.limit; });
   if (candidates.length === 0) return null;
@@ -1363,8 +1409,8 @@ function assignCandidateRowHtml(st, cid, load, limit, full) {
 function openAssignRegModal(cid) {
   var c = MOCK.consultations.find(function(x){ return x.id === cid; });
   if (!c) return;
-  var saleStaff  = MOCK.staffList.filter(function(st){ return st.role === 'Sale' && st.active; });
-  var otherStaff = MOCK.staffList.filter(function(st){ return st.role !== 'Sale' && st.active; });
+  var saleStaff  = sheetData.staffList.filter(function(st){ return st.role === 'Sale' && st.active; });
+  var otherStaff = sheetData.staffList.filter(function(st){ return st.role !== 'Sale' && st.active; });
 
   document.getElementById('modal-title').textContent = 'Phân công — ' + (c.name || 'Khách hàng');
   var body = '<div style="font-size:13px;color:var(--muted);margin-bottom:14px">Chọn người phụ trách liên hệ và tư vấn cho khách này. Lượt tư vấn sẽ xuất hiện trong tab tương ứng của người được chọn.</div>';
@@ -1716,50 +1762,15 @@ const MOCK = {
       schedule:[{date:'2026-07-10',topic:'Đọc hiểu báo cáo tài chính'}],
       materials:[], students:['Lê Văn Bình','+11 học viên khác'] },
   ],
-  staffList: [
-    { id:'s1', name:'Nguyễn Phương Thảo', role:'Sale', subRole:'Sale', email:'thao@linkajob.vn', phone:'0901111222',
-      joinDate:'2025-09-01', active:true, note:'Sale chính, phụ trách tư vấn KH mới', leadLimit:30 },
-    { id:'s2', name:'Trần Minh Khoa', role:'Sale', subRole:'Sale', email:'khoa@linkajob.vn', phone:'0902222333',
-      joinDate:'2025-11-15', active:true, note:'Sale hỗ trợ, phụ trách KH cũ', leadLimit:30 },
-    { id:'s3', name:'Lê Thị Bảo Châu', role:'Quản lý lớp học', subRole:'CourseManager', email:'chau@linkajob.vn', phone:'0903333444',
-      joinDate:'2026-01-10', active:true, note:'Quản lý học viên, nội dung lớp học & thời khoá biểu' },
-    { id:'s4', name:'Đinh Văn Thành', role:'Quản lý Advisor', subRole:'AdvisorManager', email:'thanh@linkajob.vn', phone:'0904444555',
-      joinDate:'2026-03-01', active:true, note:'Quản lý số lượng advisee & chất lượng buổi meeting của Advisor' },
-    { id:'s5', name:'Ngô Bích Ngọc', role:'Sale', subRole:'Sale', email:'ngoc@linkajob.vn', phone:'0905555666',
-      joinDate:'2026-05-01', active:false, note:'Tạm nghỉ', leadLimit:15 },
-  ],
-  saleSlots: [
-    { staff:'Nguyễn Phương Thảo', date:'2026-07-02', time:'10:00', status:'available', client:'', note:'Tư vấn gói cố vấn' },
-    { staff:'Nguyễn Phương Thảo', date:'2026-07-02', time:'14:00', status:'booked', client:'KH: Nguyễn Thị Mai', note:'Tư vấn gói cố vấn' },
-    { staff:'Trần Minh Khoa', date:'2026-07-03', time:'09:00', status:'available', client:'', note:'Tư vấn khoá học' },
-    { staff:'Trần Minh Khoa', date:'2026-07-03', time:'15:00', status:'booked', client:'KH: Phạm Văn Long', note:'Tư vấn gói cố vấn' },
-    { staff:'Nguyễn Phương Thảo', date:'2026-07-04', time:'11:00', status:'available', client:'', note:'Tư vấn gói cố vấn' },
-  ],
+  // staffList đã chuyển sang sheetData.staffList (tải thật từ tab SalesConfig — xem loadStaffListFromSheet)
+  // saleSlots chỉ chứa slot THẬT — nạp/merge từ tab AvailableSlots qua loadStaffScheduleTabAsync().
+  saleSlots: [],
   // Nhật ký & thông tin chi tiết từng lượt tư vấn (đồng bộ cấu trúc với Google Sheet đang dùng)
   // Yêu cầu đổi giờ meeting — từ Advisor hoặc Advisee, cần Staff xác nhận
   rescheduleRequests: [],
-  consultations: [
-    { id:'cv1', staff:'Trần Minh Khoa', name:'Phạm Văn Long', phone:'0909111222', email:'long.pham@gmail.com',
-      source:'Website', consultAbout:'Gói Cố vấn', date:'2026-07-03', time:'15:00', meetLink:'https://meet.google.com/xyz-uvwx-rst',
-      status:'Đã chốt lịch', result:'', nextStep:'', nextStepDeadline:'',
-      profile:{education:'', experience:'', desire:'', barrier:'', followUp:''},
-      log:[ {time:'29/06/2026 10:05', text:'Khách đăng ký tư vấn qua website, tự chọn slot 15:00 ngày 3/7.'} ] },
-    { id:'cv2', staff:'Trần Minh Khoa', name:'Nguyễn Thị Hoa', phone:'0912345678', email:'hoa.nguyen@gmail.com',
-      source:'Facebook Ads', consultAbout:'Khoá học Marketing', date:null, time:null, meetLink:'',
-      status:'Chưa liên hệ', result:'', nextStep:'Gọi điện xác nhận nhu cầu trước khi mời đặt lịch', nextStepDeadline:'2026-07-15',
-      profile:{education:'Đại học Kinh tế TP.HCM', experience:'Chưa có kinh nghiệm Marketing', desire:'Muốn học nền tảng Marketing để chuyển ngành', barrier:'Đang đi làm full-time, ít thời gian ban ngày', followUp:''},
-      log:[ {time:'10/07/2026 09:12', text:'Khách để lại thông tin qua Form quảng cáo Facebook, chưa đặt lịch meeting.'} ] },
-    { id:'cv3', staff:'Nguyễn Phương Thảo', name:'Nguyễn Thị Mai', phone:'0933444555', email:'mai.nguyen@gmail.com',
-      source:'Email', consultAbout:'Gói Cố vấn', date:'2026-07-02', time:'14:00', meetLink:'https://meet.google.com/abc-defg-hij',
-      status:'Đã chốt lịch', result:'', nextStep:'', nextStepDeadline:'',
-      profile:{education:'', experience:'', desire:'', barrier:'', followUp:''},
-      log:[ {time:'27/06/2026 16:40', text:'Khách chủ động email hỏi về gói cố vấn, đã gửi lịch trống để khách tự chọn.'} ] },
-    { id:'cv4', staff:'Nguyễn Phương Thảo', name:'Đỗ Văn Kiệt', phone:'0977888999', email:'kiet.do@gmail.com',
-      source:'Zalo', consultAbout:'Advisor', date:null, time:null, meetLink:'',
-      status:'Đang liên hệ', result:'', nextStep:'Nhắn lại Zalo hẹn khung giờ phù hợp', nextStepDeadline:'2026-07-14',
-      profile:{education:'', experience:'Fresh graduate ngành Tài chính', desire:'Muốn tìm advisor ngành Finance để định hướng', barrier:'', followUp:'Đã nhắn Zalo 1 lần, chưa phản hồi'},
-      log:[ {time:'11/07/2026 14:20', text:'Khách nhắn Zalo hỏi về advisor ngành Finance, chưa xác nhận được lịch rảnh.'} ] },
-  ],
+  // consultations chỉ chứa lead THẬT — được nạp/merge từ tab Leads qua mergeLeadRow(),
+  // không seed dữ liệu giả ở đây nữa.
+  consultations: [],
 };
 
 function fmtMoney(n) { return (n||0).toLocaleString('vi-VN') + 'đ'; }
@@ -1784,12 +1795,12 @@ function renderStaffListPage() {
   let html = pageHeader('Nhân viên', 'Quản lý nhân sự LinkaJob');
 
   // KPI nhanh
-  const active = MOCK.staffList.filter(function(s){ return s.active; });
+  const active = sheetData.staffList.filter(function(s){ return s.active; });
   const saleCount = active.filter(function(s){ return s.role === 'Sale'; }).length;
   html += '<div class="stats-row" style="grid-template-columns:repeat(3,1fr);margin-bottom:20px">';
   html += '<div class="stat-cell"><div class="stat-num">' + active.length + '</div><div class="stat-label">Nhân viên đang hoạt động</div></div>';
   html += '<div class="stat-cell"><div class="stat-num">' + saleCount + '</div><div class="stat-label">Sale đang hoạt động</div></div>';
-  html += '<div class="stat-cell"><div class="stat-num">' + (MOCK.staffList.length - active.length) + '</div><div class="stat-label">Tạm nghỉ / Nghỉ việc</div></div>';
+  html += '<div class="stat-cell"><div class="stat-num">' + (sheetData.staffList.length - active.length) + '</div><div class="stat-label">Tạm nghỉ / Nghỉ việc</div></div>';
   html += '</div>';
 
   // Bảng danh sách
@@ -1797,8 +1808,12 @@ function renderStaffListPage() {
   html += '<div class="card-header"><div class="card-header-left">Danh sách nhân viên</div>';
   html += '<button class="submit-btn" style="padding:8px 16px;font-size:13px" onclick="openAddStaffModal()">+ Thêm nhân viên</button>';
   html += '</div>';
+  if (sheetData.staffList.length === 0) {
+    html += '<div class="empty-state"><div class="icon">📭</div>Chưa có nhân viên nào trong tab SalesConfig</div></div>';
+    return html;
+  }
   html += '<table class="bookings-table"><thead><tr><th>HỌ TÊN</th><th>VỊ TRÍ</th><th>EMAIL / SĐT</th><th>TẢI LEAD</th><th>NGÀY VÀO</th><th>TRẠNG THÁI</th><th></th></tr></thead><tbody>';
-  MOCK.staffList.forEach(function(s, i){
+  sheetData.staffList.forEach(function(s, i){
     html += '<tr>';
     html += '<td><div style="display:flex;align-items:center;gap:10px">' + avatarCircle(s.name,32) + '<div><div style="font-weight:600">' + s.name + '</div><div style="font-size:12px;color:var(--muted)">' + s.note + '</div></div></div></td>';
     html += '<td>' + roleBadge(s.role) + '</td>';
@@ -1818,6 +1833,102 @@ function renderStaffListPage() {
     html += '</td></tr>';
   });
   html += '</tbody></table></div>';
+  return html;
+}
+
+// ════════════════════════════════════════════════════════════
+//  MỚI — TRANG SO SÁNH KPI NHÂN VIÊN
+//  Tổng hợp từ tab Leads + Sessions thật trên Sheet (không dùng mock),
+//  gộp theo staff_id (ưu tiên) hoặc tên (dự phòng cho dữ liệu cũ chưa có ID).
+// ════════════════════════════════════════════════════════════
+function staffMatchesEntity(staffObj, entity, idField, nameField) {
+  if (staffObj.id && entity[idField] && String(entity[idField]).trim() === String(staffObj.id).trim()) return true;
+  if (staffObj.name && entity[nameField] && stripDiacritics(entity[nameField]) === stripDiacritics(staffObj.name)) return true;
+  return false;
+}
+
+function loadStaffKpiComparePageAsync() {
+  var mc = document.getElementById('main-content');
+  mc.innerHTML = pageHeader('So sánh KPI nhân viên', 'Tổng hợp trực tiếp từ tab Leads và Sessions trên Sheet') + skeletonRows(4);
+
+  Promise.all([
+    apiGet('getStaffList', {}).catch(function(){ return null; }),
+    apiGet('getLeads', {}).catch(function(){ return null; }),
+    apiGet('getSessions', {}).catch(function(){ return null; }),
+  ]).then(function(results){
+    var staffRes = results[0], leadsRes = results[1], sessRes = results[2];
+    if (staffRes && staffRes.data) sheetData.staffList = staffRes.data.map(normalizeStaffFromSheet);
+    var leads = (leadsRes && leadsRes.data) ? leadsRes.data : [];
+    var sessions = (sessRes && sessRes.data) ? sessRes.data : [];
+    mc.innerHTML = renderStaffKpiComparePage(sheetData.staffList, leads, sessions);
+  }).catch(function(err){
+    mc.innerHTML = pageHeader('So sánh KPI nhân viên', '') +
+      '<div class="card"><div class="empty-state"><div class="icon">⚠</div>Không tải được dữ liệu.<br><small style="color:var(--muted)">' + err.message + '</small></div></div>';
+  });
+}
+
+function renderStaffKpiComparePage(staffList, leads, sessions) {
+  var html = pageHeader('So sánh KPI nhân viên', 'Tổng hợp từ tab Leads và Sessions trên Sheet');
+
+  var saleStaff = staffList.filter(function(s){ return s.subRole === 'Sale'; });
+  if (saleStaff.length === 0) {
+    return html + '<div class="card"><div class="empty-state"><div class="icon">📭</div>Chưa có nhân viên Sale nào trong SalesConfig (hoặc chưa thêm cột sub_role)</div></div>';
+  }
+
+  var rows = saleStaff.map(function(s){
+    var myLeads = leads.filter(function(l){ return staffMatchesEntity(s, l, 'staff_id', 'staff'); });
+    var converted = myLeads.filter(function(l){ return l.status === 'Đã chuyển đổi thành khách hàng'; }).length;
+    var closed = myLeads.filter(function(l){ return SLA_TERMINAL.indexOf(l.status) > -1; }).length;
+    var inProgress = myLeads.length - converted - closed;
+    var mySessions = sessions.filter(function(sess){ return staffMatchesEntity(s, sess, 'assigned_staff_id', 'assigned_staff'); });
+    var completedSessions = mySessions.filter(function(sess){ return sess.status === 'completed'; }).length;
+    var currentLoad = myLeads.filter(function(l){ return SLA_TERMINAL.indexOf(l.status) === -1; }).length;
+    var rate = myLeads.length > 0 ? Math.round(converted / myLeads.length * 100) : 0;
+    return {
+      staff: s, totalLeads: myLeads.length, converted: converted, inProgress: inProgress,
+      closed: closed, totalSessions: mySessions.length, completedSessions: completedSessions,
+      currentLoad: currentLoad, rate: rate,
+    };
+  });
+
+  rows.sort(function(a,b){ return b.rate - a.rate || b.converted - a.converted; });
+
+  var totalLeadsAll = rows.reduce(function(sum,r){ return sum + r.totalLeads; }, 0);
+  var totalConvertedAll = rows.reduce(function(sum,r){ return sum + r.converted; }, 0);
+  var avgRate = totalLeadsAll > 0 ? Math.round(totalConvertedAll / totalLeadsAll * 100) : 0;
+
+  html += '<div class="stats-row" style="grid-template-columns:repeat(3,1fr);margin-bottom:20px">';
+  html += '<div class="stat-cell"><div class="stat-num">' + totalLeadsAll + '</div><div class="stat-label">Tổng lead đã phân công</div></div>';
+  html += '<div class="stat-cell"><div class="stat-num">' + totalConvertedAll + '</div><div class="stat-label">Lead đã chuyển đổi</div></div>';
+  html += '<div class="stat-cell"><div class="stat-num">' + avgRate + '%</div><div class="stat-label">Tỷ lệ chuyển đổi trung bình</div></div>';
+  html += '</div>';
+
+  html += '<div class="card" style="margin-bottom:16px"><div class="card-header"><div class="card-header-left">Tỷ lệ chuyển đổi theo nhân viên</div></div>';
+  html += '<div style="padding:16px 28px 28px;display:flex;flex-direction:column;gap:14px">';
+  rows.forEach(function(r){
+    html += '<div><div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:6px"><span>' + avatarCircle(r.staff.name,22) + ' <b>' + r.staff.name + '</b></span><span style="color:var(--muted)">' + r.converted + '/' + r.totalLeads + ' lead · ' + r.rate + '%</span></div>';
+    html += '<div style="height:8px;background:var(--bg);border-radius:100px;overflow:hidden"><div style="height:100%;width:' + r.rate + '%;background:var(--brand);border-radius:100px;transition:width .4s"></div></div></div>';
+  });
+  html += '</div></div>';
+
+  html += '<div class="card"><div class="card-header"><div class="card-header-left">Chi tiết theo nhân viên</div>';
+  html += '<button class="refresh-btn" onclick="loadStaffKpiComparePageAsync()">↻ Làm mới</button></div>';
+  html += '<table class="bookings-table"><thead><tr><th>NHÂN VIÊN</th><th>TẢI HIỆN TẠI</th><th>TỔNG LEAD</th><th>ĐANG XỬ LÝ</th><th>ĐÃ CHUYỂN ĐỔI</th><th>TỶ LỆ</th><th>BUỔI TƯ VẤN</th><th>ĐÃ HOÀN THÀNH</th></tr></thead><tbody>';
+  rows.forEach(function(r){
+    var full = r.currentLoad >= r.staff.leadLimit;
+    html += '<tr>';
+    html += '<td><div style="display:flex;align-items:center;gap:10px">' + avatarCircle(r.staff.name,30) + '<b>' + r.staff.name + '</b></div></td>';
+    html += '<td><span style="' + (full?'color:var(--brand);font-weight:700':'') + '">' + r.currentLoad + '/' + r.staff.leadLimit + '</span>' + (full?' <span style="font-size:11px;color:var(--brand)">Đầy tải</span>':'') + '</td>';
+    html += '<td>' + r.totalLeads + '</td>';
+    html += '<td>' + r.inProgress + '</td>';
+    html += '<td><b>' + r.converted + '</b></td>';
+    html += '<td>' + r.rate + '%</td>';
+    html += '<td>' + r.totalSessions + '</td>';
+    html += '<td>' + r.completedSessions + '</td>';
+    html += '</tr>';
+  });
+  html += '</tbody></table></div>';
+
   return html;
 }
 
@@ -1933,8 +2044,8 @@ function renderAdvisorManagerDashboard() {
 }
 
 function loadSaleSelfDashboard() {
-  var s = (currentUser.staffId && MOCK.staffList.find(function(x){ return x.id === currentUser.staffId; }))
-       || MOCK.staffList.find(function(x){ return x.name === currentUser.name; });
+  var s = (currentUser.staffId && sheetData.staffList.find(function(x){ return x.id === currentUser.staffId; }))
+       || sheetData.staffList.find(function(x){ return x.name === currentUser.name; });
   var mc = document.getElementById('main-content');
   if (!s) { mc.innerHTML = '<div class="empty-state">Không tìm thấy hồ sơ nhân viên tương ứng tài khoản này</div>'; return; }
   _staffDetailId = s.id;
@@ -1959,7 +2070,7 @@ function switchStaffDetailTab(tab) {
 // Tải danh sách lead thật từ Sheet cho đúng nhân viên đang xem, merge vào
 // MOCK.consultations (không xoá sạch, để không mất optimistic update đang chờ lưu).
 function loadStaffLeadsAsync() {
-  var s = MOCK.staffList.find(function(x){ return x.id === _staffDetailId; });
+  var s = sheetData.staffList.find(function(x){ return x.id === _staffDetailId; });
   if (!s) return;
 
   apiGet('getLeads', { staff: s.name }).then(function(res){
@@ -2035,7 +2146,7 @@ function persistLeadLog(leadId, entry) {
 // Toàn bộ slot tư vấn miễn phí nằm chung dưới identity STAFF_SLOT_IDENTITY (khớp với widget public),
 // nên phải lọc thêm theo created_by để biết slot nào của đúng nhân viên đang xem.
 function loadStaffScheduleTabAsync() {
-  var s = MOCK.staffList.find(function(x){ return x.id === _staffDetailId; });
+  var s = sheetData.staffList.find(function(x){ return x.id === _staffDetailId; });
   if (!s) return;
 
   apiGet('getSlots', { advisor: STAFF_SLOT_IDENTITY }).then(function(res){
@@ -2073,7 +2184,7 @@ function loadStaffScheduleTabAsync() {
 }
 
 function renderStaffMemberDetail(staffId, tab, selfView) {
-  var s = MOCK.staffList.find(function(x){ return x.id === staffId; });
+  var s = sheetData.staffList.find(function(x){ return x.id === staffId; });
   if (!s) return '<div class="empty-state">Không tìm thấy nhân viên</div>';
   tab = tab || 'consult';
 
@@ -2476,7 +2587,7 @@ function generateMeetForConsult(cid) {
   btn.textContent = '⏳ Đang tạo...';
   btn.disabled = true;
 
-  var staffObj = MOCK.staffList.find(function(x){ return x.name === c.staff; });
+  var staffObj = sheetData.staffList.find(function(x){ return x.name === c.staff; });
   var staffEmail = staffObj ? staffObj.email : '';
 
   apiPost({
@@ -2847,7 +2958,7 @@ function renderStaffCareTab(s) {
 }
 
 function openStaffDetail(i) {
-  const s = MOCK.staffList[i];
+  const s = sheetData.staffList[i];
   document.getElementById('modal-title').textContent = s.name;
   let html = '<div style="display:flex;align-items:center;gap:14px;margin-bottom:20px">' + avatarCircle(s.name,52);
   html += '<div><div style="font-weight:700;font-size:16px">' + s.name + '</div><div style="margin-top:4px">' + roleBadge(s.role) + '</div></div></div>';
@@ -2881,7 +2992,7 @@ function openAddStaffModal() {
     '<div class="modal-field"><div class="form-label">Họ và tên *</div><input class="form-input" id="ns-name" placeholder="Nguyễn Văn A" style="margin-top:6px"></div>' +
     '<div class="modal-field"><div class="form-label">Email *</div><input class="form-input" id="ns-email" type="email" placeholder="email@linkajob.vn" style="margin-top:6px"></div>' +
     '<div class="modal-field"><div class="form-label">SĐT</div><input class="form-input" id="ns-phone" placeholder="0901234567" style="margin-top:6px"></div>' +
-    '<div class="modal-field"><div class="form-label">Vị trí *</div><select class="form-select" id="ns-role" style="margin-top:6px"><option>Sale</option><option>Quản lý lớp học</option><option>Quản lý Advisor</option><option>Marketing</option><option>Admin</option></select></div>' +
+    '<div class="modal-field"><div class="form-label">Vị trí *</div><select class="form-select" id="ns-role" style="margin-top:6px"><option value="Sale">Sale</option><option value="CourseManager">Quản lý lớp học</option><option value="AdvisorManager">Quản lý Advisor</option><option value="Admin">Admin</option></select></div>' +
     '<div class="modal-field"><div class="form-label">Ghi chú</div><input class="form-input" id="ns-note" placeholder="Mô tả công việc..." style="margin-top:6px"></div>';
   document.getElementById('modal-actions').innerHTML =
     '<button class="btn-secondary" onclick="closeModal()" style="width:auto;padding:10px 20px">Huỷ</button>' +
@@ -2893,18 +3004,27 @@ function saveNewStaff() {
   const name = document.getElementById('ns-name').value.trim();
   const email = document.getElementById('ns-email').value.trim();
   if (!name || !email) { toast('Vui lòng điền họ tên và email', 'error'); return; }
-  MOCK.staffList.push({
-    id: 's' + Date.now(), name: name,
-    role: document.getElementById('ns-role').value,
-    email: email,
+  const payload = {
+    action: 'addStaff', name: name, email: email,
     phone: document.getElementById('ns-phone').value.trim(),
-    joinDate: new Date().toISOString().slice(0,10),
-    active: true,
+    sub_role: document.getElementById('ns-role').value,
     note: document.getElementById('ns-note').value.trim(),
+  };
+  const btn = document.querySelector('#modal-actions .login-btn');
+  if (btn) { btn.innerHTML = '<span class="spinner"></span>'; btn.disabled = true; }
+  apiPost(payload).then(function(res){
+    if (res && res.success) {
+      toast('Đã thêm ' + name + ' — mật khẩu tạm đã gửi qua email ✅', 'success');
+      closeModal();
+      loadStaffListFromSheet(function(){ navTo('stf-list'); });
+    } else {
+      toast('Lỗi: ' + (res && res.error ? res.error : 'không thêm được'), 'error');
+      if (btn) { btn.innerHTML = 'Thêm nhân viên'; btn.disabled = false; }
+    }
+  }).catch(function(err){
+    toast('Lỗi kết nối: ' + err.message, 'error');
+    if (btn) { btn.innerHTML = 'Thêm nhân viên'; btn.disabled = false; }
   });
-  toast('Đã thêm ' + name, 'success');
-  closeModal();
-  navTo('stf-list');
 }
 
 // ════════════════════════════════════════════════════════════
@@ -2921,7 +3041,7 @@ var staffCalMonthOffset = 0;
 function loadStaffSchedulePageAsync() {
   var mc = document.getElementById('main-content');
   mc.innerHTML = skeletonRows(3);
-  var saleStaff = MOCK.staffList.filter(function(s){ return s.role === 'Sale' && s.active; });
+  var saleStaff = sheetData.staffList.filter(function(s){ return s.role === 'Sale' && s.active; });
   var saleNames = saleStaff.map(function(s){ return s.name; });
 
   Promise.all([
@@ -2961,7 +3081,7 @@ function loadStaffSchedulePageAsync() {
     
 
 function renderStaffSchedulePage() {
-  const saleStaff = MOCK.staffList.filter(function(s){ return s.role === 'Sale' && s.active; });
+  const saleStaff = sheetData.staffList.filter(function(s){ return s.role === 'Sale' && s.active; });
 
   let html = pageHeader('Lịch tư vấn miễn phí (Sale)', 'Sale chọn giờ trống để KH đặt lịch tư vấn 1-1');
 
@@ -3103,7 +3223,7 @@ function toggleSaleSlot(btn, key) {
 
 function saveSaleSlots(staffName) {
   if (selectedSaleSlots.size === 0) { toast('Chưa chọn giờ nào!', 'error'); return; }
-  var st = MOCK.staffList.find(function(x){ return x.name === staffName; });
+  var st = sheetData.staffList.find(function(x){ return x.name === staffName; });
   var btn = document.getElementById('sale-send-btn');
   if (btn) { btn.innerHTML = '<span class="spinner"></span> Đang lưu...'; btn.disabled = true; }
 
