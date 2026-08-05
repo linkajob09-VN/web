@@ -1007,6 +1007,30 @@ function loadAdviseeRealDataAsync() {
 
 // ── Ghép 1 dòng Booking + các dòng Sessions liên quan thành 1 object
 //    "advisee" đúng shape mà renderAdvisorOverview / renderMyBookings đang cần ──
+// Sheet đôi khi trả về ngày/giờ dạng locale (VD "8/7/2026", "8:00:00 PM") thay vì
+// chuỗi chuẩn ("2026-08-07", "20:00") tuỳ luồng backend ghi vào. Chuẩn hoá cả 2 kiểu
+// về đúng "yyyy-MM-dd" / "HH:mm" để new Date() luôn parse được.
+function normSheetDate(v) {
+  v = String(v || '').trim();
+  if (!v) return '';
+  if (/^\d{4}-\d{2}-\d{2}/.test(v)) return v.slice(0, 10); // đã đúng chuẩn (có thể kèm giờ ISO)
+  var m = /^(\d{1,2})\/(\d{1,2})\/(\d{4})/.exec(v); // M/D/YYYY kiểu locale Mỹ
+  if (m) return m[3] + '-' + (m[1].length<2?'0':'') + m[1] + '-' + (m[2].length<2?'0':'') + m[2];
+  return v;
+}
+function normSheetTime(v) {
+  v = String(v || '').trim();
+  if (!v) return '';
+  if (/^\d{1,2}:\d{2}$/.test(v)) return v; // đã đúng chuẩn HH:mm
+  var m = /^(\d{1,2}):(\d{2})(:\d{2})?\s*(AM|PM)$/i.exec(v); // "8:00:00 PM"
+  if (m) {
+    var h = Number(m[1]) % 12;
+    if (/pm/i.test(m[4])) h += 12;
+    return (h<10?'0':'') + h + ':' + m[2];
+  }
+  return v;
+}
+
 function buildAdviseeFromBooking(b, allSessions) {
   var mySessions = allSessions.filter(function(s){ return s.booking_id === b.booking_id; });
   var sessionsTotal = Number(b.sessions_total) || 0;
@@ -1027,9 +1051,12 @@ function buildAdviseeFromBooking(b, allSessions) {
       continue;
     }
 
+    var schedDate = normSheetDate(row.scheduled_date);
+    var schedTime = normSheetTime(row.scheduled_time);
+
     var timeEnd = '';
-    if (row.scheduled_time) {
-      var parts = String(row.scheduled_time).split(':');
+    if (schedTime) {
+      var parts = schedTime.split(':');
       var mins = (Number(parts[0])||0) * 60 + (Number(parts[1])||0) + (Number(row.duration_minutes) || 20);
       timeEnd = (Math.floor(mins/60)%24 < 10 ? '0':'') + (Math.floor(mins/60)%24) + ':' + (mins%60 < 10 ? '0':'') + (mins%60);
     }
@@ -1037,12 +1064,12 @@ function buildAdviseeFromBooking(b, allSessions) {
     var status;
     if (row.status === 'completed') status = 'done';
     else {
-      var sessDate = row.scheduled_date ? new Date(row.scheduled_date + 'T' + (row.scheduled_time||'00:00')) : null;
+      var sessDate = schedDate ? new Date(schedDate + 'T' + (schedTime||'00:00')) : null;
       status = (sessDate && sessDate < today) ? 'feedback' : 'upcoming';
     }
 
     sessions.push({
-      no: no, date: row.scheduled_date || null, timeStart: row.scheduled_time || null, timeEnd: timeEnd,
+      no: no, date: schedDate || null, timeStart: schedTime || null, timeEnd: timeEnd,
       status: status, feedback: null, meetLink: row.meet_link || '', prepInfo: null, advisorNotes: null,
       session_id: row.session_id,
     });
