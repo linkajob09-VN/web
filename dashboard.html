@@ -807,6 +807,7 @@ const SIDEBAR_DEF = {
       { id: 'lj-newreg',   label: '🔴 Khách đăng ký mới' },
       { id: 'lj-revenue',  label: 'Doanh thu' },
       { id: 'lj-report',   label: 'Báo cáo vận hành' },
+      { id: 'lj-sales-perf', label: '📈 Báo cáo hiệu suất Sale' },
       { id: 'lj-meetings', label: 'Lịch meeting' },
       { id: 'lj-products', label: 'Sản phẩm' },
     ]},
@@ -843,9 +844,10 @@ const ROUTE_MAP = {
   // Staff routes
   'lj-newreg':     { fn: function(){ renderStaff('lj-newreg'); } },
   'lj-revenue':    { fn: function(){ loadAdviseesFromSheet(function(){ renderStaff('lj-revenue'); }); } },
-  'lj-report':     { fn: function(){ renderStaff('lj-report'); } },
+  'lj-report':     { fn: function(){ loadAdviseesFromSheet(function(){ renderStaff('lj-report'); }); } },
+  'lj-sales-perf': { fn: function(){ loadSalesPerformancePageAsync(); } },
   'lj-meetings':   { fn: function(){ loadMeetingCalendarAsync(); } },
-  'lj-products':   { fn: function(){ renderStaff('lj-products'); } },
+  'lj-products':   { fn: function(){ loadProductsPageAsync(); } },
   'stf-list':      { fn: function(){ loadStaffListFromSheet(function(){ renderStaff('stf-list'); }); } },
   'stf-kpi':       { fn: function(){ loadStaffKpiComparePageAsync(); } },
   'stf-schedule':  { fn: function(){ loadStaffSchedulePageAsync(); } },
@@ -1709,8 +1711,9 @@ function renderStaff(tab) {
   if      (tab === 'lj-newreg')         loadNewRegistrationsPage();
   else if (tab === 'lj-revenue')        c.innerHTML = renderRevenuePage();
   else if (tab === 'lj-report')         c.innerHTML = renderReportPage();
-  else if (tab === 'linkajob-calendar' || tab === 'lj-meetings') c.innerHTML = renderMeetingCalendar();
-  else if (tab === 'lj-products')       c.innerHTML = renderProductsPage();
+  else if (tab === 'lj-sales-perf')     loadSalesPerformancePageAsync();
+  else if (tab === 'linkajob-calendar' || tab === 'lj-meetings') loadMeetingCalendarAsync();
+  else if (tab === 'lj-products')       loadProductsPageAsync();
   else if (tab === 'stf-list')          c.innerHTML = renderStaffListPage();
   else if (tab === 'stf-schedule')      c.innerHTML = renderStaffSchedulePage();
   else if (tab === 'advisor-mod')       c.innerHTML = renderAdvisorModule();
@@ -3392,37 +3395,64 @@ function pageHeader(title, sub) {
 
 // ── 1. DOANH THU ──
 function renderRevenuePage() {
-  let html = pageHeader('Doanh thu', 'Tổng quan doanh thu theo thời gian');
+  let html = pageHeader('Doanh thu', 'Tổng quan doanh thu theo thời gian (tính từ Booking đã xác nhận)');
+
+  var now = new Date(); now.setHours(0,0,0,0);
+  var startOfWeek = new Date(now); startOfWeek.setDate(now.getDate() - ((now.getDay()+6)%7)); // T2 tuần này
+  var startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+  var startOfYear = new Date(now.getFullYear(), 0, 1);
+
+  var rev = { today: 0, week: 0, month: 0, year: 0 };
+  MOCK.advisees.forEach(function(ae){
+    if (!ae.registeredAt) return;
+    var d = new Date(ae.registeredAt + 'T00:00:00');
+    if (isNaN(d)) return;
+    if (d.getTime() === now.getTime()) rev.today += ae.paid;
+    if (d >= startOfWeek) rev.week += ae.paid;
+    if (d >= startOfMonth) rev.month += ae.paid;
+    if (d >= startOfYear) rev.year += ae.paid;
+  });
 
   // 4 ô KPI
   html += '<div class="stats-row" style="grid-template-columns:repeat(4,1fr);margin-bottom:20px">';
-  html += '<div class="stat-cell"><div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">HÔM NAY</div><div class="stat-num" style="font-size:22px">' + fmtMoney(MOCK.revenue.today) + '</div></div>';
-  html += '<div class="stat-cell"><div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">TUẦN NÀY</div><div class="stat-num" style="font-size:22px">' + fmtMoney(MOCK.revenue.week) + '</div></div>';
-  html += '<div class="stat-cell"><div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">THÁNG NÀY</div><div class="stat-num" style="font-size:22px">' + fmtMoney(MOCK.revenue.month) + '</div></div>';
-  html += '<div class="stat-cell"><div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">NĂM NAY</div><div class="stat-num" style="font-size:22px">' + fmtMoney(MOCK.revenue.year) + '</div></div>';
+  html += '<div class="stat-cell"><div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">HÔM NAY</div><div class="stat-num" style="font-size:22px">' + fmtMoney(rev.today) + '</div></div>';
+  html += '<div class="stat-cell"><div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">TUẦN NÀY</div><div class="stat-num" style="font-size:22px">' + fmtMoney(rev.week) + '</div></div>';
+  html += '<div class="stat-cell"><div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">THÁNG NÀY</div><div class="stat-num" style="font-size:22px">' + fmtMoney(rev.month) + '</div></div>';
+  html += '<div class="stat-cell"><div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">NĂM NAY</div><div class="stat-num" style="font-size:22px">' + fmtMoney(rev.year) + '</div></div>';
   html += '</div>';
 
-  // Biểu đồ doanh thu theo tuần
-  const maxVal = Math.max.apply(null, MOCK.reportSeries.map(function(d){ return d.value; }));
-  html += '<div class="card"><div class="card-header"><div class="card-header-left">Doanh thu theo ngày trong tuần (buổi đã bán)</div></div>';
+  // Biểu đồ doanh thu 7 ngày gần nhất (dựa trên ngày đăng ký thật)
+  var last7 = [];
+  for (var i = 6; i >= 0; i--) { var d = new Date(now); d.setDate(now.getDate()-i); last7.push(d); }
+  var byDay = {};
+  MOCK.advisees.forEach(function(ae){ if (ae.registeredAt) byDay[ae.registeredAt] = (byDay[ae.registeredAt]||0) + ae.paid; });
+  var series = last7.map(function(d){ return { label: (d.getDate()<10?'0':'')+d.getDate()+'/'+(d.getMonth()+1<10?'0':'')+(d.getMonth()+1), value: byDay[ymd(d)] || 0 }; });
+  var maxVal = Math.max.apply(null, series.map(function(d){ return d.value; })) || 1;
+
+  html += '<div class="card"><div class="card-header"><div class="card-header-left">Doanh thu 7 ngày gần nhất</div></div>';
   html += '<div style="display:flex;gap:10px;align-items:flex-end;height:160px;padding:12px 28px 28px">';
-  MOCK.reportSeries.forEach(function(d){
+  series.forEach(function(d){
     const h = Math.round((d.value / maxVal) * 120);
     html += '<div style="display:flex;flex-direction:column;align-items:center;gap:6px;flex:1">';
-    html += '<div style="font-size:11px;color:var(--muted);font-weight:600">' + d.value + '</div>';
-    html += '<div style="width:100%;max-width:36px;height:' + h + 'px;background:var(--brand);border-radius:6px 6px 0 0"></div>';
+    html += '<div style="font-size:10.5px;color:var(--muted);font-weight:600">' + (d.value?fmtMoney(d.value):'') + '</div>';
+    html += '<div style="width:100%;max-width:36px;height:' + Math.max(h,2) + 'px;background:var(--brand);border-radius:6px 6px 0 0"></div>';
     html += '<div style="font-size:11px;color:var(--muted)">' + d.label + '</div>';
     html += '</div>';
   });
   html += '</div></div>';
 
-  // Bảng chi tiết giao dịch
-  html += '<div class="card"><div class="card-header"><div class="card-header-left">Giao dịch gần nhất</div></div>';
-  html += '<table class="bookings-table"><thead><tr><th>ADVISEE</th><th>GÓI</th><th>GIÁ TRỊ</th><th>NGÀY</th><th>TRẠNG THÁI</th></tr></thead><tbody>';
-  MOCK.advisees.forEach(function(ae){
-    html += '<tr><td><b>' + ae.name + '</b></td><td>' + ae.pkg + '</td><td><b>' + fmtMoney(ae.paid) + '</b></td><td>' + ae.registeredAt + '</td><td><span class="badge badge-confirmed">Đã thanh toán</span></td></tr>';
-  });
-  html += '</tbody></table></div>';
+  // Bảng chi tiết giao dịch — dữ liệu thật từ Bookings đã xác nhận
+  html += '<div class="card"><div class="card-header"><div class="card-header-left">Giao dịch (' + MOCK.advisees.length + ')</div></div>';
+  if (MOCK.advisees.length === 0) {
+    html += '<div class="empty-state"><div class="icon">💳</div>Chưa có giao dịch nào</div>';
+  } else {
+    html += '<table class="bookings-table"><thead><tr><th>ADVISEE</th><th>GÓI</th><th>GIÁ TRỊ</th><th>NGÀY</th><th>TRẠNG THÁI</th></tr></thead><tbody>';
+    MOCK.advisees.slice().sort(function(a,b){ return (b.registeredAt||'') > (a.registeredAt||'') ? 1 : -1; }).forEach(function(ae){
+      html += '<tr><td><b>' + ae.name + '</b></td><td>' + (ae.pkg||'—') + '</td><td><b>' + fmtMoney(ae.paid) + '</b></td><td>' + (ae.registeredAt||'—') + '</td><td><span class="badge badge-confirmed">Đã thanh toán</span></td></tr>';
+    });
+    html += '</tbody></table>';
+  }
+  html += '</div>';
   return html;
 }
 
