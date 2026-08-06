@@ -531,6 +531,84 @@ function loadAdvisorsFromSheet(callback) {
   });
 }
 
+// ── Ghép 1 dòng Booking + các dòng Sessions liên quan thành 1 object
+//    "advisee" đúng shape mà renderAdviseeModule / renderRevenuePage / renderStaffCareTab đang cần ──
+function buildAdviseeFromBooking(b, allSessions) {
+  var mySessions = allSessions.filter(function(s){ return s.booking_id === b.booking_id; });
+  var sessionsTotal = Number(b.sessions_total) || 0;
+  var today = new Date();
+
+  var sessions = [];
+  for (var no = 1; no <= sessionsTotal; no++) {
+    var row = mySessions.find(function(s){ return Number(s.session_number) === no; });
+
+    if (!row) {
+      sessions.push({
+        no: no, date: null, timeStart: null, timeEnd: null,
+        status: no === 1 ? 'upcoming' : 'locked',
+        lockedReason: no === 1 ? undefined : 'Hoàn thành buổi trước để mở khoá',
+        feedback: null, meetLink: '', prepInfo: null, advisorNotes: null, session_id: null,
+      });
+      continue;
+    }
+
+    var timeEnd = '';
+    if (row.scheduled_time) {
+      var parts = String(row.scheduled_time).split(':');
+      var mins = (Number(parts[0])||0) * 60 + (Number(parts[1])||0) + (Number(row.duration_minutes) || 20);
+      timeEnd = (Math.floor(mins/60)%24 < 10 ? '0':'') + (Math.floor(mins/60)%24) + ':' + (mins%60 < 10 ? '0':'') + (mins%60);
+    }
+
+    var status;
+    if (String(row.status||'').toLowerCase() === 'completed') status = 'done';
+    else {
+      var sessDate = row.scheduled_date ? new Date(row.scheduled_date + 'T' + (row.scheduled_time||'00:00')) : null;
+      status = (sessDate && sessDate < today) ? 'feedback' : 'upcoming';
+    }
+
+    sessions.push({
+      no: no, date: row.scheduled_date || null, timeStart: row.scheduled_time || null, timeEnd: timeEnd,
+      status: status, feedback: null, meetLink: row.meet_link || '', prepInfo: null, advisorNotes: null,
+      session_id: row.session_id,
+    });
+  }
+
+  var sessionsDone = sessions.filter(function(s){ return s.status === 'done'; }).length;
+
+  return {
+    id: b.booking_id, name: b.advisee_name, email: b.advisee_email, phone: b.advisee_phone,
+    pkg: b.package_name, bookingId: b.booking_id, advisorTitle: '',
+    sessionsTotal: sessionsTotal, sessionsDone: sessionsDone, progress: sessionsDone + '/' + sessionsTotal,
+    paid: Number(b.package_price) || 0,
+    registeredAt: b.created_at ? String(b.created_at).slice(0,10) : '',
+    expiry: b.expiry_date ? String(b.expiry_date).slice(0,10) : '',
+    advisor: b.advisor_name, sessions: sessions,
+  };
+}
+
+// ── Advisee — tải THẬT từ Bookings + Sessions, ghi thẳng vào MOCK.advisees.
+//    Ghi vào MOCK (thay vì tạo sheetData.advisees riêng) để toàn bộ ~30 chỗ
+//    trong file đang đọc MOCK.advisees tự động nhận dữ liệu thật, không cần
+//    sửa từng chỗ. ──
+let adviseesLoaded = false;
+function loadAdviseesFromSheet(callback) {
+  Promise.all([
+    apiGet('getBookings', {}),
+    apiGet('getSessions', {}),
+  ]).then(function(results){
+    var bookings = (results[0] && results[0].data) ? results[0].data : [];
+    var sessions = (results[1] && results[1].data) ? results[1].data : [];
+    var confirmed = bookings.filter(function(b){ return String(b.status||'').trim().toLowerCase() === 'confirmed'; });
+    MOCK.advisees = confirmed.map(function(b){ return buildAdviseeFromBooking(b, sessions); });
+    adviseesLoaded = true;
+    if (callback) callback();
+  }).catch(function(err){
+    console.warn('Không tải được advisees thật:', err.message);
+    adviseesLoaded = true;
+    if (callback) callback();
+  });
+}
+
 // ── Nhân viên (Sale/CourseManager/AdvisorManager/Admin) — tải THẬT từ tab SalesConfig ──
 sheetData.staffList = [];
 let staffListLoaded = false;
@@ -764,7 +842,7 @@ const SIDEBAR_DEF = {
 const ROUTE_MAP = {
   // Staff routes
   'lj-newreg':     { fn: function(){ renderStaff('lj-newreg'); } },
-  'lj-revenue':    { fn: function(){ renderStaff('lj-revenue'); } },
+  'lj-revenue':    { fn: function(){ loadAdviseesFromSheet(function(){ renderStaff('lj-revenue'); }); } },
   'lj-report':     { fn: function(){ renderStaff('lj-report'); } },
   'lj-meetings':   { fn: function(){ loadMeetingCalendarAsync(); } },
   'lj-products':   { fn: function(){ renderStaff('lj-products'); } },
@@ -773,7 +851,7 @@ const ROUTE_MAP = {
   'stf-schedule':  { fn: function(){ loadStaffSchedulePageAsync(); } },
   'adv-list':      { fn: function(){ loadAdvisorsFromSheet(function(){ renderStaff('advisor-mod'); }); } },
   'adv-new':       { fn: function(){ renderStaff('adv-new'); } },
-  'aee-list':      { fn: function(){ renderStaff('advisee-mod'); } },
+  'aee-list':      { fn: function(){ loadAdviseesFromSheet(function(){ renderStaff('advisee-mod'); }); } },
   'aee-reschedule': { fn: function(){ renderStaff('aee-reschedule'); } },
   'crs-list':      { fn: function(){ renderStaff('course-mod'); } },
   'crs-new':       { fn: function(){ renderStaff('course-mod'); } },
@@ -2059,6 +2137,12 @@ function switchStaffDetailTab(tab) {
   _staffDetailTab = tab;
   if (tab === 'schedule') { loadStaffScheduleTabAsync(); return; }
   if (tab === 'consult' || tab === 'leads') { loadStaffLeadsAsync(); return; }
+  if (tab === 'care') {
+    loadAdviseesFromSheet(function(){
+      document.getElementById('main-content').innerHTML = renderStaffMemberDetail(_staffDetailId, tab, _staffDetailSelfView);
+    });
+    return;
+  }
   document.getElementById('main-content').innerHTML = renderStaffMemberDetail(_staffDetailId, tab, _staffDetailSelfView);
 }
 
