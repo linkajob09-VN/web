@@ -469,11 +469,72 @@ footer span{ color:var(--orange);}
 @media(max-width:560px){
   .cta-box{ padding:40px 24px;}
 }
+
+/* mobile nav (hamburger) */
+.lj-nav-toggle{ display:none; background:transparent; border:none; width:38px; height:38px; align-items:center; justify-content:center; cursor:pointer; border-radius:8px; flex-shrink:0;}
+.lj-nav-toggle:hover{ background:rgba(24,21,16,.05);}
+.lj-nav-toggle svg{ width:22px; height:22px; display:block;}
+.lj-nav-toggle svg path{ stroke:var(--text);}
+.lj-nav-backdrop{ display:none;}
+@media(max-width:860px){
+  .lj-nav-toggle{ display:flex;}
+  .lj-nav-links{
+    position:fixed; top:0; right:0; bottom:0; width:min(320px,84vw);
+    background:#FFFFFF; flex-direction:column; align-items:stretch;
+    padding:88px 22px 24px; gap:2px; overflow-y:auto; z-index:250;
+    transform:translateX(100%); transition:transform .28s cubic-bezier(.22,1,.36,1);
+    box-shadow:-16px 0 40px rgba(0,0,0,.18);
+  }
+  .lj-nav-links.open{ transform:translateX(0);}
+  .lj-nav-backdrop{ display:block; position:fixed; inset:0; background:rgba(0,0,0,.4); z-index:240; opacity:0; pointer-events:none; transition:opacity .25s;}
+  .lj-nav-backdrop.open{ opacity:1; pointer-events:auto;}
+  .lj-nav-item{ width:100%;}
+  .lj-nav-links > a, .lj-nav-btn-plain{ width:100%; justify-content:space-between; padding:15px 4px; font-size:15.5px; border-radius:0; border-bottom:.5px solid var(--line); color:var(--text);}
+  .lj-dropdown{ position:static; opacity:1; pointer-events:none; max-height:0; overflow:hidden; transform:none; box-shadow:none; border:none; background:transparent; padding:0; min-width:0; border-radius:0; transition:max-height .25s ease;}
+  .lj-nav-item.open .lj-dropdown{ pointer-events:auto; max-height:400px; padding:2px 0 10px 6px;}
+  .lj-di{ padding:11px 8px;}
+  .lj-di-sub{ color:var(--muted);}
+  .lj-btn-nav{ margin:18px 0 0; width:100%; padding:14px; font-size:15px; text-align:center;}
+}
+
+@media(max-width:560px){
+  .hero-cta{ flex-direction:column; align-items:stretch;}
+  .hero-cta .btn{ width:100%;}
+  .hero-stats{ display:grid; grid-template-columns:1fr 1fr; gap:22px 14px; text-align:center; margin-top:36px;}
+  .hstat{ text-align:center;}
+}
+
+/* ── animation system ── */
+@media (prefers-reduced-motion: no-preference){
+  @keyframes heroFadeUp{ from{ opacity:0; transform:translateY(16px);} to{ opacity:1; transform:translateY(0);} }
+  .hero .eyebrow, .hero h1, .hero .sub, .hero-cta, .hero-stats{ animation:heroFadeUp .7s cubic-bezier(.22,1,.36,1) both;}
+  .hero h1{ animation-delay:.06s;}
+  .hero .sub{ animation-delay:.16s;}
+  .hero-cta{ animation-delay:.26s;}
+  .hero-stats{ animation-delay:.36s;}
+
+  .reveal-init{ opacity:0; transform:translateY(20px); transition:opacity .6s ease, transform .6s cubic-bezier(.22,1,.36,1);}
+  .reveal-init.is-visible{ opacity:1; transform:translateY(0);}
+
+  .lj-nav{ transition:box-shadow .25s ease, background-color .25s ease;}
+  .lj-nav.scrolled{ box-shadow:0 8px 28px rgba(0,0,0,.14);}
+
+  .btn{ transition:opacity .2s, transform .15s, box-shadow .2s;}
+  .btn:active{ transform:scale(.96);}
+
+  a, button, .fbtn, .story-card, .fb-card, .testi-card{ transition-property:opacity, transform, border-color, box-shadow, background-color; }
+}
+@media (prefers-reduced-motion: reduce){
+  *{ animation-duration:0.001ms !important; animation-iteration-count:1 !important; transition-duration:0.001ms !important; }
+}
 </style></head>
 <body>
 
 <nav class="lj-nav">
   <a href="index.html" class="lj-logo">LinkaJob</a>
+  <button class="lj-nav-toggle" aria-label="Mở menu" aria-expanded="false" onclick="toggleMobileNav()">
+      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M4 6h16M4 12h16M4 18h16" stroke-width="2" stroke-linecap="round"/></svg>
+    </button>
   <div class="lj-nav-links">
 
     <div class="lj-nav-item">
@@ -487,7 +548,7 @@ footer span{ color:var(--orange);}
           </div>
         </a>
         <div class="lj-dropdown-divider"></div>
-        <a class="lj-di" href="linkajob_pricing.html">
+        <a class="lj-di" href="pricing.html">
           <div class="lj-di-icon"><i class="ti ti-calendar-event" aria-hidden="true"></i></div>
           <div>
             <div class="lj-di-title">Các gói meeting 1-1 <span class="lj-dropdown-badge">Phổ biến</span></div>
@@ -529,7 +590,7 @@ footer span{ color:var(--orange);}
     <div class="lj-nav-item">
       <button class="lj-nav-btn-plain" onclick="toggleNavDropdown(this)">Thành công <i class="ti ti-chevron-down lj-nav-chevron" aria-hidden="true"></i></button>
       <div class="lj-dropdown">
-        <a class="lj-di" href="success-stories.html">
+        <a class="lj-di" href="success_stories.html">
           <div class="lj-di-icon"><i class="ti ti-trophy" aria-hidden="true"></i></div>
           <div>
             <div class="lj-di-title">Câu chuyện thành công</div>
@@ -551,12 +612,13 @@ footer span{ color:var(--orange);}
     <button class="lj-btn-nav" onclick="openConsultWidget()">Đăng ký tư vấn</button>
   </div>
 </nav>
+<div class="lj-nav-backdrop" id="ljNavBackdrop" onclick="closeMobileNav()"></div>
 
 <section class="hero">
   <div class="wrap">
     <div style="display:flex; flex-direction:column; align-items:center; gap:10px; margin-bottom:32px;">
-      <span class="eyebrow"><span class="eyebrow-dot"></span>Cố vấn 1:1 từ người trong cuộc</span>
-      <span class="eyebrow"><span class="eyebrow-dot"></span>Khoá học chuyên môn trainning bởi Manager</span>
+      <span class="eyebrow"><span class="eyebrow-dot"></span>Career mentorship · 1:1 từ người trong cuộc</span>
+      <span class="eyebrow"><span class="eyebrow-dot"></span>Career course · Học hỏi cách người trong cuộc thành công</span>
     </div>
     <h1 style="white-space:normal;">Vào MNC không cần<br><em>đi một mình.</em></h1>
     <p class="sub">Kết nối với advisor đang làm thật tại các tập đoàn đa quốc gia — được đồng hành từ CV đến offer letter.</p>
@@ -635,7 +697,7 @@ footer span{ color:var(--orange);}
             <div><div class="svc-benefit-title">Luyện phỏng vấn thực chiến</div><div class="svc-benefit-desc">HR interview, Manager round, Case interview, Group interview.</div></div>
           </div>
         </div>
-        <button class="btn-svc" onclick="location.href='advisor.html'">Check bảng giá Cố vấn 1-1 →</button>
+        <button class="btn-svc" onclick="location.href='advisor.html'">Xem dịch vụ Cố vấn 1-1 →</button>
       </div>
 
       <div class="svc-card">
@@ -666,7 +728,7 @@ footer span{ color:var(--orange);}
             <div><div class="svc-benefit-title">Business case cá nhân cho portfolio</div><div class="svc-benefit-desc">Hoàn thành 1 case thực tế — sẵn sàng bỏ vào CV và kể cho nhà tuyển dụng.</div></div>
           </div>
         </div>
-        <button class="btn-svc" onclick="location.href='land_your_dream_job.html'">Check các khoá học →</button>
+        <button class="btn-svc" onclick="location.href='land_your_dream_job.html'">Xem các khoá học →</button>
       </div>
 
     </div>
@@ -1102,6 +1164,97 @@ function renderTicker(){
   track.innerHTML = html;
 }
 renderTicker();
+
+function toggleMobileNav(){
+  var links = document.querySelector('.lj-nav-links');
+  var backdrop = document.getElementById('ljNavBackdrop');
+  var btn = document.querySelector('.lj-nav-toggle');
+  if(!links) return;
+  var isOpen = links.classList.toggle('open');
+  if(backdrop) backdrop.classList.toggle('open', isOpen);
+  if(btn) btn.setAttribute('aria-expanded', isOpen);
+  document.body.style.overflow = isOpen ? 'hidden' : '';
+}
+function closeMobileNav(){
+  var links = document.querySelector('.lj-nav-links');
+  var backdrop = document.getElementById('ljNavBackdrop');
+  var btn = document.querySelector('.lj-nav-toggle');
+  if(!links) return;
+  links.classList.remove('open');
+  if(backdrop) backdrop.classList.remove('open');
+  if(btn) btn.setAttribute('aria-expanded', 'false');
+  document.body.style.overflow = '';
+}
+
+/* ── animation: scroll reveal, stat count-up, nav shadow ── */
+(function(){
+  var reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if(reduceMotion) return;
+
+  var revealSelector = '.problem-card, .about-card, .svc-card, .testi-card, .story-card, .fb-card, .gift-card, .audience-card, .instructor-card, .price-box, .module, .faq-item, .section-head, .rating-summary, .form-box';
+  var revealEls = document.querySelectorAll(revealSelector);
+  revealEls.forEach(function(el, i){
+    el.classList.add('reveal-init');
+    el.style.transitionDelay = Math.min((i % 6) * 0.06, 0.3) + 's';
+  });
+
+  if('IntersectionObserver' in window){
+    var io = new IntersectionObserver(function(entries){
+      entries.forEach(function(entry){
+        if(entry.isIntersecting){
+          entry.target.classList.add('is-visible');
+          io.unobserve(entry.target);
+        }
+      });
+    }, { threshold:0.12, rootMargin:'0px 0px -40px 0px' });
+    revealEls.forEach(function(el){ io.observe(el); });
+  } else {
+    revealEls.forEach(function(el){ el.classList.add('is-visible'); });
+  }
+
+  /* stat count-up */
+  function animateCount(el){
+    var raw = el.textContent.trim();
+    var match = raw.match(/^([~]?)(\d+)([.,]?\d*)(\D*)$/);
+    if(!match){ return; }
+    var prefix = match[1] || '';
+    var target = parseInt(match[2], 10);
+    var suffix = (match[3] || '') + (match[4] || '');
+    if(isNaN(target)){ return; }
+    var dur = 900, start = null;
+    function step(ts){
+      if(start === null) start = ts;
+      var p = Math.min((ts - start) / dur, 1);
+      var eased = 1 - Math.pow(1 - p, 3);
+      el.textContent = prefix + Math.round(target * eased) + suffix;
+      if(p < 1) requestAnimationFrame(step);
+    }
+    requestAnimationFrame(step);
+  }
+  var statEls = document.querySelectorAll('.hstat-num, #avgRating');
+  if(statEls.length && 'IntersectionObserver' in window){
+    var statIo = new IntersectionObserver(function(entries){
+      entries.forEach(function(entry){
+        if(entry.isIntersecting){
+          animateCount(entry.target);
+          statIo.unobserve(entry.target);
+        }
+      });
+    }, { threshold:0.4 });
+    statEls.forEach(function(el){ statIo.observe(el); });
+  }
+
+  /* nav shadow on scroll */
+  var nav = document.querySelector('.lj-nav');
+  if(nav){
+    var onScroll = function(){
+      if(window.scrollY > 8){ nav.classList.add('scrolled'); }
+      else { nav.classList.remove('scrolled'); }
+    };
+    window.addEventListener('scroll', onScroll, { passive:true });
+    onScroll();
+  }
+})();
 </script>
 
 </body>
