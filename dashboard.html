@@ -1720,7 +1720,7 @@ function renderStaff(tab) {
   else if (tab === 'adv-new')           c.innerHTML = renderAdvisorNewForm();
   else if (tab === 'advisee-mod')       c.innerHTML = renderAdviseeModule();
   else if (tab === 'course-mod')        c.innerHTML = renderCourseModule();
-  else if (tab === 'aee-reschedule')    c.innerHTML = renderRescheduleRequestsPage();
+  else if (tab === 'aee-reschedule')    loadRescheduleRequestsPage();
   else c.innerHTML = renderRevenuePage();
 }
 
@@ -4884,49 +4884,88 @@ function openRescheduleModal(aeId, sessionNo, requestedBy) {
 function submitRescheduleRequest(aeId, sessionNo, requestedBy) {
   var ae = MOCK.advisees.find(function(x){ return x.id === aeId; });
   if (!ae) return;
+  var s = ae.sessions.find(function(x){ return x.no === sessionNo; });
+  if (!s || !s.date || !s.timeStart) { toast('Buổi này chưa có lịch cụ thể — không thể yêu cầu đổi giờ', 'error'); return; }
+
   var reason = document.getElementById('rs-reason').value.trim();
   var d1 = document.getElementById('rs-date1').value, t1 = document.getElementById('rs-time1').value;
   var d2 = document.getElementById('rs-date2').value, t2 = document.getElementById('rs-time2').value;
   if (!reason || !d1 || !t1 || !d2 || !t2) { toast('Vui lòng điền đầy đủ lý do và 2 khung giờ đề xuất', 'error'); return; }
 
-  var now = new Date();
-  MOCK.rescheduleRequests.push({
-    id: 'rs' + Date.now(),
-    aeId: aeId, aeName: ae.name, advisor: ae.advisor, sessionNo: sessionNo,
-    requestedBy: requestedBy, // 'advisor' hoặc 'advisee'
-    reason: reason,
-    proposedSlots: [{date:d1,time:t1},{date:d2,time:t2}],
-    status: 'pending',
-    createdAt: pad(now.getDate())+'/'+pad(now.getMonth()+1)+'/'+now.getFullYear()+' '+pad(now.getHours())+':'+pad(now.getMinutes()),
-  });
+  var btn = document.querySelector('#modal-actions .login-btn');
+  if (btn) { btn.innerHTML = '<span class="spinner"></span> Đang gửi...'; btn.disabled = true; }
 
-  toast('Đã gửi yêu cầu đổi giờ — Staff sẽ xác nhận sớm ✅', 'success');
-  closeModal();
+  apiPost({
+    action: 'submitRescheduleRequest',
+    session_id: s.session_id,
+    requested_by: requestedBy, // 'advisor' hoặc 'advisee'
+    reason: reason,
+    option1_date: d1, option1_time: t1, option2_date: d2, option2_time: t2,
+  }).then(function(res){
+    if (!res || !res.success) {
+      toast('Lỗi: ' + (res && res.error ? res.error : 'không gửi được, thử lại'), 'error');
+      if (btn) { btn.innerHTML = 'Gửi yêu cầu đổi giờ →'; btn.disabled = false; }
+      return;
+    }
+    toast('Đã gửi yêu cầu đổi giờ — Staff sẽ xác nhận sớm ✅', 'success');
+    closeModal();
+  }).catch(function(err){
+    toast('Lỗi kết nối: ' + err.message, 'error');
+    if (btn) { btn.innerHTML = 'Gửi yêu cầu đổi giờ →'; btn.disabled = false; }
+  });
 }
 
-function renderRescheduleRequestsPage() {
-  var html = pageHeader('🔔 Yêu cầu đổi lịch', 'Advisor/Advisee đề xuất đổi giờ meeting — cần Staff xác nhận');
-  var pending = MOCK.rescheduleRequests.filter(function(r){ return r.status === 'pending'; });
-  var resolved = MOCK.rescheduleRequests.filter(function(r){ return r.status !== 'pending'; });
+function loadRescheduleRequestsPage() {
+  var c = document.getElementById('main-content');
+  c.innerHTML = pageHeader('🔔 Yêu cầu đổi lịch', 'Advisor/Advisee đề xuất đổi giờ meeting — cần Staff xác nhận') + skeletonRows(3);
 
-  html += '<div class="card" style="margin-bottom:16px"><div class="card-header"><div class="card-header-left">Đang chờ xác nhận (' + pending.length + ')</div></div>';
+  // Backend chỉ lưu session_id trong RescheduleRequests — cần ghép thêm Sessions
+  // để lấy tên advisee/advisor/số buổi hiển thị.
+  Promise.all([
+    apiGet('getRescheduleRequests', {}),
+    apiGet('getSessions', {}),
+  ]).then(function(results){
+    var reqs = (results[0] && results[0].data) ? results[0].data : [];
+    var allSessions = (results[1] && results[1].data) ? results[1].data : [];
+    var sessById = {};
+    allSessions.forEach(function(s){ sessById[s.session_id] = s; });
+    reqs.forEach(function(r){
+      var s = sessById[r.session_id];
+      r._ae_name = s ? s.advisee_name : '';
+      r._advisor_name = s ? s.advisor_name : '';
+      r._session_no = s ? s.session_number : '';
+    });
+    window._rescheduleRequests = reqs;
+    c.innerHTML = renderRescheduleRequestsPage(reqs);
+  }).catch(function(err){
+    c.innerHTML = pageHeader('🔔 Yêu cầu đổi lịch', 'Advisor/Advisee đề xuất đổi giờ meeting — cần Staff xác nhận') +
+      '<div class="card"><div class="empty-state"><div class="icon">⚠</div>Không tải được danh sách yêu cầu.<br><small style="color:var(--muted)">' + err.message + '</small></div></div>';
+  });
+}
+
+function renderRescheduleRequestsPage(reqs) {
+  reqs = reqs || window._rescheduleRequests || [];
+  var html = pageHeader('🔔 Yêu cầu đổi lịch', 'Advisor/Advisee đề xuất đổi giờ meeting — cần Staff xác nhận');
+  var pending = reqs.filter(function(r){ return String(r.status||'').trim().toLowerCase() === 'pending'; });
+  var resolved = reqs.filter(function(r){ return String(r.status||'').trim().toLowerCase() !== 'pending'; });
+
+  html += '<div class="card" style="margin-bottom:16px"><div class="card-header"><div class="card-header-left">Đang chờ xác nhận (' + pending.length + ')</div><button class="refresh-btn" onclick="loadRescheduleRequestsPage()">↻</button></div>';
   if (pending.length === 0) {
     html += '<div class="empty-state"><div class="icon">✅</div>Không có yêu cầu đổi lịch nào đang chờ</div>';
   } else {
     pending.forEach(function(r){
-      var ae = MOCK.advisees.find(function(x){ return x.id === r.aeId; });
+      var aeName = r._ae_name || '(không rõ)';
       html += '<div style="padding:16px 24px;border-top:1px solid var(--border)">';
-      html += '<div style="display:flex;align-items:center;gap:12px;margin-bottom:10px">' + avatarCircle(r.aeName, 36);
-      html += '<div style="flex:1"><div style="font-weight:700;font-size:14px">' + r.aeName + ' · Buổi ' + r.sessionNo + '</div>';
-      html += '<div style="font-size:12px;color:var(--muted)">Advisor: ' + r.advisor + ' · Đề xuất bởi: ' + (r.requestedBy==='advisee'?'Advisee':'Advisor') + ' · ' + r.createdAt + '</div></div>';
-      html += '<button class="update-btn" style="border-color:var(--brand);color:var(--brand)" onclick="rejectReschedule(\'' + r.id + '\')">Từ chối</button>';
+      html += '<div style="display:flex;align-items:center;gap:12px;margin-bottom:10px">' + avatarCircle(aeName, 36);
+      html += '<div style="flex:1"><div style="font-weight:700;font-size:14px">' + aeName + (r._session_no ? ' · Buổi ' + r._session_no : '') + '</div>';
+      html += '<div style="font-size:12px;color:var(--muted)">' + (r._advisor_name ? 'Advisor: ' + r._advisor_name + ' · ' : '') + 'Đề xuất bởi: ' + (r.requested_by==='advisee'?'Advisee':'Advisor') + ' · ' + r.created_at + '</div></div>';
+      html += '<button class="update-btn" style="border-color:var(--brand);color:var(--brand)" onclick="rejectReschedule(\'' + r.request_id + '\')">Từ chối</button>';
       html += '</div>';
       html += '<div style="font-size:13px;color:var(--text);background:var(--bg);border-radius:8px;padding:10px 12px;margin-bottom:10px"><b>Lý do:</b> ' + r.reason + '</div>';
       html += '<div style="font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px">Chọn 1 khung giờ để xác nhận</div>';
       html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">';
-      r.proposedSlots.forEach(function(slot, si){
-        html += '<button class="detail-btn" style="padding:12px" onclick="confirmReschedule(\'' + r.id + '\',' + si + ')">📅 ' + fmtDateStr(slot.date) + ' · ' + slot.time + '</button>';
-      });
+      html += '<button class="detail-btn" style="padding:12px" onclick="confirmReschedule(\'' + r.request_id + '\',\'' + r.option1_date + '\',\'' + r.option1_time + '\')">📅 ' + fmtDateStr(r.option1_date) + ' · ' + r.option1_time + '</button>';
+      html += '<button class="detail-btn" style="padding:12px" onclick="confirmReschedule(\'' + r.request_id + '\',\'' + r.option2_date + '\',\'' + r.option2_time + '\')">📅 ' + fmtDateStr(r.option2_date) + ' · ' + r.option2_time + '</button>';
       html += '</div></div>';
     });
   }
@@ -4935,33 +4974,37 @@ function renderRescheduleRequestsPage() {
   if (resolved.length > 0) {
     html += '<div class="card"><div class="card-header"><div class="card-header-left">Đã xử lý</div></div>';
     resolved.forEach(function(r){
-      var tag = r.status === 'confirmed' ? '<span class="badge badge-confirmed">✓ Đã xác nhận</span>' : '<span class="badge badge-cancelled">Đã từ chối</span>';
-      html += '<div style="display:flex;align-items:center;gap:12px;padding:14px 24px;border-top:1px solid var(--border)">' + avatarCircle(r.aeName, 32);
-      html += '<div style="flex:1"><div style="font-weight:600;font-size:13px">' + r.aeName + ' · Buổi ' + r.sessionNo + '</div><div style="font-size:12px;color:var(--muted)">' + r.reason + '</div></div>' + tag + '</div>';
+      var st = String(r.status||'').trim().toLowerCase();
+      var aeName = r._ae_name || '(không rõ)';
+      var tag = st === 'confirmed' ? '<span class="badge badge-confirmed">✓ Đã xác nhận</span>' : '<span class="badge badge-cancelled">Đã từ chối</span>';
+      html += '<div style="display:flex;align-items:center;gap:12px;padding:14px 24px;border-top:1px solid var(--border)">' + avatarCircle(aeName, 32);
+      html += '<div style="flex:1"><div style="font-weight:600;font-size:13px">' + aeName + (r._session_no ? ' · Buổi ' + r._session_no : '') + '</div><div style="font-size:12px;color:var(--muted)">' + r.reason + '</div></div>' + tag + '</div>';
     });
     html += '</div>';
   }
   return html;
 }
 
-function confirmReschedule(reqId, slotIdx) {
-  var r = MOCK.rescheduleRequests.find(function(x){ return x.id === reqId; });
-  if (!r) return;
-  var ae = MOCK.advisees.find(function(x){ return x.id === r.aeId; });
-  var s = ae && ae.sessions.find(function(x){ return x.no === r.sessionNo; });
-  var slot = r.proposedSlots[slotIdx];
-  if (s) { s.date = slot.date; s.timeStart = slot.time; }
-  r.status = 'confirmed';
-  toast('Đã xác nhận đổi giờ — thông báo cho Advisor & Advisee qua Zalo/Email ✅', 'success');
-  navTo('aee-reschedule');
+function confirmReschedule(reqId, chosenDate, chosenTime) {
+  apiPost({
+    action: 'resolveRescheduleRequest',
+    request_id: reqId,
+    approve: true,
+    confirmed_date: chosenDate,
+    confirmed_time: chosenTime,
+  }).then(function(res){
+    if (!res || !res.success) { toast('Lỗi: ' + (res && res.error ? res.error : 'không xác nhận được'), 'error'); return; }
+    toast('Đã xác nhận đổi giờ ✅', 'success');
+    loadRescheduleRequestsPage();
+  }).catch(function(err){ toast('Lỗi kết nối: ' + err.message, 'error'); });
 }
 
 function rejectReschedule(reqId) {
-  var r = MOCK.rescheduleRequests.find(function(x){ return x.id === reqId; });
-  if (!r) return;
-  r.status = 'rejected';
-  toast('Đã từ chối yêu cầu — thông báo cho người đề xuất qua Zalo/Email', 'success');
-  navTo('aee-reschedule');
+  apiPost({ action: 'resolveRescheduleRequest', request_id: reqId, approve: false }).then(function(res){
+    if (!res || !res.success) { toast('Lỗi: ' + (res && res.error ? res.error : 'không từ chối được'), 'error'); return; }
+    toast('Đã từ chối yêu cầu', 'success');
+    loadRescheduleRequestsPage();
+  }).catch(function(err){ toast('Lỗi kết nối: ' + err.message, 'error'); });
 }
 
 
