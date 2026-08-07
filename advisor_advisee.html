@@ -1027,24 +1027,51 @@ function loadAdviseeRealDataAsync() {
 // chuỗi chuẩn ("2026-08-07", "20:00") tuỳ luồng backend ghi vào. Chuẩn hoá cả 2 kiểu
 // về đúng "yyyy-MM-dd" / "HH:mm" để new Date() luôn parse được.
 function normSheetDate(v) {
-  v = String(v || '').trim();
   if (!v) return '';
-  if (/^\d{4}-\d{2}-\d{2}/.test(v)) return v.slice(0, 10); // đã đúng chuẩn (có thể kèm giờ ISO)
-  var m = /^(\d{1,2})\/(\d{1,2})\/(\d{4})/.exec(v); // M/D/YYYY kiểu locale Mỹ
-  if (m) return m[3] + '-' + (m[1].length<2?'0':'') + m[1] + '-' + (m[2].length<2?'0':'') + m[2];
-  return v;
+  if (v instanceof Date && !isNaN(v)) {
+    return v.getFullYear() + '-' + String(v.getMonth()+1).padStart(2,'0') + '-' + String(v.getDate()).padStart(2,'0');
+  }
+  v = String(v).trim();
+  if (!v) return '';
+  if (/^\d{4}-\d{2}-\d{2}/.test(v)) return v.slice(0, 10);
+  var m = /^(\d{1,2})\/(\d{1,2})\/(\d{4})/.exec(v);
+  if (m) {
+    // Ưu tiên đọc theo kiểu VN (DD/MM/YYYY) khi phần đầu > 12 (chắc chắn là ngày, không thể là tháng)
+    var p1 = Number(m[1]), p2 = Number(m[2]), yyyy = m[3];
+    var dd, mm;
+    if (p1 > 12) { dd = p1; mm = p2; } else { dd = p2; mm = p1; }
+    return yyyy + '-' + String(mm).padStart(2,'0') + '-' + String(dd).padStart(2,'0');
+  }
+  var d = new Date(v);
+  return !isNaN(d) ? (d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0')) : '';
 }
 function normSheetTime(v) {
-  v = String(v || '').trim();
   if (!v) return '';
-  if (/^\d{1,2}:\d{2}$/.test(v)) return v; // đã đúng chuẩn HH:mm
-  var m = /^(\d{1,2}):(\d{2})(:\d{2})?\s*(AM|PM)$/i.exec(v); // "8:00:00 PM"
-  if (m) {
-    var h = Number(m[1]) % 12;
-    if (/pm/i.test(m[4])) h += 12;
-    return (h<10?'0':'') + h + ':' + m[2];
+  if (v instanceof Date && !isNaN(v)) {
+    return String(v.getHours()).padStart(2,'0') + ':' + String(v.getMinutes()).padStart(2,'0');
   }
-  return v;
+  v = String(v).trim();
+  if (!v) return '';
+  if (/^\d{1,2}:\d{2}$/.test(v)) return v.length === 4 ? '0'+v : v;
+  var m1 = /^(\d{1,2}):(\d{2}):\d{2}$/.exec(v);
+  if (m1) return (m1[1].length<2?'0':'') + m1[1] + ':' + m1[2];
+  var m2 = /^(\d{1,2}):(\d{2})(:\d{2})?\s*(AM|PM)$/i.exec(v);
+  if (m2) {
+    var h = Number(m2[1]) % 12;
+    if (/pm/i.test(m2[4])) h += 12;
+    return (h<10?'0':'') + h + ':' + m2[2];
+  }
+  return '';
+}
+
+// Trả về {dow, dd, mm, valid} — dùng thay cho `new Date(s.date+'T00:00:00')` rải rác khắp nơi,
+// để không nơi nào còn in ra "undefined NaN/NaN" khi date parse lỗi.
+function safeParseYMD(dateStr) {
+  var m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(dateStr||''));
+  if (!m) return { valid: false };
+  var d = new Date(Number(m[1]), Number(m[2])-1, Number(m[3]));
+  if (isNaN(d)) return { valid: false };
+  return { valid: true, dow: ['CN','T2','T3','T4','T5','T6','T7'][d.getDay()], dd: d.getDate(), mm: d.getMonth()+1, dateObj: d };
 }
 
 function buildAdviseeFromBooking(b, allSessions) {
@@ -1166,9 +1193,10 @@ function renderAdvisorOverview() {
     html += '<div class="empty-state"><div class="icon">📭</div>Không có buổi nào trong 7 ngày tới</div>';
   } else {
     upcoming.forEach(function(item){
-      var d = new Date(item.s.date + 'T00:00:00');
-      var dow = ['CN','T2','T3','T4','T5','T6','T7'][d.getDay()];
-      var dateLabel = dow + ' ' + d.getDate() + '/' + (d.getMonth()+1) + ' · ' + item.s.timeStart + '–' + item.s.timeEnd;
+      var pd = safeParseYMD(item.s.date);
+      var dateLabel = pd.valid
+        ? (pd.dow + ' ' + pd.dd + '/' + pd.mm + ' · ' + item.s.timeStart + '–' + item.s.timeEnd)
+        : ('Chưa rõ ngày · ' + item.s.timeStart + '–' + item.s.timeEnd);
       html += '<div class="session-item">' + avatarCircle(item.ae.name,36);
       html += '<div class="session-info"><div class="session-name">' + item.ae.name + ' · Buổi ' + item.s.no + '</div>';
       html += '<div class="session-meta">' + dateLabel + '</div></div>';
@@ -1188,8 +1216,8 @@ function renderAdvisorOverview() {
       var nextS = ae.sessions.find(function(s){ return s.status === 'upcoming' && s.date; });
       var nextLabel = '—';
       if (nextS) {
-        var d = new Date(nextS.date + 'T00:00:00');
-        nextLabel = ['CN','T2','T3','T4','T5','T6','T7'][d.getDay()] + ' ' + d.getDate() + '/' + (d.getMonth()+1) + ' · ' + nextS.timeStart;
+        var pdN = safeParseYMD(nextS.date);
+        nextLabel = pdN.valid ? (pdN.dow + ' ' + pdN.dd + '/' + pdN.mm + ' · ' + nextS.timeStart) : ('Chưa rõ ngày · ' + nextS.timeStart);
       }
       var pct = Math.round(ae.sessionsDone / ae.sessionsTotal * 100);
       var needFeedback = ae.sessions.some(function(s){ return s.status === 'done' && !s.advisorNotes; });
@@ -1702,9 +1730,8 @@ function renderBookedSessions() {
 
     // Danh sách sessions
     ae.sessions.forEach(function(s) {
-      var d = s.date ? new Date(s.date + 'T00:00:00') : null;
-      var dow = d ? ['CN','T2','T3','T4','T5','T6','T7'][d.getDay()] : '';
-      var dateLabel = d ? dow + ' ' + d.getDate() + '/' + (d.getMonth()+1) + ' · ' + s.timeStart + '–' + s.timeEnd : 'Chưa xếp lịch';
+      var pd = safeParseYMD(s.date);
+      var dateLabel = pd.valid ? (pd.dow + ' ' + pd.dd + '/' + pd.mm + ' · ' + s.timeStart + (s.timeEnd ? '–' + s.timeEnd : '')) : 'Chưa xếp lịch';
 
       // Status color
       var statusColor = {done:'var(--green)', feedback:'#C2410C', upcoming:'#1D4ED8', locked:'#9CA3AF'}[s.status] || '#9CA3AF';
@@ -4039,9 +4066,8 @@ function renderStaffAdviseeDetail(aeId, fromAdvisorId) {
   // Session list — same compact format, same modal
   html += '<div class="card"><div class="card-header"><div class="card-header-left">Các buổi meeting</div></div>';
   ae.sessions.forEach(function(s) {
-    var d = s.date ? new Date(s.date + 'T00:00:00') : null;
-    var dow = d ? ['CN','T2','T3','T4','T5','T6','T7'][d.getDay()] : '';
-    var dateLabel = d ? dow + ' ' + d.getDate() + '/' + (d.getMonth()+1) + '/' + d.getFullYear() + ' · ' + s.timeStart + '–' + s.timeEnd : 'Chưa xếp lịch';
+    var pd = safeParseYMD(s.date);
+    var dateLabel = pd.valid ? (pd.dow + ' ' + pd.dd + '/' + pd.mm + '/' + pd.dateObj.getFullYear() + ' · ' + s.timeStart + (s.timeEnd ? '–' + s.timeEnd : '')) : 'Chưa xếp lịch';
     var sc = {done:{bg:'var(--green-bg)',color:'var(--green)',label:'✓ Hoàn thành'},feedback:{bg:'#FFF7ED',color:'#C2410C',label:'Cần feedback'},upcoming:{bg:'#EFF6FF',color:'#1D4ED8',label:'Sắp tới'},locked:{bg:'var(--bg)',color:'var(--muted)',label:'Đã khoá'}}[s.status]||{bg:'var(--bg)',color:'var(--muted)',label:'—'};
     var needNote = (s.status==='done'||s.status==='feedback') && !s.advisorNotes;
     html += '<div style="display:flex;align-items:center;gap:14px;padding:14px 24px;border-top:1px solid var(--border)">';
@@ -4215,9 +4241,8 @@ function renderMyBookings() {
   // Compact session list
   html += '<div class="card"><div class="card-header"><div class="card-header-left">Các buổi meeting</div></div>';
   ae.sessions.forEach(function(s) {
-    var d = s.date ? new Date(s.date + 'T00:00:00') : null;
-    var dow = d ? ['CN','T2','T3','T4','T5','T6','T7'][d.getDay()] : '';
-    var dateLabel = d ? dow + ' ' + d.getDate() + '/' + (d.getMonth()+1) + '/' + d.getFullYear() + ' · ' + s.timeStart + '–' + s.timeEnd : 'Chưa xếp lịch';
+    var pd = safeParseYMD(s.date);
+    var dateLabel = pd.valid ? (pd.dow + ' ' + pd.dd + '/' + pd.mm + '/' + pd.dateObj.getFullYear() + ' · ' + s.timeStart + (s.timeEnd ? '–' + s.timeEnd : '')) : 'Chưa xếp lịch';
     var statusCfg = { done:{bg:'var(--green-bg)',color:'var(--green)',label:'✓ Hoàn thành'}, feedback:{bg:'#FFF7ED',color:'#C2410C',label:'Cần feedback'}, upcoming:{bg:'#EFF6FF',color:'#1D4ED8',label:'Sắp tới'}, locked:{bg:'var(--bg)',color:'var(--muted)',label:'Đã khoá'} };
     var sc = statusCfg[s.status] || statusCfg.locked;
     var extraTag = '';
@@ -4245,9 +4270,8 @@ function openAdviseeSessionModal(sessionNo) {
   if (!ae) return;
   var s = ae.sessions.find(function(x){ return x.no === sessionNo; });
   if (!s) return;
-  var d = s.date ? new Date(s.date + 'T00:00:00') : null;
-  var dow = d ? ['CN','T2','T3','T4','T5','T6','T7'][d.getDay()] : '';
-  var dateLabel = d ? dow + ' ' + d.getDate() + '/' + (d.getMonth()+1) + '/' + d.getFullYear() + ' · ' + s.timeStart + '–' + s.timeEnd : 'Chưa xếp lịch';
+  var pd = safeParseYMD(s.date);
+  var dateLabel = pd.valid ? (pd.dow + ' ' + pd.dd + '/' + pd.mm + '/' + pd.dateObj.getFullYear() + ' · ' + s.timeStart + (s.timeEnd ? '–' + s.timeEnd : '')) : 'Chưa xếp lịch';
   document.getElementById('modal-title').textContent = 'Buổi ' + sessionNo;
   var body = '';
 
@@ -4472,7 +4496,7 @@ function submitPrepInfoModal(sessionNo) {
   if (!ae) return;
   var s = ae.sessions.find(function(x){ return x.no === sessionNo; });
   if (!s) return;
-  if (!s.session_id) { toast('Buổi này chưa có lịch cụ thể — không thể gửi chuẩn bị', 'error'); return; }
+  if (!s.date || !s.timeStart) { toast('Buổi này chưa có lịch cụ thể — không thể gửi chuẩn bị', 'error'); return; }
 
   var btn = document.querySelector('#modal-actions .login-btn');
   if (btn) { btn.innerHTML = '<span class="spinner"></span> Đang gửi...'; btn.disabled = true; }
@@ -4760,9 +4784,8 @@ function renderAdviseeDetailForAdvisor(aeId) {
   // ── Danh sách buổi meeting ──
   html += '<div class="card"><div class="card-header"><div class="card-header-left">Các buổi meeting</div></div>';
   ae.sessions.forEach(function(s) {
-    var d = s.date ? new Date(s.date + 'T00:00:00') : null;
-    var dow = d ? ['CN','T2','T3','T4','T5','T6','T7'][d.getDay()] : '';
-    var dateLabel = d ? dow + ' ' + d.getDate() + '/' + (d.getMonth()+1) + '/' + d.getFullYear() + ' · ' + s.timeStart + '–' + s.timeEnd : 'Chưa xếp lịch';
+    var pd = safeParseYMD(s.date);
+    var dateLabel = pd.valid ? (pd.dow + ' ' + pd.dd + '/' + pd.mm + '/' + pd.dateObj.getFullYear() + ' · ' + s.timeStart + (s.timeEnd ? '–' + s.timeEnd : '')) : 'Chưa xếp lịch';
 
     var statusCfg = {
       done     : { bg:'var(--green-bg)',  color:'var(--green)',  label:'✓ Hoàn thành' },
@@ -4802,9 +4825,8 @@ function openSessionDetailModal(aeId, sessionNo) {
   var s = ae.sessions.find(function(x){ return x.no === sessionNo; });
   if (!s) return;
 
-  var d = s.date ? new Date(s.date + 'T00:00:00') : null;
-  var dow = d ? ['CN','T2','T3','T4','T5','T6','T7'][d.getDay()] : '';
-  var dateLabel = d ? dow + ' ' + d.getDate() + '/' + (d.getMonth()+1) + '/' + d.getFullYear() + ' · ' + s.timeStart + '–' + s.timeEnd : 'Chưa xếp lịch';
+  var pd = safeParseYMD(s.date);
+  var dateLabel = pd.valid ? (pd.dow + ' ' + pd.dd + '/' + pd.mm + '/' + pd.dateObj.getFullYear() + ' · ' + s.timeStart + (s.timeEnd ? '–' + s.timeEnd : '')) : 'Chưa xếp lịch';
 
   document.getElementById('modal-title').textContent = ae.name + ' · Buổi ' + sessionNo;
 
@@ -4897,7 +4919,7 @@ function submitRescheduleRequest(aeId, sessionNo, requestedBy) {
   var ae = MOCK.advisees.find(function(x){ return x.id === aeId; });
   if (!ae) return;
   var s = ae.sessions.find(function(x){ return x.no === sessionNo; });
-  if (!s || !s.session_id) { toast('Buổi này chưa có lịch cụ thể — không thể yêu cầu đổi giờ', 'error'); return; }
+  if (!s || !s.date || !s.timeStart) { toast('Buổi này chưa có lịch cụ thể — không thể yêu cầu đổi giờ', 'error'); return; }
 
   var reason = document.getElementById('rs-reason').value.trim();
   var d1 = document.getElementById('rs-date1').value, t1 = document.getElementById('rs-time1').value;
