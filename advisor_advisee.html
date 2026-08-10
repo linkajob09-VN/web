@@ -574,6 +574,41 @@ function selectRole(role, btn) {
   btn.classList.add('active');
 }
 
+// ── Áp dụng user đã xác thực vào giao diện + lưu phiên vào localStorage,
+//    để F5/đóng-mở lại trình duyệt không bị đá về màn hình đăng nhập. ──
+function applyLoggedInUser(u) {
+  currentUser = u;
+  try {
+    localStorage.setItem('linkajob_session', JSON.stringify({ user: u, savedAt: Date.now() }));
+  } catch (e) { /* localStorage có thể bị chặn (chế độ ẩn danh nghiêm ngặt) — bỏ qua, không chặn đăng nhập */ }
+  document.getElementById('login-page').style.display = 'none';
+  document.getElementById('dashboard-page').style.display = 'block';
+  document.getElementById('role-badge').textContent = u.role;
+  document.getElementById('user-avatar').textContent = u.initials;
+  document.getElementById('user-name').textContent = u.name;
+  document.getElementById('dropdown-name').textContent = u.name;
+  document.getElementById('dropdown-role').textContent = u.role + ' · LinkaJob';
+  document.getElementById('dropdown-edit-profile').style.display = (u.role === 'Advisor') ? 'flex' : 'none';
+  buildTabBar(u.role);
+}
+
+// Khôi phục phiên đăng nhập đã lưu (tối đa 24h) — gọi lúc trang vừa load.
+function tryRestoreSession() {
+  var raw;
+  try { raw = localStorage.getItem('linkajob_session'); } catch (e) { return false; }
+  if (!raw) return false;
+  try {
+    var session = JSON.parse(raw);
+    var ageHours = (Date.now() - session.savedAt) / 3600000;
+    if (ageHours > 24) { localStorage.removeItem('linkajob_session'); return false; }
+    applyLoggedInUser(session.user);
+    return true;
+  } catch (e) {
+    try { localStorage.removeItem('linkajob_session'); } catch (e2) {}
+    return false;
+  }
+}
+
 function doLogin() {
   const email = document.getElementById('login-email').value.trim();
   const password = document.getElementById('login-password').value;
@@ -594,16 +629,7 @@ function doLogin() {
       errEl.style.display = 'block';
       return;
     }
-    currentUser = u;
-    document.getElementById('login-page').style.display = 'none';
-    document.getElementById('dashboard-page').style.display = 'block';
-    document.getElementById('role-badge').textContent = u.role;
-    document.getElementById('user-avatar').textContent = u.initials;
-    document.getElementById('user-name').textContent = u.name;
-    document.getElementById('dropdown-name').textContent = u.name;
-    document.getElementById('dropdown-role').textContent = u.role + ' · LinkaJob';
-    document.getElementById('dropdown-edit-profile').style.display = (u.role === 'Advisor') ? 'flex' : 'none';
-    buildTabBar(u.role);
+    applyLoggedInUser(u);
   }
 
   if (user) { finishLogin(user); return; }
