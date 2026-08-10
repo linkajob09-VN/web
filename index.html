@@ -52,24 +52,24 @@ h1,h2,h3,h4{font-family:'Space Grotesk',sans-serif; font-weight:700; letter-spac
 .btn-ghost-light:hover{ border-color:rgba(252,82,41,.4); color:var(--orange);}
 
 /* nav — matching LinkaJob homepage */
-.lj-nav{ position:sticky; top:0; z-index:200; display:flex; align-items:center; justify-content:space-between; padding:16px 32px; background:rgba(251,250,247,.9); backdrop-filter:blur(10px); border-bottom:.5px solid var(--line);}
+.lj-nav{ position:sticky; top:0; z-index:200; display:flex; align-items:center; justify-content:space-between; padding:16px 32px; background:var(--dark); border-bottom:.5px solid var(--line-dark);}
 .lj-logo{ font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:18px; color:var(--orange); letter-spacing:-.5px; text-decoration:none; cursor:pointer;}
 .lj-nav-links{ display:flex; gap:4px; align-items:center;}
 .lj-nav-item{ position:relative;}
-.lj-nav-links a, .lj-nav-btn-plain{ font-size:13px; color:var(--muted); text-decoration:none; font-family:'Space Grotesk',sans-serif; font-weight:500; transition:color .2s, background .2s; padding:8px 14px; border-radius:8px; display:inline-flex; align-items:center; gap:5px; cursor:pointer; background:transparent; border:none;}
-.lj-nav-links a:hover, .lj-nav-btn-plain:hover{ color:var(--text); background:var(--line-soft, rgba(24,21,16,.05));}
-.lj-nav-chevron{ font-size:11px; transition:transform .2s; color:var(--muted-2, var(--muted-dark-2));}
+.lj-nav-links a, .lj-nav-btn-plain{ font-size:13px; color:var(--muted-dark); text-decoration:none; font-family:'Space Grotesk',sans-serif; font-weight:500; transition:color .2s, background .2s; padding:8px 14px; border-radius:8px; display:inline-flex; align-items:center; gap:5px; cursor:pointer; background:transparent; border:none;}
+.lj-nav-links a:hover, .lj-nav-btn-plain:hover{ color:var(--text-dark); background:rgba(255,255,255,.06);}
+.lj-nav-chevron{ font-size:11px; transition:transform .2s; color:var(--muted-dark-2);}
 .lj-nav-item.open .lj-nav-chevron{ transform:rotate(180deg); color:rgba(240,240,240,.6);}
 .lj-btn-nav{ background:var(--orange); color:#fff; font-size:13px; font-weight:500; font-family:'Space Grotesk',sans-serif; padding:8px 20px; border-radius:100px; border:none; cursor:pointer; white-space:nowrap; margin-left:8px;}
-.lj-dropdown{ position:absolute; top:calc(100% + 8px); left:50%; transform:translateX(-50%) translateY(-6px); background:#fff; border:.5px solid var(--line); border-radius:14px; padding:8px; min-width:230px; opacity:0; pointer-events:none; transition:opacity .18s ease, transform .18s ease; z-index:300; box-shadow:0 16px 40px rgba(24,21,16,.14);}
+.lj-dropdown{ position:absolute; top:calc(100% + 8px); left:50%; transform:translateX(-50%) translateY(-6px); background:#161616; border:.5px solid rgba(255,255,255,.1); border-radius:14px; padding:8px; min-width:230px; opacity:0; pointer-events:none; transition:opacity .18s ease, transform .18s ease; z-index:300; box-shadow:0 12px 32px rgba(0,0,0,.35);}
 .lj-nav-item:hover .lj-dropdown, .lj-nav-item.open .lj-dropdown{ opacity:1; pointer-events:auto; transform:translateX(-50%) translateY(0);}
 .lj-di{ display:flex; align-items:flex-start; gap:11px; padding:10px 12px; border-radius:10px; text-decoration:none; transition:background .15s;}
-.lj-di:hover{ background:var(--line-soft, rgba(24,21,16,.05));}
+.lj-di:hover{ background:rgba(255,255,255,.05);}
 .lj-di-icon{ width:32px; height:32px; border-radius:9px; background:rgba(252,82,41,.1); display:flex; align-items:center; justify-content:center; flex-shrink:0; margin-top:1px;}
 .lj-di-icon i{ font-size:16px; color:var(--orange);}
-.lj-di-title{ font-family:'Space Grotesk',sans-serif; font-size:13px; font-weight:600; color:var(--text); margin-bottom:2px;}
-.lj-di-sub{ font-size:11px; color:var(--muted-2, var(--muted)); line-height:1.45;}
-.lj-dropdown-divider{ height:.5px; background:var(--line); margin:6px 0;}
+.lj-di-title{ font-family:'Space Grotesk',sans-serif; font-size:13px; font-weight:600; color:var(--text-dark); margin-bottom:2px;}
+.lj-di-sub{ font-size:11px; color:rgba(240,240,240,.38); line-height:1.45;}
+.lj-dropdown-divider{ height:.5px; background:rgba(255,255,255,.07); margin:6px 0;}
 .lj-dropdown-badge{ display:inline-block; font-size:9px; font-weight:700; font-family:'Space Grotesk',sans-serif; letter-spacing:.06em; text-transform:uppercase; background:rgba(252,82,41,.15); color:var(--orange); padding:2px 7px; border-radius:4px; margin-left:6px; vertical-align:middle;}
 
 /* consult widget */
@@ -472,28 +472,28 @@ footer span{ color:var(--orange);}
 
 /* mobile nav (hamburger) */
 .lj-nav-toggle{ display:none; background:transparent; border:none; width:38px; height:38px; align-items:center; justify-content:center; cursor:pointer; border-radius:8px; flex-shrink:0;}
-.lj-nav-toggle:hover{ background:rgba(24,21,16,.05);}
+.lj-nav-toggle:hover{ background:rgba(255,255,255,.06);}
 .lj-nav-toggle svg{ width:22px; height:22px; display:block;}
-.lj-nav-toggle svg path{ stroke:var(--text);}
+.lj-nav-toggle svg path{ stroke:var(--text-dark);}
 .lj-nav-backdrop{ display:none;}
 @media(max-width:860px){
   .lj-nav-toggle{ display:flex;}
   .lj-nav-links{
     position:fixed; top:0; right:0; bottom:0; width:min(320px,84vw);
-    background:#FFFFFF; flex-direction:column; align-items:stretch;
+    background:var(--dark); flex-direction:column; align-items:stretch;
     padding:88px 22px 24px; gap:2px; overflow-y:auto; z-index:250;
     transform:translateX(100%); transition:transform .28s cubic-bezier(.22,1,.36,1);
-    box-shadow:-16px 0 40px rgba(0,0,0,.18);
+    box-shadow:-16px 0 40px rgba(0,0,0,.35);
   }
   .lj-nav-links.open{ transform:translateX(0);}
   .lj-nav-backdrop{ display:block; position:fixed; inset:0; background:rgba(0,0,0,.4); z-index:240; opacity:0; pointer-events:none; transition:opacity .25s;}
   .lj-nav-backdrop.open{ opacity:1; pointer-events:auto;}
   .lj-nav-item{ width:100%;}
-  .lj-nav-links > a, .lj-nav-btn-plain{ width:100%; justify-content:space-between; padding:15px 4px; font-size:15.5px; border-radius:0; border-bottom:.5px solid var(--line); color:var(--text);}
+  .lj-nav-links > a, .lj-nav-btn-plain{ width:100%; justify-content:space-between; padding:15px 4px; font-size:15.5px; border-radius:0; border-bottom:.5px solid var(--line-dark); color:var(--text-dark);}
   .lj-dropdown{ position:static; opacity:1; pointer-events:none; max-height:0; overflow:hidden; transform:none; box-shadow:none; border:none; background:transparent; padding:0; min-width:0; border-radius:0; transition:max-height .25s ease;}
   .lj-nav-item.open .lj-dropdown{ pointer-events:auto; max-height:400px; padding:2px 0 10px 6px;}
   .lj-di{ padding:11px 8px;}
-  .lj-di-sub{ color:var(--muted);}
+  .lj-di-sub{ color:var(--muted-dark);}
   .lj-btn-nav{ margin:18px 0 0; width:100%; padding:14px; font-size:15px; text-align:center;}
 }
 
