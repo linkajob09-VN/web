@@ -659,6 +659,8 @@ function doLogin() {
 
 function doLogout() {
   currentUser = null;
+  try { localStorage.removeItem('linkajob_session'); } catch (e) {}
+  try { localStorage.removeItem('linkajob_last_tab'); } catch (e) {}
   document.getElementById('dashboard-page').style.display = 'none';
   document.getElementById('login-page').style.display = 'flex';
   closeUserMenu();
@@ -976,8 +978,11 @@ function buildTabBar(role) {
   });
   tabbar.innerHTML = html;
 
-  // Activate first tab
-  if (tabs.length) switchRoleTab(tabs[0].id);
+  // Mở đúng tab đang xem lần trước (nếu có và còn hợp lệ với role hiện tại), thay vì luôn về tab đầu tiên
+  var savedTab = null;
+  try { savedTab = localStorage.getItem('linkajob_last_tab'); } catch (e) {}
+  var validSavedTab = savedTab && tabs.some(function(t){ return t.id === savedTab; });
+  if (tabs.length) switchRoleTab(validSavedTab ? savedTab : tabs[0].id);
 }
 
 var _activeRoleTab = null;
@@ -987,6 +992,7 @@ function switchRoleTab(tabId) {
   var el = document.getElementById('rt-' + tabId);
   if (el) el.classList.add('active');
   _activeRoleTab = tabId;
+  try { localStorage.setItem('linkajob_last_tab', tabId); } catch (e) {}
 
   // Render content (reuse loadLegacyTab flow)
   var role = currentUser ? currentUser.role : '';
@@ -5230,6 +5236,10 @@ function esc(obj) { return JSON.stringify(obj).replace(/"/g, '&quot;'); }
 function mkInitials(name) { return name.split(' ').filter(Boolean).map(function(w){ return w[0]; }).join('').slice(0,2).toUpperCase(); }
 
 document.getElementById('login-password').addEventListener('keydown', function(e){ if (e.key === 'Enter') doLogin(); });
+
+// Nếu đã có phiên đăng nhập hợp lệ trong localStorage, vào thẳng dashboard
+// thay vì hiện lại màn hình đăng nhập mỗi khi F5/mở lại trình duyệt.
+tryRestoreSession();
 </script>
 </body>
 </html>
