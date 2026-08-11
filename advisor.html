@@ -480,11 +480,8 @@ body{font-family:'Inter',sans-serif;background:#F5F4F1;color:#1C1C1C;overflow-x:
         <div class="apb-ava" id="mApbAva">LJ</div>
         <div><div class="apb-badge">Advisor đã chọn</div><div class="apb-name" id="mApbName">LinkaJob sẽ match cho bạn</div><div class="apb-role" id="mApbRole">Tư vấn miễn phí trước khi chọn</div></div>
       </div>
-      <div class="pkglist">
-        <div class="pkgitem" data-pkg="Trial" onclick="selPkg(this,'Trial','1 buổi · 30 phút','419',419)"><div class="pkg-l"><div class="pkg-n">Trial</div><div class="pkg-s">1 buổi · 30 phút · Thử trước khi commit</div></div><div class="pkg-p">419k</div><div class="pkg-r"><i class="ti ti-check"></i></div></div>
-        <div class="pkgitem" data-pkg="Co-Ban" onclick="selPkg(this,'Cơ Bản','2 buổi · 45–60 phút','799',799)"><div class="pkg-l"><div class="pkg-n">Cơ Bản</div><div class="pkg-s">2 buổi · 45–60 phút · CV + định hướng</div></div><div class="pkg-p">799k</div><div class="pkg-r"><i class="ti ti-check"></i></div></div>
-        <div class="pkgitem pop" data-pkg="Dac-Biet" onclick="selPkg(this,'Đặc Biệt','4 buổi · 45–60 phút','1.499',1499)"><div class="pkg-l"><div class="pkg-n">Đặc Biệt <span class="pkg-pb">Phổ biến</span></div><div class="pkg-s">4 buổi · 45–60 phút · CV + phỏng vấn đầy đủ</div></div><div class="pkg-p">1.499k</div><div class="pkg-r"><i class="ti ti-check"></i></div></div>
-        <div class="pkgitem" data-pkg="Chuyen-Sau" onclick="selPkg(this,'Chuyên Sâu','6 buổi · 45–60 phút','2.199',2199)"><div class="pkg-l"><div class="pkg-n">Chuyên Sâu</div><div class="pkg-s">6 buổi · 45–60 phút · Hành trình toàn diện</div></div><div class="pkg-p">2.199k</div><div class="pkg-r"><i class="ti ti-check"></i></div></div>
+      <div class="pkglist" id="pkgList">
+        <div style="padding:14px;color:rgba(240,240,240,.4);font-family:'Space Grotesk',sans-serif;font-size:13px;">Đang tải gói meeting...</div>
       </div>
       <div class="mnav"><button class="mnext" id="mBtn1" onclick="goStep(2)" disabled>Tiếp theo →</button></div>
     </div>
@@ -633,22 +630,81 @@ function renderAdvisorGrid() {
 var S={adv:'',advRole:'',advCo:'',advInitials:'',pkg:'',sess:'',priceLabel:'',priceNum:0};
 var currentAdvisorId = -1;
 
-/* ─── PRESELECTED PACKAGE (từ pricing.html ?package=...) ─── */
-var PKG_DATA = {
-  'Trial'      : {name:'Trial',      sess:'1 buổi · 30 phút',   priceLabel:'419',   priceNum:419},
-  'Co-Ban'     : {name:'Cơ Bản',     sess:'2 buổi · 45–60 phút', priceLabel:'799',   priceNum:799},
-  'Dac-Biet'   : {name:'Đặc Biệt',   sess:'4 buổi · 45–60 phút', priceLabel:'1.499', priceNum:1499},
-  'Chuyen-Sau' : {name:'Chuyên Sâu', sess:'6 buổi · 45–60 phút', priceLabel:'2.199', priceNum:2199}
-};
+/* ─── MỚI: gói meeting giờ nạp TỪ Google Sheet (cùng API dùng cho Dashboard)
+   thay vì hardcode — để Staff sửa giá/số buổi/hạn dùng trên Dashboard là
+   trang đặt lịch này tự cập nhật theo, không cần sửa code tay nữa. ─── */
+var PKG_DATA = {};
+
+// Tạo "slug" từ tên gói giống hệt quy ước cũ (Trial, Co-Ban, Dac-Biet,
+// Chuyen-Sau) để link ?package=... từ pricing.html vẫn hoạt động đúng
+// ngay cả khi gói đã được đổi tên/thêm mới trên Dashboard.
+function slugifyPkgName(name) {
+  var s = String(name || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  s = s.replace(/đ/g, 'd').replace(/Đ/g, 'D');
+  return s.split(/\s+/).filter(Boolean).join('-');
+}
+function fmtPriceLabelK(price) {
+  var k = Math.round(Number(price) / 1000);
+  return k.toLocaleString('vi-VN');
+}
+function jsStr(s) { return JSON.stringify(String(s == null ? '' : s)); }
+
+function renderPkgList(packages) {
+  var wrap = document.getElementById('pkgList');
+  if (!wrap) return;
+  if (!packages.length) {
+    wrap.innerHTML = '<div style="padding:14px;color:rgba(240,240,240,.4);font-family:\'Space Grotesk\',sans-serif;font-size:13px;">Hiện chưa có gói meeting nào đang mở bán.</div>';
+    return;
+  }
+  var html = '';
+  packages.forEach(function(p){
+    var slug = slugifyPkgName(p.name);
+    var sessText = p.sessions + ' buổi · trong ' + p.days + ' ngày';
+    var priceLabel = fmtPriceLabelK(p.price);
+    var priceNum = Math.round(Number(p.price) / 1000);
+    html += '<div class="pkgitem" data-pkg="' + slug + '" onclick="selPkg(this,' + jsStr(p.name) + ',' + jsStr(sessText) + ',' + jsStr(priceLabel) + ',' + priceNum + ')">'
+      + '<div class="pkg-l"><div class="pkg-n">' + p.name + '</div><div class="pkg-s">' + sessText + '</div></div>'
+      + '<div class="pkg-p">' + priceLabel + 'k</div><div class="pkg-r"><i class="ti ti-check"></i></div></div>';
+  });
+  wrap.innerHTML = html;
+}
+
+// Nạp gói meeting đang bán (active) từ Sheet — cùng WEBAPP_URL với các API khác.
+function loadPackagesForBooking() {
+  return fetch(WEBAPP_URL + '?action=getPackages&only_active=1')
+    .then(function(r){ return r.json(); })
+    .then(function(res){
+      var packages = (res && res.success && Array.isArray(res.data)) ? res.data : [];
+      PKG_DATA = {};
+      packages.forEach(function(p){
+        var slug = slugifyPkgName(p.name);
+        PKG_DATA[slug] = {
+          name: p.name,
+          sess: p.sessions + ' buổi · trong ' + p.days + ' ngày',
+          priceLabel: fmtPriceLabelK(p.price),
+          priceNum: Math.round(Number(p.price) / 1000),
+        };
+      });
+      renderPkgList(packages);
+    })
+    .catch(function(){
+      var wrap = document.getElementById('pkgList');
+      if (wrap) wrap.innerHTML = '<div style="padding:14px;color:rgba(240,240,240,.4);font-family:\'Space Grotesk\',sans-serif;font-size:13px;">Không tải được danh sách gói — vui lòng thử lại sau.</div>';
+    });
+}
+
 var urlParams = new URLSearchParams(window.location.search);
+// presetPackage được kiểm tra hợp lệ SAU khi PKG_DATA nạp xong từ Sheet (xem bên dưới)
 var presetPackage = urlParams.get('package');
-if(presetPackage && !PKG_DATA[presetPackage]) presetPackage = null;
 
 document.addEventListener('DOMContentLoaded', function(){
-  if(presetPackage){
-    document.getElementById('presetPkgName').textContent = PKG_DATA[presetPackage].name;
-    document.getElementById('presetBanner').style.display = 'flex';
-  }
+  loadPackagesForBooking().then(function(){
+    if (presetPackage && !PKG_DATA[presetPackage]) presetPackage = null;
+    if (presetPackage) {
+      document.getElementById('presetPkgName').textContent = PKG_DATA[presetPackage].name;
+      document.getElementById('presetBanner').style.display = 'flex';
+    }
+  });
   fetchAdvisorsFromSheet().then(renderAdvisorGrid);
 });
 
