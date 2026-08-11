@@ -356,30 +356,30 @@ table.pt th:first-child,table.pt td:first-child{text-align:left;}
           <th class="pt-th">
             <div class="pt-th-inner">
               <div class="pt-th-name">Trial</div>
-              <div class="pt-th-price">419k</div>
-              <div class="pt-th-sessions">1 buổi · 30 phút</div>
+              <div class="pt-th-price" id="pt-price-Trial">419k</div>
+              <div class="pt-th-sessions" id="pt-sessions-Trial">1 buổi · 30 phút</div>
             </div>
           </th>
           <th class="pt-th">
             <div class="pt-th-inner">
               <div class="pt-th-name">Cơ Bản</div>
-              <div class="pt-th-price">799k</div>
-              <div class="pt-th-sessions">2 buổi · 45–60 phút</div>
+              <div class="pt-th-price" id="pt-price-Co-Ban">799k</div>
+              <div class="pt-th-sessions" id="pt-sessions-Co-Ban">2 buổi · 45–60 phút</div>
             </div>
           </th>
           <th class="pt-th">
             <div class="pt-th-inner">
               <div class="pt-th-pop">Phổ biến nhất</div>
               <div class="pt-th-name hi">Đặc Biệt</div>
-              <div class="pt-th-price hi">1.499k</div>
-              <div class="pt-th-sessions">4 buổi · 45–60 phút</div>
+              <div class="pt-th-price hi" id="pt-price-Dac-Biet">1.499k</div>
+              <div class="pt-th-sessions" id="pt-sessions-Dac-Biet">4 buổi · 45–60 phút</div>
             </div>
           </th>
           <th class="pt-th">
             <div class="pt-th-inner">
               <div class="pt-th-name">Chuyên Sâu</div>
-              <div class="pt-th-price">2.199k</div>
-              <div class="pt-th-sessions">6 buổi · 45–60 phút</div>
+              <div class="pt-th-price" id="pt-price-Chuyen-Sau">2.199k</div>
+              <div class="pt-th-sessions" id="pt-sessions-Chuyen-Sau">6 buổi · 45–60 phút</div>
             </div>
           </th>
         </tr>
@@ -388,10 +388,10 @@ table.pt th:first-child,table.pt td:first-child{text-align:left;}
         <tr class="pt-group"><td colspan="5">Thời hạn & hồ sơ</td></tr>
         <tr class="pt-row">
           <td>Thời hạn sử dụng</td>
-          <td>03 ngày</td>
-          <td>02 tuần</td>
-          <td class="hi"><span class="pt-val hi">04 tuần</span></td>
-          <td>08 tuần</td>
+          <td id="pt-duration-Trial">03 ngày</td>
+          <td id="pt-duration-Co-Ban">02 tuần</td>
+          <td class="hi"><span class="pt-val hi" id="pt-duration-Dac-Biet">04 tuần</span></td>
+          <td id="pt-duration-Chuyen-Sau">08 tuần</td>
         </tr>
         <tr class="pt-row">
           <td>Sửa CV<small>Theo mục tiêu nghề nghiệp</small></td>
@@ -603,6 +603,49 @@ document.addEventListener('keydown', function(e){
     document.querySelectorAll('.lj-nav-item.open').forEach(function(el){ el.classList.remove('open'); });
   }
 });
+
+/* ─── MỚI: đồng bộ GIÁ / SỐ BUỔI / HẠN DÙNG trong bảng so sánh với gói
+   meeting thật trên Dashboard (Google Sheet), để trang này không bị lệch
+   giá khi Staff sửa gói. Bảng so sánh có 4 cột CỐ ĐỊNH (Trial, Cơ Bản,
+   Đặc Biệt, Chuyên Sâu) — nếu 1 trong 4 gói này bị đổi tên/ẩn/xoá trên
+   Dashboard, cột tương ứng sẽ không tự cập nhật (vì nội dung tính năng
+   trong bảng — sửa CV, luyện phỏng vấn... — là copy marketing, không nằm
+   trong dữ liệu gói và cần người sửa tay). Nếu bạn thêm gói THỨ 5, trang
+   này cũng không tự thêm cột mới — cần sửa HTML thủ công. ─── */
+var PRICING_WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbx7Bd9VvoyzfiiezQV9huoY2BKHH_Br1RAFIz00mjdyKeis-Zv-38a0gf_b-fMlul2C/exec';
+
+function pricingSlugify(name) {
+  var s = String(name || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  s = s.replace(/đ/g, 'd').replace(/Đ/g, 'D');
+  return s.split(/\s+/).filter(Boolean).join('-');
+}
+function pricingFmtPriceK(price) {
+  return Math.round(Number(price) / 1000).toLocaleString('vi-VN') + 'k';
+}
+function pricingFmtDuration(days) {
+  days = Number(days) || 0;
+  if (days % 7 === 0) return String(days / 7).padStart(2, '0') + ' tuần';
+  return String(days).padStart(2, '0') + ' ngày';
+}
+
+function syncPricingTableWithSheet() {
+  fetch(PRICING_WEBAPP_URL + '?action=getPackages&only_active=1')
+    .then(function(r){ return r.json(); })
+    .then(function(res){
+      if (!res || !res.success || !Array.isArray(res.data)) return;
+      res.data.forEach(function(p){
+        var slug = pricingSlugify(p.name);
+        var priceEl = document.getElementById('pt-price-' + slug);
+        var sessEl = document.getElementById('pt-sessions-' + slug);
+        var durEl = document.getElementById('pt-duration-' + slug);
+        if (priceEl) priceEl.textContent = pricingFmtPriceK(p.price);
+        if (sessEl) sessEl.textContent = p.sessions + ' buổi';
+        if (durEl) durEl.textContent = pricingFmtDuration(p.days);
+      });
+    })
+    .catch(function(){ /* lỗi mạng — giữ nguyên giá tĩnh đã có trong HTML */ });
+}
+document.addEventListener('DOMContentLoaded', syncPricingTableWithSheet);
 </script>
 </body>
 </html>
