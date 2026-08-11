@@ -477,12 +477,56 @@ const DEMO_ACCOUNTS = [
   { email: 'advisee@linkajob.vn', password: '123456', role: 'Advisee', name: 'Trần Gia Hân',         initials: 'GH' },
 ];
 
-const PACKAGES = {
+// MỚI: PACKAGES giờ được tải TỪ Google Sheet (tab "Packages") thay vì hằng
+// số cố định — để Staff/Admin có thể thêm/sửa/ẩn gói meeting ngay trên
+// Dashboard (trang "Sản phẩm") mà không cần sửa code. Giữ nguyên tên biến +
+// hình dạng dữ liệu { 'Tên gói': {price, sessions, days} } để mọi chỗ khác
+// trong file này (form đặt lịch, gán gói cho advisee, checkbox sản phẩm của
+// advisor...) không cần sửa gì thêm — chỉ cần PACKAGES được nạp xong TRƯỚC
+// khi các trang đó render (xem loadPackagesFromSheet + applyLoggedInUser).
+let PACKAGES = {};
+// PACKAGES_RAW: toàn bộ gói (kể cả gói đã ẩn) kèm package_id/active/sort_order
+// — dùng riêng cho trang quản lý "Sản phẩm".
+let PACKAGES_RAW = [];
+let packagesLoaded = false;
+// Chỉ dùng khi gọi Sheet thất bại (mất mạng, API lỗi...) để giao diện vẫn
+// chạy được thay vì trắng trang — KHÔNG dùng để ghi đè dữ liệu thật trên Sheet.
+const PACKAGES_FALLBACK = {
   'Trial':       { price: 419000,  sessions: 1, days: 3  },
   'Cơ Bản':     { price: 799000,  sessions: 2, days: 14 },
   'Đặc Biệt':   { price: 1499000, sessions: 4, days: 28 },
   'Chuyên Sâu': { price: 2199000, sessions: 6, days: 56 },
 };
+
+function loadPackagesFromSheet(callback) {
+  apiGet('getPackages', {}).then(function(res){
+    if (res && res.success && Array.isArray(res.data) && res.data.length) {
+      PACKAGES_RAW = res.data;
+      PACKAGES = {};
+      PACKAGES_RAW.forEach(function(p){
+        var isActive = p.active === true || p.active === 'TRUE' || p.active === 'true';
+        if (isActive) {
+          PACKAGES[p.name] = {
+            price: Number(p.price) || 0,
+            sessions: Number(p.sessions) || 0,
+            days: Number(p.days) || 0,
+            package_id: p.package_id,
+          };
+        }
+      });
+    } else {
+      PACKAGES = Object.assign({}, PACKAGES_FALLBACK);
+      PACKAGES_RAW = [];
+    }
+    packagesLoaded = true;
+    if (callback) callback();
+  }).catch(function(){
+    PACKAGES = Object.assign({}, PACKAGES_FALLBACK);
+    PACKAGES_RAW = [];
+    packagesLoaded = true;
+    if (callback) callback();
+  });
+}
 
 const TIME_SLOTS = ['08:00','09:00','10:00','11:00','14:00','15:00','16:00','17:00','18:00','19:00','20:00','21:00'];
 const DAYS_VI = ['CN','T2','T3','T4','T5','T6','T7'];
@@ -589,7 +633,10 @@ function applyLoggedInUser(u) {
   document.getElementById('dropdown-name').textContent = u.name;
   document.getElementById('dropdown-role').textContent = u.role + ' · LinkaJob';
   document.getElementById('dropdown-edit-profile').style.display = (u.role === 'Advisor') ? 'flex' : 'none';
-  buildTabBar(u.role);
+  // Nạp gói meeting THẬT từ Sheet trước khi render trang đầu tiên — đảm bảo
+  // mọi nơi dùng PACKAGES (form đặt lịch, gán gói cho advisee...) đều thấy
+  // dữ liệu mới nhất ngay từ lần render đầu, không bị race condition.
+  loadPackagesFromSheet(function(){ buildTabBar(u.role); });
 }
 
 // Khôi phục phiên đăng nhập đã lưu (tối đa 24h) — gọi lúc trang vừa load.
@@ -1835,13 +1882,6 @@ const MOCK = {
     { type: 'Cố vấn 1-1', advisor: 'Nguyễn Vũ Trí Kiên', advisee: 'Trần Gia Hân', date: '2026-07-01', time: '20:00', meet_link: 'https://meet.google.com/abc-defg-hij', booked_at: '2026-06-25 14:20', changed_at: '', session_no: '2/4', feedback_advisor: 'Advisee chuẩn bị tốt, tiến bộ rõ', feedback_advisee: 'Advisor giải thích dễ hiểu', question: 'Làm sao build portfolio Marketing?' },
     { type: 'Tư vấn', advisor: 'Phương Staff', advisee: 'Bùi Tuấn Anh', date: '2026-07-03', time: '19:00', meet_link: 'https://meet.google.com/xyz-uvwx-rst', booked_at: '2026-06-26 09:10', changed_at: '2026-06-27 11:00', session_no: '1/2', feedback_advisor: '', feedback_advisee: '', question: 'Định hướng ngành Brand' },
     { type: 'Khoá học', advisor: 'GV. Lê Minh Anh', advisee: 'Lớp Marketing K12', date: '2026-07-05', time: '18:30', meet_link: 'https://meet.google.com/lll-mmmm-nnn', booked_at: '2026-06-20 08:00', changed_at: '', session_no: '3/8', feedback_advisor: '', feedback_advisee: '', question: '' },
-  ],
-  products: [
-    { name: 'Trial', type: 'Gói cố vấn', price: 419000, sessions: 1, advisors: 'Tất cả advisor', active: true },
-    { name: 'Cơ Bản', type: 'Gói cố vấn', price: 799000, sessions: 2, advisors: 'Tất cả advisor', active: true },
-    { name: 'Đặc Biệt', type: 'Gói cố vấn', price: 1499000, sessions: 4, advisors: 'Tất cả advisor', active: true },
-    { name: 'Chuyên Sâu', type: 'Gói cố vấn', price: 2199000, sessions: 6, advisors: 'Tất cả advisor', active: true },
-    { name: 'Marketing Foundation', type: 'Khoá học', price: 2990000, sessions: 8, advisors: 'GV. Lê Minh Anh', active: true },
   ],
   advisors: [
     { id:'adv1', name:'Nguyễn Vũ Trí Kiên', title:'Brand Manager', company:'Suntory PepsiCo Vietnam', active:true, adviseeCount:3, sessionsDone:3, sessionsTotal:6,
@@ -3386,17 +3426,108 @@ function renderReportPage() {
 
 // ── 3. SẢN PHẨM ──
 function renderProductsPage() {
-  let html = pageHeader('Sản phẩm', 'Điều chỉnh giá và cấu hình gói meeting, khoá học');
-  html += '<div class="card"><div class="card-header"><div class="card-header-left">Danh sách sản phẩm</div><span style="font-size:12px;color:var(--muted)">Bấm ✎ để điều chỉnh giá</span></div>';
-  html += '<table class="bookings-table"><thead><tr><th>TÊN</th><th>LOẠI</th><th>GIÁ</th><th>SỐ BUỔI</th><th>ÁP DỤNG TRÊN</th><th>TRẠNG THÁI</th></tr></thead><tbody>';
-  MOCK.products.forEach(function(p,i){
-    html += '<tr><td><b>' + p.name + '</b></td><td>' + p.type + '</td>';
-    html += '<td><button class="update-btn" onclick="editProductPrice(' + i + ')">' + fmtMoney(p.price) + ' ✎</button></td>';
-    html += '<td>' + p.sessions + ' buổi</td><td>' + p.advisors + '</td>';
-    html += '<td>' + (p.active ? '<span class="badge badge-confirmed">Đang bán</span>' : '<span class="badge badge-cancelled">Tạm ngưng</span>') + '</td></tr>';
+  let html = pageHeader('Sản phẩm', 'Thêm / sửa / ẩn các gói meeting — thay đổi được lưu thẳng vào Sheet và áp dụng ngay cho form đặt lịch');
+  html += '<div class="card"><div class="card-header"><div class="card-header-left">Gói meeting (' + PACKAGES_RAW.length + ')</div>' +
+    '<button class="update-btn" onclick="openPackageForm()">+ Thêm gói mới</button></div>';
+  html += '<table class="bookings-table"><thead><tr><th>TÊN GÓI</th><th>GIÁ</th><th>SỐ BUỔI</th><th>HẠN DÙNG</th><th>TRẠNG THÁI</th><th></th></tr></thead><tbody>';
+  if (!PACKAGES_RAW.length) {
+    html += '<tr><td colspan="6" style="text-align:center;color:var(--muted);padding:24px 0">Chưa có gói meeting nào — bấm "+ Thêm gói mới" để tạo gói đầu tiên.</td></tr>';
+  }
+  PACKAGES_RAW.forEach(function(p){
+    var isActive = p.active === true || p.active === 'TRUE' || p.active === 'true';
+    html += '<tr>';
+    html += '<td><b>' + p.name + '</b></td>';
+    html += '<td><button class="update-btn" onclick="openPackageForm(' + esc(p) + ')">' + fmtMoney(Number(p.price) || 0) + ' ✎</button></td>';
+    html += '<td>' + p.sessions + ' buổi</td>';
+    html += '<td>' + p.days + ' ngày</td>';
+    html += '<td>' + (isActive ? '<span class="badge badge-confirmed">Đang bán</span>' : '<span class="badge badge-cancelled">Đã ẩn</span>') + '</td>';
+    html += '<td style="white-space:nowrap">' +
+      '<button class="detail-btn" onclick="togglePackageActive(\'' + p.package_id + '\',' + (!isActive) + ')">' + (isActive ? 'Ẩn' : 'Bật lại') + '</button> ' +
+      '<button class="detail-btn" onclick="deletePackageConfirm(' + esc(p) + ')">Xoá</button>' +
+      '</td>';
+    html += '</tr>';
   });
   html += '</tbody></table></div>';
   return html;
+}
+
+// ── Thêm / sửa gói meeting — mở modal dùng chung sẵn có (#modal-overlay).
+//    Không truyền p (hoặc p=null) → form Thêm mới. Truyền p (object gói lấy
+//    từ PACKAGES_RAW) → form Sửa, prefill sẵn dữ liệu hiện tại. ──
+function openPackageForm(p) {
+  var isEdit = !!(p && p.package_id);
+  document.getElementById('modal-title').textContent = isEdit ? ('Sửa gói — ' + p.name) : 'Thêm gói meeting mới';
+  var html = '';
+  html += '<div class="modal-field"><div class="form-label">Tên gói</div><input class="form-input" id="pkg-name" value="' + (isEdit ? p.name : '') + '" placeholder="VD: Trial" style="margin-top:6px"></div>';
+  html += '<div class="modal-field"><div class="form-label">Giá (VNĐ)</div><input class="form-input" type="number" id="pkg-price" value="' + (isEdit ? Number(p.price) : '') + '" placeholder="VD: 799000" style="margin-top:6px"></div>';
+  html += '<div class="modal-field"><div class="form-label">Số buổi</div><input class="form-input" type="number" id="pkg-sessions" value="' + (isEdit ? Number(p.sessions) : '') + '" placeholder="VD: 2" style="margin-top:6px"></div>';
+  html += '<div class="modal-field"><div class="form-label">Hạn dùng (số ngày kể từ lúc mua)</div><input class="form-input" type="number" id="pkg-days" value="' + (isEdit ? Number(p.days) : '') + '" placeholder="VD: 14" style="margin-top:6px"></div>';
+  document.getElementById('modal-body').innerHTML = html;
+  document.getElementById('modal-actions').innerHTML =
+    '<button class="btn-secondary" onclick="closeModal()" style="width:auto;padding:10px 20px">Huỷ</button>' +
+    '<button class="login-btn" style="width:auto;padding:10px 24px" onclick="savePackageForm(' + (isEdit ? "'" + p.package_id + "'" : 'null') + ')">' + (isEdit ? 'Lưu thay đổi' : 'Thêm gói') + '</button>';
+  document.getElementById('modal-overlay').classList.add('open');
+}
+
+function savePackageForm(packageId) {
+  var name = v('pkg-name');
+  var price = Number(document.getElementById('pkg-price').value);
+  var sessions = Number(document.getElementById('pkg-sessions').value);
+  var days = Number(document.getElementById('pkg-days').value);
+  if (!name) { toast('Vui lòng nhập tên gói', 'error'); return; }
+  if (!price || price <= 0) { toast('Giá không hợp lệ', 'error'); return; }
+  if (!sessions || sessions <= 0) { toast('Số buổi không hợp lệ', 'error'); return; }
+  if (!days || days <= 0) { toast('Hạn dùng không hợp lệ', 'error'); return; }
+
+  var existing = packageId ? PACKAGES_RAW.find(function(x){ return x.package_id === packageId; }) : null;
+  var payload = {
+    action: 'savePackage', name: name, price: price, sessions: sessions, days: days,
+    active: existing ? (existing.active === true || existing.active === 'TRUE' || existing.active === 'true') : true,
+  };
+  if (packageId) payload.package_id = packageId;
+
+  var btn = document.querySelector('#modal-actions .login-btn');
+  if (btn) { btn.innerHTML = '<span class="spinner"></span> Đang lưu...'; btn.disabled = true; }
+
+  apiPost(payload).then(function(res){
+    if (res && res.success) {
+      toast(packageId ? 'Đã cập nhật gói "' + name + '"' : 'Đã thêm gói "' + name + '"', 'success');
+      closeModal();
+      loadPackagesFromSheet(function(){ navTo('lj-products'); });
+    } else {
+      toast('Lỗi: ' + (res && res.error), 'error');
+      if (btn) { btn.innerHTML = packageId ? 'Lưu thay đổi' : 'Thêm gói'; btn.disabled = false; }
+    }
+  }).catch(function(e){
+    toast('Lỗi: ' + e.message, 'error');
+    if (btn) { btn.innerHTML = packageId ? 'Lưu thay đổi' : 'Thêm gói'; btn.disabled = false; }
+  });
+}
+
+// Ẩn/bật gói — KHÔNG xoá dữ liệu, chỉ ngừng hiển thị gói này ở form đặt lịch mới.
+function togglePackageActive(packageId, newActive) {
+  apiPost({ action: 'setPackageActive', package_id: packageId, active: newActive }).then(function(res){
+    if (res && res.success) {
+      toast(newActive ? 'Đã bật lại gói' : 'Đã ẩn gói khỏi form đặt lịch', 'success');
+      loadPackagesFromSheet(function(){ navTo('lj-products'); });
+    } else {
+      toast('Lỗi: ' + (res && res.error), 'error');
+    }
+  }).catch(function(e){ toast('Lỗi: ' + e.message, 'error'); });
+}
+
+// Xoá hẳn 1 gói — server sẽ từ chối nếu đã có booking dùng gói này (gợi ý
+// dùng "Ẩn" thay vì "Xoá" trong trường hợp đó).
+function deletePackageConfirm(p) {
+  if (!confirm('Xoá hẳn gói "' + p.name + '"? Hành động này không thể hoàn tác.')) return;
+  apiPost({ action: 'deletePackage', package_id: p.package_id }).then(function(res){
+    if (res && res.success) {
+      toast('Đã xoá gói "' + p.name + '"', 'success');
+      loadPackagesFromSheet(function(){ navTo('lj-products'); });
+    } else {
+      toast('Lỗi: ' + (res && res.error), 'error');
+    }
+  }).catch(function(e){ toast('Lỗi: ' + e.message, 'error'); });
 }
 
 function renderAdvisorNewForm() {
@@ -3525,26 +3656,6 @@ function showMeetingDetail(i) {
   document.getElementById('modal-actions').innerHTML = '<button class="login-btn" onclick="closeModal()" style="width:auto;padding:10px 24px">Đóng</button>';
   document.getElementById('modal-overlay').classList.add('open');
 }
-
-function editProductPrice(i) {
-  const p = MOCK.products[i];
-  document.getElementById('modal-title').textContent = 'Điều chỉnh giá — ' + p.name;
-  document.getElementById('modal-body').innerHTML =
-    '<div class="modal-field"><div class="form-label">Giá mới (VNĐ)</div><input class="form-input" id="edit-price-input" type="number" value="' + p.price + '" style="margin-top:6px"></div>';
-  document.getElementById('modal-actions').innerHTML =
-    '<button class="btn-secondary" onclick="closeModal()" style="width:auto;padding:10px 20px">Huỷ</button>' +
-    '<button class="login-btn" style="width:auto;padding:10px 24px" onclick="saveProductPrice(' + i + ')">Lưu thay đổi</button>';
-  document.getElementById('modal-overlay').classList.add('open');
-}
-function saveProductPrice(i) {
-  const val = Number(document.getElementById('edit-price-input').value);
-  if (!val) { toast('Giá không hợp lệ', 'error'); return; }
-  MOCK.products[i].price = val;
-  toast('Đã cập nhật giá ' + MOCK.products[i].name, 'success');
-  closeModal();
-  navTo('lj-products');
-}
-
 
 // ════════════════════════════════════════════════════════════
 //  MODULE 2: ADVISOR
