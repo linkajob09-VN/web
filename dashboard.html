@@ -3577,6 +3577,18 @@ function renderReportPage() {
 }
 
 // ── 3. SẢN PHẨM ──
+// Điểm vào cho tab "Sản phẩm" — ROUTE_MAP và renderStaff() đã gọi sẵn hàm
+// này từ trước (theo đúng pattern loadXxxPageAsync của các trang khác), chỉ
+// là hàm chưa từng được viết. Tải gói meeting mới nhất từ Sheet mỗi lần vào
+// trang, rồi render bảng quản lý.
+function loadProductsPageAsync() {
+  var c = document.getElementById('main-content');
+  c.innerHTML = pageHeader('Sản phẩm', 'Thêm / sửa / ẩn các gói meeting — thay đổi được lưu thẳng vào Sheet và áp dụng ngay cho form đặt lịch') + skeletonRows(3);
+  loadPackagesFromSheet(function(){
+    c.innerHTML = renderProductsPage();
+  });
+}
+
 function renderProductsPage() {
   let html = pageHeader('Sản phẩm', 'Thêm / sửa / ẩn các gói meeting — thay đổi được lưu thẳng vào Sheet và áp dụng ngay cho form đặt lịch');
   html += '<div class="card"><div class="card-header"><div class="card-header-left">Gói meeting (' + PACKAGES_RAW.length + ')</div>' +
@@ -3645,7 +3657,7 @@ function savePackageForm(packageId) {
     if (res && res.success) {
       toast(packageId ? 'Đã cập nhật gói "' + name + '"' : 'Đã thêm gói "' + name + '"', 'success');
       closeModal();
-      loadPackagesFromSheet(function(){ navTo('lj-products'); });
+      loadProductsPageAsync();
     } else {
       toast('Lỗi: ' + (res && res.error), 'error');
       if (btn) { btn.innerHTML = packageId ? 'Lưu thay đổi' : 'Thêm gói'; btn.disabled = false; }
@@ -3661,7 +3673,7 @@ function togglePackageActive(packageId, newActive) {
   apiPost({ action: 'setPackageActive', package_id: packageId, active: newActive }).then(function(res){
     if (res && res.success) {
       toast(newActive ? 'Đã bật lại gói' : 'Đã ẩn gói khỏi form đặt lịch', 'success');
-      loadPackagesFromSheet(function(){ navTo('lj-products'); });
+      loadProductsPageAsync();
     } else {
       toast('Lỗi: ' + (res && res.error), 'error');
     }
@@ -3675,7 +3687,7 @@ function deletePackageConfirm(p) {
   apiPost({ action: 'deletePackage', package_id: p.package_id }).then(function(res){
     if (res && res.success) {
       toast('Đã xoá gói "' + p.name + '"', 'success');
-      loadPackagesFromSheet(function(){ navTo('lj-products'); });
+      loadProductsPageAsync();
     } else {
       toast('Lỗi: ' + (res && res.error), 'error');
     }
