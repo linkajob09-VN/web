@@ -3592,21 +3592,22 @@ function loadProductsPageAsync() {
 function renderProductsPage() {
   let html = pageHeader('Sản phẩm', 'Thêm / sửa / ẩn các gói meeting — thay đổi được lưu thẳng vào Sheet và áp dụng ngay cho form đặt lịch');
   html += '<div class="card"><div class="card-header"><div class="card-header-left">Gói meeting (' + PACKAGES_RAW.length + ')</div>' +
-    '<button class="update-btn" onclick="openPackageForm()">+ Thêm gói mới</button></div>';
-  html += '<table class="bookings-table"><thead><tr><th>TÊN GÓI</th><th>GIÁ</th><th>SỐ BUỔI</th><th>HẠN DÙNG</th><th>TRẠNG THÁI</th><th></th></tr></thead><tbody>';
+    '<button class="update-btn" onclick="openPackageEditor()">+ Thêm gói mới</button></div>';
+  html += '<table class="bookings-table"><thead><tr><th>TÊN GÓI</th><th>GIÁ</th><th>SỐ BUỔI</th><th>HẠN DÙNG</th><th>THỜI LƯỢNG/BUỔI</th><th>TRẠNG THÁI</th><th></th></tr></thead><tbody>';
   if (!PACKAGES_RAW.length) {
-    html += '<tr><td colspan="6" style="text-align:center;color:var(--muted);padding:24px 0">Chưa có gói meeting nào — bấm "+ Thêm gói mới" để tạo gói đầu tiên.</td></tr>';
+    html += '<tr><td colspan="7" style="text-align:center;color:var(--muted);padding:24px 0">Chưa có gói meeting nào — bấm "+ Thêm gói mới" để tạo gói đầu tiên.</td></tr>';
   }
   PACKAGES_RAW.forEach(function(p){
     var isActive = p.active === true || p.active === 'TRUE' || p.active === 'true';
     html += '<tr>';
     html += '<td><b>' + p.name + '</b>' + (p.badge_label ? ' <span class="badge" style="background:#FFE9E4;color:var(--brand);font-size:10.5px">' + p.badge_label + '</span>' : '') + '</td>';
-    html += '<td><button class="update-btn" onclick="openPackageForm(' + esc(p) + ')">' + fmtMoney(Number(p.price) || 0) + ' ✎</button></td>';
+    html += '<td>' + fmtMoney(Number(p.price) || 0) + '</td>';
     html += '<td>' + p.sessions + ' buổi</td>';
     html += '<td>' + p.days + ' ngày</td>';
+    html += '<td>' + (Number(p.duration_minutes) || 60) + ' phút</td>';
     html += '<td>' + (isActive ? '<span class="badge badge-confirmed">Đang bán</span>' : '<span class="badge badge-cancelled">Đã ẩn</span>') + '</td>';
     html += '<td style="white-space:nowrap">' +
-      '<button class="detail-btn" onclick="openPackageFeaturesEditor(' + esc(p) + ')">🎯 Nội dung hỗ trợ</button> ' +
+      '<button class="update-btn" onclick="openPackageEditor(' + esc(p) + ')">✎ Sửa</button> ' +
       '<button class="detail-btn" onclick="togglePackageActive(\'' + p.package_id + '\',' + (!isActive) + ')">' + (isActive ? 'Ẩn' : 'Bật lại') + '</button> ' +
       '<button class="detail-btn" onclick="deletePackageConfirm(' + esc(p) + ')">Xoá</button>' +
       '</td>';
@@ -3616,59 +3617,159 @@ function renderProductsPage() {
   return html;
 }
 
-// ── Thêm / sửa gói meeting — mở modal dùng chung sẵn có (#modal-overlay).
-//    Không truyền p (hoặc p=null) → form Thêm mới. Truyền p (object gói lấy
-//    từ PACKAGES_RAW) → form Sửa, prefill sẵn dữ liệu hiện tại. ──
-function openPackageForm(p) {
-  var isEdit = !!(p && p.package_id);
-  document.getElementById('modal-title').textContent = isEdit ? ('Sửa gói — ' + p.name) : 'Thêm gói meeting mới';
-  var html = '';
-  html += '<div class="modal-field"><div class="form-label">Tên gói</div><input class="form-input" id="pkg-name" value="' + (isEdit ? p.name : '') + '" placeholder="VD: Trial" style="margin-top:6px"></div>';
-  html += '<div class="modal-field"><div class="form-label">Giá (VNĐ)</div><input class="form-input" type="number" id="pkg-price" value="' + (isEdit ? Number(p.price) : '') + '" placeholder="VD: 799000" style="margin-top:6px"></div>';
-  html += '<div class="modal-field"><div class="form-label">Số buổi</div><input class="form-input" type="number" id="pkg-sessions" value="' + (isEdit ? Number(p.sessions) : '') + '" placeholder="VD: 2" style="margin-top:6px"></div>';
-  html += '<div class="modal-field"><div class="form-label">Hạn dùng (số ngày kể từ lúc mua)</div><input class="form-input" type="number" id="pkg-days" value="' + (isEdit ? Number(p.days) : '') + '" placeholder="VD: 14" style="margin-top:6px"></div>';
-  html += '<div class="modal-field"><div class="form-label">Nhãn nổi bật (để trống nếu không có — VD: PHỔ BIẾN NHẤT)</div><input class="form-input" id="pkg-badge" value="' + (isEdit ? (p.badge_label || '') : '') + '" placeholder="VD: PHỔ BIẾN NHẤT" style="margin-top:6px"></div>';
-  document.getElementById('modal-body').innerHTML = html;
-  document.getElementById('modal-actions').innerHTML =
-    '<button class="btn-secondary" onclick="closeModal()" style="width:auto;padding:10px 20px">Huỷ</button>' +
-    '<button class="login-btn" style="width:auto;padding:10px 24px" onclick="savePackageForm(' + (isEdit ? "'" + p.package_id + "'" : 'null') + ')">' + (isEdit ? 'Lưu thay đổi' : 'Thêm gói') + '</button>';
-  document.getElementById('modal-overlay').classList.add('open');
+// ── Widget chỉnh sửa gói — GỘP thông tin cơ bản (giá/số buổi/hạn dùng/thời
+//    lượng buổi) VÀ nội dung hỗ trợ (bảng so sánh feature) vào 1 trang duy
+//    nhất, lưu 1 lần cho cả 2 phần. Không truyền p (hoặc p=null) → form
+//    Thêm mới (chưa có nội dung hỗ trợ để tải). ──
+var _editingPackage = null;
+var _editingFeatures = [];
+
+function openPackageEditor(p) {
+  _editingPackage = p || null;
+  var c = document.getElementById('main-content');
+  c.className = 'content';
+
+  if (!p) { // Thêm gói mới — chưa có package_id nên chưa có feature để tải
+    _editingFeatures = [];
+    c.innerHTML = renderPackageEditor();
+    return;
+  }
+
+  c.innerHTML = skeletonRows(3);
+  apiGet('getPackageFeatures', { package_id: p.package_id }).then(function(res){
+    _editingFeatures = (res && res.data) ? res.data.map(function(f){
+      return { group_label: f.group_label || '', feature_label: f.feature_label || '', value: f.value || 'dash', sort_order: Number(f.sort_order) || 0 };
+    }) : [];
+    c.innerHTML = renderPackageEditor();
+  }).catch(function(err){
+    toast('Không tải được nội dung hỗ trợ: ' + err.message, 'error');
+    _editingFeatures = [];
+    c.innerHTML = renderPackageEditor();
+  });
 }
 
-function savePackageForm(packageId) {
+function renderPackageEditor() {
+  var p = _editingPackage;
+  var isEdit = !!(p && p.package_id);
+
+  var html = '<div style="margin-bottom:14px"><button class="detail-btn" onclick="loadProductsPageAsync()">← Quay lại Sản phẩm</button></div>';
+  html += pageHeader(isEdit ? ('Sửa gói — ' + p.name) : 'Thêm gói meeting mới', 'Giá, số buổi, hạn dùng, thời lượng mỗi buổi, và nội dung hỗ trợ hiển thị trên landing page');
+
+  // ── Thông tin cơ bản ──
+  html += '<div class="card"><div class="card-header"><div class="card-header-left">Thông tin cơ bản</div></div>';
+  html += '<div style="padding:16px 24px;display:grid;grid-template-columns:1fr 1fr;gap:14px">';
+  html += '<div><div class="form-label">Tên gói</div><input class="form-input" id="pkg-name" value="' + (isEdit ? p.name : '') + '" placeholder="VD: Trial" style="margin-top:6px"></div>';
+  html += '<div><div class="form-label">Nhãn nổi bật (để trống nếu không có)</div><input class="form-input" id="pkg-badge" value="' + (isEdit ? (p.badge_label || '') : '') + '" placeholder="VD: PHỔ BIẾN NHẤT" style="margin-top:6px"></div>';
+  html += '<div><div class="form-label">Giá (VNĐ)</div><input class="form-input" type="number" id="pkg-price" value="' + (isEdit ? Number(p.price) : '') + '" placeholder="VD: 799000" style="margin-top:6px"></div>';
+  html += '<div><div class="form-label">Số buổi</div><input class="form-input" type="number" id="pkg-sessions" value="' + (isEdit ? Number(p.sessions) : '') + '" placeholder="VD: 2" style="margin-top:6px"></div>';
+  html += '<div><div class="form-label">Hạn dùng (số ngày kể từ lúc mua)</div><input class="form-input" type="number" id="pkg-days" value="' + (isEdit ? Number(p.days) : '') + '" placeholder="VD: 14" style="margin-top:6px"></div>';
+  html += '<div><div class="form-label">Thời lượng mỗi buổi (phút)</div><input class="form-input" type="number" id="pkg-duration" value="' + (isEdit ? (Number(p.duration_minutes) || 60) : 60) + '" placeholder="VD: 45" style="margin-top:6px"></div>';
+  html += '</div></div>';
+
+  // ── Nội dung hỗ trợ ──
+  html += '<div class="card"><div class="card-header"><div class="card-header-left">Nội dung hỗ trợ (' + _editingFeatures.length + ')</div>' +
+    '<button class="update-btn" onclick="addFeatureRow()">+ Thêm dòng</button></div>';
+  if (!isEdit) {
+    html += '<div style="padding:12px 24px;font-size:12px;color:var(--muted)">Lưu gói trước, sau đó mở lại để thêm nội dung hỗ trợ.</div>';
+  } else {
+    html += '<table class="bookings-table"><thead><tr><th style="width:22%">NHÓM</th><th style="width:30%">TÊN MỤC</th><th style="width:16%">ÁP DỤNG</th><th style="width:22%">NỘI DUNG TUỲ CHỈNH</th><th></th></tr></thead><tbody>';
+    if (_editingFeatures.length === 0) {
+      html += '<tr><td colspan="5" style="text-align:center;color:var(--muted);padding:24px 0">Chưa có dòng nào — bấm "+ Thêm dòng" để bắt đầu.</td></tr>';
+    }
+    _editingFeatures.forEach(function(f, idx){
+      var isCustomText = f.value !== 'check' && f.value !== 'dash';
+      var isChecked = f.value === 'check';
+      html += '<tr>';
+      html += '<td><input class="form-input" style="padding:6px 8px;font-size:12.5px" value="' + (f.group_label||'').replace(/"/g,'&quot;') + '" placeholder="VD: THỜI HẠN & HỒ SƠ" onchange="updateFeatureField(' + idx + ',\'group_label\',this.value)"></td>';
+      html += '<td><input class="form-input" style="padding:6px 8px;font-size:12.5px" value="' + (f.feature_label||'').replace(/"/g,'&quot;') + '" placeholder="VD: Sửa CV" onchange="updateFeatureField(' + idx + ',\'feature_label\',this.value)"></td>';
+      html += '<td style="text-align:center"><input type="checkbox" style="width:18px;height:18px;cursor:pointer" ' + (isChecked ? 'checked' : '') + (isCustomText ? ' disabled title="Đang dùng nội dung tuỳ chỉnh — xoá ô bên phải để dùng tick"' : '') + ' onchange="toggleFeatureCheck(' + idx + ',this.checked)"></td>';
+      html += '<td><input class="form-input" style="padding:6px 8px;font-size:12.5px" value="' + (isCustomText ? f.value.replace(/"/g,'&quot;') : '') + '" placeholder="VD: 1 công ty (để trống = dùng tick)" onchange="updateFeatureField(' + idx + ',\'value\',this.value || \'dash\')"></td>';
+      html += '<td><button class="detail-btn" onclick="removeFeatureRow(' + idx + ')">Xoá</button></td>';
+      html += '</tr>';
+    });
+    html += '</tbody></table>';
+    html += '<div style="padding:14px 24px;font-size:11.5px;color:var(--muted)">💡 Tick "Áp dụng" để hiện dấu ✓, bỏ tick để hiện dấu — . Muốn hiện chữ tuỳ chỉnh (VD: "1 công ty") thì gõ vào ô "Nội dung tuỳ chỉnh", ô tick sẽ tự khoá lại.</div>';
+  }
+  html += '</div>';
+
+  html += '<div style="padding:0 0 20px"><button class="login-btn" style="width:auto;padding:10px 24px" onclick="savePackageEditor(' + (isEdit ? "'" + p.package_id + "'" : 'null') + ')">' + (isEdit ? 'Lưu tất cả thay đổi' : 'Thêm gói') + '</button></div>';
+  return html;
+}
+
+function updateFeatureField(idx, field, value) {
+  if (!_editingFeatures[idx]) return;
+  _editingFeatures[idx][field] = value;
+  document.getElementById('main-content').innerHTML = renderPackageEditor();
+}
+
+function toggleFeatureCheck(idx, checked) {
+  if (!_editingFeatures[idx]) return;
+  _editingFeatures[idx].value = checked ? 'check' : 'dash';
+  document.getElementById('main-content').innerHTML = renderPackageEditor();
+}
+
+function addFeatureRow() {
+  var maxSort = _editingFeatures.reduce(function(m,f){ return Math.max(m, Number(f.sort_order)||0); }, 0);
+  _editingFeatures.push({ group_label: '', feature_label: '', value: 'dash', sort_order: maxSort + 10 });
+  document.getElementById('main-content').innerHTML = renderPackageEditor();
+}
+
+function removeFeatureRow(idx) {
+  _editingFeatures.splice(idx, 1);
+  document.getElementById('main-content').innerHTML = renderPackageEditor();
+}
+
+// Lưu CẢ 2 phần: thông tin cơ bản (savePackage) rồi tới nội dung hỗ trợ
+// (savePackageFeaturesForPackage) — nối tiếp nhau vì features cần đúng
+// package_id (gói mới tạo chỉ có ID sau khi savePackage trả về).
+function savePackageEditor(packageId) {
   var name = v('pkg-name');
   var price = Number(document.getElementById('pkg-price').value);
   var sessions = Number(document.getElementById('pkg-sessions').value);
   var days = Number(document.getElementById('pkg-days').value);
+  var duration = Number(document.getElementById('pkg-duration').value) || 60;
   var badgeLabel = v('pkg-badge');
   if (!name) { toast('Vui lòng nhập tên gói', 'error'); return; }
   if (!price || price <= 0) { toast('Giá không hợp lệ', 'error'); return; }
   if (!sessions || sessions <= 0) { toast('Số buổi không hợp lệ', 'error'); return; }
   if (!days || days <= 0) { toast('Hạn dùng không hợp lệ', 'error'); return; }
 
+  var invalidFeature = _editingFeatures.some(function(f){ return !f.feature_label.trim(); });
+  if (invalidFeature) { toast('Mỗi dòng nội dung hỗ trợ cần có "Tên mục" — điền hoặc xoá dòng trống', 'error'); return; }
+
   var existing = packageId ? PACKAGES_RAW.find(function(x){ return x.package_id === packageId; }) : null;
   var payload = {
     action: 'savePackage', name: name, price: price, sessions: sessions, days: days,
+    duration_minutes: duration, badge_label: badgeLabel,
     active: existing ? (existing.active === true || existing.active === 'TRUE' || existing.active === 'true') : true,
-    badge_label: badgeLabel,
   };
   if (packageId) payload.package_id = packageId;
 
-  var btn = document.querySelector('#modal-actions .login-btn');
+  var btn = document.querySelector('.login-btn');
   if (btn) { btn.innerHTML = '<span class="spinner"></span> Đang lưu...'; btn.disabled = true; }
 
   apiPost(payload).then(function(res){
-    if (res && res.success) {
-      toast(packageId ? 'Đã cập nhật gói "' + name + '"' : 'Đã thêm gói "' + name + '"', 'success');
-      closeModal();
-      loadProductsPageAsync();
-    } else {
+    if (!res || !res.success) {
       toast('Lỗi: ' + (res && res.error), 'error');
-      if (btn) { btn.innerHTML = packageId ? 'Lưu thay đổi' : 'Thêm gói'; btn.disabled = false; }
+      if (btn) { btn.innerHTML = packageId ? 'Lưu tất cả thay đổi' : 'Thêm gói'; btn.disabled = false; }
+      return;
     }
+    var savedPackageId = res.package_id || packageId;
+    apiPost({
+      action: 'savePackageFeaturesForPackage',
+      package_id: savedPackageId,
+      features: _editingFeatures,
+    }).then(function(res2){
+      toast(packageId ? 'Đã cập nhật gói "' + name + '" ✅' : 'Đã thêm gói "' + name + '" ✅', 'success');
+      loadProductsPageAsync();
+      if (!res2 || !res2.success) toast('Lưu gói thành công, nhưng lỗi lưu nội dung hỗ trợ: ' + (res2 && res2.error || ''), 'error');
+    }).catch(function(e){
+      toast('Lưu gói thành công, nhưng lỗi kết nối lúc lưu nội dung hỗ trợ: ' + e.message, 'error');
+      loadProductsPageAsync();
+    });
   }).catch(function(e){
     toast('Lỗi: ' + e.message, 'error');
-    if (btn) { btn.innerHTML = packageId ? 'Lưu thay đổi' : 'Thêm gói'; btn.disabled = false; }
+    if (btn) { btn.innerHTML = packageId ? 'Lưu tất cả thay đổi' : 'Thêm gói'; btn.disabled = false; }
   });
 }
 
@@ -3696,87 +3797,6 @@ function deletePackageConfirm(p) {
       toast('Lỗi: ' + (res && res.error), 'error');
     }
   }).catch(function(e){ toast('Lỗi: ' + e.message, 'error'); });
-}
-
-// ── Nội dung hỗ trợ (bảng so sánh feature) — sửa trực tiếp trên 1 trang
-//    riêng vì có thể nhiều dòng, thêm/xoá tự do, không hợp để nhét vào
-//    modal nhỏ. Lưu 1 lần cho toàn bộ (ghi đè hết dòng cũ của gói này). ──
-var _editingPackage = null;
-var _editingFeatures = [];
-
-function openPackageFeaturesEditor(p) {
-  _editingPackage = p;
-  var c = document.getElementById('main-content');
-  c.className = 'content';
-  c.innerHTML = skeletonRows(3);
-  apiGet('getPackageFeatures', { package_id: p.package_id }).then(function(res){
-    _editingFeatures = (res && res.data) ? res.data.map(function(f){
-      return { group_label: f.group_label || '', feature_label: f.feature_label || '', value: f.value || '', sort_order: Number(f.sort_order) || 0 };
-    }) : [];
-    c.innerHTML = renderPackageFeaturesEditor();
-  }).catch(function(err){
-    toast('Không tải được nội dung hỗ trợ: ' + err.message, 'error');
-    _editingFeatures = [];
-    c.innerHTML = renderPackageFeaturesEditor();
-  });
-}
-
-function renderPackageFeaturesEditor() {
-  var p = _editingPackage;
-  var html = '<div style="margin-bottom:14px"><button class="detail-btn" onclick="loadProductsPageAsync()">← Quay lại Sản phẩm</button></div>';
-  html += pageHeader('Nội dung hỗ trợ — ' + p.name, 'Các dòng hiển thị trong bảng so sánh gói trên landing page (Sửa CV, Luyện phỏng vấn HR...)');
-
-  html += '<div class="card"><div class="card-header"><div class="card-header-left">Danh sách nội dung (' + _editingFeatures.length + ')</div>' +
-    '<button class="update-btn" onclick="addFeatureRow()">+ Thêm dòng</button></div>';
-
-  html += '<table class="bookings-table"><thead><tr><th style="width:20%">NHÓM</th><th style="width:26%">TÊN MỤC</th><th style="width:26%">GIÁ TRỊ</th><th style="width:10%">THỨ TỰ</th><th></th></tr></thead><tbody>';
-  if (_editingFeatures.length === 0) {
-    html += '<tr><td colspan="5" style="text-align:center;color:var(--muted);padding:24px 0">Chưa có dòng nào — bấm "+ Thêm dòng" để bắt đầu.</td></tr>';
-  }
-  _editingFeatures.forEach(function(f, idx){
-    html += '<tr>';
-    html += '<td><input class="form-input" style="padding:6px 8px;font-size:12.5px" value="' + (f.group_label||'').replace(/"/g,'&quot;') + '" placeholder="VD: THỜI HẠN & HỒ SƠ" onchange="updateFeatureField(' + idx + ',\'group_label\',this.value)"></td>';
-    html += '<td><input class="form-input" style="padding:6px 8px;font-size:12.5px" value="' + (f.feature_label||'').replace(/"/g,'&quot;') + '" placeholder="VD: Sửa CV" onchange="updateFeatureField(' + idx + ',\'feature_label\',this.value)"></td>';
-    html += '<td><input class="form-input" style="padding:6px 8px;font-size:12.5px" value="' + (f.value||'').replace(/"/g,'&quot;') + '" placeholder="check / dash / 1 công ty..." onchange="updateFeatureField(' + idx + ',\'value\',this.value)"></td>';
-    html += '<td><input class="form-input" type="number" style="padding:6px 8px;font-size:12.5px" value="' + f.sort_order + '" onchange="updateFeatureField(' + idx + ',\'sort_order\',this.value)"></td>';
-    html += '<td><button class="detail-btn" onclick="removeFeatureRow(' + idx + ')">Xoá</button></td>';
-    html += '</tr>';
-  });
-  html += '</tbody></table>';
-  html += '<div style="padding:14px 24px;font-size:11.5px;color:var(--muted)">💡 Cột "Giá trị": gõ <code>check</code> để hiện dấu ✓, <code>dash</code> để hiện dấu —, hoặc gõ chữ tự do (VD: "1 công ty", "Nhận xét nhanh").</div>';
-  html += '<div style="padding:0 24px 20px"><button class="login-btn" style="width:auto;padding:10px 24px" onclick="savePackageFeatures()">Lưu toàn bộ</button></div>';
-  html += '</div>';
-  return html;
-}
-
-function updateFeatureField(idx, field, value) {
-  if (!_editingFeatures[idx]) return;
-  _editingFeatures[idx][field] = value;
-}
-
-function addFeatureRow() {
-  var maxSort = _editingFeatures.reduce(function(m,f){ return Math.max(m, Number(f.sort_order)||0); }, 0);
-  _editingFeatures.push({ group_label: '', feature_label: '', value: 'check', sort_order: maxSort + 10 });
-  document.getElementById('main-content').innerHTML = renderPackageFeaturesEditor();
-}
-
-function removeFeatureRow(idx) {
-  _editingFeatures.splice(idx, 1);
-  document.getElementById('main-content').innerHTML = renderPackageFeaturesEditor();
-}
-
-function savePackageFeatures() {
-  var invalid = _editingFeatures.some(function(f){ return !f.feature_label.trim(); });
-  if (invalid) { toast('Mỗi dòng cần có "Tên mục" — điền hoặc xoá dòng trống', 'error'); return; }
-
-  apiPost({
-    action: 'savePackageFeaturesForPackage',
-    package_id: _editingPackage.package_id,
-    features: _editingFeatures,
-  }).then(function(res){
-    if (res && res.success) toast('Đã lưu nội dung hỗ trợ ✅', 'success');
-    else toast('Lỗi: ' + (res && res.error), 'error');
-  }).catch(function(e){ toast('Lỗi kết nối: ' + e.message, 'error'); });
 }
 
 function renderAdvisorNewForm() {
@@ -5417,8 +5437,6 @@ function mkInitials(name) { return name.split(' ').filter(Boolean).map(function(
 
 document.getElementById('login-password').addEventListener('keydown', function(e){ if (e.key === 'Enter') doLogin(); });
 
-// Nếu đã có phiên đăng nhập hợp lệ trong localStorage, vào thẳng dashboard
-// thay vì hiện lại màn hình đăng nhập mỗi khi F5/mở lại trình duyệt.
 tryRestoreSession();
 </script>
 </body>
