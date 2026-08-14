@@ -102,14 +102,15 @@ table.pt th:first-child,table.pt td:first-child{text-align:left;}
 .pt-th-pop{background:#fc5229;color:#fff;font-family:'Space Grotesk',sans-serif;font-size:9.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:3px 11px;border-radius:100px;display:inline-flex;align-items:center;gap:4px;margin-bottom:5px;box-shadow:0 4px 12px rgba(252,82,41,.35);}
 
 /* group label */
-.pt-group td{font-family:'Space Grotesk',sans-serif;font-size:11px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:rgba(240,240,240,.55);padding:20px 20px 8px;border-bottom:none;background:rgba(255,255,255,.025);position:relative;}
+.pt-group td{font-family:'Space Grotesk',sans-serif;font-size:11px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--accent-text,rgba(240,240,240,.55));padding:20px 20px 8px;border-bottom:none;background:rgba(255,255,255,.025);position:relative;}
 .pt-group td:first-child{padding-left:20px;}
-.pt-group td::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:rgba(252,82,41,.4);}
+.pt-group td::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--accent,rgba(252,82,41,.4));}
 .pt-group:first-child td{padding-top:16px;}
 
 /* data rows */
+.pt-row{background:var(--row-tint,transparent);}
 .pt-row td{padding:13px 16px;border-bottom:.5px solid rgba(255,255,255,.06);font-size:13.5px;color:rgba(240,240,240,.68);vertical-align:middle;}
-.pt-row td:first-child{padding-left:20px;color:rgba(240,240,240,.88);font-weight:500;min-width:180px;}
+.pt-row td:first-child{padding-left:20px;color:rgba(240,240,240,.88);font-weight:500;min-width:180px;position:relative;box-shadow:inset 3px 0 0 var(--accent,transparent);}
 .pt-row td small{display:block;font-size:10.5px;color:rgba(240,240,240,.35);margin-top:2px;font-weight:400;}
 .pt-row td.hi{background:rgba(252,82,41,.07);}
 .pt-row:last-child td{border-bottom:none;}
@@ -603,19 +604,37 @@ function renderPricingTable(packages, featuresByPkg) {
   var seen = {};
   packages.forEach(function(p){
     (featuresByPkg[p.package_id] || []).forEach(function(f){
-      var key = (f.group_label || '') + '|||' + (f.feature_label || '');
+      var key = String(f.group_label || '').trim() + '|||' + String(f.feature_label || '').trim();
       if (!seen[key]) {
         seen[key] = true;
-        rowKeys.push({ group_label: f.group_label || '', feature_label: f.feature_label || '', sort_order: Number(f.sort_order) || 0 });
+        rowKeys.push({ group_label: String(f.group_label || '').trim(), feature_label: String(f.feature_label || '').trim(), sort_order: Number(f.sort_order) || 0 });
       }
     });
   });
   rowKeys.sort(function(a, b){ return a.sort_order - b.sort_order; });
 
+  // ── MỚI: mỗi NHÓM ("Chủ đề CV", "Chủ đề phỏng vấn"...) được gán 1 màu
+  //    riêng, xoay vòng theo bảng màu — để mắt lướt xuống là nhận ra ngay
+  //    đang ở section nào, thay vì phải đọc chữ tiêu đề nhỏ. Màu áp cho:
+  //    vạch màu bên trái + chữ tiêu đề nhóm + lớp nền rất nhạt phủ cả dòng. ──
+  var PT_PALETTE = ['#fc5229', '#38bdf8', '#34d399', '#a78bfa', '#fbbf24', '#f472b6'];
+  function hexToRgba(hex, alpha) {
+    var h = hex.replace('#', '');
+    var r = parseInt(h.substring(0, 2), 16), g = parseInt(h.substring(2, 4), 16), b = parseInt(h.substring(4, 6), 16);
+    return 'rgba(' + r + ',' + g + ',' + b + ',' + alpha + ')';
+  }
+  var groupOrder = ['Thời hạn & hồ sơ'];
+  rowKeys.forEach(function(rk){
+    if (rk.group_label && groupOrder.indexOf(rk.group_label) === -1) groupOrder.push(rk.group_label);
+  });
+  var groupColor = {};
+  groupOrder.forEach(function(g, idx){ groupColor[g] = PT_PALETTE[idx % PT_PALETTE.length]; });
+
   var tbodyHtml = '';
   // "Thời hạn sử dụng" luôn hiện đầu tiên — lấy trực tiếp từ Packages (days), không phải từ PackageFeatures.
-  tbodyHtml += '<tr class="pt-group"><td colspan="' + colCount + '">Thời hạn & hồ sơ</td></tr>';
-  tbodyHtml += '<tr class="pt-row"><td>Thời hạn sử dụng</td>';
+  var thHanColor = groupColor['Thời hạn & hồ sơ'];
+  tbodyHtml += '<tr class="pt-group" style="--accent:' + thHanColor + ';--accent-text:' + thHanColor + '"><td colspan="' + colCount + '">Thời hạn & hồ sơ</td></tr>';
+  tbodyHtml += '<tr class="pt-row" style="--accent:' + thHanColor + ';--row-tint:' + hexToRgba(thHanColor, 0.035) + '"><td>Thời hạn sử dụng</td>';
   packages.forEach(function(p, i){
     var isHi = i === highlightIdx;
     tbodyHtml += '<td' + (isHi ? ' class="hi"' : '') + '><span class="pt-val' + (isHi ? ' hi' : '') + '">' + pricingFmtDuration(p.days) + '</span></td>';
@@ -625,14 +644,16 @@ function renderPricingTable(packages, featuresByPkg) {
   var lastGroup = 'Thời hạn & hồ sơ';
   rowKeys.forEach(function(rk){
     if (rk.group_label && rk.group_label !== lastGroup) {
-      tbodyHtml += '<tr class="pt-group"><td colspan="' + colCount + '">' + pricingEscHtml(rk.group_label) + '</td></tr>';
+      var gColor = groupColor[rk.group_label];
+      tbodyHtml += '<tr class="pt-group" style="--accent:' + gColor + ';--accent-text:' + gColor + '"><td colspan="' + colCount + '">' + pricingEscHtml(rk.group_label) + '</td></tr>';
       lastGroup = rk.group_label;
     }
-    tbodyHtml += '<tr class="pt-row"><td>' + pricingEscHtml(rk.feature_label) + '</td>';
+    var rowColor = groupColor[rk.group_label] || thHanColor;
+    tbodyHtml += '<tr class="pt-row" style="--accent:' + rowColor + ';--row-tint:' + hexToRgba(rowColor, 0.035) + '"><td>' + pricingEscHtml(rk.feature_label) + '</td>';
     packages.forEach(function(p, i){
       var isHi = i === highlightIdx;
       var feat = (featuresByPkg[p.package_id] || []).find(function(f){
-        return (f.group_label || '') === rk.group_label && (f.feature_label || '') === rk.feature_label;
+        return String(f.group_label || '').trim() === rk.group_label && String(f.feature_label || '').trim() === rk.feature_label;
       });
       var val = feat ? feat.value : 'dash';
       var cell;
