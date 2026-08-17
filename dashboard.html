@@ -3639,10 +3639,39 @@ function openPackageEditor(p) {
   }
 
   c.innerHTML = skeletonRows(3);
-  apiGet('getPackageFeatures', { package_id: p.package_id }).then(function(res){
-    _editingFeatures = (res && res.data) ? res.data.map(function(f){
-      return { group_label: f.group_label || '', feature_label: f.feature_label || '', value: f.value || 'dash', sort_order: Number(f.sort_order) || 0 };
-    }) : [];
+
+  apiGet('getPackageFeatures', {}).then(function(res){
+    var allFeatures = (res && res.data) ? res.data : [];
+
+    var masterRows = [];
+    var seen = {};
+    allFeatures.slice()
+      .sort(function(a, b){ return (Number(a.sort_order) || 0) - (Number(b.sort_order) || 0); })
+      .forEach(function(f){
+        var key = String(f.group_label || '').trim() + '|||' + String(f.feature_label || '').trim();
+        if (!seen[key]) {
+          seen[key] = true;
+          masterRows.push({ group_label: String(f.group_label || '').trim(), feature_label: String(f.feature_label || '').trim(), sort_order: Number(f.sort_order) || 0 });
+        }
+      });
+
+    var ownByKey = {};
+    allFeatures.forEach(function(f){
+      if (String(f.package_id).trim() === p.package_id) {
+        ownByKey[String(f.group_label || '').trim() + '|||' + String(f.feature_label || '').trim()] = f;
+      }
+    });
+
+    _editingFeatures = masterRows.map(function(mr){
+      var own = ownByKey[mr.group_label + '|||' + mr.feature_label];
+      return {
+        group_label: mr.group_label,
+        feature_label: mr.feature_label,
+        value: own ? (own.value || 'dash') : 'dash',
+        sort_order: mr.sort_order,
+      };
+    });
+
     c.innerHTML = renderPackageEditor();
   }).catch(function(err){
     toast('Không tải được nội dung hỗ trợ: ' + err.message, 'error');
