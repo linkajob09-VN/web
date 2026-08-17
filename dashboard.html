@@ -3705,7 +3705,13 @@ function renderPackageEditor() {
       html += '<td><input class="form-input" style="padding:6px 8px;font-size:12.5px" value="' + (f.feature_label||'').replace(/"/g,'&quot;') + '" placeholder="VD: Sửa CV" onchange="updateFeatureField(' + idx + ',\'feature_label\',this.value)"></td>';
       html += '<td style="text-align:center"><input type="checkbox" style="width:18px;height:18px;cursor:pointer" ' + (isChecked ? 'checked' : '') + (isCustomText ? ' disabled title="Đang dùng nội dung tuỳ chỉnh — xoá ô bên phải để dùng tick"' : '') + ' onchange="toggleFeatureCheck(' + idx + ',this.checked)"></td>';
       html += '<td><input class="form-input" style="padding:6px 8px;font-size:12.5px" value="' + (isCustomText ? f.value.replace(/"/g,'&quot;') : '') + '" placeholder="VD: 1 công ty (để trống = dùng tick)" onchange="updateFeatureField(' + idx + ',\'value\',this.value || \'dash\')"></td>';
-      html += '<td><button class="detail-btn" onclick="removeFeatureRow(' + idx + ')">Xoá</button></td>';
+      var isFirst = idx === 0;
+      var isLast = idx === _editingFeatures.length - 1;
+      html += '<td style="white-space:nowrap">' +
+        '<button class="detail-btn" style="padding:4px 8px" ' + (isFirst ? 'disabled' : '') + ' title="Chuyển lên" onclick="moveFeatureRow(' + idx + ',-1)">↑</button> ' +
+        '<button class="detail-btn" style="padding:4px 8px" ' + (isLast ? 'disabled' : '') + ' title="Chuyển xuống" onclick="moveFeatureRow(' + idx + ',1)">↓</button> ' +
+        '<button class="detail-btn" onclick="removeFeatureRow(' + idx + ')">Xoá</button>' +
+        '</td>';
       html += '</tr>';
     });
     html += '</tbody></table>';
@@ -3728,6 +3734,17 @@ function toggleFeatureCheck(idx, checked) {
   _editingFeatures[idx].value = checked ? 'check' : 'dash';
   document.getElementById('main-content').innerHTML = renderPackageEditor();
 }
+
+function moveFeatureRow(idx, dir) {
+  var newIdx = idx + dir;
+  if (newIdx < 0 || newIdx >= _editingFeatures.length) return;
+  var tmp = _editingFeatures[idx];
+  _editingFeatures[idx] = _editingFeatures[newIdx];
+  _editingFeatures[newIdx] = tmp;
+  _editingFeatures.forEach(function(f, i){ f.sort_order = (i + 1) * 10; });
+  document.getElementById('main-content').innerHTML = renderPackageEditor();
+}
+  
 
 function addFeatureRow() {
   var maxSort = _editingFeatures.reduce(function(m,f){ return Math.max(m, Number(f.sort_order)||0); }, 0);
