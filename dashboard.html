@@ -496,7 +496,7 @@ function loadPackagesFromSheet(callback) {
         var isActive = p.active === true || p.active === 'TRUE' || p.active === 'true';
         if (isActive) {
           PACKAGES[p.name] = {
-            price: Number(p.price) || 0,
+            price: (p.price === '' || p.price === null || p.price === undefined) ? 0 : p.price,
             sessions: Number(p.sessions) || 0,
             days: Number(p.days) || 0,
             package_id: p.package_id,
@@ -1966,6 +1966,14 @@ const MOCK = {
 };
 
 function fmtMoney(n) { return (n||0).toLocaleString('vi-VN') + 'đ'; }
+// Giá gói cho phép nhập chữ tự do (VD: "Theo thoả thuận") giống ô Nhóm/Tên mục —
+// chỉ format tiền tệ khi giá trị thực sự là số nguyên, còn lại hiển thị nguyên văn.
+function fmtPkgPrice(v) {
+  if (v === '' || v === null || v === undefined || v === 0 || v === '0') return 'Liên hệ';
+  var s = String(v).trim();
+  if (/^\d+$/.test(s)) return fmtMoney(Number(s));
+  return s;
+}
 
 // ════════════════════════════════════════════════════════════
 //  MODULE STAFF — DANH SÁCH NHÂN VIÊN
@@ -2520,7 +2528,7 @@ function openCreateAdviseeFromConsultModal(cid) {
   var body = '<div style="font-size:13px;color:var(--muted);margin-bottom:14px">Khách đã đồng ý đăng ký. Chọn gói và Advisor để tạo hồ sơ — doanh thu sẽ tự động tính cho bạn.</div>';
   body += '<div class="form-label" style="margin-bottom:6px">Gói</div>';
   body += '<select class="form-select" id="ca-pkg" style="margin-bottom:14px">' +
-    Object.keys(PACKAGES).map(function(p){ return '<option value="' + p + '">' + p + ' — ' + fmtMoney(PACKAGES[p].price) + ' · ' + PACKAGES[p].sessions + ' buổi</option>'; }).join('') +
+    Object.keys(PACKAGES).map(function(p){ return '<option value="' + p + '">' + p + ' — ' + fmtPkgPrice(PACKAGES[p].price) + ' · ' + PACKAGES[p].sessions + ' buổi</option>'; }).join('') +
     '</select>';
   body += '<div class="form-label" style="margin-bottom:6px">Advisor phụ trách</div>';
   body += '<select class="form-select" id="ca-advisor" style="margin-bottom:14px">' +
@@ -3630,7 +3638,7 @@ function renderProductsPage() {
     var isAdvisorUnlimited = p.advisor_unlimited === true || p.advisor_unlimited === 'TRUE' || p.advisor_unlimited === 'true';
     html += '<tr>';
     html += '<td><b>' + p.name + '</b>' + (p.badge_label ? ' <span class="badge" style="background:#FFE9E4;color:var(--brand);font-size:10.5px">' + p.badge_label + '</span>' : '') + '</td>';
-    html += '<td>' + (isContactPrice ? '<span style="color:var(--brand);font-weight:600">Liên hệ</span>' : fmtMoney(Number(p.price) || 0)) + '</td>';
+    html += '<td>' + (isContactPrice ? '<span style="color:var(--brand);font-weight:600">Liên hệ</span>' : fmtPkgPrice(p.price)) + '</td>';
     html += '<td>' + (isSessionsUnlimited ? 'Không giới hạn' : (p.sessions + ' buổi')) + (isAdvisorUnlimited ? ' <span style="font-size:10.5px;color:var(--muted)">· Advisor tự do</span>' : '') + '</td>';
     html += '<td>' + p.days + ' ngày</td>';
     html += '<td>' + (Number(p.duration_minutes) || 60) + ' phút</td>';
@@ -3734,7 +3742,7 @@ function renderPackageEditor() {
 
   html += '<div style="padding:16px 24px;display:grid;grid-template-columns:1fr 1fr;gap:14px;border-bottom:1px solid var(--border)">';
   html += '<div><div class="form-label">Giá (VNĐ)</div>' +
-    '<input class="form-input" type="number" id="pkg-price" value="' + (isEdit ? Number(p.price) || '' : '') + '" placeholder="VD: 799000" style="margin-top:6px" ' + (isContactPrice ? 'disabled' : '') + '>' +
+    '<input class="form-input" type="text" id="pkg-price" value="' + (isEdit ? (isContactPrice ? '' : (p.price || '')) : '') + '" placeholder="VD: 799000 (hoặc nhập chữ, VD: Theo thoả thuận)" style="margin-top:6px" ' + (isContactPrice ? 'disabled' : '') + '>' +
     '<label style="display:flex;align-items:center;gap:6px;margin-top:6px;font-size:12px;color:var(--muted);cursor:pointer">' +
     '<input type="checkbox" id="pkg-contact-price" ' + (isContactPrice ? 'checked' : '') + ' onchange="onPkgContactPriceToggle(this.checked)"> Hiện "Liên hệ" thay vì giá cụ thể' +
     '</label></div>';
@@ -3835,13 +3843,13 @@ function savePackageEditor(packageId) {
   var isContactPrice = document.getElementById('pkg-contact-price').checked;
   var isSessionsUnlimited = document.getElementById('pkg-sessions-unlimited').checked;
   var isAdvisorUnlimited = document.getElementById('pkg-advisor-unlimited').checked;
-  var price = isContactPrice ? 0 : Number(document.getElementById('pkg-price').value);
+  var price = isContactPrice ? 0 : v('pkg-price').trim();
   var sessions = isSessionsUnlimited ? 0 : Number(document.getElementById('pkg-sessions').value);
   var days = Number(document.getElementById('pkg-days').value);
   var duration = Number(document.getElementById('pkg-duration').value) || 60;
   var badgeLabel = v('pkg-badge');
   if (!name) { toast('Vui lòng nhập tên gói', 'error'); return; }
-  if (!isContactPrice && (!price || price <= 0)) { toast('Giá không hợp lệ (hoặc tick "Hiện Liên hệ")', 'error'); return; }
+  if (!isContactPrice && !price) { toast('Giá không hợp lệ (hoặc tick "Hiện Liên hệ")', 'error'); return; }
   if (!isSessionsUnlimited && (!sessions || sessions <= 0)) { toast('Số buổi không hợp lệ (hoặc tick "Không giới hạn")', 'error'); return; }
   if (!days || days <= 0) { toast('Hạn dùng không hợp lệ', 'error'); return; }
 
@@ -3961,7 +3969,7 @@ function renderAdvisorNewForm() {
   Object.keys(PACKAGES).forEach(function(p){
     html += '<label style="display:flex;align-items:center;gap:10px;background:var(--white);border:1.5px solid var(--border);border-radius:10px;padding:9px 14px;cursor:pointer;margin-bottom:6px">' +
       '<input type="checkbox" class="na-pkg-cb" value="' + p + '">' +
-      '<div style="flex:1"><span style="font-size:13px;font-weight:600">' + p + '</span> <span style="font-size:12px;color:var(--muted)">— ' + fmtMoney(PACKAGES[p].price) + ' · ' + PACKAGES[p].sessions + ' buổi</span></div>' +
+      '<div style="flex:1"><span style="font-size:13px;font-weight:600">' + p + '</span> <span style="font-size:12px;color:var(--muted)">— ' + fmtPkgPrice(PACKAGES[p].price) + ' · ' + PACKAGES[p].sessions + ' buổi</span></div>' +
       '</label>';
   });
   html += '</div>';
@@ -4379,7 +4387,7 @@ function openEditAdvisorModal(advisorId) {
     var checked = currentPkgs.indexOf(p) > -1;
     body += '<label style="display:flex;align-items:center;gap:10px;background:var(--white);border:1.5px solid ' + (checked?'var(--brand)':'var(--border)') + ';border-radius:10px;padding:9px 14px;cursor:pointer;margin-bottom:6px">' +
       '<input type="checkbox" class="ea-pkg-cb" value="' + p + '" ' + (checked?'checked':'') + '>' +
-      '<div style="flex:1"><span style="font-size:13px;font-weight:600">' + p + '</span> <span style="font-size:12px;color:var(--muted)">— ' + fmtMoney(PACKAGES[p].price) + ' · ' + PACKAGES[p].sessions + ' buổi</span></div>' +
+      '<div style="flex:1"><span style="font-size:13px;font-weight:600">' + p + '</span> <span style="font-size:12px;color:var(--muted)">— ' + fmtPkgPrice(PACKAGES[p].price) + ' · ' + PACKAGES[p].sessions + ' buổi</span></div>' +
       '</label>';
   });
   body += '</div>';
@@ -4615,7 +4623,7 @@ function openEditAdviseeModal(aeId, fromAdvisorId) {
   var ae = MOCK.advisees.find(function(x){ return x.id === aeId; });
   if (!ae) return;
   var pkgOptions = Object.keys(PACKAGES).map(function(p){
-    return '<option value="' + p + '"' + (p === ae.pkg ? ' selected' : '') + '>' + p + ' — ' + fmtMoney(PACKAGES[p].price) + ' · ' + PACKAGES[p].sessions + ' buổi</option>';
+    return '<option value="' + p + '"' + (p === ae.pkg ? ' selected' : '') + '>' + p + ' — ' + fmtPkgPrice(PACKAGES[p].price) + ' · ' + PACKAGES[p].sessions + ' buổi</option>';
   }).join('');
 
   document.getElementById('modal-title').textContent = '✏️ Chỉnh sửa — ' + ae.name;
