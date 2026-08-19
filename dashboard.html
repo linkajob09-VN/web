@@ -603,8 +603,17 @@ function buildAdviseeFromBooking(b, allSessions) {
       timeEnd = (Math.floor(mins/60)%24 < 10 ? '0':'') + (Math.floor(mins/60)%24) + ':' + (mins%60 < 10 ? '0':'') + (mins%60);
     }
 
+    // Feedback của Advisee (từ tab AdvisorReviews, được getSessions ghép sẵn theo session_id)
+    var feedbackObj = (row.feedback_rating !== undefined && row.feedback_rating !== null && row.feedback_rating !== '')
+      ? { rating: Number(row.feedback_rating), text: row.feedback_text || '' }
+      : null;
+    // Nhận xét của Advisor (từ tab AdvisorNotes, được getSessions ghép sẵn theo session_id)
+    var advisorNotesObj = row.advisor_note_summary
+      ? { summary: row.advisor_note_summary, feedback: row.advisor_note_feedback || '', actionItems: row.advisor_note_action_items || '', submittedAt: row.advisor_note_created_at || '' }
+      : null;
+
     var status;
-    if (String(row.status||'').toLowerCase() === 'completed') status = 'done';
+    if (String(row.status||'').toLowerCase() === 'completed' || feedbackObj) status = 'done';
     else {
       var sessDate = row.scheduled_date ? new Date(row.scheduled_date + 'T' + (row.scheduled_time||'00:00')) : null;
       status = (sessDate && sessDate < today) ? 'feedback' : 'upcoming';
@@ -612,7 +621,7 @@ function buildAdviseeFromBooking(b, allSessions) {
 
     sessions.push({
       no: no, date: row.scheduled_date || null, timeStart: row.scheduled_time || null, timeEnd: timeEnd,
-      status: status, feedback: null, meetLink: row.meet_link || '', prepInfo: null, advisorNotes: null,
+      status: status, feedback: feedbackObj, meetLink: row.meet_link || '', prepInfo: null, advisorNotes: advisorNotesObj,
       session_id: row.session_id,
     });
   }
@@ -1337,6 +1346,18 @@ const DAYS_VI_FULL = ['T2','T3','T4','T5','T6','T7','CN'];
 
 
 // ── Advisor: lịch trống dạng tháng ──
+// Chỉ những slot "available" (chưa được đặt) mới bị áp filter 24h/7 ngày dưới đây;
+// slot "booked" (đã có buổi meeting thật) vẫn hiển thị đầy đủ để Advisor luôn thấy lịch hẹn của mình.
+function isAvailableSlotVisible(dateStr, timeStr) {
+  if (!dateStr) return false;
+  var slotDt = new Date(dateStr + 'T' + (timeStr || '00:00') + ':00');
+  if (isNaN(slotDt.getTime())) return false;
+  var now = new Date();
+  var minVisibleDt = new Date(now.getTime() + 24*60*60*1000);   // phải cách hiện tại hơn 24 tiếng
+  var maxVisibleDt = new Date(now.getTime() + 7*24*60*60*1000); // và trong vòng 7 ngày sắp tới
+  return slotDt >= minVisibleDt && slotDt <= maxVisibleDt;
+}
+
 function renderSchedulePicker() {
   _calendarContext = 'advisor-schedule';
   const slotsByDate = {};
@@ -1344,8 +1365,12 @@ function renderSchedulePicker() {
     if (s.advisor_name !== currentUser.name) return;
     const d = String(s.date).slice(0,10);
     if (!slotsByDate[d]) slotsByDate[d] = { available: 0, booked: 0 };
-    if (s.status === 'booked') slotsByDate[d].booked++;
-    else slotsByDate[d].available++;
+    if (s.status === 'booked') {
+      slotsByDate[d].booked++;
+    } else if (isAvailableSlotVisible(d, s.time_start)) {
+      // Lịch trống cũ (đã qua) hoặc lịch trống trong vòng 24h tới: tự động không hiển thị/không tính
+      slotsByDate[d].available++;
+    }
   });
   // gộp cả slot vừa chọn nhưng chưa gửi
   selectedSlots.forEach(function(key){
@@ -1377,7 +1402,8 @@ function openAdvisorDayModal(dateStr) {
     if (s.advisor_name !== currentUser.name) return;
     if (String(s.date).slice(0,10) !== dateStr) return;
     if (s.status === 'booked') bookedTimes[s.time_start] = true;
-    if (s.status === 'available') savedTimes[s.time_start] = true;
+    // Lịch trống cũ / trong vòng 24h tới tự động không hiển thị là "đã lưu"
+    else if (s.status === 'available' && isAvailableSlotVisible(dateStr, s.time_start)) savedTimes[s.time_start] = true;
   });
 
   let html = '<div class="day-time-grid" id="day-time-grid">';
@@ -3695,7 +3721,18 @@ function renderPackageEditor() {
   html += '<div style="padding:16px 24px;display:grid;grid-template-columns:1fr 1fr;gap:14px">';
   html += '<div><div class="form-label">Tên gói</div><input class="form-input" id="pkg-name" value="' + (isEdit ? p.name : '') + '" placeholder="VD: Trial" style="margin-top:6px"></div>';
   html += '<div><div class="form-label">Nhãn nổi bật (để trống nếu không có)</div><input class="form-input" id="pkg-badge" value="' + (isEdit ? (p.badge_label || '') : '') + '" placeholder="VD: PHỔ BIẾN NHẤT" style="margin-top:6px"></div>';
+  html += '<div><div class="form-label">Thời lượng mỗi buổi (phút)</div><input class="form-input" type="number" id="pkg-duration" value="' + (isEdit ? (Number(p.duration_minutes) || 60) : 60) + '" placeholder="VD: 45" style="margin-top:6px"></div>';
 
+  html += '<div style="grid-column:1 / -1"><label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer">' +
+    '<input type="checkbox" id="pkg-advisor-unlimited" ' + (isAdvisorUnlimited ? 'checked' : '') + '> Không giới hạn Advisor (khách được đổi Advisor tự do trong gói này)' +
+    '</label></div>';
+  html += '</div></div>';
+
+  // ── Nội dung hỗ trợ ──
+  html += '<div class="card"><div class="card-header"><div class="card-header-left">Nội dung hỗ trợ (' + _editingFeatures.length + ')</div>' +
+    '<button class="update-btn" onclick="addFeatureRow()">+ Thêm dòng</button></div>';
+
+  html += '<div style="padding:16px 24px;display:grid;grid-template-columns:1fr 1fr;gap:14px;border-bottom:1px solid var(--border)">';
   html += '<div><div class="form-label">Giá (VNĐ)</div>' +
     '<input class="form-input" type="number" id="pkg-price" value="' + (isEdit ? Number(p.price) || '' : '') + '" placeholder="VD: 799000" style="margin-top:6px" ' + (isContactPrice ? 'disabled' : '') + '>' +
     '<label style="display:flex;align-items:center;gap:6px;margin-top:6px;font-size:12px;color:var(--muted);cursor:pointer">' +
@@ -3709,16 +3746,8 @@ function renderPackageEditor() {
     '</label></div>';
 
   html += '<div><div class="form-label">Hạn dùng (số ngày kể từ lúc mua)</div><input class="form-input" type="number" id="pkg-days" value="' + (isEdit ? Number(p.days) : '') + '" placeholder="VD: 14" style="margin-top:6px"></div>';
-  html += '<div><div class="form-label">Thời lượng mỗi buổi (phút)</div><input class="form-input" type="number" id="pkg-duration" value="' + (isEdit ? (Number(p.duration_minutes) || 60) : 60) + '" placeholder="VD: 45" style="margin-top:6px"></div>';
+  html += '</div>';
 
-  html += '<div style="grid-column:1 / -1"><label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer">' +
-    '<input type="checkbox" id="pkg-advisor-unlimited" ' + (isAdvisorUnlimited ? 'checked' : '') + '> Không giới hạn Advisor (khách được đổi Advisor tự do trong gói này)' +
-    '</label></div>';
-  html += '</div></div>';
-
-  // ── Nội dung hỗ trợ ──
-  html += '<div class="card"><div class="card-header"><div class="card-header-left">Nội dung hỗ trợ (' + _editingFeatures.length + ')</div>' +
-    '<button class="update-btn" onclick="addFeatureRow()">+ Thêm dòng</button></div>';
   if (!isEdit) {
     html += '<div style="padding:12px 24px;font-size:12px;color:var(--muted)">Lưu gói trước, sau đó mở lại để thêm nội dung hỗ trợ.</div>';
   } else {
@@ -4880,15 +4909,31 @@ function submitAdviseeFeedbackModal(sessionNo) {
   var text   = (document.getElementById('m-fbtext-' + sessionNo)||{}).value || '';
   if (!rating) { toast('Vui lòng chọn số sao', 'error'); return; }
   var ae = MOCK.advisees.find(function(x){ return x.name === currentUser.name; });
-  if (ae) {
-    var s = ae.sessions.find(function(x){ return x.no === sessionNo; });
-    if (s) {
-      s.status = 'done'; s.feedback = { rating:rating, text:text };
-      ae.sessionsDone = Math.min(ae.sessionsDone + 1, ae.sessionsTotal);
-      var next = ae.sessions.find(function(x){ return x.no === sessionNo+1 && x.status === 'locked'; });
-      if (next) next.status = 'upcoming';
-    }
-  }
+  if (!ae) return;
+  var s = ae.sessions.find(function(x){ return x.no === sessionNo; });
+  if (!s) return;
+
+  var feedbackSessionId = s.session_id || (ae.bookingId + '-' + sessionNo);
+
+  // Lưu thật lên Sheet (tab AdvisorReviews) — feedback này sẽ hiển thị cho
+  // Advisor xem và có thể public trên trang giới thiệu Advisor.
+  // Không chặn UI nếu lỗi mạng, chỉ báo toast.
+  apiPost({
+    action: 'submitAdviseeFeedback',
+    session_id: feedbackSessionId,
+    advisor_name: ae.advisor,
+    advisee_name: ae.name,
+    rating: rating,
+    text: text,
+  }).then(function(res){
+    if (!res || !res.success) toast('Đã lưu tạm — lỗi đồng bộ Sheet: ' + (res&&res.error||''), 'error');
+  }).catch(function(err){ toast('Đã lưu tạm — lỗi kết nối: ' + err.message, 'error'); });
+
+  s.status = 'done'; s.feedback = { rating:rating, text:text };
+  ae.sessionsDone = Math.min(ae.sessionsDone + 1, ae.sessionsTotal);
+  var next = ae.sessions.find(function(x){ return x.no === sessionNo+1 && x.status === 'locked'; });
+  if (next) next.status = 'upcoming';
+
   adviseeStarState[sessionNo] = { selected:0, hover:0 };
   toast('Đã gửi feedback buổi ' + sessionNo + '! Buổi ' + (sessionNo+1) + ' đã mở khoá 🎉', 'success');
   closeModal();
@@ -5040,18 +5085,33 @@ function submitAdvisorNotes(aeId, sessionNo) {
   if (!summary.trim() || !feedback.trim()) { toast('Vui lòng điền Nội dung và Nhận xét trước khi gửi', 'error'); return; }
 
   var ae = MOCK.advisees.find(function(x){ return x.id === aeId; });
-  if (ae) {
-    var s = ae.sessions.find(function(x){ return x.no === sessionNo; });
-    if (s) {
-      var now = new Date();
-      s.advisorNotes = {
-        summary: summary.trim(),
-        feedback: feedback.trim(),
-        actionItems: actionItems.trim(),
-        submittedAt: pad(now.getDate()) + '/' + pad(now.getMonth()+1) + '/' + now.getFullYear() + ' ' + pad(now.getHours()) + ':' + pad(now.getMinutes())
-      };
-    }
-  }
+  if (!ae) return;
+  var s = ae.sessions.find(function(x){ return x.no === sessionNo; });
+  if (!s) return;
+
+  var notesSessionId = s.session_id || (ae.bookingId + '-' + sessionNo);
+
+  // Lưu thật lên Sheet (tab AdvisorNotes) — KHÔNG public, chỉ Advisee & Staff xem được.
+  apiPost({
+    action: 'submitAdvisorNotes',
+    session_id: notesSessionId,
+    advisor_name: ae.advisor,
+    advisee_name: ae.name,
+    summary: summary.trim(),
+    feedback: feedback.trim(),
+    action_items: actionItems.trim(),
+  }).then(function(res){
+    if (!res || !res.success) toast('Đã lưu tạm — lỗi đồng bộ Sheet: ' + (res&&res.error||''), 'error');
+  }).catch(function(err){ toast('Đã lưu tạm — lỗi kết nối: ' + err.message, 'error'); });
+
+  var now = new Date();
+  s.advisorNotes = {
+    summary: summary.trim(),
+    feedback: feedback.trim(),
+    actionItems: actionItems.trim(),
+    submittedAt: pad(now.getDate()) + '/' + pad(now.getMonth()+1) + '/' + now.getFullYear() + ' ' + pad(now.getHours()) + ':' + pad(now.getMinutes())
+  };
+
   toast('Đã gửi nhận xét buổi ' + sessionNo + ' ✅', 'success');
   closeModal();
   navToAdviseeDetail(aeId);
