@@ -569,8 +569,18 @@ function pricingSlugify(name) {
   s = s.replace(/đ/g, 'd').replace(/Đ/g, 'D');
   return s.split(/\s+/).filter(Boolean).join('-');
 }
-function pricingFmtPriceK(price) {
-  return Math.round(Number(price) / 1000).toLocaleString('vi-VN') + 'k';
+function pricingFmtPriceK(p) {
+  var price = p.price;
+  var mode = p.price_mode;
+  if (mode === 'contact' || price === '' || price === null || price === undefined || price === 0 || price === '0') return 'Liên hệ';
+  var s = String(price).trim();
+  if (/^\d+$/.test(s)) return Math.round(Number(s) / 1000).toLocaleString('vi-VN') + 'k';
+  return s; // giá dạng chữ tự do (VD: "Theo thoả thuận") — hiện nguyên văn
+}
+function pricingFmtSessions(p) {
+  var isUnlimited = p.sessions_unlimited === true || p.sessions_unlimited === 'TRUE' || p.sessions_unlimited === 'true';
+  if (isUnlimited) return 'Không giới hạn buổi';
+  return (Number(p.sessions) || 0) + ' buổi';
 }
 function pricingFmtDuration(days) {
   days = Number(days) || 0;
@@ -592,8 +602,8 @@ function renderPricingTable(packages, featuresByPkg) {
     theadHtml += '<th class="pt-th' + (isHi ? ' hi' : '') + '"><div class="pt-th-inner">';
     if (isHi) theadHtml += '<div class="pt-th-pop">' + pricingEscHtml(p.badge_label) + '</div>';
     theadHtml += '<div class="pt-th-name' + (isHi ? ' hi' : '') + '">' + pricingEscHtml(p.name) + '</div>';
-    theadHtml += '<div class="pt-th-price' + (isHi ? ' hi' : '') + '">' + pricingFmtPriceK(p.price) + '</div>';
-    theadHtml += '<div class="pt-th-sessions">' + p.sessions + ' buổi · ' + (Number(p.duration_minutes) || 60) + ' phút</div>';
+    theadHtml += '<div class="pt-th-price' + (isHi ? ' hi' : '') + '">' + pricingFmtPriceK(p) + '</div>';
+    theadHtml += '<div class="pt-th-sessions">' + pricingFmtSessions(p) + ' · ' + (Number(p.duration_minutes) || 60) + ' phút</div>';
     theadHtml += '</div></th>';
   });
   theadHtml += '</tr>';
