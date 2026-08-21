@@ -4816,7 +4816,8 @@ function openAdviseeSessionModal(sessionNo) {
   body += '<div><div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:2px">Thời gian</div><div style="font-size:14px;font-weight:600">' + dateLabel + '</div></div>';
   body += '<div style="display:flex;gap:8px">';
   if (s.meetLink) body += '<a href="' + s.meetLink + '" target="_blank" class="detail-btn">🎥 Vào Meet</a>';
-  if (s.status === 'upcoming') body += '<button class="detail-btn" onclick="closeModal();openRescheduleModal(\'' + ae.id + '\',' + sessionNo + ',\'advisee\')">🔄 Đổi giờ</button>';
+  if (s.status === 'upcoming' && !s.date) body += '<button class="detail-btn" onclick="closeModal();openBookSessionModal(\'' + ae.id + '\',' + sessionNo + ')">🗓 Chọn giờ meeting</button>';
+  else if (s.status === 'upcoming' && s.date) body += '<button class="detail-btn" onclick="closeModal();openRescheduleModal(\'' + ae.id + '\',' + sessionNo + ',\'advisee\')">🔄 Đổi giờ</button>';
   body += '</div></div>';
 
   // Chuẩn bị
@@ -4895,6 +4896,128 @@ function aeeSelectStarModal(sessionNo, val) {
   if (!adviseeStarState[sessionNo]) adviseeStarState[sessionNo] = { selected:0, hover:0 };
   adviseeStarState[sessionNo].selected = val;
   aeeHoverStarModal(sessionNo, val);
+}
+
+// ── Advisee: chọn giờ meeting đầu tiên với Advisor đã match (buổi chưa có s.date) ──
+var _bookSessionCtx = null; // { aeId, sessionNo, advisorName }
+var _bookSessionSlots = {}; // { 'YYYY-MM-DD': [{slot_id, time, timeEnd}] }
+var _bookSessionSelected = null; // { date, time, slotId } — slot đã chọn nhưng CHƯA xác nhận
+
+function openBookSessionModal(aeId, sessionNo) {
+  var ae = MOCK.advisees.find(function(x){ return x.id === aeId; });
+  if (!ae) return;
+  _bookSessionCtx = { aeId: aeId, sessionNo: sessionNo, advisorName: ae.advisor };
+  _bookSessionSlots = {};
+  _bookSessionSelected = null;
+
+  document.getElementById('modal-title').textContent = 'Chọn giờ meeting — Buổi ' + sessionNo;
+  document.getElementById('modal-body').innerHTML = skeletonRows(2);
+  document.getElementById('modal-actions').innerHTML =
+    '<button class="btn-secondary" onclick="closeModal()" style="width:auto;padding:10px 20px">Đóng</button>';
+  document.getElementById('modal-overlay').classList.add('open');
+
+  apiGet('getSlots', { advisor: ae.advisor, only_available: '1' }).then(function(res){
+    var raw = (res && res.data) ? res.data : [];
+    raw.forEach(function(s){
+      var d = String(s.date || '').slice(0, 10);
+      if (!d) return;
+      if (!_bookSessionSlots[d]) _bookSessionSlots[d] = [];
+      _bookSessionSlots[d].push({ slot_id: s.slot_id, time: s.time_start, timeEnd: s.time_end });
+    });
+    Object.keys(_bookSessionSlots).forEach(function(d){
+      _bookSessionSlots[d].sort(function(a,b){ return a.time.localeCompare(b.time); });
+    });
+    renderBookSessionModalBody();
+  }).catch(function(err){
+    document.getElementById('modal-body').innerHTML =
+      '<div class="empty-state"><div class="icon">⚠</div>Không tải được lịch trống của Advisor.<br><small style="color:var(--muted)">' + err.message + '</small></div>';
+  });
+}
+
+function renderBookSessionModalBody() {
+  var dates = Object.keys(_bookSessionSlots).filter(function(d){ return _bookSessionSlots[d].length > 0; }).sort();
+  var html = '<div style="font-size:13px;color:var(--muted);margin-bottom:14px">Chọn 1 khung giờ trống từ lịch của Advisor <b>' + _bookSessionCtx.advisorName + '</b>, sau đó bấm "Xác nhận đặt lịch".</div>';
+
+  if (dates.length === 0) {
+    html += '<div class="empty-state"><div class="icon">📭</div>Advisor hiện chưa có giờ trống nào. Vui lòng liên hệ đội LinkaJob để được hỗ trợ xếp lịch.</div>';
+  } else {
+    dates.forEach(function(d){
+      var dateObj = new Date(d + 'T00:00:00');
+      var label = DAYS_VI[dateObj.getDay()] + ' ' + dateObj.getDate() + '/' + (dateObj.getMonth()+1) + '/' + dateObj.getFullYear();
+      html += '<div style="font-size:12.5px;font-weight:700;color:var(--text);margin:14px 0 8px">' + label + '</div>';
+      html += '<div style="display:flex;flex-wrap:wrap;gap:8px">';
+      _bookSessionSlots[d].forEach(function(sl){
+        var isSel = _bookSessionSelected && _bookSessionSelected.date === d && _bookSessionSelected.slotId === sl.slot_id;
+        html += '<button class="day-time-chip' + (isSel?' selected':'') + '" onclick="selectBookSlot(\'' + d + '\',\'' + sl.time + '\',\'' + sl.slot_id + '\')">' + sl.time + '</button>';
+      });
+      html += '</div>';
+    });
+  }
+  document.getElementById('modal-body').innerHTML = html;
+  renderBookSessionModalActions();
+}
+
+// Bước 1: chỉ CHỌN slot (bôi sáng chip), chưa gửi request gì cả
+function selectBookSlot(dateStr, time, slotId) {
+  _bookSessionSelected = { date: dateStr, time: time, slotId: slotId };
+  renderBookSessionModalBody();
+}
+
+function renderBookSessionModalActions() {
+  var actions = '<button class="btn-secondary" onclick="closeModal()" style="width:auto;padding:10px 20px">Đóng</button>';
+  if (_bookSessionSelected) {
+    var t = _bookSessionSelected.date.split('-').reverse().join('/');
+    actions += '<button class="login-btn" onclick="confirmBookSession()" style="width:auto;padding:10px 24px">Xác nhận đặt lịch ' + t + ' · ' + _bookSessionSelected.time + ' →</button>';
+  } else {
+    actions += '<button class="login-btn" disabled style="width:auto;padding:10px 24px;opacity:.5;cursor:not-allowed">Chọn 1 khung giờ ở trên</button>';
+  }
+  document.getElementById('modal-actions').innerHTML = actions;
+}
+
+// Bước 2: người dùng bấm nút xác nhận riêng thì mới thực sự gửi request đặt lịch
+function confirmBookSession() {
+  var ctx = _bookSessionCtx;
+  var sel = _bookSessionSelected;
+  if (!sel) { toast('Vui lòng chọn 1 khung giờ trước!', 'error'); return; }
+  var ae = MOCK.advisees.find(function(x){ return x.id === ctx.aeId; });
+  if (!ae) return;
+
+  var btn = document.querySelector('#modal-actions .login-btn');
+  if (btn) { btn.innerHTML = '<span class="spinner"></span> Đang đặt lịch...'; btn.disabled = true; }
+
+  apiPost({
+    action: 'bookSession',
+    slot_id: sel.slotId,
+    booking_id: ae.bookingId,
+    session_number: ctx.sessionNo,
+    advisee_name: ae.name,
+  }).then(function(res){
+    if (!res || !res.success) {
+      toast('Lỗi: ' + (res && res.error ? res.error : 'không đặt được lịch — slot có thể vừa bị người khác chọn'), 'error');
+      _bookSessionSelected = null;
+      openBookSessionModal(ctx.aeId, ctx.sessionNo);
+      return;
+    }
+    var s = ae.sessions.find(function(x){ return x.no === ctx.sessionNo; });
+    if (s) {
+      s.date = sel.date;
+      s.timeStart = sel.time;
+      s.session_id = res.session_id; // backend trả về session_id thật vừa tạo
+      s.status = 'upcoming';
+      // Backend luôn tạo session với duration_minutes = 60 (xem action bookSession)
+      var parts = sel.time.split(':');
+      var endMins = (Number(parts[0])||0) * 60 + (Number(parts[1])||0) + 60;
+      var eh = Math.floor(endMins / 60) % 24, em = endMins % 60;
+      s.timeEnd = (eh<10?'0':'') + eh + ':' + (em<10?'0':'') + em;
+    }
+    toast('Đã đặt lịch buổi ' + ctx.sessionNo + ' ✅', 'success');
+    _bookSessionSelected = null;
+    closeModal();
+    document.getElementById('main-content').innerHTML = renderMyBookings();
+  }).catch(function(err){
+    toast('Lỗi kết nối: ' + err.message, 'error');
+    if (btn) { btn.innerHTML = 'Xác nhận đặt lịch →'; btn.disabled = false; }
+  });
 }
 
 function submitPrepInfoModal(sessionNo) {
@@ -5229,7 +5352,7 @@ function openSessionDetailModal(aeId, sessionNo) {
   body += '<div><div style="font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:2px">Thời gian</div><div style="font-size:14px;font-weight:600">' + dateLabel + '</div></div>';
   body += '<div style="display:flex;gap:8px">';
   if (s.meetLink) body += '<a href="' + s.meetLink + '" target="_blank" class="detail-btn">🎥 Vào Meet</a>';
-  if (s.status === 'upcoming') body += '<button class="detail-btn" onclick="closeModal();openRescheduleModal(\'' + ae.id + '\',' + sessionNo + ',\'advisor\')">🔄 Đổi giờ</button>';
+  if (s.status === 'upcoming' && s.date) body += '<button class="detail-btn" onclick="closeModal();openRescheduleModal(\'' + ae.id + '\',' + sessionNo + ',\'advisor\')">🔄 Đổi giờ</button>';
   body += '</div></div>';
 
   // Prep info từ Advisee
