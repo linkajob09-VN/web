@@ -492,6 +492,8 @@ footer span{ color:var(--orange);}
   .lj-nav-links > a, .lj-nav-btn-plain{ width:100%; justify-content:space-between; padding:15px 4px; font-size:15.5px; border-radius:0; border-bottom:.5px solid var(--line-dark); color:var(--text-dark);}
   .lj-dropdown{ position:static; opacity:1; pointer-events:none; max-height:0; overflow:hidden; transform:none; box-shadow:none; border:none; background:transparent; padding:0; min-width:0; border-radius:0; transition:max-height .25s ease;}
   .lj-nav-item.open .lj-dropdown{ pointer-events:auto; max-height:400px; padding:2px 0 10px 6px;}
+  /* Đảm bảo link trong dropdown luôn nhận được click trên mobile */
+  .lj-dropdown a{ pointer-events:auto !important; position:relative; z-index:260;}
   .lj-di{ padding:11px 8px;}
   .lj-di-sub{ color:var(--muted-dark);}
   .lj-btn-nav{ margin:18px 0 0; width:100%; padding:14px; font-size:15px; text-align:center;}
@@ -612,7 +614,7 @@ footer span{ color:var(--orange);}
     <button class="lj-btn-nav" onclick="openConsultWidget()">Đăng ký tư vấn</button>
   </div>
 </nav>
-<div class="lj-nav-backdrop" id="ljNavBackdrop" onclick="closeMobileNav()"></div>
+<div class="lj-nav-backdrop" id="ljNavBackdrop"></div>
 
 <section class="hero">
   <div class="wrap">
@@ -1123,6 +1125,8 @@ function toggleNavDropdown(btn) {
   if (!wasOpen) item.classList.add('open');
 }
 document.addEventListener('click', function(e){
+  // Nếu click vào link bên trong dropdown → để navigate trước, không đóng
+  if (e.target.closest('.lj-dropdown a')) return;
   if (!e.target.closest('.lj-nav-item')) {
     document.querySelectorAll('.lj-nav-item.open').forEach(function(el){ el.classList.remove('open'); });
   }
@@ -1185,6 +1189,12 @@ function closeMobileNav(){
   if(btn) btn.setAttribute('aria-expanded', 'false');
   document.body.style.overflow = '';
 }
+
+// Đóng nav khi click backdrop — nhưng KHÔNG khi click link trong nav
+document.getElementById('ljNavBackdrop') && document.getElementById('ljNavBackdrop').addEventListener('click', function(e){
+  if (e.target.closest('.lj-nav-links')) return; // click bên trong nav panel → bỏ qua
+  closeMobileNav();
+});
 
 /* ── animation: scroll reveal, stat count-up, nav shadow ── */
 (function(){
