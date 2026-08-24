@@ -518,6 +518,18 @@ function loadPackagesFromSheet(callback) {
 }
 
 const TIME_SLOTS = ['08:00','09:00','10:00','11:00','14:00','15:00','16:00','17:00','18:00','19:00','20:00','21:00'];
+// MỚI: mốc 30 phút đầy đủ trong ngày, dùng cho dropdown "Từ / Đến" khi Advisor
+// gửi lịch trống theo khung giờ (thay vì chọn từng ô rời rạc như trước).
+const HALF_HOUR_OPTIONS = (function(){
+  var out = [];
+  for (var h = 0; h < 24; h++) {
+    out.push((h<10?'0':'')+h+':00');
+    out.push((h<10?'0':'')+h+':30');
+  }
+  return out;
+})();
+function timeStrToMinutes(t) { var p = t.split(':'); return Number(p[0])*60 + Number(p[1]); }
+function minutesToTimeStr(m) { m = ((m % 1440) + 1440) % 1440; var h = Math.floor(m/60), mm = m%60; return (h<10?'0':'')+h+':'+(mm<10?'0':'')+mm; }
 const DAYS_VI = ['CN','T2','T3','T4','T5','T6','T7'];
 
 // Identity dùng chung cho toàn bộ slot "tư vấn miễn phí" trên Sheet — PHẢI khớp CW_STAFF_IDENTITY
@@ -1391,40 +1403,150 @@ function renderSchedulePicker() {
   });
 }
 
-function openAdvisorDayModal(dateStr) {
-  const dateObj = new Date(dateStr + 'T00:00:00');
-  const dow = DAYS_VI[dateObj.getDay()];
-  document.getElementById('modal-title').textContent = dow + ' ' + dateObj.getDate() + '/' + (dateObj.getMonth()+1) + ' — Chọn giờ trống';
+// ── Advisor: chọn khung giờ trống theo dạng "Từ – Đến" (thay vì lưới ô rời rạc) ──
+var _dayModalPendingRanges = []; // [{from,to}] các khung giờ MỚI thêm, chưa gửi lên server
+var _dayModalDateStr = '';
 
-  const bookedTimes = {};
-  const savedTimes = {};
+function getDaySlotMap(dateStr) {
+  // { 'HH:mm': {booked:bool, slotId:string} } — chỉ những slot còn nên hiển thị
+  // (slot đã booked luôn hiện; slot available áp filter 24h/7-ngày như cũ).
+  var map = {};
   sheetData.slots.forEach(function(s){
     if (s.advisor_name !== currentUser.name) return;
     if (String(s.date).slice(0,10) !== dateStr) return;
-    if (s.status === 'booked') bookedTimes[s.time_start] = true;
-    // Lịch trống cũ / trong vòng 24h tới tự động không hiển thị là "đã lưu"
-    else if (s.status === 'available' && isAvailableSlotVisible(dateStr, s.time_start)) savedTimes[s.time_start] = true;
+    if (s.status === 'booked') map[s.time_start] = { booked: true, slotId: s.slot_id };
+    else if (s.status === 'available' && isAvailableSlotVisible(dateStr, s.time_start)) map[s.time_start] = { booked: false, slotId: s.slot_id };
   });
+  return map;
+}
 
-  let html = '<div class="day-time-grid" id="day-time-grid">';
-  TIME_SLOTS.forEach(function(t){
-    const key = dateStr + '_' + t;
-    const isBooked = !!bookedTimes[t];
-    const isSel = selectedSlots.has(key) || !!savedTimes[t];
-    html += '<button class="day-time-chip' + (isBooked?' booked':isSel?' selected':'') + '" data-key="' + key + '" ' + (isBooked?'disabled':'') + ' onclick="toggleDaySlot(this,\'' + key + '\')">' + t + '</button>';
+function groupTimesIntoRanges(times) {
+  // gộp các mốc 'HH:mm' (cách nhau 30') liền kề thành từng khung giờ liên tục
+  var sorted = times.slice().sort();
+  var ranges = [];
+  var cur = null;
+  sorted.forEach(function(t){
+    var mins = timeStrToMinutes(t);
+    if (cur && mins === cur.endMins) { cur.endMins += 30; cur.times.push(t); }
+    else { if (cur) ranges.push(cur); cur = { startMins: mins, endMins: mins + 30, times: [t] }; }
+  });
+  if (cur) ranges.push(cur);
+  return ranges;
+}
+
+function openAdvisorDayModal(dateStr) {
+  _dayModalDateStr = dateStr;
+  _dayModalPendingRanges = [];
+  const dateObj = new Date(dateStr + 'T00:00:00');
+  const dow = DAYS_VI[dateObj.getDay()];
+  document.getElementById('modal-title').textContent = dow + ' ' + dateObj.getDate() + '/' + (dateObj.getMonth()+1) + ' — Giờ làm việc';
+  renderDayModalBody();
+  document.getElementById('modal-overlay').classList.add('open');
+}
+
+function renderDayModalBody() {
+  var dateStr = _dayModalDateStr;
+  var slotMap = getDaySlotMap(dateStr);
+  var ranges = groupTimesIntoRanges(Object.keys(slotMap));
+
+  var html = '<div style="display:flex;flex-direction:column;gap:10px" id="day-ranges-list">';
+  if (ranges.length === 0 && _dayModalPendingRanges.length === 0) {
+    html += '<div style="font-size:13px;color:var(--muted)">Chưa có khung giờ nào cho ngày này.</div>';
+  }
+  ranges.forEach(function(r, idx){
+    var hasBooked = r.times.some(function(t){ return slotMap[t].booked; });
+    var label = minutesToTimeStr(r.startMins) + ' – ' + minutesToTimeStr(r.endMins);
+    html += '<div style="display:flex;align-items:center;justify-content:space-between;border:1px solid var(--border);border-radius:10px;padding:10px 14px">' +
+      '<div style="font-size:13.5px;font-weight:600">🕐 ' + label + (hasBooked ? ' <span class="badge badge-confirmed" style="margin-left:6px">Đã có lịch</span>' : '') + '</div>' +
+      (hasBooked ? '' : '<button class="detail-btn" onclick="removeSavedDayRange(' + idx + ')" style="color:#DC2626">Xoá</button>') +
+      '</div>';
+  });
+  _dayModalPendingRanges.forEach(function(r, idx){
+    html += '<div style="display:flex;align-items:center;justify-content:space-between;border:1px dashed var(--brand);background:#FFF7F5;border-radius:10px;padding:10px 14px">' +
+      '<div style="font-size:13.5px;font-weight:600;color:var(--brand)">🕐 ' + r.from + ' – ' + r.to + ' <span style="font-weight:400;color:var(--muted)">(chưa gửi)</span></div>' +
+      '<button class="detail-btn" onclick="removePendingDayRange(' + idx + ')">Xoá</button>' +
+      '</div>';
   });
   html += '</div>';
+
+  html += '<div style="margin-top:14px;padding-top:14px;border-top:1px solid var(--border)">';
+  html += '<div style="font-size:12.5px;font-weight:700;color:var(--muted);margin-bottom:8px">THÊM KHUNG GIỜ</div>';
+  html += '<div style="display:flex;gap:8px;align-items:flex-end">';
+  html += '<div style="flex:1"><div class="form-label">Từ</div><select class="form-input" id="range-from" style="margin-top:4px">' + HALF_HOUR_OPTIONS.map(function(t){ return '<option value="' + t + '"' + (t==='09:00'?' selected':'') + '>' + t + '</option>'; }).join('') + '</select></div>';
+  html += '<div style="flex:1"><div class="form-label">Đến</div><select class="form-input" id="range-to" style="margin-top:4px">' + HALF_HOUR_OPTIONS.map(function(t){ return '<option value="' + t + '"' + (t==='10:00'?' selected':'') + '>' + t + '</option>'; }).join('') + '</select></div>';
+  html += '<button class="login-btn" style="width:auto;padding:10px 18px" onclick="addPendingDayRange()">+ Thêm</button>';
+  html += '</div></div>';
 
   document.getElementById('modal-body').innerHTML = html;
   document.getElementById('modal-actions').innerHTML =
     '<button class="btn-secondary" onclick="closeModal()" style="width:auto;padding:10px 20px">Đóng</button>' +
-    '<button class="login-btn" id="day-send-btn" style="width:auto;padding:10px 24px" onclick="sendSlots()">Gửi lịch trống đã chọn</button>';
-  document.getElementById('modal-overlay').classList.add('open');
+    '<button class="login-btn" id="day-send-btn" style="width:auto;padding:10px 24px" onclick="sendDayRanges()">Gửi lịch trống đã thêm</button>';
 }
 
-function toggleDaySlot(btn, key) {
-  if (selectedSlots.has(key)) { selectedSlots.delete(key); btn.classList.remove('selected'); }
-  else { selectedSlots.add(key); btn.classList.add('selected'); }
+function addPendingDayRange() {
+  var from = document.getElementById('range-from').value;
+  var to = document.getElementById('range-to').value;
+  if (timeStrToMinutes(to) <= timeStrToMinutes(from)) { toast('Giờ "Đến" phải sau giờ "Từ"', 'error'); return; }
+  _dayModalPendingRanges.push({ from: from, to: to });
+  renderDayModalBody();
+}
+
+function removePendingDayRange(idx) {
+  _dayModalPendingRanges.splice(idx, 1);
+  renderDayModalBody();
+}
+
+function removeSavedDayRange(idx) {
+  var dateStr = _dayModalDateStr;
+  var slotMap = getDaySlotMap(dateStr);
+  var ranges = groupTimesIntoRanges(Object.keys(slotMap));
+  var r = ranges[idx];
+  if (!r) return;
+  var slotIds = r.times.map(function(t){ return slotMap[t].slotId; }).filter(Boolean);
+  if (slotIds.length === 0) return;
+  if (!confirm('Xoá khung giờ ' + minutesToTimeStr(r.startMins) + ' – ' + minutesToTimeStr(r.endMins) + '?')) return;
+
+  Promise.all(slotIds.map(function(id){
+    return apiPost({ action: 'deleteSlot', slot_id: id }).catch(function(){ return null; });
+  })).then(function(){
+    var timeSet = {}; r.times.forEach(function(t){ timeSet[t] = true; });
+    sheetData.slots = sheetData.slots.filter(function(s){
+      if (s.advisor_name !== currentUser.name) return true;
+      if (String(s.date).slice(0,10) !== dateStr) return true;
+      return !timeSet[s.time_start];
+    });
+    renderDayModalBody();
+    toast('Đã xoá khung giờ', 'success');
+  });
+}
+
+function sendDayRanges() {
+  if (_dayModalPendingRanges.length === 0) { toast('Chưa thêm khung giờ nào!', 'error'); return; }
+  var keys = [];
+  _dayModalPendingRanges.forEach(function(r){
+    var m = timeStrToMinutes(r.from);
+    var endM = timeStrToMinutes(r.to);
+    while (m < endM) { keys.push(_dayModalDateStr + '_' + minutesToTimeStr(m)); m += 30; }
+  });
+  keys = Array.from(new Set(keys));
+
+  var btn = document.getElementById('day-send-btn');
+  if (btn) { btn.innerHTML = '<span class="spinner"></span> Đang gửi...'; btn.disabled = true; }
+
+  apiPost({ action: 'addSlots', advisor: currentUser.name, advisor_email: currentUser.email, slots: keys, duration_minutes: 30 }).then(function(res){
+    if (res && res.success) {
+      toast('Đã gửi ' + _dayModalPendingRanges.length + ' khung giờ (' + keys.length + ' slot)!', 'success');
+      _dayModalPendingRanges = [];
+      closeModal();
+      switchRoleTab('schedule');
+    } else {
+      toast('Lỗi: ' + (res && res.error), 'error');
+      if (btn) { btn.innerHTML = 'Gửi lịch trống đã thêm'; btn.disabled = false; }
+    }
+  }).catch(function(e){
+    toast('Lỗi: ' + e.message, 'error');
+    if (btn) { btn.innerHTML = 'Gửi lịch trống đã thêm'; btn.disabled = false; }
+  });
 }
 
 
