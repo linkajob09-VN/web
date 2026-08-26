@@ -623,6 +623,12 @@ function buildAdviseeFromBooking(b, allSessions) {
     var advisorNotesObj = row.advisor_note_summary
       ? { summary: row.advisor_note_summary, feedback: row.advisor_note_feedback || '', actionItems: row.advisor_note_action_items || '', submittedAt: row.advisor_note_created_at || '' }
       : null;
+    // MỚI (fix 2026-08-24): Thông tin chuẩn bị của Advisee (từ tab SessionPrep,
+    // được getSessions ghép sẵn) — trước đây bị hard-code null, dù backend đã
+    // trả dữ liệu, nên Advisor không bao giờ thấy Advisee đã gửi chuẩn bị gì.
+    var prepInfoObj = row.prep_question
+      ? { cvLink: row.prep_cv_link || '', question: row.prep_question || '', otherLinks: row.prep_other_links || '', submittedAt: row.prep_submitted_at || '' }
+      : null;
 
     var status;
     if (String(row.status||'').toLowerCase() === 'completed' || feedbackObj) status = 'done';
@@ -633,7 +639,7 @@ function buildAdviseeFromBooking(b, allSessions) {
 
     sessions.push({
       no: no, date: row.scheduled_date || null, timeStart: row.scheduled_time || null, timeEnd: timeEnd,
-      status: status, feedback: feedbackObj, meetLink: row.meet_link || '', prepInfo: null, advisorNotes: advisorNotesObj,
+      status: status, feedback: feedbackObj, meetLink: row.meet_link || '', prepInfo: prepInfoObj, advisorNotes: advisorNotesObj,
       session_id: row.session_id,
     });
   }
@@ -5148,10 +5154,26 @@ function submitPrepInfoModal(sessionNo) {
   var links = (document.getElementById('m-prep-links-' + sessionNo)||{}).value || '';
   if (!q.trim()) { toast('Vui lòng điền câu hỏi cho Advisor', 'error'); return; }
   var ae = MOCK.advisees.find(function(x){ return x.name === currentUser.name; });
-  if (ae) {
-    var s = ae.sessions.find(function(x){ return x.no === sessionNo; });
-    if (s) { var now = new Date(); s.prepInfo = { cvLink:cv.trim(), question:q.trim(), otherLinks:links.trim(), submittedAt:pad(now.getDate())+'/'+pad(now.getMonth()+1)+'/'+now.getFullYear()+' '+pad(now.getHours())+':'+pad(now.getMinutes()) }; }
-  }
+  if (!ae) return;
+  var s = ae.sessions.find(function(x){ return x.no === sessionNo; });
+  if (!s) return;
+
+  if (!s.session_id) { toast('Buổi này chưa có lịch cụ thể, không thể gửi chuẩn bị', 'error'); return; }
+
+  // MỚI (fix 2026-08-24): trước đây chỉ lưu tạm ở bộ nhớ, chưa từng gọi API
+  // để lưu lên Sheet (SessionPrep) — nên Advisor không bao giờ thấy được.
+  apiPost({
+    action: 'submitPrepInfo',
+    session_id: s.session_id,
+    cv_link: cv.trim(),
+    question: q.trim(),
+    other_links: links.trim(),
+  }).then(function(res){
+    if (!res || !res.success) toast('Đã lưu tạm — lỗi đồng bộ Sheet: ' + (res&&res.error||''), 'error');
+  }).catch(function(err){ toast('Đã lưu tạm — lỗi kết nối: ' + err.message, 'error'); });
+
+  var now = new Date();
+  s.prepInfo = { cvLink:cv.trim(), question:q.trim(), otherLinks:links.trim(), submittedAt:pad(now.getDate())+'/'+pad(now.getMonth()+1)+'/'+now.getFullYear()+' '+pad(now.getHours())+':'+pad(now.getMinutes()) };
   toast('Đã gửi thông tin chuẩn bị buổi ' + sessionNo + ' ✅', 'success');
   closeModal();
   document.getElementById('main-content').innerHTML = renderMyBookings();
