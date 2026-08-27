@@ -4878,7 +4878,8 @@ function openSessionDetailModal(aeId, sessionNo) {
 
   // Feedback của Advisee cho Advisor (nếu có)
   if (s.feedback) {
-    body += '<div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;margin:14px 0 8px">Feedback của Advisee</div>';
+    body += '<div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;margin:14px 0 8px">3 điều bạn học/nhận được sau buổi cố vấn
+    </div>';
     body += '<div style="background:#FFF7ED;border:1.5px solid #FED7AA;border-radius:10px;padding:12px 14px">';
     var stars = '';
     for (var i=1;i<=5;i++) stars += '<span style="color:' + (i<=s.feedback.rating?'#F59E0B':'#D1D5DB') + ';font-size:15px">★</span>';
