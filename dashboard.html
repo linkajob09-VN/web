@@ -43,6 +43,9 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
 .role-btn:hover:not(.active) { border-color: var(--brand); color: var(--brand); }
 
 .login-btn { width: 100%; padding: 16px; font-size: 17px; font-weight: 700; border-radius: var(--radius-sm); border: none; background: var(--brand); color: #fff; cursor: pointer; transition: opacity .15s; display: flex; align-items: center; justify-content: center; gap: 8px; }
+/* MỚI (fix 2026-08-27): .btn-secondary được dùng ở 14+ chỗ (nút Đóng/Huỷ trong modal) nhưng chưa từng có style — thêm để đồng bộ với .login-btn */
+.btn-secondary { width: 100%; padding: 16px; font-size: 15px; font-weight: 600; border-radius: var(--radius-sm); border: 1.5px solid var(--border); background: var(--white); color: var(--text); cursor: pointer; transition: all .15s; display: flex; align-items: center; justify-content: center; gap: 8px; }
+.btn-secondary:hover { background: var(--bg); }
 .login-btn:hover { opacity: .88; }
 .login-btn:disabled { opacity: .55; cursor: not-allowed; }
 .login-error { color: var(--brand); font-size: 13px; margin-top: 10px; text-align: center; display: none; }
@@ -368,6 +371,12 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
 .cal-event-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
 .cal-event-more { font-size: 11px; color: var(--muted); font-weight: 700; padding: 1px 4px; cursor: pointer; }
 .cal-event-more:hover { color: var(--brand); }
+@media print {
+  body * { visibility: hidden; }
+  #report-printable, #report-printable * { visibility: visible; }
+  #report-printable { position: absolute; left: 0; top: 0; width: 100%; }
+  .sidebar, .topbar, .card-header button, button { display: none !important; }
+}
 </style>
 </head>
 <body>
@@ -921,6 +930,7 @@ const SIDEBAR_DEF = {
       { id: 'lj-newreg',   label: '🔴 Khách đăng ký mới' },
       { id: 'lj-revenue',  label: 'Doanh thu' },
       { id: 'lj-report',   label: 'Báo cáo vận hành' },
+      { id: 'lj-market-report', label: '📊 Báo cáo Marketing' },
       { id: 'lj-sales-perf', label: '📈 Báo cáo hiệu suất Sale' },
       { id: 'lj-meetings', label: 'Lịch meeting' },
       { id: 'lj-products', label: 'Sản phẩm' },
@@ -959,6 +969,7 @@ const ROUTE_MAP = {
   'lj-newreg':     { fn: function(){ renderStaff('lj-newreg'); } },
   'lj-revenue':    { fn: function(){ loadAdviseesFromSheet(function(){ renderStaff('lj-revenue'); }); } },
   'lj-report':     { fn: function(){ loadAdviseesFromSheet(function(){ renderStaff('lj-report'); }); } },
+  'lj-market-report': { fn: function(){ loadMarketingReportPageAsync(); } },
   'lj-sales-perf': { fn: function(){ loadSalesPerformancePageAsync(); } },
   'lj-meetings':   { fn: function(){ loadMeetingCalendarAsync(); } },
   'lj-products':   { fn: function(){ loadProductsPageAsync(); } },
@@ -1598,6 +1609,11 @@ function mergeLeadRow(r) {
   obj.profile = {
     education: r.education || '', experience: r.experience || '',
     desire: r.desire || '', barrier: r.barrier || '', followUp: r.follow_up || '',
+    // MỚI (fix 2026-08-24): field báo cáo marketing/kinh doanh theo tháng/quý
+    customerType: r.customer_type || '', region: r.region || '',
+    studentYear: r.student_year || '', experienceYears: r.experience_years || '',
+    interestedDept: r.interested_dept || '', interestedLevel: r.interested_level || '',
+    sourceChannel: r.source_channel || '',
   };
   if (!existing) MOCK.consultations.push(obj);
   return obj;
@@ -2428,6 +2444,10 @@ function loadStaffLeadsAsync() {
       obj.profile = {
         education: r.education || '', experience: r.experience || '',
         desire: r.desire || '', barrier: r.barrier || '', followUp: r.follow_up || '',
+        customerType: r.customer_type || '', region: r.region || '',
+        studentYear: r.student_year || '', experienceYears: r.experience_years || '',
+        interestedDept: r.interested_dept || '', interestedLevel: r.interested_level || '',
+        sourceChannel: r.source_channel || '',
       };
       if (!existing) MOCK.consultations.push(obj);
     });
@@ -2879,6 +2899,13 @@ function renderConsultationDetail(cid) {
   // Hồ sơ khách hàng
   html += '<div class="card" style="margin-bottom:16px"><div class="card-header"><div class="card-header-left">Hồ sơ khách hàng</div></div>';
   html += '<div class="form-grid">';
+  html += '<div><div class="form-label">Bạn hiện là</div><select class="form-select" id="cv-customertype" onchange="cvToggleCustomerTypeFields()"><option value="">-- Chọn --</option><option value="Sinh viên"' + (p.customerType==='Sinh viên'?' selected':'') + '>Sinh viên</option><option value="Đã đi làm"' + (p.customerType==='Đã đi làm'?' selected':'') + '>Đã đi làm</option></select></div>';
+  html += '<div><div class="form-label">Khu vực</div><select class="form-select" id="cv-region"><option value="">-- Chọn --</option>' + ['Miền Bắc','Miền Trung','Miền Nam'].map(function(r){ return '<option' + (p.region===r?' selected':'') + '>' + r + '</option>'; }).join('') + '</select></div>';
+  html += '<div id="cv-studentyear-wrap" style="display:' + (p.customerType==='Sinh viên'?'block':'none') + '"><div class="form-label">Sinh viên năm mấy</div><select class="form-select" id="cv-studentyear"><option value="">-- Chọn --</option>' + ['Năm 1','Năm 2','Năm 3','Năm 4','Đã tốt nghiệp'].map(function(y){ return '<option' + (p.studentYear===y?' selected':'') + '>' + y + '</option>'; }).join('') + '</select></div>';
+  html += '<div id="cv-expyears-wrap" style="display:' + (p.customerType==='Đã đi làm'?'block':'none') + '"><div class="form-label">Kinh nghiệm bao lâu</div><select class="form-select" id="cv-expyears"><option value="">-- Chọn --</option>' + ['Dưới 1 năm','1-2 năm','2-5 năm','5-10 năm','Trên 10 năm'].map(function(y){ return '<option' + (p.experienceYears===y?' selected':'') + '>' + y + '</option>'; }).join('') + '</select></div>';
+  html += '<div><div class="form-label">Phòng ban / vị trí quan tâm</div><select class="form-select" id="cv-interesteddept"><option value="">-- Chọn --</option>' + ['Marketing','Sales/Kinh doanh','Tài chính/Kế toán','Chuỗi cung ứng/Logistics','Nhân sự','Data/Công nghệ','Vận hành','Tư vấn/Consulting','Khác'].map(function(d){ return '<option' + (p.interestedDept===d?' selected':'') + '>' + d + '</option>'; }).join('') + '</select></div>';
+  html += '<div><div class="form-label">Level quan tâm</div><select class="form-select" id="cv-interestedlevel"><option value="">-- Chọn --</option>' + ['Intern','Fresh Graduate','Junior','Senior','Manager trở lên'].map(function(l){ return '<option' + (p.interestedLevel===l?' selected':'') + '>' + l + '</option>'; }).join('') + '</select></div>';
+  html += '<div><div class="form-label">Biết đến LinkaJob qua đâu</div><select class="form-select" id="cv-source"><option value="">-- Chọn --</option>' + ['Facebook','Instagram','Threads','TikTok','Được giới thiệu','Khác'].map(function(s){ return '<option' + (p.sourceChannel===s?' selected':'') + '>' + s + '</option>'; }).join('') + '</select></div>';
   html += '<div class="full"><div class="form-label">Học vấn</div><input class="form-input" id="cv-education" value="' + (p.education||'') + '"></div>';
   html += '<div class="full"><div class="form-label">Kinh nghiệm</div><input class="form-input" id="cv-experience" value="' + (p.experience||'') + '"></div>';
   html += '<div class="full"><div class="form-label">Mong muốn</div><textarea class="form-textarea" id="cv-desire" rows="2">' + (p.desire||'') + '</textarea></div>';
@@ -2977,6 +3004,14 @@ function saveConsultProgress(cid) {
   persistLead(c);
 }
 
+function cvToggleCustomerTypeFields() {
+  var v = document.getElementById('cv-customertype').value;
+  var sw = document.getElementById('cv-studentyear-wrap');
+  var ew = document.getElementById('cv-expyears-wrap');
+  if (sw) sw.style.display = (v === 'Sinh viên') ? 'block' : 'none';
+  if (ew) ew.style.display = (v === 'Đã đi làm') ? 'block' : 'none';
+}
+
 function saveConsultProfile(cid) {
   var c = MOCK.consultations.find(function(x){ return x.id === cid; });
   if (!c) return;
@@ -2986,6 +3021,14 @@ function saveConsultProfile(cid) {
     desire: document.getElementById('cv-desire').value.trim(),
     barrier: document.getElementById('cv-barrier').value.trim(),
     followUp: document.getElementById('cv-followup').value.trim(),
+    // MỚI (fix 2026-08-24): field báo cáo marketing/kinh doanh theo tháng/quý
+    customerType: document.getElementById('cv-customertype').value,
+    region: document.getElementById('cv-region').value,
+    studentYear: document.getElementById('cv-studentyear').value,
+    experienceYears: document.getElementById('cv-expyears').value,
+    interestedDept: document.getElementById('cv-interesteddept').value,
+    interestedLevel: document.getElementById('cv-interestedlevel').value,
+    sourceChannel: document.getElementById('cv-source').value,
   };
   toast('Đã lưu hồ sơ khách hàng', 'success');
   navToConsultationDetail(cid);
@@ -3735,6 +3778,265 @@ function renderReportPage() {
     html += '<div style="height:8px;background:var(--bg);border-radius:100px;overflow:hidden"><div style="height:100%;width:' + pct + '%;background:#6D28D9;border-radius:100px"></div></div></div>';
   });
   html += '</div></div>';
+  return html;
+}
+
+// ════════════════════════════════════════════════════════════
+//  📊 BÁO CÁO MARKETING & KINH DOANH (theo tháng/quý)
+// ════════════════════════════════════════════════════════════
+var _reportPeriod = (function(){ var t = new Date(); return { year: t.getFullYear(), month: t.getMonth(), mode: 'month' }; })();
+var _reportLeadsCache = null;
+var _reportBookingsCache = null;
+
+var REPORT_COLORS = ['#fc5229','#6D28D9','#0EA5E9','#10B981','#F59E0B','#EC4899','#64748B','#84CC16'];
+
+function loadMarketingReportPageAsync() {
+  var mc = document.getElementById('main-content');
+  mc.innerHTML = skeletonRows(4);
+
+  Promise.all([
+    apiGet('getLeads', {}).catch(function(){ return null; }),
+    apiGet('getBookings', {}).catch(function(){ return null; }),
+  ]).then(function(results){
+    _reportLeadsCache = (results[0] && results[0].data) ? results[0].data : [];
+    _reportBookingsCache = (results[1] && results[1].data) ? results[1].data : [];
+    mc.innerHTML = renderMarketingReportPage();
+  }).catch(function(err){
+    mc.innerHTML = '<div class="card"><div class="empty-state"><div class="icon">⚠</div>Không tải được báo cáo.<br><small style="color:var(--muted)">' + err.message + '</small></div></div>';
+  });
+}
+
+function reportChangePeriod(delta) {
+  if (_reportPeriod.mode === 'month') {
+    _reportPeriod.month += delta;
+    if (_reportPeriod.month < 0) { _reportPeriod.month = 11; _reportPeriod.year--; }
+    if (_reportPeriod.month > 11) { _reportPeriod.month = 0; _reportPeriod.year++; }
+  } else {
+    var q = Math.floor(_reportPeriod.month / 3) + delta;
+    if (q < 0) { q = 3; _reportPeriod.year--; }
+    if (q > 3) { q = 0; _reportPeriod.year++; }
+    _reportPeriod.month = q * 3;
+  }
+  document.getElementById('main-content').innerHTML = renderMarketingReportPage();
+}
+
+function reportSetMode(mode) {
+  _reportPeriod.mode = mode;
+  document.getElementById('main-content').innerHTML = renderMarketingReportPage();
+}
+
+function reportPeriodRange() {
+  var y = _reportPeriod.year, m = _reportPeriod.month;
+  if (_reportPeriod.mode === 'month') {
+    var start = new Date(y, m, 1);
+    var end = new Date(y, m + 1, 1);
+    return { start: start, end: end, label: 'Tháng ' + (m+1) + '/' + y };
+  } else {
+    var qStart = Math.floor(m / 3) * 3;
+    var start2 = new Date(y, qStart, 1);
+    var end2 = new Date(y, qStart + 3, 1);
+    return { start: start2, end: end2, label: 'Quý ' + (Math.floor(qStart/3)+1) + '/' + y };
+  }
+}
+
+function reportPrevPeriodRange() {
+  var cur = reportPeriodRange();
+  var lenMs = cur.end.getTime() - cur.start.getTime();
+  return { start: new Date(cur.start.getTime() - lenMs), end: cur.start };
+}
+
+function parseSheetDate(v) {
+  if (!v) return null;
+  var s = String(v).slice(0, 10);
+  var d = new Date(s + 'T00:00:00');
+  return isNaN(d.getTime()) ? null : d;
+}
+
+function reportAggregate(leads, bookings, range) {
+  var agg = {
+    totalLeads: 0, converted: 0,
+    byChannel: {}, byRegion: {}, byCustomerType: {}, byDept: {}, byLevel: {},
+    byDay: {}, revenue: 0,
+  };
+  leads.forEach(function(r){
+    var d = parseSheetDate(r.created_at);
+    if (!d || d < range.start || d >= range.end) return;
+    agg.totalLeads++;
+    if (String(r.result||'').trim() === 'Đăng ký') agg.converted++;
+    var ch = r.source_channel || r.source || 'Không rõ';
+    agg.byChannel[ch] = (agg.byChannel[ch]||0) + 1;
+    var rg = r.region || 'Không rõ';
+    agg.byRegion[rg] = (agg.byRegion[rg]||0) + 1;
+    var ct = r.customer_type || 'Không rõ';
+    agg.byCustomerType[ct] = (agg.byCustomerType[ct]||0) + 1;
+    var dp = r.interested_dept || 'Không rõ';
+    agg.byDept[dp] = (agg.byDept[dp]||0) + 1;
+    var lv = r.interested_level || 'Không rõ';
+    agg.byLevel[lv] = (agg.byLevel[lv]||0) + 1;
+    var dayKey = String(r.created_at).slice(0,10);
+    agg.byDay[dayKey] = (agg.byDay[dayKey]||0) + 1;
+  });
+  bookings.forEach(function(b){
+    var d = parseSheetDate(b.created_at);
+    if (!d || d < range.start || d >= range.end) return;
+    var st = String(b.status||'').toLowerCase();
+    if (st !== 'confirmed' && st !== 'completed') return; // chỉ tính booking đã xác nhận/hoàn tất, giống trang Doanh thu
+    agg.revenue += Number(b.package_price) || 0;
+  });
+  return agg;
+}
+
+function svgBarList(dataObj, opts) {
+  opts = opts || {};
+  var color = opts.color || 'var(--brand)';
+  var entries = Object.keys(dataObj).map(function(k){ return { label: k, value: dataObj[k] }; })
+    .sort(function(a,b){ return b.value - a.value; });
+  var total = entries.reduce(function(s,e){ return s + e.value; }, 0) || 1;
+  var max = Math.max.apply(null, entries.map(function(e){ return e.value; })) || 1;
+  if (entries.length === 0) return '<div style="padding:16px 0;color:var(--muted);font-size:13px">Chưa có dữ liệu.</div>';
+  var html2 = '<div style="display:flex;flex-direction:column;gap:12px">';
+  entries.forEach(function(e, i){
+    var pct = Math.round(e.value / max * 100);
+    var sharePct = Math.round(e.value / total * 100);
+    var c = Array.isArray(color) ? color[i % color.length] : color;
+    html2 += '<div><div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:6px"><span>' + e.label + '</span><span style="color:var(--muted)">' + e.value + ' (' + sharePct + '%)</span></div>';
+    html2 += '<div style="height:8px;background:var(--bg);border-radius:100px;overflow:hidden"><div style="height:100%;width:' + pct + '%;background:' + c + ';border-radius:100px"></div></div></div>';
+  });
+  html2 += '</div>';
+  return html2;
+}
+
+function svgDonut(dataObj, size) {
+  size = size || 180;
+  var entries = Object.keys(dataObj).map(function(k){ return { label: k, value: dataObj[k] }; })
+    .sort(function(a,b){ return b.value - a.value; });
+  var total = entries.reduce(function(s,e){ return s + e.value; }, 0);
+  if (total === 0) return '<div style="padding:16px 0;color:var(--muted);font-size:13px">Chưa có dữ liệu.</div>';
+  var r = size/2 - 14, cx = size/2, cy = size/2, circ = 2*Math.PI*r;
+  var offset = 0;
+  var svg = '<svg width="' + size + '" height="' + size + '" viewBox="0 0 ' + size + ' ' + size + '">';
+  entries.forEach(function(e, i){
+    var frac = e.value / total;
+    var len = frac * circ;
+    var color = REPORT_COLORS[i % REPORT_COLORS.length];
+    svg += '<circle cx="' + cx + '" cy="' + cy + '" r="' + r + '" fill="none" stroke="' + color + '" stroke-width="22" ' +
+      'stroke-dasharray="' + len + ' ' + (circ-len) + '" stroke-dashoffset="' + (-offset) + '" transform="rotate(-90 ' + cx + ' ' + cy + ')"/>';
+    offset += len;
+  });
+  svg += '<text x="' + cx + '" y="' + cy + '" text-anchor="middle" dominant-baseline="middle" font-size="22" font-weight="700" fill="var(--text)">' + total + '</text>';
+  svg += '</svg>';
+  var legend = '<div style="display:flex;flex-direction:column;gap:8px;justify-content:center">';
+  entries.forEach(function(e, i){
+    var color = REPORT_COLORS[i % REPORT_COLORS.length];
+    var pct = Math.round(e.value/total*100);
+    legend += '<div style="display:flex;align-items:center;gap:8px;font-size:12.5px"><span style="width:10px;height:10px;border-radius:3px;background:' + color + ';flex-shrink:0"></span>' + e.label + ' <span style="color:var(--muted)">— ' + e.value + ' (' + pct + '%)</span></div>';
+  });
+  legend += '</div>';
+  return '<div style="display:flex;align-items:center;gap:24px;flex-wrap:wrap">' + svg + legend + '</div>';
+}
+
+function reportTopEntry(dataObj) {
+  var keys = Object.keys(dataObj);
+  if (!keys.length) return null;
+  keys.sort(function(a,b){ return dataObj[b] - dataObj[a]; });
+  return { label: keys[0], value: dataObj[keys[0]] };
+}
+
+// Gợi ý hành động — RULE-BASED dựa trên số liệu thật (chưa dùng AI thật, có thể
+// nối vào 1 API AI sau này để thay thế/nâng cấp phần này khi có API key).
+function generateReportInsights(agg, prevAgg) {
+  var tips = [];
+  var topChannel = reportTopEntry(agg.byChannel);
+  if (topChannel) {
+    var channelShare = Math.round(topChannel.value / agg.totalLeads * 100);
+    tips.push('Kênh <b>' + topChannel.label + '</b> đang mang về nhiều lead nhất (' + channelShare + '% tổng lead) — nên ưu tiên phân bổ thêm ngân sách marketing vào kênh này trong tháng tới.');
+  }
+  var topDept = reportTopEntry(agg.byDept);
+  if (topDept && topDept.label !== 'Không rõ') {
+    tips.push('Phòng ban/vị trí được quan tâm nhiều nhất: <b>' + topDept.label + '</b> (' + topDept.value + ' lượt) — cân nhắc ưu tiên tuyển thêm Advisor mảng này, hoặc mở khoá học/nội dung chuyên sâu đúng chủ đề.');
+  }
+  var convRate = agg.totalLeads > 0 ? Math.round(agg.converted / agg.totalLeads * 100) : 0;
+  if (agg.totalLeads > 0) {
+    tips.push('Tỷ lệ chốt (lead → đăng ký) tháng này: <b>' + convRate + '%</b>' + (convRate < 15 ? ' — khá thấp, nên rà lại chất lượng tư vấn hoặc kịch bản chăm sóc của Sale.' : '.'));
+  }
+  if (prevAgg && prevAgg.totalLeads > 0) {
+    var deltaPct = Math.round((agg.totalLeads - prevAgg.totalLeads) / prevAgg.totalLeads * 100);
+    if (deltaPct <= -15) tips.push('Số lead giảm <b>' + Math.abs(deltaPct) + '%</b> so với kỳ trước — nên kiểm tra lại hiệu quả các kênh quảng cáo/nội dung đang chạy.');
+    else if (deltaPct >= 15) tips.push('Số lead tăng <b>' + deltaPct + '%</b> so với kỳ trước — nên đảm bảo đủ Sale/Advisor để không bị nghẽn ở khâu tư vấn/xếp lịch.');
+  }
+  var topRegion = reportTopEntry(agg.byRegion);
+  if (topRegion && topRegion.label !== 'Không rõ') {
+    tips.push('Khách hàng tập trung nhiều nhất ở <b>' + topRegion.label + '</b> — có thể cân nhắc chiến dịch/ưu đãi theo khu vực này để tối ưu chi phí marketing.');
+  }
+  if (tips.length === 0) tips.push('Chưa đủ dữ liệu trong kỳ này để đưa ra gợi ý — hãy đảm bảo Sale điền đầy đủ "Hồ sơ khách hàng" khi chăm sóc lead.');
+  return tips;
+}
+
+function reportDeltaLabel(cur, prev) {
+  if (!prev) return 'Chưa có dữ liệu kỳ trước để so sánh';
+  var delta = Math.round((cur - prev) / prev * 100);
+  if (delta === 0) return 'Không đổi so với kỳ trước';
+  return (delta > 0 ? '▲ +' : '▼ ') + delta + '% so với kỳ trước';
+}
+
+function exportReportToPDF() {
+  window.print();
+}
+
+function renderMarketingReportPage() {
+  var leads = _reportLeadsCache || [];
+  var bookings = _reportBookingsCache || [];
+  var range = reportPeriodRange();
+  var prevRange = reportPrevPeriodRange();
+  var agg = reportAggregate(leads, bookings, range);
+  var prevAgg = reportAggregate(leads, bookings, prevRange);
+  var convRate = agg.totalLeads > 0 ? Math.round(agg.converted / agg.totalLeads * 100) : 0;
+
+  var html = pageHeader('📊 Báo cáo Marketing', 'Số liệu khách hàng theo tháng/quý — phục vụ ra quyết định marketing & mở rộng đội ngũ');
+
+  html += '<div class="card" style="margin-bottom:20px"><div style="display:flex;align-items:center;justify-content:space-between;padding:14px 20px;flex-wrap:wrap;gap:10px">';
+  html += '<div style="display:flex;align-items:center;gap:10px">';
+  html += '<button class="detail-btn" onclick="reportChangePeriod(-1)">‹</button>';
+  html += '<div style="font-weight:700;font-size:15px;min-width:140px;text-align:center">' + range.label + '</div>';
+  html += '<button class="detail-btn" onclick="reportChangePeriod(1)">›</button>';
+  html += '</div>';
+  html += '<div style="display:flex;gap:6px">';
+  html += '<button class="' + (_reportPeriod.mode==='month'?'login-btn':'btn-secondary') + '" style="width:auto;padding:8px 16px;font-size:13px" onclick="reportSetMode(\'month\')">Theo tháng</button>';
+  html += '<button class="' + (_reportPeriod.mode==='quarter'?'login-btn':'btn-secondary') + '" style="width:auto;padding:8px 16px;font-size:13px" onclick="reportSetMode(\'quarter\')">Theo quý</button>';
+  html += '<button class="update-btn" onclick="exportReportToPDF()">⬇ Xuất PDF</button>';
+  html += '</div></div></div>';
+
+  html += '<div id="report-printable">';
+
+  html += '<div class="stats-row" style="grid-template-columns:repeat(4,1fr);margin-bottom:20px">';
+  html += '<div class="stat-cell"><div class="stat-num">' + agg.totalLeads + '</div><div class="stat-label">Tổng lead</div><div class="stat-detail">' + reportDeltaLabel(agg.totalLeads, prevAgg.totalLeads) + '</div></div>';
+  html += '<div class="stat-cell"><div class="stat-num">' + agg.converted + '</div><div class="stat-label">Đã đăng ký</div><div class="stat-detail">Tỷ lệ chốt ' + convRate + '%</div></div>';
+  html += '<div class="stat-cell"><div class="stat-num">' + fmtMoney(agg.revenue) + '</div><div class="stat-label">Doanh thu ước tính</div><div class="stat-detail">' + reportDeltaLabel(agg.revenue, prevAgg.revenue) + '</div></div>';
+  html += '<div class="stat-cell"><div class="stat-num">' + (reportTopEntry(agg.byChannel)?reportTopEntry(agg.byChannel).label:'—') + '</div><div class="stat-label">Kênh tốt nhất</div><div class="stat-detail">Mang về nhiều lead nhất kỳ này</div></div>';
+  html += '</div>';
+
+  html += '<div class="card" style="margin-bottom:20px;border-left:3px solid var(--brand)"><div class="card-header"><div class="card-header-left">💡 Gợi ý hành động cho kỳ tiếp theo</div></div>';
+  html += '<div style="padding:16px 24px;display:flex;flex-direction:column;gap:10px;font-size:13.5px;line-height:1.6">';
+  generateReportInsights(agg, prevAgg).forEach(function(tip){
+    html += '<div style="display:flex;gap:8px"><span>▸</span><span>' + tip + '</span></div>';
+  });
+  html += '</div>';
+  html += '<div style="padding:0 24px 16px;font-size:11.5px;color:var(--muted)">* Gợi ý tự động dựa trên số liệu hiện có (rule-based). Có thể nâng cấp bằng AI khi tích hợp API key.</div>';
+  html += '</div>';
+
+  html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px">';
+  html += '<div class="card"><div class="card-header"><div class="card-header-left">Sinh viên vs Đã đi làm</div></div><div style="padding:20px 24px">' + svgDonut(agg.byCustomerType) + '</div></div>';
+  html += '<div class="card"><div class="card-header"><div class="card-header-left">Biết đến LinkaJob qua đâu</div></div><div style="padding:20px 24px">' + svgDonut(agg.byChannel) + '</div></div>';
+  html += '</div>';
+
+  html += '<div class="card" style="margin-bottom:20px"><div class="card-header"><div class="card-header-left">Phòng ban / vị trí quan tâm</div></div><div style="padding:16px 24px 24px">' + svgBarList(agg.byDept, {color: REPORT_COLORS}) + '</div></div>';
+  html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px">';
+  html += '<div class="card"><div class="card-header"><div class="card-header-left">Khu vực</div></div><div style="padding:16px 24px 24px">' + svgBarList(agg.byRegion, {color:'#0EA5E9'}) + '</div></div>';
+  html += '<div class="card"><div class="card-header"><div class="card-header-left">Level quan tâm</div></div><div style="padding:16px 24px 24px">' + svgBarList(agg.byLevel, {color:'#6D28D9'}) + '</div></div>';
+  html += '</div>';
+
+  html += '</div>';
+
   return html;
 }
 
