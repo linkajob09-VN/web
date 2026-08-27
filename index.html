@@ -831,6 +831,50 @@ footer span{ color:var(--orange);}
         </select>
       </div>
       <div class="cw-field">
+        <label>Bạn hiện là</label>
+        <select id="cwCustomerType">
+          <option value="">-- Chọn --</option>
+          <option value="Sinh viên">Sinh viên</option>
+          <option value="Đã đi làm">Đã đi làm</option>
+        </select>
+      </div>
+      <div class="cw-field">
+        <label>Phòng ban / vị trí quan tâm</label>
+        <select id="cwInterestedDept">
+          <option value="">-- Chọn --</option>
+          <option value="Marketing">Marketing</option>
+          <option value="Sales/Kinh doanh">Sales/Kinh doanh</option>
+          <option value="Tài chính/Kế toán">Tài chính/Kế toán</option>
+          <option value="Chuỗi cung ứng/Logistics">Chuỗi cung ứng/Logistics</option>
+          <option value="Nhân sự">Nhân sự</option>
+          <option value="Data/Công nghệ">Data/Công nghệ</option>
+          <option value="Vận hành">Vận hành</option>
+          <option value="Tư vấn/Consulting">Tư vấn/Consulting</option>
+          <option value="Khác">Khác</option>
+        </select>
+      </div>
+      <div class="cw-field">
+        <label>Khu vực sinh sống / làm việc</label>
+        <select id="cwRegion">
+          <option value="">-- Chọn --</option>
+          <option value="Miền Bắc">Miền Bắc</option>
+          <option value="Miền Trung">Miền Trung</option>
+          <option value="Miền Nam">Miền Nam</option>
+        </select>
+      </div>
+      <div class="cw-field">
+        <label>Biết đến LinkaJob qua đâu</label>
+        <select id="cwSource">
+          <option value="">-- Chọn --</option>
+          <option value="Facebook">Facebook</option>
+          <option value="Instagram">Instagram</option>
+          <option value="Threads">Threads</option>
+          <option value="TikTok">TikTok</option>
+          <option value="Được giới thiệu">Được giới thiệu</option>
+          <option value="Khác">Khác</option>
+        </select>
+      </div>
+      <div class="cw-field">
         <label>Câu hỏi muốn tư vấn</label>
         <textarea id="cwQuestion" rows="3" placeholder="VD: Mình muốn hỏi thêm về khoá Supply Chain Principles..."></textarea>
       </div>
@@ -894,7 +938,9 @@ function openConsultWidget(){
   ['cwName','cwPhone','cwEmail','cwQuestion'].forEach(function(id){
     var el = document.getElementById(id); if(el) el.value = '';
   });
-  var s = document.getElementById('cwService'); if(s) s.selectedIndex = 0;
+  ['cwService','cwCustomerType','cwInterestedDept','cwRegion','cwSource'].forEach(function(id){
+    var el = document.getElementById(id); if(el) el.selectedIndex = 0;
+  });
   var b = document.getElementById('cwBtn1'); if(b) b.disabled = true;
   cwGoStep(1);
 }
@@ -924,11 +970,15 @@ function cwProceedToStep2(){
 
 function cwCaptureLeadIfNeeded(){
   if (cwLeadCaptured) return;
-  var name     = document.getElementById('cwName').value.trim();
-  var phone    = document.getElementById('cwPhone').value.trim();
-  var email    = document.getElementById('cwEmail').value.trim();
-  var service  = document.getElementById('cwService').value;
-  var question = document.getElementById('cwQuestion').value.trim();
+  var name          = document.getElementById('cwName').value.trim();
+  var phone         = document.getElementById('cwPhone').value.trim();
+  var email         = document.getElementById('cwEmail').value.trim();
+  var service       = document.getElementById('cwService').value;
+  var question      = document.getElementById('cwQuestion').value.trim();
+  var customerType  = document.getElementById('cwCustomerType').value;
+  var interestedDept= document.getElementById('cwInterestedDept').value;
+  var region        = document.getElementById('cwRegion').value;
+  var source        = document.getElementById('cwSource').value;
   if (!name || !phone) return;
 
   cwLeadCaptured = true;
@@ -938,7 +988,8 @@ function cwCaptureLeadIfNeeded(){
     headers: { 'Content-Type': 'text/plain;charset=utf-8' },
     body   : JSON.stringify({
       action: 'captureLead',
-      name: name, phone: phone, email: email, service: service, question: question
+      name: name, phone: phone, email: email, service: service, question: question,
+      customer_type: customerType, interested_dept: interestedDept, region: region, source_channel: source
     })
   })
   .then(function(r){ return r.json(); })
@@ -1061,6 +1112,10 @@ function cwConfirm(){
   var email    = document.getElementById('cwEmail').value.trim();
   var service  = document.getElementById('cwService').value;
   var question = document.getElementById('cwQuestion').value.trim();
+  var customerType   = document.getElementById('cwCustomerType').value;
+  var interestedDept = document.getElementById('cwInterestedDept').value;
+  var region          = document.getElementById('cwRegion').value;
+  var source          = document.getElementById('cwSource').value;
 
   var payload = {
     action  : 'bookFreeConsultByTime',
@@ -1071,7 +1126,8 @@ function cwConfirm(){
     email   : email,
     service : service,
     question: question,
-    lead_session_id: cwLeadSessionId
+    lead_session_id: cwLeadSessionId,
+    customer_type: customerType, interested_dept: interestedDept, region: region, source_channel: source
   };
 
   btn.dataset.sending = '1';
