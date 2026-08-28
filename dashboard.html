@@ -555,6 +555,16 @@ let sheetData = { bookings: [], slots: [] };
 sheetData.advisors = [];
 let advisorsLoaded = false;
 
+/* Chuyển link chia sẻ Google Drive (dạng .../file/d/FILE_ID/view?...) thành link ảnh
+   xem trực tiếp được (hotlink). File trên Drive cần để chế độ chia sẻ "Anyone with the link". */
+function toDirectImageUrl(url) {
+  url = String(url || '').trim();
+  if (!url) return '';
+  var m = url.match(/\/file\/d\/([a-zA-Z0-9_-]+)/) || url.match(/[?&]id=([a-zA-Z0-9_-]+)/);
+  if (m && m[1]) return 'https://lh3.googleusercontent.com/d/' + m[1];
+  return url; // đã là link ảnh trực tiếp (không phải Google Drive)
+}
+
 function normalizeAdvisorFromSheet(a) {
   return {
     id: a.advisor_id,
@@ -568,6 +578,8 @@ function normalizeAdvisorFromSheet(a) {
     email: a.email || '',
     phone: a.phone || '',
     contact: a.zalo_id || '',
+    // Ảnh đại diện advisor — đọc từ cột photo_url trong Sheet (hoặc photo/avatar_url).
+    photo: toDirectImageUrl(a.photo_url || a.photo || a.avatar_url || ''),
     bio: a.bio || '',
     message: a.message || '',
     tags: a.industry ? a.industry.split(',').map(function(t){ return t.trim(); }).filter(Boolean) : [],
@@ -4555,7 +4567,7 @@ function renderStaffAdvisorDetail(advisorId) {
 
   // Top row: avatar + name + actions
   html += '<div style="display:flex;gap:16px;align-items:flex-start;margin-bottom:20px">';
-  html += avatarCircle(a.name, 60);
+  html += avatarCircle(a.name, 60, a.photo);
   html += '<div style="flex:1">';
   html += '<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap">';
   html += '<div>';
@@ -4764,6 +4776,18 @@ function openEditAdvisorModal(advisorId) {
 
   var body = '<div style="display:flex;flex-direction:column;gap:14px">';
 
+  // ── 0. Ảnh đại diện ──
+  body += '<div class="ea-section"><div class="ea-section-title">🖼️ Ảnh đại diện</div>' +
+    '<div style="display:flex;gap:14px;align-items:center">' +
+    '<div id="ea-photo-preview">' + avatarCircle(a.name, 64, a.photo) + '</div>' +
+    '<div style="flex:1">' +
+      '<div class="form-label">Link ảnh (Google Drive hoặc link ảnh trực tiếp)</div>' +
+      '<input class="form-input" id="ea-photo" placeholder="https://drive.google.com/file/d/.../view?usp=sharing" value="' + (a.photo||'') + '" oninput="previewAdvisorPhoto(\'' + a.name.replace(/'/g,"\\'") + '\')" style="margin-top:6px">' +
+      '<div style="font-size:11.5px;color:var(--muted);margin-top:6px;line-height:1.5">Dán link chia sẻ Google Drive của ảnh (nhớ để chế độ chia sẻ <b>"Anyone with the link"</b>) — hệ thống sẽ tự nhận diện. Có thể để trống nếu chưa có ảnh.</div>' +
+    '</div>' +
+    '</div>' +
+    '</div>';
+
   // ── 1. Thông tin cơ bản ──
   body += '<div class="ea-section"><div class="ea-section-title">👤 Thông tin cơ bản</div>' +
     '<div style="margin-bottom:12px"><div class="form-label">Họ và tên</div><input class="form-input" id="ea-name" value="' + a.name + '" style="margin-top:6px"></div>' +
@@ -4855,10 +4879,18 @@ function openEditAdvisorModal(advisorId) {
   document.getElementById('modal-overlay').classList.add('open');
 }
 
+function previewAdvisorPhoto(name) {
+  var input = document.getElementById('ea-photo');
+  var preview = document.getElementById('ea-photo-preview');
+  if (!input || !preview) return;
+  preview.innerHTML = avatarCircle(name, 64, toDirectImageUrl(input.value));
+}
+
 function saveAdvisorEdit(advisorId) {
   var a = sheetData.advisors.find(function(x){ return x.id === advisorId; });
   if (!a) return;
   a.name    = document.getElementById('ea-name').value.trim()    || a.name;
+  a.photo   = toDirectImageUrl(document.getElementById('ea-photo').value.trim());
   a.title   = document.getElementById('ea-title').value.trim()   || a.title;
   a.company = document.getElementById('ea-company').value.trim();
   a.tags    = document.getElementById('ea-tags').value.split(',').map(function(t){ return t.trim(); }).filter(Boolean);
@@ -4903,7 +4935,7 @@ function saveAdvisorEdit(advisorId) {
     name: a.name, role: a.title, company: a.company,
     industry: (a.tags||[]).join(', '),
     email: a.email, phone: a.phone, zalo_id: a.contact,
-    bio: a.bio, message: a.message,
+    bio: a.bio, message: a.message, photo_url: a.photo,
     experience: a.experience, products: a.products, feedbacks: a.feedbacks,
   }).then(function(res){
     if (res && res.success) toast('Đã lưu & đồng bộ lên Sheet ✅', 'success');
@@ -6101,13 +6133,33 @@ document.getElementById('modal-overlay').addEventListener('click', function(e){ 
 
 const AV_COLORS = [['#D0E8FF','#2475B0'],['#FFD6D0','#C0392B'],['#D0F0E8','#1A7A5E'],['#EDE9FE','#6D28D9'],['#FEF3C7','#92400E'],['#FCE7F3','#9D174D']];
 const colorCache = {};
-function avatarCircle(name, size) {
+function avatarCircle(name, size, photoUrl) {
   size = size || 38;
   if (!name) name = '?';
   if (!colorCache[name]) colorCache[name] = AV_COLORS[name.charCodeAt(0) % AV_COLORS.length];
   const c = colorCache[name];
   const ini = name.split(' ').filter(Boolean).map(function(w){ return w[0]; }).join('').slice(0,2).toUpperCase();
+  if (photoUrl) {
+    return '<img class="av-circle" src="' + photoUrl + '" alt="' + ini + '"' +
+      ' data-fallback-ini="' + ini + '" data-fallback-bg="' + c[0] + '" data-fallback-color="' + c[1] + '" data-fallback-size="' + size + '"' +
+      ' style="width:' + size + 'px;height:' + size + 'px;object-fit:cover;flex-shrink:0" onerror="avatarImgFallback(this)">';
+  }
   return '<div class="av-circle" style="width:' + size + 'px;height:' + size + 'px;background:' + c[0] + ';color:' + c[1] + ';font-size:' + (size*0.33) + 'px;flex-shrink:0">' + ini + '</div>';
+}
+
+/* Nếu ảnh advisor lỗi (link Drive chưa public / link hỏng) → tự rơi về vòng tròn initials. */
+function avatarImgFallback(img) {
+  var size = img.getAttribute('data-fallback-size') || 38;
+  var d = document.createElement('div');
+  d.className = 'av-circle';
+  d.style.width = size + 'px';
+  d.style.height = size + 'px';
+  d.style.background = img.getAttribute('data-fallback-bg');
+  d.style.color = img.getAttribute('data-fallback-color');
+  d.style.fontSize = (size * 0.33) + 'px';
+  d.style.flexShrink = '0';
+  d.textContent = img.getAttribute('data-fallback-ini');
+  img.replaceWith(d);
 }
 
 function statusBadge(s) {
