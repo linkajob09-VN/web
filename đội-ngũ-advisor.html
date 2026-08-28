@@ -69,7 +69,8 @@ body{font-family:'Montserrat',sans-serif;background:#F5F4F1;color:#1C1C1C;overfl
 .acard:hover{border-color:rgba(252,82,41,.35);transform:translateY(-3px);box-shadow:0 8px 24px rgba(252,82,41,.08);}
 
 .acard-top{padding:18px 16px 0;display:flex;flex-direction:column;align-items:center;text-align:center;}
-.acard-ava{width:64px;height:64px;border-radius:50%;background:linear-gradient(135deg,#fdf1ee,#fce8e2);display:flex;align-items:center;justify-content:center;font-family:'Montserrat',sans-serif;font-size:20px;font-weight:700;color:#fc5229;border:.5px solid rgba(252,82,41,.15);margin-bottom:12px;position:relative;flex-shrink:0;}
+.acard-ava{width:64px;height:64px;border-radius:50%;background:linear-gradient(135deg,#fdf1ee,#fce8e2);display:flex;align-items:center;justify-content:center;font-family:'Montserrat',sans-serif;font-size:20px;font-weight:700;color:#fc5229;border:.5px solid rgba(252,82,41,.15);margin-bottom:12px;position:relative;flex-shrink:0;overflow:hidden;}
+.acard-ava img{width:100%;height:100%;object-fit:cover;border-radius:50%;}
 .acard-verified{position:absolute;bottom:0;right:0;width:18px;height:18px;background:#fc5229;border-radius:50%;display:flex;align-items:center;justify-content:center;border:2px solid #fff;}
 .acard-verified i{font-size:9px;color:#fff;}
 .acard-name{font-family:'Montserrat',sans-serif;font-size:14px;font-weight:700;color:#1C1C1C;margin-bottom:3px;line-height:1.2;}
@@ -119,7 +120,8 @@ body{font-family:'Montserrat',sans-serif;background:#F5F4F1;color:#1C1C1C;overfl
 
 /* drawer identity */
 .d-identity{padding:24px 24px 0;display:flex;gap:16px;align-items:flex-start;}
-.d-ava{width:72px;height:72px;border-radius:50%;background:linear-gradient(135deg,#252525,#1a1a1a);display:flex;align-items:center;justify-content:center;font-family:'Montserrat',sans-serif;font-size:22px;font-weight:700;color:#fc5229;border:.5px solid rgba(252,82,41,.2);flex-shrink:0;position:relative;}
+.d-ava{width:72px;height:72px;border-radius:50%;background:linear-gradient(135deg,#252525,#1a1a1a);display:flex;align-items:center;justify-content:center;font-family:'Montserrat',sans-serif;font-size:22px;font-weight:700;color:#fc5229;border:.5px solid rgba(252,82,41,.2);flex-shrink:0;position:relative;overflow:hidden;}
+.d-ava img{width:100%;height:100%;object-fit:cover;border-radius:50%;}
 .d-verified{position:absolute;bottom:1px;right:1px;width:20px;height:20px;background:#fc5229;border-radius:50%;display:flex;align-items:center;justify-content:center;border:2.5px solid #111;}
 .d-verified i{font-size:9px;color:#fff;}
 .d-meta{flex:1;}
@@ -194,7 +196,8 @@ body{font-family:'Montserrat',sans-serif;background:#F5F4F1;color:#1C1C1C;overfl
 .mps{font-size:12px;color:rgba(240,240,240,.35);margin-bottom:16px;line-height:1.6;}
 /* preselect banner */
 .apb{background:#1C0A06;border:.5px solid rgba(252,82,41,.22);border-radius:10px;padding:12px 14px;display:flex;align-items:center;gap:12px;margin-bottom:14px;}
-.apb-ava{width:36px;height:36px;border-radius:50%;background:#222;display:flex;align-items:center;justify-content:center;font-family:'Montserrat',sans-serif;font-size:12px;font-weight:700;color:#fc5229;flex-shrink:0;}
+.apb-ava{width:36px;height:36px;border-radius:50%;background:#222;display:flex;align-items:center;justify-content:center;font-family:'Montserrat',sans-serif;font-size:12px;font-weight:700;color:#fc5229;flex-shrink:0;overflow:hidden;}
+.apb-ava img{width:100%;height:100%;object-fit:cover;border-radius:50%;}
 .apb-badge{font-size:9px;font-family:'Montserrat',sans-serif;font-weight:700;background:rgba(252,82,41,.15);color:#fc5229;padding:2px 8px;border-radius:4px;letter-spacing:.06em;text-transform:uppercase;display:inline-block;margin-bottom:4px;}
 .apb-name{font-family:'Montserrat',sans-serif;font-size:13px;font-weight:700;color:#F0F0F0;}
 .apb-role{font-size:11px;color:rgba(240,240,240,.35);}
@@ -643,6 +646,10 @@ function fetchAdvisorsFromSheet() {
           name: a.name || '',
           role: a.role || '',
           co: a.company || '',
+          // Ảnh advisor: đọc từ cột photo_url (hoặc photo/avatar_url) trong Google Sheet.
+          // Nếu dùng link Google Drive, hãy dán qua ô "Ảnh đại diện" trong Dashboard —
+          // hệ thống sẽ tự chuyển sang link ảnh xem trực tiếp được.
+          photo: toDirectImageUrl(a.photo_url || a.photo || a.avatar_url || ''),
           ind: a.industry ? a.industry.split(',').map(function(t){ return t.trim(); }).filter(Boolean) : [],
           prog: [],
           message: a.message || a.bio || '',
@@ -661,6 +668,24 @@ function mkInitialsFallback(name) {
   return parts.map(function(p){ return p[0]; }).join('').slice(-2).toUpperCase() || '?';
 }
 
+/* Chuyển link chia sẻ Google Drive (dạng .../file/d/FILE_ID/view?...) thành link ảnh
+   xem trực tiếp được (hotlink). File trên Drive cần để chế độ chia sẻ "Anyone with the link". */
+function toDirectImageUrl(url) {
+  url = String(url || '').trim();
+  if (!url) return '';
+  var m = url.match(/\/file\/d\/([a-zA-Z0-9_-]+)/) || url.match(/[?&]id=([a-zA-Z0-9_-]+)/);
+  if (m && m[1]) return 'https://lh3.googleusercontent.com/d/' + m[1];
+  return url; // đã là link ảnh trực tiếp (không phải Google Drive)
+}
+
+/* HTML avatar dùng chung: hiển thị ảnh nếu có, fallback về initials nếu ảnh lỗi/không có. */
+function advisorAvaHtml(a) {
+  var initials = a.initials || '?';
+  if (!a.photo) return initials;
+  var safeInitials = String(initials).replace(/'/g, "\\'");
+  return '<img src="' + a.photo + '" alt="' + initials + '" onerror="this.outerHTML=\'' + safeInitials + '\';">';
+}
+
 function renderAdvisorGrid() {
   var grid = document.getElementById('advGrid');
   if (ADVISORS.length === 0) {
@@ -674,7 +699,7 @@ function renderAdvisorGrid() {
     a.ind.slice(0,2).forEach(function(t){ tagsHtml += '<span class="atag atag-ind">'+t+'</span>'; });
     html += '<div class="acard" data-ind="'+a.ind.join(' ').toLowerCase()+'" data-id="'+a.id+'">'
       + '<div class="acard-top">'
-      +   '<div class="acard-ava">'+a.initials+'<div class="acard-verified"><i class="ti ti-check"></i></div></div>'
+      +   '<div class="acard-ava">'+advisorAvaHtml(a)+'<div class="acard-verified"><i class="ti ti-check"></i></div></div>'
       +   '<div class="acard-name">'+a.name+'</div>'
       +   '<div class="acard-role">'+a.role+'</div>'
       +   '<div class="acard-co"><span class="acard-co-dot"></span>'+a.co+'</div>'
@@ -740,7 +765,7 @@ function doFilter(btn, ind){
 function openDrawer(id){
   var a = ADVISORS[id];
   currentAdvisorId = id;
-  document.getElementById('dAva').childNodes[0].textContent = a.initials;
+  document.getElementById('dAva').innerHTML = advisorAvaHtml(a) + '<div class="d-verified"><i class="ti ti-check"></i></div>';
   document.getElementById('dName').textContent = a.name;
   document.getElementById('dRole').textContent = a.role;
   document.getElementById('dCo').textContent = a.co;
@@ -783,19 +808,19 @@ function handleDrawerBg(e){
 function bookFromDrawer(){
   var a = ADVISORS[currentAdvisorId];
   closeDrawer();
-  openCheckout(a.name, a.role, a.co, a.initials);
+  openCheckout(a.name, a.role, a.co, a.initials, a.photo);
 }
 
 /* ─── CHECKOUT ─── */
 var STEPS = ['Chọn Gói','Thông tin','Xác nhận & Thanh toán'];
 
-function openCheckout(adv, role, co, initials){
+function openCheckout(adv, role, co, initials, photo){
   S.adv=adv; S.advRole=role; S.advCo=co; S.advInitials=initials||'LJ';
   S.pkg=''; S.sess=''; S.priceLabel=''; S.priceNum=0;
   document.querySelectorAll('.pkgitem').forEach(function(e){e.classList.remove('sel');});
   document.getElementById('mBtn1').disabled = true;
   resetForm();
-  document.getElementById('mApbAva').textContent = initials||'LJ';
+  document.getElementById('mApbAva').innerHTML = advisorAvaHtml({initials: initials||'LJ', photo: photo||''});
   document.getElementById('mApbName').textContent = adv||'LinkaJob sẽ match cho bạn';
   document.getElementById('mApbRole').textContent = role ? role+' · '+co : 'Tư vấn miễn phí trước khi chọn';
   document.getElementById('mhSub').textContent = adv ? 'Advisor: '+adv : 'LinkaJob · Career Consulting';
