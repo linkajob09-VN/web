@@ -75,7 +75,7 @@ h1,h2,h3,h4{font-family:'Montserrat',sans-serif; font-weight:700; letter-spacing
 /* consult widget */
 .cw-overlay{ position:fixed; inset:0; background:transparent; z-index:998; display:none;}
 .cw-overlay.show{ display:block;}
-.cw-box{ position:fixed; bottom:20px; right:20px; width:360px; max-width:calc(100vw - 32px); max-height:calc(100vh - 40px); background:#161616; border:.5px solid rgba(255,255,255,.1); border-radius:18px; box-shadow:0 20px 60px rgba(0,0,0,.5); z-index:999; display:flex; flex-direction:column; overflow:hidden;}
+.cw-box{ position:fixed; bottom:20px; right:20px; width:360px; max-width:calc(100vw - 32px); max-height:calc(100vh - 40px); background:#F5F4F1; border:.5px solid rgba(255,255,255,.1); border-radius:18px; box-shadow:0 20px 60px rgba(0,0,0,.5); z-index:999; display:flex; flex-direction:column; overflow:hidden;}
 .cw-head{ display:flex; align-items:flex-start; justify-content:space-between; padding:18px 20px 14px; border-bottom:.5px solid rgba(255,255,255,.08); flex-shrink:0;}
 .cw-title{ font-family:'Montserrat',sans-serif; font-size:15px; font-weight:700; color:var(--text-dark);}
 .cw-sub{ font-size:12px; color:rgba(240,240,240,.4); margin-top:3px;}
@@ -122,7 +122,7 @@ h1,h2,h3,h4{font-family:'Montserrat',sans-serif; font-weight:700; letter-spacing
 @media(max-width:480px){ .cw-box{ left:16px; right:16px; bottom:16px; width:auto;} }
 
 /* hero */
-.hero{ background:radial-gradient(circle at 50% -10%, rgba(252,82,41,.08), transparent 55%), var(--paper); padding:72px 0 48px; text-align:center;}
+.hero{ background:radial-gradient(circle at 50% -5%, rgba(252,82,41,.08), transparent 55%), var(--paper); padding:72px 0 48px; text-align:center;}
 .hero .eyebrow{ margin-bottom:20px;}
 .hero h1{ font-size:40px; color:var(--text); letter-spacing:-1.6px; margin-bottom:14px; white-space:nowrap;}
 @media(max-width:640px){ .hero h1{ font-size:26px; white-space:normal;} }
@@ -625,11 +625,11 @@ button:focus-visible, a:focus-visible, .lj-nav-btn-plain:focus-visible, .fbtn:fo
 <section class="hero">
   <div class="wrap">
     <div style="display:flex; flex-direction:column; align-items:center; gap:10px; margin-bottom:32px;">
-      <span class="eyebrow"><span class="eyebrow-dot"></span>Career mentorship · 1:1 từ người trong cuộc</span>
-      <span class="eyebrow"><span class="eyebrow-dot"></span>Career course · Học hỏi cách người trong cuộc thành công</span>
+      <span class="eyebrow">Career advisor</span>
+      <span class="eyebrow">Career course</span>
     </div>
-    <h1 style="white-space:normal;">Vào MNC không cần<br><em>đi một mình.</em></h1>
-    <p class="sub">Kết nối với advisor đang làm thật tại các tập đoàn đa quốc gia — được đồng hành từ CV đến offer letter.</p>
+    <h1 style="white-space:normal;">Ứng tuyển công ty đa quốc gia<br><em>không cần đi một mình</em></h1>
+    <p class="sub">Kết nối với advisor đang làm thật tại các tập đoàn đa quốc gia - đồng hành từ CV đến offer letter.</p>
     <div class="hero-cta">
       <button class="btn btn-orange" onclick="openConsultWidget()">Đăng ký tư vấn miễn phí</button>
       <a href="success_stories.html" class="btn btn-ghost-light">Xem câu chuyện thành công</a>
@@ -654,7 +654,7 @@ button:focus-visible, a:focus-visible, .lj-nav-btn-plain:focus-visible, .fbtn:fo
     <div class="section-head">
       <span class="eyebrow"><span class="eyebrow-dot"></span>Về LinkaJob</span>
       <h2>Không phải job board.<br>Không phải lớp học online.</h2>
-      <p>LinkaJob kết nối bạn với người đang làm thật tại MNC — để được đồng hành trực tiếp trên hành trình ứng tuyển.</p>
+      <p>LinkaJob kết nối bạn với người đang làm thật tại MNC - để được đồng hành trực tiếp trên hành trình ứng tuyển.</p>
     </div>
     <div class="about-grid">
       <div class="about-card">
@@ -663,11 +663,11 @@ button:focus-visible, a:focus-visible, .lj-nav-btn-plain:focus-visible, .fbtn:fo
       </div>
       <div class="about-card">
         <div class="about-icon"><i class="ti ti-users" aria-hidden="true"></i></div>
-        <p>Dành cho sinh viên & fresher dưới 2 năm</p>
+        <p>Dành cho sinh viên, fresher dưới 2 năm & muốn tìm hiểu trái ngành</p>
       </div>
       <div class="about-card">
         <div class="about-icon"><i class="ti ti-heart-handshake" aria-hidden="true"></i></div>
-        <p>Đồng hành 1:1, không bán khoá rồi bỏ</p>
+        <p>Đồng hành 1:1, đi qua từng vòng tuyển dụng</p>
       </div>
       <div class="about-card">
         <div class="about-icon"><i class="ti ti-trophy" aria-hidden="true"></i></div>
@@ -682,19 +682,19 @@ button:focus-visible, a:focus-visible, .lj-nav-btn-plain:focus-visible, .fbtn:fo
     <div class="section-head">
       <span class="eyebrow"><span class="eyebrow-dot"></span>Dịch vụ</span>
       <h2>Hai hình thức.<br>Một đích đến.</h2>
-      <p>Chọn con đường phù hợp với bạn — hoặc kết hợp cả hai để tối ưu hành trình.</p>
+      <p>Chọn con đường phù hợp với bạn hoặc kết hợp cả hai để tối ưu hành trình.</p>
     </div>
     <div class="svc-grid">
 
       <div class="svc-card">
         <div class="svc-badge"><i class="ti ti-message-circle" aria-hidden="true"></i>Career Consulting</div>
         <div class="svc-title">Cố vấn 1:1<br>theo từng vị trí</div>
-        <p class="svc-tagline">Advisor đồng hành cùng bạn trong 3–7 buổi, theo đúng JD bạn đang apply.</p>
+        <p class="svc-tagline">Advisor đồng hành cùng bạn trong 1-6 buổi, theo đúng JD bạn đang apply.</p>
         <div class="svc-divider"></div>
         <div class="svc-benefits">
           <div class="svc-benefit">
             <div class="svc-benefit-icon"><i class="ti ti-file-text" aria-hidden="true"></i></div>
-            <div><div class="svc-benefit-title">CV & LinkedIn theo JD</div><div class="svc-benefit-desc">Sửa hồ sơ theo từng vị trí cụ thể — không sửa chung chung.</div></div>
+            <div><div class="svc-benefit-title">CV & LinkedIn theo JD</div><div class="svc-benefit-desc">Sửa hồ sơ theo từng vị trí cụ thể, không sửa chung chung.</div></div>
           </div>
           <div class="svc-benefit">
             <div class="svc-benefit-icon"><i class="ti ti-bulb" aria-hidden="true"></i></div>
@@ -711,17 +711,8 @@ button:focus-visible, a:focus-visible, .lj-nav-btn-plain:focus-visible, .fbtn:fo
       <div class="svc-card">
         <div class="svc-badge"><i class="ti ti-school" aria-hidden="true"></i>Career Course</div>
         <div class="svc-title">Khoá học thực chiến<br>từ người trong ngành</div>
-        <p class="svc-tagline">3 khoá học đang chạy — 30% lý thuyết, 70% thực hành theo từng chuyên ngành.</p>
+        <p class="svc-tagline">3 khoá học đang chạy: 30% lý thuyết, 70% thực hành theo từng chuyên ngành.</p>
         <div class="svc-divider"></div>
-        <div class="svc-ratio" style="margin-bottom:18px;">
-          <span class="ratio-label">Lý thuyết</span>
-          <div class="ratio-bar" style="width:30px;background:rgba(252,82,41,.25);"></div>
-          <span class="ratio-label" style="color:var(--muted-dark-2);">30%</span>
-          <div style="width:1px;height:12px;background:var(--line-dark);margin:0 4px;"></div>
-          <span class="ratio-label">Thực hành</span>
-          <div class="ratio-bar" style="width:70px;background:var(--orange);"></div>
-          <span class="ratio-label" style="color:var(--orange);">70%</span>
-        </div>
         <div class="svc-benefits">
           <div class="svc-benefit">
             <div class="svc-benefit-icon"><i class="ti ti-tool" aria-hidden="true"></i></div>
@@ -733,7 +724,7 @@ button:focus-visible, a:focus-visible, .lj-nav-btn-plain:focus-visible, .fbtn:fo
           </div>
           <div class="svc-benefit">
             <div class="svc-benefit-icon"><i class="ti ti-briefcase" aria-hidden="true"></i></div>
-            <div><div class="svc-benefit-title">Business case cá nhân cho portfolio</div><div class="svc-benefit-desc">Hoàn thành 1 case thực tế — sẵn sàng bỏ vào CV và kể cho nhà tuyển dụng.</div></div>
+            <div><div class="svc-benefit-title">Business case cá nhân cho portfolio</div><div class="svc-benefit-desc">Hoàn thành 3-4 case thực tế, sẵn sàng bỏ vào CV và kể cho nhà tuyển dụng.</div></div>
           </div>
         </div>
         <button class="btn-svc" onclick="location.href='land_your_dream_job.html'">Xem các khoá học →</button>
@@ -791,7 +782,7 @@ button:focus-visible, a:focus-visible, .lj-nav-btn-plain:focus-visible, .fbtn:fo
 <div class="cta-wrap">
   <div class="cta-box">
     <h2>Bắt đầu hành trình<br>vào MNC của bạn.</h2>
-    <p>Buổi tư vấn đầu tiên miễn phí — đội ngũ LinkaJob phản hồi trong 24h.</p>
+    <p>Hãy để lại thông tin, đội ngũ LinkaJob sẽ liên hệ qua Zalo để hỗ trợ bạn trong 24h tới.</p>
     <button class="btn-cta" onclick="openConsultWidget()">Đăng ký tư vấn</button>
   </div>
 </div>
@@ -831,8 +822,8 @@ button:focus-visible, a:focus-visible, .lj-nav-btn-plain:focus-visible, .fbtn:fo
       <div class="cw-field">
         <label>Quan tâm dịch vụ</label>
         <select id="cwService">
-          <option value="Khoá học Supply Chain Principles" selected>Khoá học Supply Chain Principles</option>
-          <option value="Cố vấn 1-1">Cố vấn 1-1</option>
+          <option value="Cố vấn 1-1" selected>Cố vấn 1-1</option>
+          <option value="Khoá học">Khoá học</option>
           <option value="Chưa rõ — cần tư vấn thêm">Chưa rõ — cần tư vấn thêm</option>
         </select>
       </div>
@@ -841,6 +832,7 @@ button:focus-visible, a:focus-visible, .lj-nav-btn-plain:focus-visible, .fbtn:fo
         <select id="cwCustomerType">
           <option value="">-- Chọn --</option>
           <option value="Sinh viên">Sinh viên</option>
+          <option value="Mới tốt nghiệp">Mới tốt nghiệp</option>
           <option value="Đã đi làm">Đã đi làm</option>
         </select>
       </div>
@@ -881,36 +873,15 @@ button:focus-visible, a:focus-visible, .lj-nav-btn-plain:focus-visible, .fbtn:fo
         </select>
       </div>
       <div class="cw-field">
-        <label>Câu hỏi muốn tư vấn</label>
-        <textarea id="cwQuestion" rows="3" placeholder="VD: Mình muốn hỏi thêm về khoá Supply Chain Principles..."></textarea>
+        <label>Họ và tên <span>*</span></label>
+        <input type="link" id="cwName" placeholder="google drive" oninput="cwCheckStep1()">
       </div>
-      <div class="cw-note"><i class="ti ti-video" aria-hidden="true"></i> Chúng tôi sẽ tư vấn qua Google Meet — bạn vui lòng chọn khung giờ phù hợp ở bước tiếp theo.</div>
-      <button class="cw-next" id="cwBtn1" onclick="cwProceedToStep2()" disabled>Tiếp theo →</button>
-    </div>
-
-    <div class="cw-step" id="cwStep2" style="display:none;">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
-        <button onclick="cwChangeMonth(-1)" style="background:rgba(255,255,255,0.06);border:none;width:26px;height:26px;border-radius:7px;color:#F0F0F0;cursor:pointer;font-size:14px;">‹</button>
-        <div class="cw-cal-title" id="cwCalTitle" style="margin-bottom:0;">—</div>
-        <button onclick="cwChangeMonth(1)" style="background:rgba(255,255,255,0.06);border:none;width:26px;height:26px;border-radius:7px;color:#F0F0F0;cursor:pointer;font-size:14px;">›</button>
+      <div class="cw-field">
+        <label>Câu hỏi muốn tư vấn<span>*</span></label>
+        <textarea id="cwQuestion" rows="3" placeholder="VD: Mình muốn hỏi thêm về cố vấn 1-1 sẽ diễn ra như nào..."></textarea>
       </div>
-      <div class="cw-cal-days-lbl">
-        <span>CN</span><span>T2</span><span>T3</span><span>T4</span><span>T5</span><span>T6</span><span>T7</span>
-      </div>
-      <div class="cw-cal-grid" id="cwCalGrid"></div>
-      <div class="cw-ts-label" id="cwTsLabel">Chọn ngày có chấm cam để xem giờ trống</div>
-      <div class="cw-ts-slots" id="cwTsSlots"></div>
-      <div class="cw-nav-row">
-        <button class="cw-back" onclick="cwGoStep(1)">← Quay lại</button>
-        <button class="cw-next" id="cwBtn2" onclick="cwConfirm()" disabled>Xác nhận đặt lịch</button>
-      </div>
-    </div>
-
-    <div class="cw-step" id="cwStep3" style="display:none;">
-      <div class="cw-success-icon"><i class="ti ti-check" aria-hidden="true"></i></div>
-      <div class="cw-success-title">Đã ghi nhận lịch tư vấn!</div>
-      <div class="cw-success-sub" id="cwSuccessDetail">—</div>
-      <button class="cw-next" onclick="closeConsultWidget()">Đóng</button>
+      <div class="cw-note"><i class="ti ti-video" aria-hidden="true"></i> LinkaJob sẽ liên hệ với bạn qua Zalo, bạn để ý tin nhắn người lạ nhé.</div>
+      <button class="cw-next" >Gửi đăng ký </button>
     </div>
   </div>
 </div>
