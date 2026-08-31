@@ -676,12 +676,12 @@ function renderPricingTable(packages, featuresByPkg) {
     tbodyHtml += '</tr>';
   });
 
-  // ── Dòng nút CTA — link thẳng sang advisor.html?package=<slug> ──
+  // ── Dòng nút CTA — link thẳng sang đội-ngũ-advisor.html?package=<slug> ──
   tbodyHtml += '<tr class="pt-cta-row"><td></td>';
   packages.forEach(function(p, i){
     var isHi = i === highlightIdx;
     var slug = pricingSlugify(p.name);
-    tbodyHtml += '<td' + (isHi ? ' class="hi"' : '') + '><button class="pt-btn ' + (isHi ? 'pt-btn-main' : 'pt-btn-ghost') + '" onclick="location.href=\'advisor.html?package=' + slug + '\'">Chọn ' + pricingEscHtml(p.name) + '</button></td>';
+    tbodyHtml += '<td' + (isHi ? ' class="hi"' : '') + '><button class="pt-btn ' + (isHi ? 'pt-btn-main' : 'pt-btn-ghost') + '" onclick="location.href=\'đội-ngũ-advisor.html?package=' + slug + '\'">Chọn ' + pricingEscHtml(p.name) + '</button></td>';
   });
   tbodyHtml += '</tr>';
 
