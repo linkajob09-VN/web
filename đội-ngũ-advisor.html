@@ -19,12 +19,21 @@ body{font-family:'Montserrat',sans-serif;background:#F5F4F1;color:#1C1C1C;overfl
   .lj-nav-links a, .lj-nav-btn-plain { font-size: 13px; color: rgba(240,240,240,0.5); text-decoration: none; font-family: 'Montserrat', sans-serif; font-weight: 500; transition: color 0.2s, background 0.2s; padding: 8px 14px; border-radius: 8px; display: inline-flex; align-items: center; gap: 5px; cursor: pointer; background: transparent; border: none; }
   .lj-nav-links a:hover, .lj-nav-btn-plain:hover { color: #F0F0F0; background: rgba(255,255,255,0.05); }
   .lj-nav-chevron { font-size: 11px; transition: transform 0.2s; color: rgba(240,240,240,0.3); }
-  .lj-nav-item:hover .lj-nav-chevron { transform: rotate(180deg); color: rgba(240,240,240,0.6); }
   .lj-btn-nav { background: #fc5229; color: #fff; font-size: 13px; font-weight: 500; font-family: 'Montserrat', sans-serif; padding: 8px 20px; border-radius: 100px; border: none; cursor: pointer; white-space: nowrap; margin-left: 8px; }
 
   /* DROPDOWN */
   .lj-dropdown { position: absolute; top: calc(100% + 8px); left: 50%; transform: translateX(-50%) translateY(-6px); background: #161616; border: 0.5px solid rgba(255,255,255,0.1); border-radius: 14px; padding: 8px; min-width: 230px; opacity: 0; pointer-events: none; transition: opacity 0.18s ease, transform 0.18s ease; z-index: 300; }
-  .lj-nav-item:hover .lj-dropdown { opacity: 1; pointer-events: auto; transform: translateX(-50%) translateY(0); }
+  /* "Cầu nối" vô hình che khoảng hở 8px giữa nút và dropdown — nếu không có phần này,
+     chuột đi qua khoảng hở sẽ bị tính là rời khỏi .lj-nav-item, dropdown đóng lại ngay
+     và không mở lại được (vì pointer-events:none đã kích hoạt). */
+  .lj-dropdown::before { content: ''; position: absolute; top: -8px; left: 0; right: 0; height: 8px; pointer-events: auto; }
+  /* Chỉ bật hiệu ứng hover cho thiết bị có chuột thật (desktop). Trên điện thoại, trình duyệt
+     "dính" trạng thái :hover sau khi chạm — nếu không giới hạn ở đây, quy tắc này (độ ưu tiên
+     CSS cao hơn override mobile bên dưới) sẽ đẩy lệch dropdown ra ngoài màn hình sau khi bấm mở menu. */
+  @media (hover: hover) and (pointer: fine) {
+    .lj-nav-item:hover .lj-dropdown { opacity: 1; pointer-events: auto; transform: translateX(-50%) translateY(0); }
+    .lj-nav-item:hover .lj-nav-chevron { transform: rotate(180deg); color: rgba(240,240,240,0.6); }
+  }
   .lj-di { display: flex; align-items: flex-start; gap: 11px; padding: 10px 12px; border-radius: 10px; text-decoration: none; transition: background 0.15s; }
   .lj-di:hover { background: rgba(255,255,255,0.05); }
   .lj-di-icon { width: 32px; height: 32px; border-radius: 9px; background: rgba(252,82,41,0.1); display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 1px; transition: background 0.15s; }
