@@ -875,7 +875,7 @@ button:focus-visible, a:focus-visible, .lj-nav-btn-plain:focus-visible, .fbtn:fo
       </div>
       <div class="cw-field">
         <label>Câu hỏi muốn tư vấn<span>*</span></label>
-        <textarea id="cwQuestion" rows="3" placeholder="VD: Mình muốn hỏi thêm về cố vấn 1-1 sẽ diễn ra như nào..."></textarea>
+        <textarea id="cwQuestion" rows="3" placeholder="VD: Mình muốn hỏi thêm về cố vấn 1-1 sẽ diễn ra như nào..." oninput="cwCheckStep1()"></textarea>
       </div>
       <div class="cw-note"><i class="ti ti-video" aria-hidden="true"></i> LinkaJob sẽ liên hệ với bạn qua Zalo, bạn để ý tin nhắn người lạ nhé.</div>
       <button class="cw-next" id="cwBtn1" onclick="cwSubmitLead()" disabled>Gửi đăng ký </button>
