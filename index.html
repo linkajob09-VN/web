@@ -625,9 +625,9 @@ button:focus-visible, a:focus-visible, .lj-nav-btn-plain:focus-visible, .fbtn:fo
 
 <section class="hero">
   <div class="wrap">
-    <div style="display:flex; flex-direction:column; align-items:center; gap:10px; margin-bottom:32px;">
-      <span class="eyebrow">Career advisor</span>
-      <a class="eyebrow">Career course</a>
+    <div style="display:flex; flex-direction:row; align-items:center; justify-content:center; gap:10px; margin-bottom:32px;">
+      <span class="eyebrow" style="margin-bottom:0;">Career advisor</span>
+      <a class="eyebrow" style="margin-bottom:0;">Career course</a>
     </div>
     <h1 style="white-space:normal;">Ứng tuyển công ty đa quốc gia<br><em>không cần đi một mình</em></h1>
     <p class="sub">Kết nối với advisor đang làm thật tại các tập đoàn đa quốc gia - đồng hành từ CV đến offer letter.</p>
@@ -878,7 +878,14 @@ button:focus-visible, a:focus-visible, .lj-nav-btn-plain:focus-visible, .fbtn:fo
         <textarea id="cwQuestion" rows="3" placeholder="VD: Mình muốn hỏi thêm về cố vấn 1-1 sẽ diễn ra như nào..."></textarea>
       </div>
       <div class="cw-note"><i class="ti ti-video" aria-hidden="true"></i> LinkaJob sẽ liên hệ với bạn qua Zalo, bạn để ý tin nhắn người lạ nhé.</div>
-      <button class="cw-next" >Gửi đăng ký </button>
+      <button class="cw-next" id="cwBtn1" onclick="cwSubmitLead()" disabled>Gửi đăng ký </button>
+    </div>
+
+    <div class="cw-step" id="cwStep2" style="display:none">
+      <div class="cw-note" style="text-align:center;padding:20px 4px;font-size:14px;line-height:1.6">
+        <i class="ti ti-circle-check" aria-hidden="true" style="font-size:32px;color:var(--orange);display:block;margin-bottom:10px"></i>
+        <div id="cwSuccessDetail"></div>
+      </div>
     </div>
   </div>
 </div>
@@ -915,31 +922,80 @@ function openConsultWidget(){
   ['cwService','cwCustomerType','cwInterestedDept','cwRegion','cwSource'].forEach(function(id){
     var el = document.getElementById(id); if(el) el.selectedIndex = 0;
   });
-  var b = document.getElementById('cwBtn1'); if(b) b.disabled = true;
+  var b = document.getElementById('cwBtn1'); if(b) { b.disabled = true; b.textContent = 'Gửi đăng ký '; b.dataset.sending = ''; }
   cwGoStep(1);
 }
 function closeConsultWidget(){
   document.getElementById('cwOverlay').classList.remove('show');
 }
 function cwGoStep(n){
-  [1,2,3].forEach(function(i){
-    document.getElementById('cwStep'+i).style.display = (i===n?'block':'none');
+  // MỚI (fix 2026-09-03): bản widget này KHÔNG có bước chọn lịch — chỉ có
+  // đúng 2 bước thật: cwStep1 (form) và cwStep2 (cảm ơn).
+  [1,2].forEach(function(i){
+    var el = document.getElementById('cwStep'+i);
+    if (el) el.style.display = (i===n?'block':'none');
   });
-  var subs = {1:'Điền thông tin để được tư vấn miễn phí', 2:'Chọn khung giờ phù hợp với bạn', 3:'Cảm ơn bạn đã đăng ký'};
-  document.getElementById('cwSub').textContent = subs[n];
-  if(n===2) cwRenderCalendar();
+  var subs = {1:'Điền thông tin để được tư vấn miễn phí', 2:'Cảm ơn bạn đã đăng ký'};
+  document.getElementById('cwSub').textContent = subs[n] || '';
 }
 function cwCheckStep1(){
   var name  = document.getElementById('cwName').value.trim();
   var phone = document.getElementById('cwPhone').value.trim();
   var email = document.getElementById('cwEmail').value.trim();
+  var question = document.getElementById('cwQuestion').value.trim();
   var validEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-  document.getElementById('cwBtn1').disabled = !(name && phone && validEmail);
+  var btn = document.getElementById('cwBtn1');
+  if (btn) btn.disabled = !(name && phone && validEmail && question);
 }
 
-function cwProceedToStep2(){
-  cwGoStep(2);
-  cwCaptureLeadIfNeeded();
+// MỚI (fix 2026-09-03): submit trực tiếp bằng captureLead — widget này không
+// có bước chọn giờ (khách chỉ để lại thông tin, LinkaJob chủ động liên hệ qua
+// Zalo như ghi chú trong form), nên không cần/không thể gọi cwConfirm() (hàm
+// đó đòi hỏi đã chọn ngày/giờ trên lịch, vốn không tồn tại ở bản widget này).
+function cwSubmitLead(){
+  var btn = document.getElementById('cwBtn1');
+  if (btn.dataset.sending) return;
+
+  var name     = document.getElementById('cwName').value.trim();
+  var phone    = document.getElementById('cwPhone').value.trim();
+  var email    = document.getElementById('cwEmail').value.trim();
+  var service  = document.getElementById('cwService').value;
+  var question = document.getElementById('cwQuestion').value.trim();
+  var customerType   = document.getElementById('cwCustomerType').value;
+  var interestedDept = document.getElementById('cwInterestedDept').value;
+  var region          = document.getElementById('cwRegion').value;
+  var source          = document.getElementById('cwSource').value;
+
+  if (!name || !phone || !question) { alert('Vui lòng điền đầy đủ thông tin bắt buộc.'); return; }
+
+  btn.dataset.sending = '1';
+  btn.disabled = true;
+  btn.textContent = 'Đang gửi...';
+
+  fetch(CW_WEBAPP_URL, {
+    method : 'POST',
+    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+    body   : JSON.stringify({
+      action: 'captureLead',
+      name: name, phone: phone, email: email, service: service, question: question,
+      customer_type: customerType, interested_dept: interestedDept, region: region, source_channel: source
+    })
+  })
+  .then(function(r){ return r.json(); })
+  .then(function(data){
+    if (!data.success) throw new Error(data.error || 'Lỗi không xác định');
+    cwLeadCaptured = true;
+    document.getElementById('cwSuccessDetail').innerHTML =
+      'Cảm ơn <strong>' + name + '</strong> đã đăng ký!<br><br>' +
+      'Đội ngũ LinkaJob sẽ liên hệ với bạn trong thời gian sớm nhất.';
+    cwGoStep(2);
+  })
+  .catch(function(err){
+    alert('Gửi đăng ký thất bại: ' + err.message + '. Vui lòng thử lại.');
+    btn.dataset.sending = '';
+    btn.disabled = false;
+    btn.textContent = 'Gửi đăng ký';
+  });
 }
 
 function cwCaptureLeadIfNeeded(){
