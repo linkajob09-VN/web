@@ -18,14 +18,16 @@
   .lj-nav-links a, .lj-nav-btn-plain { font-size: 13px; color: rgba(240,240,240,0.5); text-decoration: none; font-family: 'Space Grotesk', sans-serif; font-weight: 500; transition: color 0.2s, background 0.2s; padding: 8px 14px; border-radius: 8px; display: inline-flex; align-items: center; gap: 5px; cursor: pointer; background: transparent; border: none; }
   .lj-nav-links a:hover, .lj-nav-btn-plain:hover { color: #F0F0F0; background: rgba(255,255,255,0.05); }
   .lj-nav-chevron { font-size: 11px; transition: transform 0.2s; color: rgba(240,240,240,0.3); }
+  .lj-nav-item:hover .lj-nav-chevron { transform: rotate(180deg); color: rgba(240,240,240,0.6); }
   .lj-btn-nav { background: #fc5229; color: #fff; font-size: 13px; font-weight: 500; font-family: 'Space Grotesk', sans-serif; padding: 8px 20px; border-radius: 100px; border: none; cursor: pointer; white-space: nowrap; margin-left: 8px; }
 
   /* DROPDOWN */
   .lj-dropdown { position: absolute; top: calc(100% + 8px); left: 50%; transform: translateX(-50%) translateY(-6px); background: #161616; border: 0.5px solid rgba(255,255,255,0.1); border-radius: 14px; padding: 8px; min-width: 230px; opacity: 0; pointer-events: none; transition: opacity 0.18s ease, transform 0.18s ease; z-index: 300; }
-@media (hover: hover) and (pointer: fine) {
+  /* "Cầu nối" vô hình che khoảng hở 8px giữa nút và dropdown — nếu không có phần này,
+     chuột đi qua khoảng hở sẽ bị tính là rời khỏi .lj-nav-item, dropdown đóng lại ngay
+     và không mở lại được (vì pointer-events:none đã kích hoạt). */
+  .lj-dropdown::before { content: ''; position: absolute; top: -8px; left: 0; right: 0; height: 8px; pointer-events: auto; }
   .lj-nav-item:hover .lj-dropdown { opacity: 1; pointer-events: auto; transform: translateX(-50%) translateY(0); }
-  .lj-nav-item:hover .lj-nav-chevron { transform: rotate(180deg); color: rgba(240,240,240,0.6); }
-}
   .lj-di { display: flex; align-items: flex-start; gap: 11px; padding: 10px 12px; border-radius: 10px; text-decoration: none; transition: background 0.15s; }
   .lj-di:hover { background: rgba(255,255,255,0.05); }
   .lj-di-icon { width: 32px; height: 32px; border-radius: 9px; background: rgba(252,82,41,0.1); display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 1px; transition: background 0.15s; }
@@ -255,7 +257,7 @@ table.pt th:not(:first-child),table.pt td:not(:first-child){border-left:1px soli
       <div class="lj-nav-item">
         <button class="lj-nav-btn-plain" onclick="toggleNavDropdown(this)">Cố vấn 1-1 <i class="ti ti-chevron-down lj-nav-chevron" aria-hidden="true"></i></button>
         <div class="lj-dropdown">
-          <a class="lj-di" href="đội-ngũ-advisor.html">
+          <a class="lj-di" href="advisor.html">
             <div class="lj-di-icon"><i class="ti ti-user-star" aria-hidden="true"></i></div>
             <div>
               <div class="lj-di-title">Profile Advisor</div>
@@ -263,7 +265,7 @@ table.pt th:not(:first-child),table.pt td:not(:first-child){border-left:1px soli
             </div>
           </a>
           <div class="lj-dropdown-divider"></div>
-          <a class="lj-di" href="đăng-ký-cố-vấn-advisor.html">
+          <a class="lj-di" href="pricing.html">
             <div class="lj-di-icon"><i class="ti ti-calendar-event" aria-hidden="true"></i></div>
             <div>
               <div class="lj-di-title">Các gói meeting 1-1 <span class="lj-dropdown-badge">Đang xem</span></div>
@@ -277,7 +279,7 @@ table.pt th:not(:first-child),table.pt td:not(:first-child){border-left:1px soli
       <div class="lj-nav-item">
         <button class="lj-nav-btn-plain" onclick="toggleNavDropdown(this)">Khoá học <i class="ti ti-chevron-down lj-nav-chevron" aria-hidden="true"></i></button>
         <div class="lj-dropdown lj-dropdown-courses">
-          <a class="lj-di" href="khoá-học-land-your-dream-job.html">
+          <a class="lj-di" href="land-your-dream-job.html">
             <div class="lj-di-icon"><i class="ti ti-rocket" aria-hidden="true"></i></div>
             <div>
               <div class="lj-di-title">Land Your Dream Job</div>
@@ -285,7 +287,7 @@ table.pt th:not(:first-child),table.pt td:not(:first-child){border-left:1px soli
             </div>
           </a>
           <div class="lj-dropdown-divider"></div>
-          <a class="lj-di" href="khoá-học-logistics-operation-cracking.html">
+          <a class="lj-di" href="logistics-operation.html">
             <div class="lj-di-icon"><i class="ti ti-truck-delivery" aria-hidden="true"></i></div>
             <div>
               <div class="lj-di-title">Logistics Operation</div>
@@ -293,7 +295,7 @@ table.pt th:not(:first-child),table.pt td:not(:first-child){border-left:1px soli
             </div>
           </a>
           <div class="lj-dropdown-divider"></div>
-          <a class="lj-di" href="khoá-học-supply-chain-principles.html">
+          <a class="lj-di" href="supply-chain-principles.html">
             <div class="lj-di-icon"><i class="ti ti-topology-star-3" aria-hidden="true"></i></div>
             <div>
               <div class="lj-di-title">Supply Chain Principles</div>
@@ -308,7 +310,7 @@ table.pt th:not(:first-child),table.pt td:not(:first-child){border-left:1px soli
         <button class="lj-nav-btn-plain" onclick="toggleNavDropdown(this)">Thành công <i class="ti ti-chevron-down lj-nav-chevron" aria-hidden="true"></i></button>
         <div class="lj-dropdown">
           <div class="lj-dropdown-inner">
-            <a class="lj-di" href="success-stories.html">
+            <a class="lj-di" href="success_stories.html">
             <div class="lj-di-icon"><i class="ti ti-user-star" aria-hidden="true"></i></div>
             <div>
               <div class="lj-di-title">Câu chuyện thành công</div>
@@ -678,12 +680,12 @@ function renderPricingTable(packages, featuresByPkg) {
     tbodyHtml += '</tr>';
   });
 
-  // ── Dòng nút CTA — link thẳng sang đội-ngũ-advisor.html?package=<slug> ──
+  // ── Dòng nút CTA — link thẳng sang advisor.html?package=<slug> ──
   tbodyHtml += '<tr class="pt-cta-row"><td></td>';
   packages.forEach(function(p, i){
     var isHi = i === highlightIdx;
     var slug = pricingSlugify(p.name);
-    tbodyHtml += '<td' + (isHi ? ' class="hi"' : '') + '><button class="pt-btn ' + (isHi ? 'pt-btn-main' : 'pt-btn-ghost') + '" onclick="location.href=\'đội-ngũ-advisor.html?package=' + slug + '\'">Chọn ' + pricingEscHtml(p.name) + '</button></td>';
+    tbodyHtml += '<td' + (isHi ? ' class="hi"' : '') + '><button class="pt-btn ' + (isHi ? 'pt-btn-main' : 'pt-btn-ghost') + '" onclick="location.href=\'advisor.html?package=' + slug + '\'">Chọn ' + pricingEscHtml(p.name) + '</button></td>';
   });
   tbodyHtml += '</tr>';
 
