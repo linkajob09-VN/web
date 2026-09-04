@@ -1822,8 +1822,16 @@ function loadMeetingCalendarAsync() {
   var mc = document.getElementById('main-content');
   mc.innerHTML = skeletonRows(3);
 
-  apiGet('getSessions', {}).then(function(res){
-    var sessions = (res && res.data) ? res.data : [];
+  Promise.all([
+    apiGet('getSessions', {}).catch(function(){ return null; }),
+    // Từ khi bỏ đặt lịch trực tiếp qua widget, các buổi "tư vấn miễn phí" chỉ được
+    // Sale chốt lịch qua tab "Khách chưa đặt lịch" — thao tác đó CHỈ ghi ngày/giờ vào
+    // tab Leads, không tạo dòng trong Sessions. Nên phải gộp thêm nguồn này vào,
+    // nếu không lịch tổng sẽ luôn trống dù Sale đã chốt lịch đúng quy trình.
+    apiGet('getLeads', {}).catch(function(){ return null; }),
+  ]).then(function(results){
+    var sessions = (results[0] && results[0].data) ? results[0].data : [];
+    var leads = (results[1] && results[1].data) ? results[1].data : [];
     var meetingsByDate = {};
 
     sessions.forEach(function(s){
@@ -1839,6 +1847,21 @@ function loadMeetingCalendarAsync() {
         meet_link: s.meet_link,
         session_id: s.session_id,
         status: s.status,
+      });
+    });
+
+    leads.forEach(function(r){
+      var d = String(r.date || '').slice(0, 10);
+      if (!d) return; // lead chưa chốt lịch — bỏ qua
+      if (!meetingsByDate[d]) meetingsByDate[d] = [];
+      meetingsByDate[d].push({
+        type: 'Tư vấn miễn phí',
+        advisor: r.staff || 'LinkaJob Team',
+        advisee: r.name,
+        time: r.time || '',
+        meet_link: r.meet_link || '',
+        session_id: 'lead-' + r.lead_id,
+        status: r.status || '',
       });
     });
 
