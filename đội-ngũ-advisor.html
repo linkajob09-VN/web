@@ -237,11 +237,11 @@ body{font-family:'Inter',sans-serif;background:#F5F4F1;color:#1C1C1C;overflow-x:
 .total-l{font-family:'Space Grotesk',sans-serif;font-size:13px;font-weight:700;color:#F0F0F0;}
 .total-p{font-family:'Space Grotesk',sans-serif;font-size:20px;font-weight:700;color:#fc5229;}
 /* payment */
-.pay-wrap{display:flex;gap:14px;align-items:flex-start;margin-bottom:12px;}
-.pay-qr{background:#fff;border-radius:10px;padding:10px;flex-shrink:0;}
-.pay-qr svg{width:100px;height:100px;display:block;}
-.pay-qr img{width:100px;height:100px;display:block;}
-.pay-det{flex:1;}
+.pay-wrap{display:flex;flex-direction:column;align-items:center;gap:14px;margin-bottom:12px;}
+.pay-qr{background:#fff;border-radius:10px;padding:14px;flex-shrink:0;}
+.pay-qr svg{width:220px;height:220px;display:block;}
+.pay-qr img{width:220px;height:220px;display:block;}
+.pay-det{flex:1;width:100%;}
 .pay-bank{font-family:'Space Grotesk',sans-serif;font-size:13px;font-weight:700;color:#F0F0F0;margin-bottom:8px;}
 .prow{display:flex;justify-content:space-between;gap:8px;padding:6px 0;border-bottom:.5px solid rgba(255,255,255,.05);}
 .prow:last-child{border-bottom:none;}
@@ -535,7 +535,7 @@ body{font-family:'Inter',sans-serif;background:#F5F4F1;color:#1C1C1C;overflow-x:
           <div class="prow"><span class="pl">Nội dung CK</span><span class="pv o" id="payCk">—</span></div>
         </div>
       </div>
-      <div class="pay-note">Quét mã QR ở trên và chuyển khoản đúng nội dung — hệ thống sẽ tự xác nhận. Nếu cần hỗ trợ, gửi bill qua <strong>contact@linkajob.vn</strong> hoặc inbox Facebook/Instagram.</div>
+      <div class="pay-note">Thanh toán xong vui lòng chụp lại màn hình giao dịch gửi về Zalo với số điện thoại <strong>0903374648</strong>, team sẽ hỗ trợ các bước tiếp theo.</div>
       <div id="mSubmitStatus" style="display:none;margin-top:10px;padding:10px 12px;border-radius:8px;font-size:12.5px;line-height:1.5;"></div>
       <div class="mnav">
         <button class="mback" onclick="goStep(2)">← Sửa thông tin</button>
