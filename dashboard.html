@@ -1610,14 +1610,14 @@ function mergeLeadRow(r) {
   obj.name = r.name || ''; obj.phone = r.phone || ''; obj.email = r.email || '';
   obj.source = r.source || ''; obj.consultAbout = r.consult_about || '';
   obj.date = r.date ? String(r.date).slice(0,10) : '';
-  obj.time = r.time || '';
+  obj.time = fmtHHMM(r.time);
   obj.meetLink = r.meet_link || '';
   obj.status = r.status || 'Chưa liên hệ';
   obj.result = r.result || '';
   obj.nextStep = r.next_step || '';
   obj.nextStepDeadline = r.next_step_deadline ? String(r.next_step_deadline).slice(0,10) : '';
   obj.contactedDate = r.contacted_date ? String(r.contacted_date).slice(0,10) : '';
-  obj.contactedTime = r.contacted_time || '';
+  obj.contactedTime = fmtHHMM(r.contacted_time);
   obj.profile = {
     education: r.education || '', experience: r.experience || '',
     desire: r.desire || '', barrier: r.barrier || '', followUp: r.follow_up || '',
@@ -1843,7 +1843,7 @@ function loadMeetingCalendarAsync() {
         type: type,
         advisor: s.advisor_name,
         advisee: s.advisee_name,
-        time: s.scheduled_time,
+        time: fmtHHMM(s.scheduled_time),
         meet_link: s.meet_link,
         session_id: s.session_id,
         status: s.status,
@@ -1858,7 +1858,7 @@ function loadMeetingCalendarAsync() {
         type: 'Tư vấn miễn phí',
         advisor: r.staff || 'LinkaJob Team',
         advisee: r.name,
-        time: r.time || '',
+        time: fmtHHMM(r.time),
         meet_link: r.meet_link || '',
         session_id: 'lead-' + r.lead_id,
         status: r.status || '',
@@ -1900,7 +1900,7 @@ function renderMeetingMonthCalendar(meetingsByDate) {
       html += '<div class="cal-event-list">';
       dayMeetings.slice(0, MAX_VISIBLE).forEach(function(m){
         const color = typeColor[m.type] || 'var(--muted)';
-        const label = (m.time ? m.time + ' ' : '') + (m.advisee || m.type);
+        const label = (m.time ? m.time + ' ' : '') + meetingClassLabel(m);
         html += '<div class="cal-event-pill" style="color:' + color + '" onclick="openStaffDayModal(\'' + dateStr + '\')" title="' + String(label).replace(/"/g,'') + '">';
         html += '<span class="cal-event-dot" style="background:' + color + '"></span>' + label;
         html += '</div>';
@@ -1927,8 +1927,8 @@ function openStaffDayModal(dateStr) {
   } else {
     list.slice().sort(function(a,b){ return (a.time||'').localeCompare(b.time||''); }).forEach(function(m){
       html += '<div class="day-meeting-item">' + avatarCircle(m.advisee, 34) +
-        '<div style="flex:1"><div style="font-weight:600;font-size:14px">' + (m.advisee||'—') + ' · ' + m.type + '</div>' +
-        '<div style="font-size:12px;color:var(--muted)">' + (m.advisor||'') + ' · ' + (m.time||'') + '</div></div>';
+        '<div style="flex:1"><div style="font-weight:600;font-size:14px">' + (m.advisee||'—') + ' · ' + meetingClassLabel(m) + '</div>' +
+        '<div style="font-size:12px;color:var(--muted)">' + (m.time||'') + '</div></div>';
       if (m.meet_link) html += '<a href="' + m.meet_link + '" target="_blank" class="detail-btn" style="margin-right:6px">🎥 Meet</a>';
       html += '</div>';
     });
@@ -2468,14 +2468,14 @@ function loadStaffLeadsAsync() {
       obj.name = r.name || ''; obj.phone = r.phone || ''; obj.email = r.email || '';
       obj.source = r.source || ''; obj.consultAbout = r.consult_about || '';
       obj.date = r.date ? String(r.date).slice(0,10) : '';
-      obj.time = r.time || '';
+      obj.time = fmtHHMM(r.time);
       obj.meetLink = r.meet_link || '';
       obj.status = r.status || 'Chưa liên hệ';
       obj.result = r.result || '';
       obj.nextStep = r.next_step || '';
       obj.nextStepDeadline = r.next_step_deadline ? String(r.next_step_deadline).slice(0,10) : '';
       obj.contactedDate = r.contacted_date ? String(r.contacted_date).slice(0,10) : '';
-      obj.contactedTime = r.contacted_time || '';
+      obj.contactedTime = fmtHHMM(r.contacted_time);
       obj.profile = {
         education: r.education || '', experience: r.experience || '',
         desire: r.desire || '', barrier: r.barrier || '', followUp: r.follow_up || '',
@@ -2603,7 +2603,6 @@ function renderStaffMemberDetail(staffId, tab, selfView) {
   var TABS = [
     { id:'consult', icon:'📞', label:'Lịch tư vấn' },
     { id:'leads', icon:'⚠', label:'Khách chưa đặt lịch', badge: leadCount },
-    { id:'schedule', icon:'📅', label:'Gửi lịch trống' },
     { id:'care', icon:'💬', label:'Chăm sóc khách hàng' },
     { id:'kpi', icon:'📊', label:'KPI cá nhân' },
   ];
@@ -6228,6 +6227,27 @@ function slotKeyFromSheetRow(s) {
 function fmtDate(d) { if (!d) return '—'; const dt = new Date(d); return DAYS_VI[dt.getDay()] + ' ' + dt.getDate() + '/' + (dt.getMonth()+1) + ' · ' + pad(dt.getHours()) + ':' + pad(dt.getMinutes()); }
 function fmtShort(d) { return d.getDate() + '/' + (d.getMonth()+1); }
 function pad(n) { return String(n).padStart(2,'0'); }
+
+// Phòng thủ cho lỗi "cột định dạng Giờ (Time) trong Sheet" — khi Apps Script chưa
+// format đúng, giá trị trả về là 1 chuỗi ISO giả với phần ngày = mốc epoch 1899-12-30
+// (vd "1899-12-30T06:23:30.000Z") thay vì "06:23". Hàm này nhận diện và tự trích giờ:phút
+// đúng, đồng thời vẫn chấp nhận chuỗi "HH:mm" sạch nếu backend đã format đúng từ đầu.
+function fmtHHMM(v) {
+  if (!v) return '';
+  var s = String(v).trim();
+  if (/^\d{1,2}:\d{2}(:\d{2})?$/.test(s)) return s.slice(0, 5);
+  var d = new Date(s);
+  if (!isNaN(d.getTime())) return pad(d.getHours()) + ':' + pad(d.getMinutes());
+  return s;
+}
+
+// "Tên phân loại" hiển thị trên lịch meeting — theo đúng quy ước:
+//   Tư vấn | Cố vấn 1-1 [tên Advisor] | Khoá học [mã khoá]
+function meetingClassLabel(m) {
+  if (m.type === 'Tư vấn miễn phí') return 'Tư vấn';
+  if (m.type === 'Khoá học') return 'Khoá học' + (m.course_code ? ' ' + m.course_code : '');
+  return 'Cố vấn 1-1' + (m.advisor ? ' ' + m.advisor : '');
+}
 function v(id) { const el = document.getElementById(id); return el ? el.value.trim() : ''; }
 function esc(obj) { return JSON.stringify(obj).replace(/"/g, '&quot;'); }
 function mkInitials(name) { return name.split(' ').filter(Boolean).map(function(w){ return w[0]; }).join('').slice(0,2).toUpperCase(); }
