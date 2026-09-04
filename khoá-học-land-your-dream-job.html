@@ -204,7 +204,13 @@ section{ padding:80px 0;}
 
 /* instructor cards - matching brand avatar+verified style */
 .instructor-grid{ display:grid; grid-template-columns:1fr 1fr; gap:16px;}
-.instructor-card{ background:var(--dark-card); border:.5px solid var(--line-dark); border-radius:16px; padding:26px; display:flex; gap:18px;}
+.instructor-card{ background:var(--dark-card); border:.5px solid var(--line-dark); border-radius:16px; padding:20px; display:flex; gap:18px; transition:border-color .25s ease, transform .25s ease;}
+.instructor-card:hover{ border-color:rgba(252,82,41,.4); transform:translateY(-4px);}
+.instructor-photo{ width:96px; height:96px; border-radius:14px; overflow:hidden; flex:none; position:relative; background:linear-gradient(135deg,#252525,#1a1a1a);}
+.instructor-photo img{ width:100%; height:100%; object-fit:cover; display:block; transition:transform .45s ease;}
+.instructor-card:hover .instructor-photo img{ transform:scale(1.1);}
+.instructor-photo .avatar-fallback{ position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-family:'Montserrat',sans-serif; font-weight:700; font-size:26px; color:var(--orange);}
+.instructor-photo .photo-verified{ position:absolute; bottom:5px; right:5px; width:20px; height:20px; background:var(--orange); border-radius:50%; display:flex; align-items:center; justify-content:center; border:2px solid var(--dark-card); font-size:10px; color:#fff;}
 .avatar{ position:relative; flex:none; width:60px; height:60px; border-radius:50%; background:linear-gradient(135deg,#252525,#1a1a1a); border:.5px solid rgba(252,82,41,.2); display:flex; align-items:center; justify-content:center; font-family:'Montserrat',sans-serif; font-weight:700; font-size:19px; color:var(--orange);}
 .avatar .verified{ position:absolute; bottom:-1px; right:-1px; width:18px; height:18px; background:var(--orange); border-radius:50%; display:flex; align-items:center; justify-content:center; border:2px solid var(--dark-card); font-size:9px; color:#fff;}
 .avatar.on-light{ background:linear-gradient(135deg,#fdf1ee,#fce8e2); border-color:rgba(252,82,41,.15);}
@@ -370,6 +376,31 @@ button, a, .lj-nav-btn-plain, .fbtn, .story-card, .fb-card{ outline:none;}
 button:focus-visible, a:focus-visible, .lj-nav-btn-plain:focus-visible, .fbtn:focus-visible, .story-card:focus-visible, .fb-card:focus-visible{
   outline:2px solid var(--orange); outline-offset:2px; border-radius:6px;
 }
+
+/* hero split layout — text left, advisor photo right */
+.hero-split{ display:grid; grid-template-columns:1.15fr .85fr; gap:48px; align-items:center; text-align:left;}
+.hero-split .hero-text .eyebrow{ margin-bottom:20px;}
+.hero-split .hero-text h1{ white-space:normal;}
+.hero-split .hero-cta, .hero-split .hero-stats{ justify-content:flex-start; margin-left:0;}
+.hero-split .hero-stats{ border-top:.5px solid var(--line-dark); padding-top:28px;}
+.hero-photo-col{ position:relative;}
+.hero-photo{ position:relative; border-radius:22px; overflow:hidden; aspect-ratio:4/5; background:linear-gradient(180deg,#1c1c1c,#0a0a0a); border:.5px solid var(--line-dark);}
+.hero-photo img{ width:100%; height:100%; object-fit:cover; display:block;}
+.hero-photo .avatar-fallback{ position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-family:'Montserrat',sans-serif; font-weight:800; font-size:52px; color:var(--orange);}
+.hero-exp-badge{ position:absolute; top:16px; right:16px; width:78px; height:78px; border-radius:50%; background:var(--orange); display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; box-shadow:0 14px 30px rgba(252,82,41,.4); z-index:2;}
+.hero-exp-badge b{ font-family:'Montserrat',sans-serif; font-size:21px; font-weight:800; color:#fff; line-height:1;}
+.hero-exp-badge span{ font-size:8px; font-weight:700; color:#fff; text-transform:uppercase; letter-spacing:.03em; line-height:1.25; margin-top:3px;}
+.hero-advisor-card{ position:absolute; left:14px; right:14px; bottom:14px; background:rgba(13,13,13,.82); backdrop-filter:blur(10px); border:.5px solid var(--line-dark); border-radius:14px; padding:11px 13px; display:flex; align-items:center; gap:11px; z-index:2;}
+.hero-advisor-card .avatar{ width:38px; height:38px; border-radius:50%; overflow:hidden; flex:none; background:linear-gradient(135deg,#252525,#1a1a1a); display:flex; align-items:center; justify-content:center; font-family:'Montserrat',sans-serif; font-weight:700; font-size:13px; color:var(--orange);}
+.hero-advisor-card .avatar img{ width:100%; height:100%; object-fit:cover;}
+.hero-advisor-card strong{ display:block; font-size:13.5px; color:var(--text-dark); font-weight:700;}
+.hero-advisor-card span{ display:block; font-size:11px; color:var(--orange); font-weight:600; margin-top:1px;}
+@media(max-width:860px){
+  .hero-split{ grid-template-columns:1fr; gap:32px;}
+  .hero-split .hero-text{ text-align:center;}
+  .hero-split .hero-cta, .hero-split .hero-stats{ justify-content:center;}
+  .hero-photo-col{ max-width:340px; width:100%; margin:0 auto;}
+}
 </style>
 </head>
 <body>
@@ -384,7 +415,7 @@ button:focus-visible, a:focus-visible, .lj-nav-btn-plain:focus-visible, .fbtn:fo
     <div class="lj-nav-item">
       <button class="lj-nav-btn-plain" onclick="toggleNavDropdown(this)">Cố vấn 1-1 <i class="ti ti-chevron-down lj-nav-chevron" aria-hidden="true"></i></button>
       <div class="lj-dropdown">
-        <a class="lj-di" href="đội-ngũ-advisor.html">
+        <a class="lj-di" href="advisor.html">
           <div class="lj-di-icon"><i class="ti ti-user-star" aria-hidden="true"></i></div>
           <div>
             <div class="lj-di-title">Profile Advisor</div>
@@ -392,7 +423,7 @@ button:focus-visible, a:focus-visible, .lj-nav-btn-plain:focus-visible, .fbtn:fo
           </div>
         </a>
         <div class="lj-dropdown-divider"></div>
-        <a class="lj-di" href="đăng-ký-cố-vấn-advisor.html">
+        <a class="lj-di" href="pricing.html">
           <div class="lj-di-icon"><i class="ti ti-calendar-event" aria-hidden="true"></i></div>
           <div>
             <div class="lj-di-title">Các gói meeting 1-1 <span class="lj-dropdown-badge">Phổ biến</span></div>
@@ -405,15 +436,15 @@ button:focus-visible, a:focus-visible, .lj-nav-btn-plain:focus-visible, .fbtn:fo
     <div class="lj-nav-item">
       <button class="lj-nav-btn-plain" onclick="toggleNavDropdown(this)">Khoá học <i class="ti ti-chevron-down lj-nav-chevron" aria-hidden="true"></i></button>
       <div class="lj-dropdown">
-        <a class="lj-di" href="khoá-học-land-your-dream-job.html">
+        <a class="lj-di" href="land_your_dream_job.html">
           <div class="lj-di-icon"><i class="ti ti-rocket" aria-hidden="true"></i></div>
           <div>
-            <div class="lj-di-title">Land Your Dream Job</div>
+            <div class="lj-di-title">Land Your Dream Job <span class="lj-dropdown-badge">Đang xem</span></div>
             <div class="lj-di-sub">Marketing · Sales · FMCG · Fields · Case Study</div>
           </div>
         </a>
         <div class="lj-dropdown-divider"></div>
-        <a class="lj-di" href="khoá-học-logistics-operation-cracking.html">
+        <a class="lj-di" href="logistics_operation_cracking.html">
           <div class="lj-di-icon"><i class="ti ti-truck-delivery" aria-hidden="true"></i></div>
           <div>
             <div class="lj-di-title">Logistics Operation Cracking</div>
@@ -421,10 +452,10 @@ button:focus-visible, a:focus-visible, .lj-nav-btn-plain:focus-visible, .fbtn:fo
           </div>
         </a>
         <div class="lj-dropdown-divider"></div>
-        <a class="lj-di" href="khoá-học-supply-chain-principles.html">
+        <a class="lj-di" href="supply_chain_principles.html">
           <div class="lj-di-icon"><i class="ti ti-topology-star-3" aria-hidden="true"></i></div>
           <div>
-            <div class="lj-di-title">Supply Chain Principles <span class="lj-dropdown-badge">Đang xem</span></div>
+            <div class="lj-di-title">Supply Chain Principles</div>
             <div class="lj-di-sub">Planning · Sourcing · Procurement · Manufacturing · Logistics</div>
           </div>
         </a>
@@ -434,7 +465,7 @@ button:focus-visible, a:focus-visible, .lj-nav-btn-plain:focus-visible, .fbtn:fo
     <div class="lj-nav-item">
       <button class="lj-nav-btn-plain" onclick="toggleNavDropdown(this)">Thành công <i class="ti ti-chevron-down lj-nav-chevron" aria-hidden="true"></i></button>
       <div class="lj-dropdown">
-        <a class="lj-di" href="success-stories.html">
+        <a class="lj-di" href="success_stories.html">
           <div class="lj-di-icon"><i class="ti ti-trophy" aria-hidden="true"></i></div>
           <div>
             <div class="lj-di-title">Câu chuyện thành công</div>
@@ -452,26 +483,38 @@ button:focus-visible, a:focus-visible, .lj-nav-btn-plain:focus-visible, .fbtn:fo
       </div>
     </div>
 
-    <a href="tài-liệu-chuyên-môn.html">Tài liệu chuyên môn</a>
+    <a href="blog.html">Blog</a>
     <button class="lj-btn-nav" onclick="openConsultWidget()">Đăng ký tư vấn</button>
   </div>
 </nav>
-<div class="lj-nav-backdrop" id="ljNavBackdrop"></div>
+<div class="lj-nav-backdrop" id="ljNavBackdrop" onclick="closeMobileNav()"></div>
 
 <section class="hero">
-  <div class="wrap">
-    <span class="eyebrow on-dark"><span class="eyebrow-dot"></span>Khoá học FMCG · LinkaJob</span>
-    <h1>Land Your <em>Dream Job</em></h1>
-    <p class="sub">Chiến lược ứng tuyển 5W — biến CV "tay trắng" thành ứng viên FMCG được săn đón, nhận lời mời phỏng vấn tại các tập đoàn đa quốc gia trong vòng 45 ngày.</p>
-    <div class="hero-cta">
-      <button class="btn btn-orange" onclick="openConsultWidget()">Đăng ký tư vấn miễn phí</button>
-      <a href="#lotrinh" class="btn btn-ghost-dark">Xem lộ trình học</a>
+  <div class="wrap hero-split">
+    <div class="hero-text">
+      <span class="eyebrow on-dark"><span class="eyebrow-dot"></span>Khoá học FMCG · LinkaJob</span>
+      <h1>Land Your <em>Dream Job</em></h1>
+      <p class="sub">Chiến lược ứng tuyển 5W — biến CV "tay trắng" thành ứng viên FMCG được săn đón, nhận lời mời phỏng vấn tại các tập đoàn đa quốc gia trong vòng 45 ngày.</p>
+      <div class="hero-cta">
+        <button class="btn btn-orange" onclick="openConsultWidget()">Đăng ký tư vấn miễn phí</button>
+        <a href="#lotrinh" class="btn btn-ghost-dark">Xem lộ trình học</a>
+      </div>
+      <div class="hero-stats">
+        <div class="hstat"><div class="hstat-num">90%</div><div class="hstat-lbl">Nhận offer tại MNC</div></div>
+        <div class="hstat"><div class="hstat-num">5</div><div class="hstat-lbl">Học viên / khoá</div></div>
+        <div class="hstat"><div class="hstat-num">2</div><div class="hstat-lbl">Advisor đứng lớp</div></div>
+        <div class="hstat"><div class="hstat-num">1:1</div><div class="hstat-lbl">Buổi meeting riêng</div></div>
+      </div>
     </div>
-    <div class="hero-stats">
-      <div class="hstat"><div class="hstat-num">90%</div><div class="hstat-lbl">Nhận offer tại MNC</div></div>
-      <div class="hstat"><div class="hstat-num">5</div><div class="hstat-lbl">Học viên / khoá</div></div>
-      <div class="hstat"><div class="hstat-num">2</div><div class="hstat-lbl">Advisor đứng lớp</div></div>
-      <div class="hstat"><div class="hstat-num">1:1</div><div class="hstat-lbl">Buổi meeting riêng</div></div>
+    <div class="hero-photo-col">
+      <div class="hero-photo">
+        <img id="heroFieldPhoto" src="PASTE_FIELD_TRIP_PHOTO_URL_HERE" alt="Buổi đi field cùng học viên Land Your Dream Job" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+        <div class="avatar-fallback" style="display:none; flex-direction:column; gap:8px; font-size:14px; font-weight:600; text-align:center; padding:20px;"><i class="ti ti-photo" style="font-size:32px;" aria-hidden="true"></i>Chèn ảnh đi field tại đây</div>
+        <div class="hero-exp-badge"><b>5+</b><span>mùa<br>đi field</span></div>
+        <div class="hero-advisor-card">
+          <div><strong>Buổi đi field tại kênh MT</strong><span>Cùng học viên Land Your Dream Job</span></div>
+        </div>
+      </div>
     </div>
   </div>
 </section>
@@ -689,7 +732,11 @@ button:focus-visible, a:focus-visible, .lj-nav-btn-plain:focus-visible, .fbtn:fo
     </div>
     <div class="instructor-grid">
       <div class="instructor-card">
-        <div class="avatar">HO<span class="verified"><i class="ti ti-check"></i></span></div>
+        <div class="instructor-photo">
+          <img src="https://linkajob.vn/wp-content/uploads/2025/04/Duong-Thi-Hoang-Oanh.png" alt="Advisor Hoàng Oanh" loading="lazy" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+          <div class="avatar-fallback" style="display:none;">HO</div>
+          <span class="photo-verified"><i class="ti ti-check"></i></span>
+        </div>
         <div>
           <h3>Advisor Hoàng Oanh</h3>
           <div class="role">Regional Marketing Manager @ Lactalis</div>
@@ -701,7 +748,11 @@ button:focus-visible, a:focus-visible, .lj-nav-btn-plain:focus-visible, .fbtn:fo
         </div>
       </div>
       <div class="instructor-card">
-        <div class="avatar">HP<span class="verified"><i class="ti ti-check"></i></span></div>
+        <div class="instructor-photo">
+          <img src="https://linkajob.vn/wp-content/uploads/2025/04/vu-hai-phong.png" alt="Advisor Hải Phong" loading="lazy" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+          <div class="avatar-fallback" style="display:none;">HP</div>
+          <span class="photo-verified"><i class="ti ti-check"></i></span>
+        </div>
         <div>
           <h3>Advisor Hải Phong</h3>
           <div class="role">Key Account Assistant Manager @ Unilever</div>
@@ -1344,6 +1395,5 @@ function closeMobileNav(){
   }
 })();
 </script>
-
 </body>
 </html>
