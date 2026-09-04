@@ -496,7 +496,7 @@ button:focus-visible, a:focus-visible, .lj-nav-btn-plain:focus-visible, .fbtn:fo
       <span class="eyebrow on-dark"><span class="eyebrow-dot"></span>Khoá học Supply Chain & Logistics · LinkaJob</span>
       <h1>Supply Chain Principles</h1>
       <p class="sub">Nắm vững 11 thành phần chuỗi cung ứng, từ Raw Materials đến Reverse Logistics — đào tạo trực tiếp bởi chuyên gia 10+ năm tại Lazada, Maersk, OnPoint.</p>
-      
+      <div class="pill-row" style="margin-bottom:28px;">
         <span class="pill">Khai giảng 15/8</span>
       </div>
       <div class="hero-cta">
@@ -506,18 +506,18 @@ button:focus-visible, a:focus-visible, .lj-nav-btn-plain:focus-visible, .fbtn:fo
       <div class="hero-stats">
         <div class="hstat"><div class="hstat-num">8</div><div class="hstat-lbl">Buổi học</div></div>
         <div class="hstat"><div class="hstat-num">5</div><div class="hstat-lbl">Học viên / khoá</div></div>
-        <div class="hstat"><div class="hstat-num">6</div><div class="hstat-lbl">Phòng ban</div></div>
+        <div class="hstat"><div class="hstat-num">6</div><div class="hstat-lbl">Phòng ban Logistics & Supply Chain</div></div>
         <div class="hstat"><div class="hstat-num">13</div><div class="hstat-lbl">Kỹ năng đạt được</div></div>
       </div>
     </div>
     <div class="hero-photo-col">
       <div class="hero-photo">
-        <img src="https://linkajob.vn/wp-content/uploads/2025/06/tran-quoc-toan.jpg" alt="ThS. Trần Quốc Toản" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+        <img id="heroPhotoMain" src="https://linkajob.vn/wp-content/uploads/2025/06/tran-quoc-toan.jpg" alt="ThS. Trần Quốc Toản" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
         <div class="avatar-fallback" style="display:none;">TQT</div>
         <div class="hero-exp-badge"><b>10+</b><span>năm<br>kinh nghiệm</span></div>
         <div class="hero-advisor-card">
           <div class="avatar">
-            <img src="https://linkajob.vn/wp-content/uploads/2025/06/tran-quoc-toan.jpg" alt="" onerror="this.style.display='none'; this.parentElement.insertAdjacentText('afterbegin','TQT');">
+            <img id="heroPhotoMini" src="https://linkajob.vn/wp-content/uploads/2025/06/tran-quoc-toan.jpg" alt="" onerror="this.style.display='none'; this.parentElement.insertAdjacentText('afterbegin','TQT');">
           </div>
           <div><strong>ThS. Trần Quốc Toản</strong><span>Lazada E-logistics · Sr. Operation Manager</span></div>
         </div>
@@ -1388,5 +1388,31 @@ function closeMobileNav(){
 })();
 </script>
 
+
+<script>
+/* ── Lấy ảnh advisor thật từ hệ thống Đội ngũ Advisor (cùng nguồn dữ liệu với advisor.html) ──
+   Nếu tìm thấy advisor khớp tên và có ảnh, ảnh sẽ ghi đè lên URL mặc định phía trên.
+   Nếu fetch lỗi hoặc không tìm thấy, ảnh mặc định đã có sẵn trong HTML vẫn giữ nguyên. */
+(function(){
+  var ADVISOR_WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbx7Bd9VvoyzfiiezQV9huoY2BKHH_Br1RAFIz00mjdyKeis-Zv-38a0gf_b-fMlul2C/exec';
+  var TARGET_NAME = 'quốc toản'; // đối chiếu không phân biệt hoa/thường, chỉ cần chứa cụm này trong tên advisor
+
+  fetch(ADVISOR_WEBAPP_URL + '?action=getAdvisors&only_active=1')
+    .then(function(r){ return r.json(); })
+    .then(function(res){
+      if(!res || !res.data) return;
+      var match = res.data.find(function(a){
+        return String(a.name||'').toLowerCase().indexOf(TARGET_NAME) > -1;
+      });
+      var photo = match && (match.photo || match.photo_url || match.avatar || match.image || match.image_url);
+      if(!photo) return;
+      var main = document.getElementById('heroPhotoMain');
+      var mini = document.getElementById('heroPhotoMini');
+      if(main){ main.src = photo; main.style.display = ''; }
+      if(mini){ mini.src = photo; mini.style.display = ''; }
+    })
+    .catch(function(){ /* giữ nguyên ảnh mặc định nếu fetch lỗi */ });
+})();
+</script>
 </body>
 </html>
