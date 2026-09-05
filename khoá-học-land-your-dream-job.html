@@ -385,6 +385,12 @@ button:focus-visible, a:focus-visible, .lj-nav-btn-plain:focus-visible, .fbtn:fo
 .hero-split .hero-stats{ border-top:.5px solid var(--line-dark); padding-top:28px;}
 .hero-photo-col{ position:relative;}
 .hero-photo{ position:relative; border-radius:22px; overflow:hidden; aspect-ratio:4/5; background:linear-gradient(180deg,#1c1c1c,#0a0a0a); border:.5px solid var(--line-dark);}
+.hero-slideshow{ position:absolute; inset:0;}
+.hero-slideshow .slide{ position:absolute; inset:0; width:100%; height:100%; object-fit:cover; opacity:0; transition:opacity 1.2s ease; z-index:0;}
+.hero-slideshow .slide.active{ opacity:1; z-index:1;}
+.hero-slide-dots{ position:absolute; top:14px; left:14px; display:flex; gap:6px; z-index:2;}
+.hero-slide-dots .dot{ width:6px; height:6px; border-radius:50%; background:rgba(255,255,255,.35); cursor:pointer; transition:background .25s, width .25s;}
+.hero-slide-dots .dot.active{ background:var(--orange); width:18px; border-radius:4px;}
 .hero-photo img{ width:100%; height:100%; object-fit:cover; display:block;}
 .hero-photo .avatar-fallback{ position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-family:'Montserrat',sans-serif; font-weight:800; font-size:52px; color:var(--orange);}
 .hero-exp-badge{ position:absolute; top:16px; right:16px; width:78px; height:78px; border-radius:50%; background:var(--orange); display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; box-shadow:0 14px 30px rgba(252,82,41,.4); z-index:2;}
@@ -415,7 +421,7 @@ button:focus-visible, a:focus-visible, .lj-nav-btn-plain:focus-visible, .fbtn:fo
     <div class="lj-nav-item">
       <button class="lj-nav-btn-plain" onclick="toggleNavDropdown(this)">Cố vấn 1-1 <i class="ti ti-chevron-down lj-nav-chevron" aria-hidden="true"></i></button>
       <div class="lj-dropdown">
-        <a class="lj-di" href="đội-ngũ-advisor.html">
+        <a class="lj-di" href="advisor.html">
           <div class="lj-di-icon"><i class="ti ti-user-star" aria-hidden="true"></i></div>
           <div>
             <div class="lj-di-title">Profile Advisor</div>
@@ -423,7 +429,7 @@ button:focus-visible, a:focus-visible, .lj-nav-btn-plain:focus-visible, .fbtn:fo
           </div>
         </a>
         <div class="lj-dropdown-divider"></div>
-        <a class="lj-di" href="đăng-ký-cố-vấn-advisor.html">
+        <a class="lj-di" href="pricing.html">
           <div class="lj-di-icon"><i class="ti ti-calendar-event" aria-hidden="true"></i></div>
           <div>
             <div class="lj-di-title">Các gói meeting 1-1 <span class="lj-dropdown-badge">Phổ biến</span></div>
@@ -436,7 +442,7 @@ button:focus-visible, a:focus-visible, .lj-nav-btn-plain:focus-visible, .fbtn:fo
     <div class="lj-nav-item">
       <button class="lj-nav-btn-plain" onclick="toggleNavDropdown(this)">Khoá học <i class="ti ti-chevron-down lj-nav-chevron" aria-hidden="true"></i></button>
       <div class="lj-dropdown">
-        <a class="lj-di" href="khoá-học-land-your-dream-job.html">
+        <a class="lj-di" href="land_your_dream_job.html">
           <div class="lj-di-icon"><i class="ti ti-rocket" aria-hidden="true"></i></div>
           <div>
             <div class="lj-di-title">Land Your Dream Job <span class="lj-dropdown-badge">Đang xem</span></div>
@@ -444,7 +450,7 @@ button:focus-visible, a:focus-visible, .lj-nav-btn-plain:focus-visible, .fbtn:fo
           </div>
         </a>
         <div class="lj-dropdown-divider"></div>
-        <a class="lj-di" href="khoá-học-logistics-operation-cracking.html">
+        <a class="lj-di" href="logistics_operation_cracking.html">
           <div class="lj-di-icon"><i class="ti ti-truck-delivery" aria-hidden="true"></i></div>
           <div>
             <div class="lj-di-title">Logistics Operation Cracking</div>
@@ -452,7 +458,7 @@ button:focus-visible, a:focus-visible, .lj-nav-btn-plain:focus-visible, .fbtn:fo
           </div>
         </a>
         <div class="lj-dropdown-divider"></div>
-        <a class="lj-di" href="khoá-học-supply-chain-principles.html">
+        <a class="lj-di" href="supply_chain_principles.html">
           <div class="lj-di-icon"><i class="ti ti-topology-star-3" aria-hidden="true"></i></div>
           <div>
             <div class="lj-di-title">Supply Chain Principles</div>
@@ -465,7 +471,7 @@ button:focus-visible, a:focus-visible, .lj-nav-btn-plain:focus-visible, .fbtn:fo
     <div class="lj-nav-item">
       <button class="lj-nav-btn-plain" onclick="toggleNavDropdown(this)">Thành công <i class="ti ti-chevron-down lj-nav-chevron" aria-hidden="true"></i></button>
       <div class="lj-dropdown">
-        <a class="lj-di" href="success-stories.html">
+        <a class="lj-di" href="success_stories.html">
           <div class="lj-di-icon"><i class="ti ti-trophy" aria-hidden="true"></i></div>
           <div>
             <div class="lj-di-title">Câu chuyện thành công</div>
@@ -508,8 +514,24 @@ button:focus-visible, a:focus-visible, .lj-nav-btn-plain:focus-visible, .fbtn:fo
     </div>
     <div class="hero-photo-col">
       <div class="hero-photo">
-        <img id="heroFieldPhoto" src="PASTE_FIELD_TRIP_PHOTO_URL_HERE" alt="Buổi đi field cùng học viên Land Your Dream Job" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-        <div class="avatar-fallback" style="display:none; flex-direction:column; gap:8px; font-size:14px; font-weight:600; text-align:center; padding:20px;"><i class="ti ti-photo" style="font-size:32px;" aria-hidden="true"></i>Chèn ảnh đi field tại đây</div>
+        <!--
+          SLIDESHOW ẢNH ĐI FIELD — lấy từ Google Drive, tự chạy crossfade.
+          CÁCH TEAM TỰ CẬP NHẬT (không cần sửa code):
+            - Mỗi ảnh bên dưới ứng với 1 file trên Drive. Muốn đổi ảnh nào, vào đúng file đó
+              trên Drive → kéo-thả ảnh mới đè lên (Manage versions → Upload new version).
+              KHÔNG xoá file rồi tạo file mới — vì FILE_ID sẽ đổi, ảnh sẽ mất.
+            - Cách lấy FILE_ID: chuột phải ảnh trên Drive → Share → đổi quyền "Anyone with the link"
+              → Copy link, dạng .../file/d/FILE_ID/view → lấy đúng đoạn FILE_ID.
+            - Muốn ĐỔI SỐ LƯỢNG ảnh (thêm/bớt), mới cần nhờ sửa code — chỉ thay/đổi ảnh có sẵn thì không.
+        -->
+        <div class="hero-slideshow" id="heroSlideshow">
+          <img class="slide active" data-drive-id="PASTE_FILE_ID_1" src="https://drive.google.com/thumbnail?id=PASTE_FILE_ID_1&sz=w1000" alt="Buổi đi field Land Your Dream Job — ảnh 1" onerror="this.style.opacity=0;">
+          <img class="slide" data-drive-id="PASTE_FILE_ID_2" src="https://drive.google.com/thumbnail?id=PASTE_FILE_ID_2&sz=w1000" alt="Buổi đi field Land Your Dream Job — ảnh 2" onerror="this.style.opacity=0;">
+          <img class="slide" data-drive-id="PASTE_FILE_ID_3" src="https://drive.google.com/thumbnail?id=PASTE_FILE_ID_3&sz=w1000" alt="Buổi đi field Land Your Dream Job — ảnh 3" onerror="this.style.opacity=0;">
+          <img class="slide" data-drive-id="PASTE_FILE_ID_4" src="https://drive.google.com/thumbnail?id=PASTE_FILE_ID_4&sz=w1000" alt="Buổi đi field Land Your Dream Job — ảnh 4" onerror="this.style.opacity=0;">
+          <div class="avatar-fallback" id="heroSlideshowFallback" style="display:none; flex-direction:column; gap:8px; font-size:14px; font-weight:600; text-align:center; padding:20px;"><i class="ti ti-photo" style="font-size:32px;" aria-hidden="true"></i>Chèn ảnh đi field tại đây</div>
+          <div class="hero-slide-dots" id="heroSlideDots"></div>
+        </div>
         <div class="hero-exp-badge"><b>5+</b><span>mùa<br>đi field</span></div>
         <div class="hero-advisor-card">
           <div><strong>Buổi đi field tại kênh MT</strong><span>Cùng học viên Land Your Dream Job</span></div>
@@ -1393,6 +1415,49 @@ function closeMobileNav(){
     window.addEventListener('scroll', onScroll, { passive:true });
     onScroll();
   }
+})();
+/* ── Slideshow ảnh đi field: tự động crossfade, có chấm bấm để chuyển tay ── */
+(function(){
+  var wrap = document.getElementById('heroSlideshow');
+  if(!wrap) return;
+  var slides = Array.prototype.slice.call(wrap.querySelectorAll('.slide'));
+  var dotsWrap = document.getElementById('heroSlideDots');
+  var fallback = document.getElementById('heroSlideshowFallback');
+  var current = 0;
+  var timer = null;
+  var INTERVAL = 4000;
+
+  slides.forEach(function(img, i){
+    var dot = document.createElement('span');
+    dot.className = 'dot' + (i === 0 ? ' active' : '');
+    dot.addEventListener('click', function(){ goTo(i); resetTimer(); });
+    dotsWrap.appendChild(dot);
+  });
+  var dots = Array.prototype.slice.call(dotsWrap.querySelectorAll('.dot'));
+
+  function goTo(i){
+    slides[current].classList.remove('active');
+    dots[current].classList.remove('active');
+    current = i;
+    slides[current].classList.add('active');
+    dots[current].classList.add('active');
+  }
+  function next(){ goTo((current + 1) % slides.length); }
+  function resetTimer(){ clearInterval(timer); timer = setInterval(next, INTERVAL); }
+
+  // Nếu TẤT CẢ ảnh đều lỗi (chưa gắn FILE_ID thật) → ẩn slideshow, hiện placeholder hướng dẫn.
+  var loadFails = 0;
+  slides.forEach(function(img){
+    img.addEventListener('error', function(){
+      loadFails++;
+      if(loadFails >= slides.length){
+        wrap.style.display = 'none';
+        if(fallback) fallback.style.display = 'flex';
+      }
+    });
+  });
+
+  resetTimer();
 })();
 </script>
 </body>
