@@ -647,9 +647,21 @@ function slugifyPkgName(name) {
   s = s.replace(/đ/g, 'd').replace(/Đ/g, 'D');
   return s.split(/\s+/).filter(Boolean).join('-');
 }
-function fmtPriceLabelK(price) {
-  var k = Math.round(Number(price) / 1000);
-  return k.toLocaleString('vi-VN');
+// MỚI (fix 2026-09-04): xử lý gói "Liên hệ" (price_mode=contact / giá=0) và gói
+// chữ tự do — trước đây luôn ép Number(price) nên hiện "0k" cho các gói này
+// (giống lỗi đã sửa ở trang pricing/dashboard, nhưng file advisor.html có 1
+// bản sao riêng của logic này nên chưa được vá).
+function fmtPriceLabelK(price, priceMode) {
+  if (priceMode === 'contact' || price === '' || price === null || price === undefined || price === 0 || price === '0') return 'Liên hệ';
+  var s = String(price).trim();
+  if (/^\d+$/.test(s)) return Math.round(Number(s) / 1000).toLocaleString('vi-VN');
+  return s; // giá dạng chữ tự do -> hiện nguyên văn, không cộng "k" ở nơi gọi
+}
+// MỚI: gói "Không giới hạn số buổi" trước đây hiện "0 buổi" do ép Number(sessions).
+function fmtSessionsLabel(p) {
+  var isUnlimited = p.sessions_unlimited === true || p.sessions_unlimited === 'TRUE' || p.sessions_unlimited === 'true';
+  var sessPart = isUnlimited ? 'Không giới hạn buổi' : (Number(p.sessions) || 0) + ' buổi';
+  return sessPart + ' · trong ' + p.days + ' ngày';
 }
 function jsStr(s) { return JSON.stringify(String(s == null ? '' : s)); }
 
@@ -661,16 +673,32 @@ function renderPkgList(packages) {
     return;
   }
   var html = '';
-  packages.forEach(function(p){
+  packages.forEach(function(p, idx){
     var slug = slugifyPkgName(p.name);
-    var sessText = p.sessions + ' buổi · trong ' + p.days + ' ngày';
-    var priceLabel = fmtPriceLabelK(p.price);
-    var priceNum = Math.round(Number(p.price) / 1000);
-    html += '<div class="pkgitem" data-pkg="' + slug + '" onclick="selPkg(this,' + jsStr(p.name) + ',' + jsStr(sessText) + ',' + jsStr(priceLabel) + ',' + priceNum + ')">'
+    var isContact = p.price_mode === 'contact' || !p.price || p.price === '0';
+    var priceLabel = fmtPriceLabelK(p.price, p.price_mode);
+    var priceDisplay = isContact || !/^[\d.,]+$/.test(priceLabel) ? priceLabel : (priceLabel + 'k');
+    var sessText = fmtSessionsLabel(p);
+    // MỚI (fix 2026-09-04): trước đây build onclick bằng cách nhúng chuỗi
+    // JSON.stringify (dùng dấu ") vào ngay TRONG thuộc tính onclick="..." cũng
+    // dùng dấu " --- khiến trình duyệt hiểu nhầm attribute kết thúc sớm, làm
+    // hỏng hoàn toàn việc bấm chọn gói (mọi gói, không riêng gói nào). Giờ
+    // không nhúng dữ liệu vào chuỗi HTML nữa --- chỉ lưu index, gắn onclick
+    // thật bằng JS sau khi render (tránh mọi lỗi escape ký tự đặc biệt).
+    html += '<div class="pkgitem" data-pkg="' + slug + '" data-idx="' + idx + '">'
       + '<div class="pkg-l"><div class="pkg-n">' + p.name + '</div><div class="pkg-s">' + sessText + '</div></div>'
-      + '<div class="pkg-p">' + priceLabel + 'k</div><div class="pkg-r"><i class="ti ti-check"></i></div></div>';
+      + '<div class="pkg-p">' + priceDisplay + '</div><div class="pkg-r"><i class="ti ti-check"></i></div></div>';
   });
   wrap.innerHTML = html;
+  wrap.querySelectorAll('.pkgitem').forEach(function(el){
+    el.onclick = function(){
+      var p = packages[Number(el.dataset.idx)];
+      var sessText = fmtSessionsLabel(p);
+      var priceLabel = fmtPriceLabelK(p.price, p.price_mode);
+      var priceNum = /^[\d.,]+$/.test(priceLabel) ? Math.round(Number(p.price) / 1000) || 0 : 0;
+      selPkg(el, p.name, sessText, priceLabel, priceNum);
+    };
+  });
 }
 
 // Nạp gói meeting đang bán (active) từ Sheet — cùng WEBAPP_URL với các API khác.
@@ -894,7 +922,13 @@ function proceedToStep3(){
 }
 
 function renderStep3(n){
-  var amount = S.priceNum * 1000;
+  // MỚI (fix 2026-09-04): gói "Liên hệ" không có giá cố định -> không ép hiện
+  // "Liên hệ.000 đ" vô nghĩa, và QR VietQR không nên gắn amount=0 (để khách tự
+  // nhập số tiền khi CK, tránh chuyển nhầm 0đ).
+  var isFixedPrice = /^[\d.,]+$/.test(String(S.priceLabel || ''));
+  var amount = isFixedPrice ? S.priceNum * 1000 : 0;
+  var totalDisplay = isFixedPrice ? (S.priceLabel + '.000 đ') : (S.priceLabel || 'Liên hệ');
+
   document.getElementById('cvPkg').textContent = 'Gói '+S.pkg;
   document.getElementById('cvSess').textContent = S.sess;
   document.getElementById('cvAdv').textContent = S.adv||'LinkaJob sẽ match';
@@ -902,15 +936,15 @@ function renderStep3(n){
   document.getElementById('cvName').textContent = n;
   document.getElementById('cvEmail').textContent = document.getElementById('mEmail').value;
   document.getElementById('cvPhone').textContent = document.getElementById('mPhone').value;
-  document.getElementById('cvTotal').textContent = S.priceLabel+'.000 đ';
-  document.getElementById('payAmt').textContent = amount.toLocaleString('vi-VN')+' đ';
+  document.getElementById('cvTotal').textContent = totalDisplay;
+  document.getElementById('payAmt').textContent = isFixedPrice ? (amount.toLocaleString('vi-VN')+' đ') : 'Liên hệ để báo giá';
   document.getElementById('payCk').textContent = S.bookingId || '—';
   var qrImg = document.getElementById('payQrImg');
   if (qrImg && S.bookingId) {
     qrImg.src = 'https://img.vietqr.io/image/' + BANK_ID + '-' + BANK_ACCOUNT_NO + '-compact2.png' +
-      '?amount=' + amount + '&addInfo=' + encodeURIComponent(S.bookingId) + '&accountName=' + encodeURIComponent(BANK_ACCOUNT_NAME);
+      '?' + (amount ? 'amount=' + amount + '&' : '') + 'addInfo=' + encodeURIComponent(S.bookingId) + '&accountName=' + encodeURIComponent(BANK_ACCOUNT_NAME);
   }
-  setCtx('Gói '+S.pkg+' · '+(S.adv||'LinkaJob'), 'Tổng: '+S.priceLabel+'.000 đ');
+  setCtx('Gói '+S.pkg+' · '+(S.adv||'LinkaJob'), 'Tổng: '+totalDisplay);
   renderSteps(3);
   showPanel('mp3');
 }
