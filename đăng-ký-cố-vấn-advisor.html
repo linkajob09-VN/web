@@ -10,37 +10,6 @@
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
 .lj{font-family:'Inter',sans-serif;background:#0D0D0D;color:#F0F0F0;overflow-x:hidden;}
 
-/* NAV */
-  .lj-nav { display: flex; align-items: center; justify-content: space-between; padding: 16px 32px; border-bottom: 0.5px solid rgba(255,255,255,0.08); position: relative; z-index: 200; }
-  .lj-logo { font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 18px; color: #fc5229; letter-spacing: -0.5px; }
-  .lj-nav-links { display: flex; gap: 4px; align-items: center; }
-  .lj-nav-item { position: relative; }
-  .lj-nav-links a, .lj-nav-btn-plain { font-size: 13px; color: rgba(240,240,240,0.5); text-decoration: none; font-family: 'Space Grotesk', sans-serif; font-weight: 500; transition: color 0.2s, background 0.2s; padding: 8px 14px; border-radius: 8px; display: inline-flex; align-items: center; gap: 5px; cursor: pointer; background: transparent; border: none; }
-  .lj-nav-links a:hover, .lj-nav-btn-plain:hover { color: #F0F0F0; background: rgba(255,255,255,0.05); }
-  .lj-nav-chevron { font-size: 11px; transition: transform 0.2s; color: rgba(240,240,240,0.3); }
-  .lj-nav-item:hover .lj-nav-chevron { transform: rotate(180deg); color: rgba(240,240,240,0.6); }
-  .lj-btn-nav { background: #fc5229; color: #fff; font-size: 13px; font-weight: 500; font-family: 'Space Grotesk', sans-serif; padding: 8px 20px; border-radius: 100px; border: none; cursor: pointer; white-space: nowrap; margin-left: 8px; }
-
-  /* DROPDOWN */
-  .lj-dropdown { position: absolute; top: calc(100% + 8px); left: 50%; transform: translateX(-50%) translateY(-6px); background: #161616; border: 0.5px solid rgba(255,255,255,0.1); border-radius: 14px; padding: 8px; min-width: 230px; opacity: 0; pointer-events: none; transition: opacity 0.18s ease, transform 0.18s ease; z-index: 300; }
-  /* "Cầu nối" vô hình che khoảng hở 8px giữa nút và dropdown — nếu không có phần này,
-     chuột đi qua khoảng hở sẽ bị tính là rời khỏi .lj-nav-item, dropdown đóng lại ngay
-     và không mở lại được (vì pointer-events:none đã kích hoạt). */
-  .lj-dropdown::before { content: ''; position: absolute; top: -8px; left: 0; right: 0; height: 8px; pointer-events: auto; }
-  .lj-nav-item:hover .lj-dropdown { opacity: 1; pointer-events: auto; transform: translateX(-50%) translateY(0); }
-  .lj-di { display: flex; align-items: flex-start; gap: 11px; padding: 10px 12px; border-radius: 10px; text-decoration: none; transition: background 0.15s; }
-  .lj-di:hover { background: rgba(255,255,255,0.05); }
-  .lj-di-icon { width: 32px; height: 32px; border-radius: 9px; background: rgba(252,82,41,0.1); display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 1px; transition: background 0.15s; }
-  .lj-di-icon i { font-size: 16px; color: #fc5229; transition: color 0.15s; }
-  .lj-dropdown-courses .lj-di-icon { background: rgba(255,255,255,0.05); }
-  .lj-dropdown-courses .lj-di-icon i { color: rgba(240,240,240,0.45); }
-  .lj-dropdown-courses .lj-di:hover .lj-di-icon { background: rgba(252,82,41,0.1); }
-  .lj-dropdown-courses .lj-di:hover .lj-di-icon i { color: #fc5229; }
-  .lj-di-title { font-family: 'Space Grotesk', sans-serif; font-size: 13px; font-weight: 600; color: #F0F0F0; margin-bottom: 2px; }
-  .lj-di-sub { font-size: 11px; color: rgba(240,240,240,0.38); line-height: 1.45; }
-  .lj-dropdown-divider { height: 0.5px; background: rgba(255,255,255,0.07); margin: 6px 0; }
-  .lj-dropdown-badge { display: inline-block; font-size: 9px; font-weight: 700; font-family: 'Space Grotesk', sans-serif; letter-spacing: 0.06em; text-transform: uppercase; background: rgba(252,82,41,0.15); color: #fc5229; padding: 2px 7px; border-radius: 4px; margin-left: 6px; vertical-align: middle; }
-
 /* ── HERO ── */
 .hero{padding:64px 32px 40px;text-align:center;}
 .eyebrow{display:inline-flex;align-items:center;gap:7px;background:#1A1A1A;border:.5px solid rgba(255,255,255,.1);border-radius:100px;padding:6px 14px;font-size:12px;color:rgba(240,240,240,.5);font-family:'Space Grotesk',sans-serif;font-weight:500;margin-bottom:22px;}
@@ -185,33 +154,6 @@ table.pt th:not(:first-child),table.pt td:not(:first-child){border-left:1px soli
 .lj-footer-links{display:flex;gap:20px;}
 .lj-footer-links a{font-size:12px;color:rgba(240,240,240,.28);text-decoration:none;}
 
-/* ── MOBILE NAV (hamburger) ── */
-.lj-nav-toggle{ display:none; background:transparent; border:none; width:38px; height:38px; align-items:center; justify-content:center; cursor:pointer; border-radius:8px; flex-shrink:0;}
-.lj-nav-toggle:hover{ background:rgba(255,255,255,.06);}
-.lj-nav-toggle svg{ width:22px; height:22px; display:block;}
-.lj-nav-toggle svg path{ stroke:#F0F0F0;}
-.lj-nav-backdrop{ display:none;}
-@media(max-width:860px){
-  .lj-nav-toggle{ display:flex;}
-  .lj-nav-links{
-    position:fixed; top:0; right:0; bottom:0; width:min(320px,84vw);
-    background:#0D0D0D; flex-direction:column; align-items:stretch;
-    padding:88px 22px 24px; gap:2px; overflow-y:auto; z-index:250;
-    transform:translateX(100%); transition:transform .28s cubic-bezier(.22,1,.36,1);
-    box-shadow:-16px 0 40px rgba(0,0,0,.4);
-  }
-  .lj-nav-links.open{ transform:translateX(0);}
-  .lj-nav-backdrop{ display:block; position:fixed; inset:0; background:rgba(0,0,0,.45); z-index:240; opacity:0; pointer-events:none; transition:opacity .25s;}
-  .lj-nav-backdrop.open{ opacity:1; pointer-events:auto;}
-  .lj-nav-item{ width:100%;}
-  .lj-nav-links > a, .lj-nav-btn-plain{ width:100%; justify-content:space-between; padding:15px 4px; font-size:15.5px; border-radius:0; border-bottom:.5px solid rgba(255,255,255,.09); color:#F0F0F0;}
-  .lj-dropdown{ position:static; opacity:1; pointer-events:none; max-height:0; overflow:hidden; transform:none; box-shadow:none; border:none; background:transparent; padding:0; min-width:0; border-radius:0; transition:max-height .25s ease;}
-  .lj-nav-item.open .lj-dropdown{ pointer-events:auto; max-height:400px; padding:2px 0 10px 6px;}
-  .lj-di{ padding:11px 8px;}
-  .lj-di-sub{ color:rgba(240,240,240,.4);}
-  .lj-btn-nav{ margin:18px 0 0; width:100%; padding:14px; font-size:15px; text-align:center;}
-}
-
 /* ── RESPONSIVE (pricing.html) ── */
 @media(max-width:860px){
   .how{ grid-template-columns:1fr; gap:22px; margin:32px 20px 0; padding:26px 22px 22px;}
@@ -241,99 +183,13 @@ table.pt th:not(:first-child),table.pt td:not(:first-child){border-left:1px soli
   .pt-row td:first-child, .pt-group td:first-child{ position:sticky; left:0; background:#0D0D0D; z-index:1;}
 }
 </style>
+<link rel="stylesheet" href="nav.css">
 </head>
 <body>
 <div class="lj">
 
 <!-- NAV -->
-  <nav class="lj-nav">
-    <a href="index.html" class="lj-logo" style="text-decoration:none;cursor:pointer;">LinkaJob</a>
-  <button class="lj-nav-toggle" aria-label="Mở menu" aria-expanded="false" onclick="toggleMobileNav()">
-      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M4 6h16M4 12h16M4 18h16" stroke-width="2" stroke-linecap="round"/></svg>
-    </button>
-    <div class="lj-nav-links">
-
-      <!-- Cố vấn 1-1 -->
-      <div class="lj-nav-item">
-        <button class="lj-nav-btn-plain" onclick="toggleNavDropdown(this)">Cố vấn 1-1 <i class="ti ti-chevron-down lj-nav-chevron" aria-hidden="true"></i></button>
-        <div class="lj-dropdown">
-          <a class="lj-di" href="đội-ngũ-advisor.html">
-            <div class="lj-di-icon"><i class="ti ti-user-star" aria-hidden="true"></i></div>
-            <div>
-              <div class="lj-di-title">Profile Advisor</div>
-              <div class="lj-di-sub">Tìm advisor phù hợp với định hướng của bạn</div>
-            </div>
-          </a>
-          <div class="lj-dropdown-divider"></div>
-          <a class="lj-di" href="đăng-ký-cố-vấn-advisor.html">
-            <div class="lj-di-icon"><i class="ti ti-calendar-event" aria-hidden="true"></i></div>
-            <div>
-              <div class="lj-di-title">Các gói meeting 1-1 <span class="lj-dropdown-badge">Đang xem</span></div>
-              <div class="lj-di-sub">Buổi đầu miễn phí · 3–7 sessions/gói</div>
-            </div>
-          </a>
-        </div>
-      </div>
-
-      <!-- Khoá học -->
-      <div class="lj-nav-item">
-        <button class="lj-nav-btn-plain" onclick="toggleNavDropdown(this)">Khoá học <i class="ti ti-chevron-down lj-nav-chevron" aria-hidden="true"></i></button>
-        <div class="lj-dropdown lj-dropdown-courses">
-          <a class="lj-di" href="khoá-học-land-your-dream-job.html">
-            <div class="lj-di-icon"><i class="ti ti-rocket" aria-hidden="true"></i></div>
-            <div>
-              <div class="lj-di-title">Land Your Dream Job</div>
-              <div class="lj-di-sub">CV · Interview · Offer negotiation</div>
-            </div>
-          </a>
-          <div class="lj-dropdown-divider"></div>
-          <a class="lj-di" href="khoá-học-logistics-operation-cracking.html">
-            <div class="lj-di-icon"><i class="ti ti-truck-delivery" aria-hidden="true"></i></div>
-            <div>
-              <div class="lj-di-title">Logistics Operation</div>
-              <div class="lj-di-sub">Thực chiến logistics từ MNC insiders</div>
-            </div>
-          </a>
-          <div class="lj-dropdown-divider"></div>
-          <a class="lj-di" href="khoá-học-supply-chain-principles.html">
-            <div class="lj-di-icon"><i class="ti ti-topology-star-3" aria-hidden="true"></i></div>
-            <div>
-              <div class="lj-di-title">Supply Chain Principles</div>
-              <div class="lj-di-sub">Nền tảng supply chain cho fresher</div>
-            </div>
-          </a>
-        </div>
-      </div>
-
-      <!-- Thành công -->
-      <div class="lj-nav-item">
-        <button class="lj-nav-btn-plain" onclick="toggleNavDropdown(this)">Thành công <i class="ti ti-chevron-down lj-nav-chevron" aria-hidden="true"></i></button>
-        <div class="lj-dropdown">
-          <div class="lj-dropdown-inner">
-            <a class="lj-di" href="success-stories.html">
-            <div class="lj-di-icon"><i class="ti ti-user-star" aria-hidden="true"></i></div>
-            <div>
-              <div class="lj-di-title">Câu chuyện thành công</div>
-              <div class="lj-di-sub">Hành trình vào MNC từ sinh viên thật</div>
-            </div>
-            </a>
-          <div class="lj-dropdown-divider"></div>
-            <a class="lj-di" href="feedback.html">
-            <div class="lj-di-icon"><i class="ti ti-calendar-event" aria-hidden="true"></i></div>
-            <div>
-              <div class="lj-di-title">Feedback dịch vụ </div>
-              <div class="lj-di-sub">~96% advisee hài lòng với dịch vụ</div>
-            </div>
-            </a>
-          </div>
-        </div>
-      </div>
-
-      <a href="blog.html">Blog</a>
-      <button class="lj-btn-nav" onclick="openConsultWidget()">Đăng ký tư vấn</button>
-    </div>
-  </nav>
-<div class="lj-nav-backdrop" id="ljNavBackdrop" onclick="closeMobileNav()"></div>
+<div id="lj-nav-root"></div>
 
 
 <!-- 1. HERO — Tôi có đúng chỗ không? -->
@@ -544,23 +400,6 @@ function toggleFaq(btn){
   document.querySelectorAll('.faq-item.open').forEach(function(el){el.classList.remove('open');});
   if(!wasOpen)item.classList.add('open');
 }
-  /* ─── NAV DROPDOWN: bấm để mở/đóng, hoạt động cả trên mobile ─── */
-function toggleNavDropdown(btn) {
-  var item = btn.closest('.lj-nav-item');
-  var wasOpen = item.classList.contains('open');
-  document.querySelectorAll('.lj-nav-item.open').forEach(function(el){ el.classList.remove('open'); });
-  if (!wasOpen) item.classList.add('open');
-}
-document.addEventListener('click', function(e){
-  if (!e.target.closest('.lj-nav-item')) {
-    document.querySelectorAll('.lj-nav-item.open').forEach(function(el){ el.classList.remove('open'); });
-  }
-});
-document.addEventListener('keydown', function(e){
-  if (e.key === 'Escape') {
-    document.querySelectorAll('.lj-nav-item.open').forEach(function(el){ el.classList.remove('open'); });
-  }
-});
 
 /* ─── MỚI: TOÀN BỘ bảng so sánh (cột gói + từng dòng "Nội dung hỗ trợ")
    giờ render động 100% từ Sheet — khớp đúng với trang "Sản phẩm" trên
@@ -723,26 +562,8 @@ function loadPricingTable() {
 }
 document.addEventListener('DOMContentLoaded', loadPricingTable);
 
-function toggleMobileNav(){
-  var links = document.querySelector('.lj-nav-links');
-  var backdrop = document.getElementById('ljNavBackdrop');
-  var btn = document.querySelector('.lj-nav-toggle');
-  if(!links) return;
-  var isOpen = links.classList.toggle('open');
-  if(backdrop) backdrop.classList.toggle('open', isOpen);
-  if(btn) btn.setAttribute('aria-expanded', isOpen);
-  document.body.style.overflow = isOpen ? 'hidden' : '';
-}
-function closeMobileNav(){
-  var links = document.querySelector('.lj-nav-links');
-  var backdrop = document.getElementById('ljNavBackdrop');
-  var btn = document.querySelector('.lj-nav-toggle');
-  if(!links) return;
-  links.classList.remove('open');
-  if(backdrop) backdrop.classList.remove('open');
-  if(btn) btn.setAttribute('aria-expanded', 'false');
-  document.body.style.overflow = '';
-}
 </script>
+<script src="nav.js"></script>
+<script>initSharedNav();</script>
 </body>
 </html>
