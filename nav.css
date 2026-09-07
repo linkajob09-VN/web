@@ -25,6 +25,10 @@
 .lj-nav-item.open .lj-nav-chevron{ transform:rotate(180deg); color:rgba(240,240,240,.6);}
 .lj-btn-nav{ background:var(--orange); color:#fff; font-size:13px; font-weight:500; font-family:'Montserrat',sans-serif; padding:8px 20px; border-radius:100px; border:none; cursor:pointer; white-space:nowrap; margin-left:8px;}
 .lj-dropdown{ position:absolute; top:calc(100% + 8px); left:50%; transform:translateX(-50%) translateY(-6px); background:#161616; border:.5px solid rgba(255,255,255,.1); border-radius:14px; padding:8px; min-width:230px; opacity:0; pointer-events:none; transition:opacity .18s ease, transform .18s ease; z-index:300; box-shadow:0 12px 32px rgba(0,0,0,.35);}
+/* "Cầu nối" vô hình che khoảng hở giữa nút và dropdown — nếu không có phần
+   này, chuột đi qua khoảng hở sẽ bị tính là rời khỏi .lj-nav-item, dropdown
+   đóng lại ngay và không mở lại được (vì pointer-events:none đã kích hoạt). */
+.lj-dropdown::before{ content:''; position:absolute; top:-8px; left:0; right:0; height:8px; pointer-events:auto;}
 .lj-nav-item:hover .lj-dropdown, .lj-nav-item.open .lj-dropdown{ opacity:1; pointer-events:auto; transform:translateX(-50%) translateY(0);}
 .lj-di{ display:flex; align-items:flex-start; gap:11px; padding:10px 12px; border-radius:10px; text-decoration:none; transition:background .15s;}
 .lj-di:hover{ background:rgba(255,255,255,.05);}
