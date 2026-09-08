@@ -1708,18 +1708,24 @@ function parseConsultNotes(notes) {
 
 function renderNewRegistrationsList(leads) {
   var html = '';
-  html += '<div style="font-size:15px;font-weight:700;margin-bottom:14px">🔴 Khách đăng ký tư vấn mới</div>';
+  html += '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:10px">';
+  html += '<div style="font-size:15px;font-weight:700">🔴 Khách đăng ký tư vấn mới</div>';
+  html += '<button class="submit-btn" style="padding:8px 16px;font-size:13px;width:auto" onclick="openCreateLeadModal()">+ Tạo đơn mới</button>';
+  html += '</div>';
   html += '<div class="card"><div class="card-header"><div class="card-header-left">Danh sách đăng ký (' + leads.length + ')</div>';
   html += '<button class="refresh-btn" onclick="loadNewRegistrationsPage()">↻ Làm mới</button></div>';
 
   if (leads.length === 0) {
     html += '<div class="empty-state"><div class="icon">📭</div>Chưa có khách nào đăng ký từ website</div>';
   } else {
+    html += '<div style="padding:16px 24px 0">' + searchBoxHtml('new-reg-list', 'Tìm theo tên, SĐT, email...') + '</div>';
+    html += '<div id="new-reg-list">';
     leads.forEach(function(r){
       var obj = mergeLeadRow(r);
       if (!obj) return;
       var assignedTo = (obj.staff || '').trim();
-      html += '<div style="display:flex;align-items:center;gap:14px;padding:16px 24px;border-top:1px solid var(--border);flex-wrap:wrap">';
+      var searchKey = (obj.name + ' ' + obj.phone + ' ' + obj.email).toLowerCase().replace(/"/g,'');
+      html += '<div data-search="' + searchKey + '" style="display:flex;align-items:center;gap:14px;padding:16px 24px;border-top:1px solid var(--border);flex-wrap:wrap">';
       html += avatarCircle(obj.name || '?', 40);
       html += '<div style="flex:1;min-width:200px">';
       html += '<div style="font-weight:700;font-size:14px">' + (obj.name || 'Khách hàng') + (obj.consultAbout ? ' <span style="font-weight:400;color:var(--muted);font-size:12px">· ' + obj.consultAbout + '</span>' : '') + '</div>';
@@ -1741,9 +1747,81 @@ function renderNewRegistrationsList(leads) {
       html += '<button class="detail-btn" onclick="navToConsultationDetail(\'' + obj.id + '\')">Chi tiết →</button>';
       html += '</div>';
     });
+    html += '</div>'; // đóng #new-reg-list
   }
   html += '</div>';
   return html;
+}
+
+// ── "Tạo đơn mới" — cho admin quản lý Fanpage/IG/TikTok chủ động tạo hồ sơ
+//    khách khi có lead nhắn tin trên các nền tảng đó, để team Sale đi tư vấn.
+//    Dùng chung action 'captureLead' với widget public (kèm dedup + auto-assign Sale).
+function openCreateLeadModal() {
+  document.getElementById('modal-title').textContent = '➕ Tạo đơn đăng ký mới';
+  document.getElementById('modal-body').innerHTML =
+    '<div class="modal-field"><div class="form-label">Họ và tên <span style="color:var(--brand)">*</span></div>' +
+    '<input class="form-input" id="cl-name" placeholder="Nguyễn Văn A" style="margin-top:6px"></div>' +
+    '<div class="modal-field"><div class="form-label">Số điện thoại <span style="color:var(--brand)">*</span></div>' +
+    '<input class="form-input" id="cl-phone" placeholder="09xxxxxxxx" style="margin-top:6px"></div>' +
+    '<div class="modal-field"><div class="form-label">Email</div>' +
+    '<input class="form-input" id="cl-email" placeholder="email@vidu.com" style="margin-top:6px"></div>' +
+    '<div class="modal-field"><div class="form-label">Nguồn</div>' +
+    '<select class="form-input" id="cl-source" style="margin-top:6px">' +
+      '<option value="Facebook">Facebook</option>' +
+      '<option value="Instagram">Instagram</option>' +
+      '<option value="TikTok">TikTok</option>' +
+      '<option value="Zalo">Zalo</option>' +
+      '<option value="Giới thiệu">Giới thiệu</option>' +
+      '<option value="Khác">Khác</option>' +
+    '</select></div>' +
+    '<div class="modal-field"><div class="form-label">Tư vấn về</div>' +
+    '<select class="form-input" id="cl-service" style="margin-top:6px">' +
+      '<option value="Cố vấn 1-1">Cố vấn 1-1</option>' +
+      '<option value="Khoá học">Khoá học</option>' +
+      '<option value="Khác">Khác</option>' +
+    '</select></div>' +
+    '<div id="cl-error" style="color:var(--brand);font-size:12.5px;margin-top:4px;display:none"></div>';
+  document.getElementById('modal-actions').innerHTML =
+    '<button class="btn-secondary" onclick="closeModal()" style="width:auto;padding:10px 20px">Huỷ</button>' +
+    '<button class="login-btn" id="cl-submit-btn" onclick="submitCreateLead()" style="width:auto;padding:10px 24px">Tạo đơn</button>';
+  document.getElementById('modal-overlay').classList.add('open');
+  setTimeout(function(){ var el = document.getElementById('cl-name'); if(el) el.focus(); }, 100);
+}
+
+function submitCreateLead() {
+  var name  = (document.getElementById('cl-name')||{}).value.trim();
+  var phone = (document.getElementById('cl-phone')||{}).value.trim();
+  var email = (document.getElementById('cl-email')||{}).value.trim();
+  var source  = (document.getElementById('cl-source')||{}).value;
+  var service = (document.getElementById('cl-service')||{}).value;
+  var errEl = document.getElementById('cl-error');
+
+  if (!name || !phone) {
+    errEl.textContent = 'Vui lòng nhập đầy đủ Họ tên và Số điện thoại.';
+    errEl.style.display = 'block';
+    return;
+  }
+
+  var btn = document.getElementById('cl-submit-btn');
+  btn.disabled = true; btn.textContent = 'Đang tạo...';
+
+  apiPost({ action: 'captureLead', name: name, phone: phone, email: email, source: source, service: service })
+    .then(function(res){
+      if (res && res.success) {
+        toast('Đã tạo đơn mới' + (res.assigned_staff ? ' — gán cho ' + res.assigned_staff : ''), 'success');
+        closeModal();
+        loadNewRegistrationsPage();
+      } else {
+        errEl.textContent = (res && res.error) || 'Có lỗi khi tạo đơn, thử lại.';
+        errEl.style.display = 'block';
+        btn.disabled = false; btn.textContent = 'Tạo đơn';
+      }
+    })
+    .catch(function(err){
+      errEl.textContent = 'Lỗi kết nối: ' + err.message;
+      errEl.style.display = 'block';
+      btn.disabled = false; btn.textContent = 'Tạo đơn';
+    });
 }
 
 function autoAssignReg(cid) {
@@ -1838,7 +1916,11 @@ function loadMeetingCalendarAsync() {
       var d = String(s.scheduled_date || '').slice(0, 10);
       if (!d) return;
       if (!meetingsByDate[d]) meetingsByDate[d] = [];
-      var type = s.advisor_name === STAFF_SLOT_IDENTITY ? 'Tư vấn miễn phí' : 'Cố vấn 1-1';
+      // session_type là cột MỚI (dành cho các buổi tạo qua "Tạo meeting"); các dòng
+      // Sessions cũ trước đây không có cột này nên fallback về cách nhận diện cũ.
+      var type = s.session_type === 'course' ? 'Khoá học'
+        : (s.session_type === 'consult' || s.advisor_name === STAFF_SLOT_IDENTITY) ? 'Tư vấn miễn phí'
+        : 'Cố vấn 1-1';
       meetingsByDate[d].push({
         type: type,
         advisor: s.advisor_name,
@@ -1847,6 +1929,7 @@ function loadMeetingCalendarAsync() {
         meet_link: s.meet_link,
         session_id: s.session_id,
         status: s.status,
+        course_code: s.course_code || '',
       });
     });
 
@@ -1880,7 +1963,8 @@ function renderMeetingMonthCalendar(meetingsByDate) {
   const typeColor = { 'Cố vấn 1-1': '#1D4ED8', 'Tư vấn miễn phí': '#F4451A', 'Khoá học': '#7C3AED' };
 
   let html = '<div class="card"><div class="card-header"><div class="card-header-left">Lịch meeting</div>' +
-    '<button class="refresh-btn" onclick="loadMeetingCalendarAsync()">↻ Làm mới</button></div>';
+    '<div style="display:flex;gap:8px"><button class="submit-btn" style="padding:8px 16px;font-size:13px;width:auto" onclick="openCreateMeetingModal()">+ Tạo meeting</button>' +
+    '<button class="refresh-btn" onclick="loadMeetingCalendarAsync()">↻ Làm mới</button></div></div>';
   html += '<div class="cal-nav"><div class="cal-nav-left"><button onclick="changeCalMonth(-1)">‹</button><span class="cal-nav-label">' + monthLabel + '</span><button onclick="changeCalMonth(1)">›</button></div>';
   html += '<button class="cal-today-btn" onclick="goToCalToday()">Hôm nay</button></div>';
 
@@ -1913,6 +1997,102 @@ function renderMeetingMonthCalendar(meetingsByDate) {
   });
   html += '</div></div>';
   return html;
+}
+
+// ── "Tạo meeting" — tạo nhanh 1 buổi (Tư vấn / Cố vấn 1-1 / Khoá học) không
+//    qua luồng booking chuẩn. Ghi trực tiếp 1 dòng vào tab Sessions.
+function openCreateMeetingModal() {
+  document.getElementById('modal-title').textContent = '➕ Tạo meeting mới';
+  document.getElementById('modal-body').innerHTML =
+    '<div class="modal-field"><div class="form-label">Loại meeting</div>' +
+    '<select class="form-input" id="cm-type" style="margin-top:6px" onchange="toggleCreateMeetingFields()">' +
+      '<option value="consult">Tư vấn (miễn phí)</option>' +
+      '<option value="advisor">Cố vấn 1-1</option>' +
+      '<option value="course">Khoá học</option>' +
+    '</select></div>' +
+    '<div class="modal-field" id="cm-advisor-field" style="display:none"><div class="form-label">Tên Advisor</div>' +
+    '<input class="form-input" id="cm-advisor" placeholder="VD: Nguyễn Vũ Trí Kiên" style="margin-top:6px"></div>' +
+    '<div class="modal-field" id="cm-course-field" style="display:none"><div class="form-label">Mã / tên khoá học</div>' +
+    '<input class="form-input" id="cm-course" placeholder="VD: KH01 - Land Your Dream Job" style="margin-top:6px"></div>' +
+    '<div class="modal-field"><div class="form-label">Tên khách hàng / học viên <span style="color:var(--brand)">*</span></div>' +
+    '<input class="form-input" id="cm-attendee" placeholder="Nguyễn Văn A" style="margin-top:6px"></div>' +
+    '<div style="display:flex;gap:10px">' +
+      '<div class="modal-field" style="flex:1"><div class="form-label">Ngày <span style="color:var(--brand)">*</span></div>' +
+      '<input class="form-input" type="date" id="cm-date" style="margin-top:6px"></div>' +
+      '<div class="modal-field" style="flex:1"><div class="form-label">Giờ <span style="color:var(--brand)">*</span></div>' +
+      '<input class="form-input" type="time" id="cm-time" style="margin-top:6px"></div>' +
+    '</div>' +
+    '<div class="modal-field"><div class="form-label">Link Meet</div>' +
+    '<input class="form-input" id="cm-link" placeholder="https://meet.google.com/..." style="margin-top:6px"></div>' +
+    '<div class="modal-field"><div class="form-label">Ghi chú</div>' +
+    '<input class="form-input" id="cm-notes" placeholder="(không bắt buộc)" style="margin-top:6px"></div>' +
+    '<div id="cm-error" style="color:var(--brand);font-size:12.5px;margin-top:4px;display:none"></div>';
+  document.getElementById('modal-actions').innerHTML =
+    '<button class="btn-secondary" onclick="closeModal()" style="width:auto;padding:10px 20px">Huỷ</button>' +
+    '<button class="login-btn" id="cm-submit-btn" onclick="submitCreateMeeting()" style="width:auto;padding:10px 24px">Tạo meeting</button>';
+  document.getElementById('modal-overlay').classList.add('open');
+  setTimeout(function(){ var el = document.getElementById('cm-attendee'); if(el) el.focus(); }, 100);
+}
+
+function toggleCreateMeetingFields() {
+  var type = document.getElementById('cm-type').value;
+  document.getElementById('cm-advisor-field').style.display = type === 'advisor' ? '' : 'none';
+  document.getElementById('cm-course-field').style.display = type === 'course' ? '' : 'none';
+}
+
+function submitCreateMeeting() {
+  var type      = document.getElementById('cm-type').value;
+  var advisor   = (document.getElementById('cm-advisor')||{}).value.trim();
+  var course    = (document.getElementById('cm-course')||{}).value.trim();
+  var attendee  = document.getElementById('cm-attendee').value.trim();
+  var date      = document.getElementById('cm-date').value;
+  var time      = document.getElementById('cm-time').value;
+  var link      = document.getElementById('cm-link').value.trim();
+  var notes     = document.getElementById('cm-notes').value.trim();
+  var errEl = document.getElementById('cm-error');
+
+  if (!attendee || !date || !time) {
+    errEl.textContent = 'Vui lòng nhập đầy đủ Tên khách/học viên, Ngày và Giờ.';
+    errEl.style.display = 'block';
+    return;
+  }
+  if (type === 'advisor' && !advisor) {
+    errEl.textContent = 'Vui lòng nhập tên Advisor phụ trách buổi cố vấn.';
+    errEl.style.display = 'block';
+    return;
+  }
+  if (type === 'course' && !course) {
+    errEl.textContent = 'Vui lòng nhập mã/tên khoá học.';
+    errEl.style.display = 'block';
+    return;
+  }
+
+  var btn = document.getElementById('cm-submit-btn');
+  btn.disabled = true; btn.textContent = 'Đang tạo...';
+
+  apiPost({
+    action: 'createManualMeeting',
+    meeting_type: type,
+    advisor_name: advisor,
+    course_code: course,
+    attendee_name: attendee,
+    date: date, time: time,
+    meet_link: link, notes: notes,
+  }).then(function(res){
+    if (res && res.success) {
+      toast('Đã tạo meeting mới', 'success');
+      closeModal();
+      loadMeetingCalendarAsync();
+    } else {
+      errEl.textContent = (res && res.error) || 'Có lỗi khi tạo meeting, thử lại.';
+      errEl.style.display = 'block';
+      btn.disabled = false; btn.textContent = 'Tạo meeting';
+    }
+  }).catch(function(err){
+    errEl.textContent = 'Lỗi kết nối: ' + err.message;
+    errEl.style.display = 'block';
+    btn.disabled = false; btn.textContent = 'Tạo meeting';
+  });
 }
 
 function openStaffDayModal(dateStr) {
@@ -2191,9 +2371,11 @@ function renderStaffListPage() {
     html += '<div class="empty-state"><div class="icon">📭</div>Chưa có nhân viên nào trong tab SalesConfig</div></div>';
     return html;
   }
-  html += '<table class="bookings-table"><thead><tr><th>HỌ TÊN</th><th>VỊ TRÍ</th><th>EMAIL / SĐT</th><th>TẢI LEAD</th><th>NGÀY VÀO</th><th>TRẠNG THÁI</th><th></th></tr></thead><tbody>';
+  html += '<div style="padding:0 20px">' + searchBoxHtml('staff-list-tbody', 'Tìm theo tên, vị trí, email, SĐT...') + '</div>';
+  html += '<table class="bookings-table"><thead><tr><th>HỌ TÊN</th><th>VỊ TRÍ</th><th>EMAIL / SĐT</th><th>TẢI LEAD</th><th>NGÀY VÀO</th><th>TRẠNG THÁI</th><th></th></tr></thead><tbody id="staff-list-tbody">';
   sheetData.staffList.forEach(function(s, i){
-    html += '<tr>';
+    var searchKey = (s.name + ' ' + s.role + ' ' + s.email + ' ' + s.phone).toLowerCase().replace(/"/g,'');
+    html += '<tr data-search="' + searchKey + '">';
     html += '<td><div style="display:flex;align-items:center;gap:10px">' + avatarCircle(s.name,32) + '<div><div style="font-weight:600">' + s.name + '</div><div style="font-size:12px;color:var(--muted)">' + s.note + '</div></div></div></td>';
     html += '<td>' + roleBadge(s.role) + '</td>';
     html += '<td><div style="font-size:13px">' + s.email + '</div><div style="font-size:12px;color:var(--muted)">' + s.phone + '</div></td>';
@@ -2500,28 +2682,45 @@ function loadStaffLeadsAsync() {
 
 // Ghi 1 lead (tạo mới nếu chưa có id, cập nhật nếu đã có) lên Sheet.
 // Optimistic: UI đã cập nhật trước khi gọi hàm này, chỉ cần đồng bộ nền.
+// Hàng đợi lưu theo từng lead — nếu Sale sửa 2 trường liên tiếp thật nhanh (vd chọn
+// ngày giờ liên hệ rồi đổi status ngay sau đó), 2 lệnh lưu SẼ chạy thành 2 request
+// mạng riêng biệt, không đảm bảo tới server đúng thứ tự đã bấm. Request nào server
+// XỬ LÝ XONG SAU sẽ ghi đè, dù nó được gửi TRƯỚC — dẫn đến 1 trong 2 thay đổi bị mất
+// (đây chính là lỗi "chọn giờ liên hệ nhưng status không đổi" / "đổi status nhưng
+// giờ liên hệ không lưu"). Để tránh, mỗi lead có 1 hàng đợi riêng: lệnh lưu sau luôn
+// đợi lệnh lưu trước của CÙNG lead đó xong rồi mới gửi lên server.
+var _leadSaveChain = {};
 function persistLead(c) {
   var isNew = !c.id;
-  return apiPost({
-    action: 'saveLead',
-    lead_id: c.id || '',
-    staff: c.staff || '', name: c.name || '', phone: c.phone || '', email: c.email || '',
-    source: c.source || '', consult_about: c.consultAbout || '',
-    date: c.date || '', time: c.time || '', meet_link: c.meetLink || '',
-    status: c.status || '', result: c.result || '',
-    next_step: c.nextStep || '', next_step_deadline: c.nextStepDeadline || '',
-    contacted_date: c.contactedDate || '', contacted_time: c.contactedTime || '',
-    education: (c.profile && c.profile.education) || '',
-    experience: (c.profile && c.profile.experience) || '',
-    desire: (c.profile && c.profile.desire) || '',
-    barrier: (c.profile && c.profile.barrier) || '',
-    follow_up: (c.profile && c.profile.followUp) || '',
-    session_id: c.sessionId || '',
-  }).then(function(res){
-    if (res && res.success && isNew && res.lead_id) c.id = res.lead_id;
-    if (!res || !res.success) console.warn('Lưu lead lên Sheet thất bại:', res && res.error);
-    return res;
-  }).catch(function(err){ console.warn('Lỗi kết nối khi lưu lead:', err.message); });
+  var key = c.id || ('__new__' + (c._tmpKey || (c._tmpKey = Math.random())));
+  var prevChain = _leadSaveChain[key] || Promise.resolve();
+
+  var chained = prevChain.then(function(){
+    return apiPost({
+      action: 'saveLead',
+      lead_id: c.id || '',
+      staff: c.staff || '', name: c.name || '', phone: c.phone || '', email: c.email || '',
+      source: c.source || '', consult_about: c.consultAbout || '',
+      date: c.date || '', time: c.time || '', meet_link: c.meetLink || '',
+      status: c.status || '', result: c.result || '',
+      next_step: c.nextStep || '', next_step_deadline: c.nextStepDeadline || '',
+      contacted_date: c.contactedDate || '', contacted_time: c.contactedTime || '',
+      education: (c.profile && c.profile.education) || '',
+      experience: (c.profile && c.profile.experience) || '',
+      desire: (c.profile && c.profile.desire) || '',
+      barrier: (c.profile && c.profile.barrier) || '',
+      follow_up: (c.profile && c.profile.followUp) || '',
+      session_id: c.sessionId || '',
+    }).then(function(res){
+      if (res && res.success && isNew && res.lead_id) c.id = res.lead_id;
+      if (!res || !res.success) console.warn('Lưu lead lên Sheet thất bại:', res && res.error);
+      return res;
+    }).catch(function(err){ console.warn('Lỗi kết nối khi lưu lead:', err.message); });
+  });
+
+  // Luôn giữ chain sống dù lần lưu trước lỗi, để các lần lưu sau không bị kẹt mãi mãi
+  _leadSaveChain[key] = chained.catch(function(){});
+  return chained;
 }
 
 // Ghi 1 dòng nhật ký cho lead lên Sheet (tab LeadLogs).
@@ -2636,26 +2835,29 @@ function renderStaffConsultTab(s) {
 
   var html = '';
   html += '<div class="card"><div class="card-header"><div class="card-header-left">📅 Lịch tư vấn sắp tới (' + upcoming.length + ')</div></div>';
-  html += renderConsultTable(upcoming);
+  if (upcoming.length > 0) html += '<div style="padding:0 20px">' + searchBoxHtml('consult-upcoming-tbody', 'Tìm theo tên, email, SĐT...') + '</div>';
+  html += renderConsultTable(upcoming, 'consult-upcoming-tbody');
   html += '</div>';
 
   html += '<div class="card"><div class="card-header"><div class="card-header-left">✅ Khách hàng đã tư vấn (' + past.length + ')</div></div>';
-  html += renderConsultTable(past);
+  if (past.length > 0) html += '<div style="padding:0 20px">' + searchBoxHtml('consult-past-tbody', 'Tìm theo tên, email, SĐT...') + '</div>';
+  html += renderConsultTable(past, 'consult-past-tbody');
   html += '</div>';
 
   return html;
 }
 
-function renderConsultTable(list) {
+function renderConsultTable(list, containerId) {
   if (list.length === 0) {
     return '<div class="empty-state"><div class="icon">📭</div>Chưa có buổi nào</div>';
   }
   var html = '<div style="overflow-x:auto"><table class="bookings-table" style="min-width:820px"><thead><tr>' +
     '<th>KHÁCH HÀNG</th><th>EMAIL / SĐT</th><th>THỜI GIAN TƯ VẤN</th><th>TƯ VẤN SẢN PHẨM</th><th>KẾT QUẢ</th>' +
-    '</tr></thead><tbody>';
+    '</tr></thead><tbody' + (containerId ? ' id="' + containerId + '"' : '') + '>';
 
   list.forEach(function(c){
-    html += '<tr>';
+    var searchKey = (c.name + ' ' + (c.phone||'') + ' ' + (c.email||'')).toLowerCase().replace(/"/g,'');
+    html += '<tr data-search="' + searchKey + '">';
     html += '<td style="min-width:130px"><div style="font-weight:700;font-size:13px">' + c.name + '</div></td>';
     html += '<td style="font-size:12.5px;color:var(--muted);min-width:150px">' + (c.phone||'—') + '<br>' + (c.email||'') + '</td>';
     html += '<td style="min-width:170px"><div style="font-size:13px;font-weight:600">' + fmtDateStr(c.date) + ' · ' + c.time + '</div>' +
@@ -2777,13 +2979,15 @@ function renderStaffLeadsTab(s) {
   if (leads.length === 0) {
     html += '<div class="empty-state"><div class="icon">✅</div>Không có khách nào đang chờ liên hệ</div>';
   } else {
+    html += '<div style="padding:0 20px">' + searchBoxHtml('leads-nolichhen-tbody', 'Tìm theo tên, email, SĐT...') + '</div>';
     html += '<div style="overflow-x:auto"><table class="bookings-table" style="min-width:820px"><thead><tr>' +
       '<th>KHÁCH HÀNG</th><th>EMAIL / SĐT</th><th>THỜI GIAN LEAD</th><th>ĐÃ LIÊN HỆ</th><th></th>' +
-      '</tr></thead><tbody>';
+      '</tr></thead><tbody id="leads-nolichhen-tbody">';
 
     leads.forEach(function(c){
       var leadInfo = getLeadFreshness(c);
-      html += '<tr>';
+      var searchKey = (c.name + ' ' + (c.phone||'') + ' ' + (c.email||'')).toLowerCase().replace(/"/g,'');
+      html += '<tr data-search="' + searchKey + '">';
       html += '<td style="min-width:140px"><div style="font-weight:700;font-size:13px">' + c.name + '</div></td>';
       html += '<td style="font-size:12.5px;color:var(--muted);min-width:150px">' + (c.phone||'—') + '<br>' + (c.email||'') + '</td>';
       html += '<td style="min-width:190px"><span style="background:' + leadInfo.bg + ';color:' + leadInfo.color + ';font-size:11.5px;font-weight:700;padding:3px 9px;border-radius:100px;display:inline-block">' + leadInfo.label + '</span></td>';
@@ -3312,6 +3516,8 @@ function renderStaffCareTab(s) {
   if (MOCK.advisees.length === 0) {
     html += '<div class="empty-state"><div class="icon">🙋</div>Chưa có khách hàng nào</div>';
   } else {
+    html += '<div style="padding:16px 24px 0">' + searchBoxHtml('care-list', 'Tìm theo tên, email, SĐT, advisor...') + '</div>';
+    html += '<div id="care-list">';
     MOCK.advisees.forEach(function(ae){
       var pct = Math.round(ae.sessionsDone / ae.sessionsTotal * 100);
       var expiryDate = new Date(ae.expiry + 'T00:00:00');
@@ -3334,7 +3540,7 @@ function renderStaffCareTab(s) {
         }
       });
 
-      html += '<div style="padding:16px 24px;border-top:1px solid var(--border)">';
+      html += '<div data-search="' + (ae.name + ' ' + ae.email + ' ' + ae.phone + ' ' + ae.advisor).toLowerCase().replace(/"/g,'') + '" style="padding:16px 24px;border-top:1px solid var(--border)">';
       html += '<div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap">';
       html += avatarCircle(ae.name, 40);
       html += '<div style="flex:1;min-width:180px">';
@@ -3363,6 +3569,7 @@ function renderStaffCareTab(s) {
 
       html += '</div>';
     });
+    html += '</div>'; // đóng #care-list
   }
   html += '</div>';
   return html;
@@ -4531,14 +4738,16 @@ function renderAdvisorModule() {
   // Active advisor cards
   html += '<div class="card"><div class="card-header"><div class="card-header-left">Advisor đang hoạt động</div>';
   html += '<button class="submit-btn" style="padding:8px 16px;font-size:13px" onclick="toast(\'Form thêm Advisor mới (demo)\',\'success\')">+ Thêm Advisor mới</button></div>';
+  html += '<div style="padding:0 20px">' + searchBoxHtml('advisor-list-tbody', 'Tìm theo tên, chức danh, email...') + '</div>';
   if (active.length === 0) {
     html += '<div class="empty-state"><div class="icon">👤</div>Chưa có advisor nào</div>';
   } else {
-    html += '<table class="bookings-table"><thead><tr><th>ADVISOR</th><th>ADVISEE</th><th>TIẾN ĐỘ BUỔI</th><th>EMAIL</th><th></th></tr></thead><tbody>';
+    html += '<table class="bookings-table"><thead><tr><th>ADVISOR</th><th>ADVISEE</th><th>TIẾN ĐỘ BUỔI</th><th>EMAIL</th><th></th></tr></thead><tbody id="advisor-list-tbody">';
     active.forEach(function(a) {
       var myAdvisees = MOCK.advisees.filter(function(ae){ return ae.advisor === a.name; });
       var needNote = myAdvisees.some(function(ae){ return ae.sessions.some(function(s){ return s.status === 'done' && !s.advisorNotes; }); });
-      html += '<tr>';
+      var searchKey = (a.name + ' ' + a.title + ' ' + a.email).toLowerCase().replace(/"/g,'');
+      html += '<tr data-search="' + searchKey + '">';
       html += '<td><div style="display:flex;align-items:center;gap:10px">' + avatarCircle(a.name, 36) + '<div><div style="font-weight:700">' + a.name + '</div><div style="font-size:12px;color:var(--muted)">' + a.title + '</div></div></div></td>';
       html += '<td><b>' + myAdvisees.length + '</b> <span style="color:var(--muted);font-size:12px">advisee</span></td>';
       html += '<td><div style="display:flex;align-items:center;gap:8px"><div style="flex:1;height:6px;background:var(--bg);border-radius:100px;overflow:hidden;min-width:60px"><div style="height:100%;width:' + (a.sessionsTotal>0?Math.round(a.sessionsDone/a.sessionsTotal*100):0) + '%;background:var(--green);border-radius:100px"></div></div><span style="font-size:12px;color:var(--muted);white-space:nowrap">' + a.sessionsDone + '/' + a.sessionsTotal + '</span>' + (needNote ? '<span style="background:#FEF3C7;color:#92400E;font-size:10px;font-weight:700;padding:2px 7px;border-radius:100px">Cần nhận xét</span>' : '') + '</div></td>';
@@ -5004,7 +5213,8 @@ function renderAdviseeModule() {
   if (MOCK.advisees.length === 0) {
     html += '<div class="empty-state"><div class="icon">🙋</div>Chưa có advisee nào</div>';
   } else {
-    html += '<table class="bookings-table"><thead><tr><th>ADVISEE</th><th>GÓI · ADVISOR</th><th>TIẾN ĐỘ</th><th>TRẠNG THÁI</th><th></th></tr></thead><tbody>';
+    html += '<div style="padding:0 20px">' + searchBoxHtml('advisee-list-tbody', 'Tìm theo tên, email, advisor...') + '</div>';
+    html += '<table class="bookings-table"><thead><tr><th>ADVISEE</th><th>GÓI · ADVISOR</th><th>TIẾN ĐỘ</th><th>TRẠNG THÁI</th><th></th></tr></thead><tbody id="advisee-list-tbody">';
     MOCK.advisees.forEach(function(ae) {
       var pct = Math.round(ae.sessionsDone / ae.sessionsTotal * 100);
       var hasFeedback = ae.sessions.some(function(s){ return s.status === 'feedback'; });
@@ -5016,7 +5226,8 @@ function renderAdviseeModule() {
           ? '<span style="background:#EFF6FF;color:#1D4ED8;font-size:11px;font-weight:700;padding:3px 10px;border-radius:100px">Sắp tới</span>'
           : '<span style="background:var(--green-bg);color:var(--green);font-size:11px;font-weight:700;padding:3px 10px;border-radius:100px">Hoàn thành</span>';
       if (hasReschedule) statusTag += ' <span style="background:var(--brand-light);color:var(--brand);font-size:11px;font-weight:700;padding:3px 10px;border-radius:100px">🔔 Yêu cầu đổi lịch</span>';
-      html += '<tr>';
+      var searchKey = (ae.name + ' ' + ae.email + ' ' + ae.advisor + ' ' + ae.pkg).toLowerCase().replace(/"/g,'');
+      html += '<tr data-search="' + searchKey + '">';
       html += '<td><div style="display:flex;align-items:center;gap:10px">' + avatarCircle(ae.name, 34) + '<div><div style="font-weight:700">' + ae.name + '</div><div style="font-size:12px;color:var(--muted)">' + ae.email + '</div></div></div></td>';
       html += '<td><div style="font-weight:600;font-size:13px">Gói ' + ae.pkg + '</div><div style="font-size:12px;color:var(--muted)">' + ae.advisor + '</div></td>';
       html += '<td><div style="display:flex;align-items:center;gap:8px"><div style="flex:1;height:6px;background:var(--bg);border-radius:100px;overflow:hidden;min-width:60px"><div style="height:100%;width:' + pct + '%;background:var(--green);border-radius:100px"></div></div><span style="font-size:12px;font-weight:700;color:var(--muted);white-space:nowrap">' + ae.sessionsDone + '/' + ae.sessionsTotal + '</span></div></td>';
@@ -6226,6 +6437,33 @@ function slotKeyFromSheetRow(s) {
 }
 function fmtDate(d) { if (!d) return '—'; const dt = new Date(d); return DAYS_VI[dt.getDay()] + ' ' + dt.getDate() + '/' + (dt.getMonth()+1) + ' · ' + pad(dt.getHours()) + ':' + pad(dt.getMinutes()); }
 function fmtShort(d) { return d.getDate() + '/' + (d.getMonth()+1); }
+// ── Ô tìm kiếm dùng chung cho mọi trang danh sách (Advisor, nhân viên, khách
+//    hàng, lead, lịch tư vấn...). "containerId" là id của phần tử bao ngoài
+//    chứa các dòng/card cần lọc; mỗi dòng/card cần có data-search="..." (chữ
+//    thường, gộp sẵn các trường muốn tìm — tên/email/sđt...).
+function searchBoxHtml(containerId, placeholder) {
+  return '<div style="margin-bottom:14px;position:relative">' +
+    '<input type="text" class="form-input" placeholder="' + (placeholder || 'Tìm kiếm...') + '" ' +
+      'style="padding-left:34px" oninput="filterRowsBySearch(this,\'' + containerId + '\')">' +
+    '<span style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:14px">🔎</span>' +
+    '</div>';
+}
+
+function filterRowsBySearch(inputEl, containerId) {
+  var q = String(inputEl.value || '').trim().toLowerCase();
+  var container = document.getElementById(containerId);
+  if (!container) return;
+  var rows = container.querySelectorAll('[data-search]');
+  var visibleCount = 0;
+  rows.forEach(function(row){
+    var match = !q || row.getAttribute('data-search').indexOf(q) > -1;
+    row.style.display = match ? '' : 'none';
+    if (match) visibleCount++;
+  });
+  var emptyEl = container.querySelector('.search-empty-state');
+  if (emptyEl) emptyEl.style.display = (visibleCount === 0 && q) ? '' : 'none';
+}
+
 function pad(n) { return String(n).padStart(2,'0'); }
 
 // Phòng thủ cho lỗi "cột định dạng Giờ (Time) trong Sheet" — khi Apps Script chưa
