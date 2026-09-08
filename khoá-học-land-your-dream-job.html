@@ -53,25 +53,6 @@ h1,h2,h3,h4{font-family:'Montserrat',sans-serif; font-weight:700; letter-spacing
 .btn-ghost-light:hover{ border-color:rgba(252,82,41,.4); color:var(--orange);}
 
 /* nav — matching LinkaJob homepage */
-.lj-nav{ position:sticky; top:0; z-index:500; display:flex; align-items:center; justify-content:space-between; padding:16px 32px; background:var(--dark); border-bottom:.5px solid var(--line-dark);}
-.lj-logo{ font-family:'Montserrat',sans-serif; font-weight:700; font-size:18px; color:var(--orange); letter-spacing:-.5px; text-decoration:none; cursor:pointer;}
-.lj-nav-links{ display:flex; gap:4px; align-items:center;}
-.lj-nav-item{ position:relative;}
-.lj-nav-links a, .lj-nav-btn-plain{ font-size:13px; color:var(--muted-dark); text-decoration:none; font-family:'Montserrat',sans-serif; font-weight:500; transition:color .2s, background .2s; padding:8px 14px; border-radius:8px; display:inline-flex; align-items:center; gap:5px; cursor:pointer; background:transparent; border:none;}
-.lj-nav-links a:hover, .lj-nav-btn-plain:hover{ color:var(--text-dark); background:rgba(255,255,255,.05);}
-.lj-nav-chevron{ font-size:11px; transition:transform .2s; color:var(--muted-dark-2);}
-.lj-nav-item.open .lj-nav-chevron{ transform:rotate(180deg); color:rgba(240,240,240,.6);}
-.lj-btn-nav{ background:var(--orange); color:#fff; font-size:13px; font-weight:500; font-family:'Montserrat',sans-serif; padding:8px 20px; border-radius:100px; border:none; cursor:pointer; white-space:nowrap; margin-left:8px;}
-.lj-dropdown{ position:absolute; top:calc(100% + 8px); left:50%; transform:translateX(-50%) translateY(-6px); background:#161616; border:.5px solid rgba(255,255,255,.1); border-radius:14px; padding:8px; min-width:230px; opacity:0; pointer-events:none; transition:opacity .18s ease, transform .18s ease; z-index:300; box-shadow:0 12px 32px rgba(0,0,0,.35);}
-.lj-nav-item:hover .lj-dropdown, .lj-nav-item.open .lj-dropdown{ opacity:1; pointer-events:auto; transform:translateX(-50%) translateY(0);}
-.lj-di{ display:flex; align-items:flex-start; gap:11px; padding:10px 12px; border-radius:10px; text-decoration:none; transition:background .15s;}
-.lj-di:hover{ background:rgba(255,255,255,.05);}
-.lj-di-icon{ width:32px; height:32px; border-radius:9px; background:rgba(252,82,41,.1); display:flex; align-items:center; justify-content:center; flex-shrink:0; margin-top:1px;}
-.lj-di-icon i{ font-size:16px; color:var(--orange);}
-.lj-di-title{ font-family:'Montserrat',sans-serif; font-size:13px; font-weight:600; color:var(--text-dark); margin-bottom:2px;}
-.lj-di-sub{ font-size:11px; color:rgba(240,240,240,.38); line-height:1.45;}
-.lj-dropdown-divider{ height:.5px; background:rgba(255,255,255,.07); margin:6px 0;}
-.lj-dropdown-badge{ display:inline-block; font-size:9px; font-weight:700; font-family:'Montserrat',sans-serif; letter-spacing:.06em; text-transform:uppercase; background:rgba(252,82,41,.15); color:var(--orange); padding:2px 7px; border-radius:4px; margin-left:6px; vertical-align:middle;}
 
 /* consult widget */
 .cw-overlay{ position:fixed; inset:0; background:transparent; z-index:998; display:none;}
@@ -313,32 +294,6 @@ footer span{ color:var(--orange);}
   .wrap{ padding:0 20px;}
 }
 
-/* mobile nav (hamburger) */
-.lj-nav-toggle{ display:none; background:transparent; border:none; width:38px; height:38px; align-items:center; justify-content:center; cursor:pointer; border-radius:8px; flex-shrink:0;}
-.lj-nav-toggle:hover{ background:rgba(255,255,255,.06);}
-.lj-nav-toggle svg{ width:22px; height:22px; display:block;}
-.lj-nav-toggle svg path{ stroke:var(--text-dark);}
-.lj-nav-backdrop{ display:none;}
-@media(max-width:860px){
-  .lj-nav-toggle{ display:flex;}
-  .lj-nav-links{
-    position:fixed; top:0; right:0; bottom:0; width:min(320px,84vw);
-    background:var(--dark); flex-direction:column; align-items:stretch;
-    padding:88px 22px 24px; gap:2px; overflow-y:auto; z-index:250;
-    transform:translateX(100%); transition:transform .28s cubic-bezier(.22,1,.36,1);
-    box-shadow:-16px 0 40px rgba(0,0,0,.18);
-  }
-  .lj-nav-links.open{ transform:translateX(0);}
-  .lj-nav-backdrop{ display:block; position:fixed; inset:0; background:rgba(0,0,0,.4); z-index:240; opacity:0; pointer-events:none; transition:opacity .25s;}
-  .lj-nav-backdrop.open{ opacity:1; pointer-events:auto;}
-  .lj-nav-item{ width:100%;}
-  .lj-nav-links > a, .lj-nav-btn-plain{ width:100%; justify-content:space-between; padding:15px 4px; font-size:15.5px; border-radius:0; border-bottom:.5px solid var(--line-dark); color:var(--text-dark);}
-  .lj-dropdown{ position:static; opacity:1; pointer-events:none; max-height:0; overflow:hidden; transform:none; box-shadow:none; border:none; background:transparent; padding:0; min-width:0; border-radius:0; transition:max-height .25s ease;}
-  .lj-nav-item.open .lj-dropdown{ pointer-events:auto; max-height:400px; padding:2px 0 10px 6px;}
-  .lj-di{ padding:11px 8px;}
-  .lj-di-sub{ color:var(--muted-dark);}
-  .lj-btn-nav{ margin:18px 0 0; width:100%; padding:14px; font-size:15px; text-align:center;}
-}
 
 @media(max-width:560px){
   .hero-cta{ flex-direction:column; align-items:stretch;}
@@ -359,8 +314,6 @@ footer span{ color:var(--orange);}
   .reveal-init{ opacity:0; transform:translateY(20px); transition:opacity .6s ease, transform .6s cubic-bezier(.22,1,.36,1);}
   .reveal-init.is-visible{ opacity:1; transform:translateY(0);}
 
-  .lj-nav{ transition:box-shadow .25s ease, background-color .25s ease;}
-  .lj-nav.scrolled{ box-shadow:0 8px 28px rgba(0,0,0,.14);}
 
   .btn{ transition:opacity .2s, transform .15s, box-shadow .2s;}
   .btn:active{ transform:scale(.96);}
@@ -408,92 +361,11 @@ button:focus-visible, a:focus-visible, .lj-nav-btn-plain:focus-visible, .fbtn:fo
   .hero-photo-col{ max-width:340px; width:100%; margin:0 auto;}
 }
 </style>
+<link rel="stylesheet" href="nav.css">
 </head>
 <body>
 
-<nav class="lj-nav">
-  <a href="index.html" class="lj-logo">LinkaJob</a>
-  <button class="lj-nav-toggle" aria-label="Mở menu" aria-expanded="false" onclick="toggleMobileNav()">
-      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M4 6h16M4 12h16M4 18h16" stroke-width="2" stroke-linecap="round"/></svg>
-    </button>
-  <div class="lj-nav-links">
-
-    <div class="lj-nav-item">
-      <button class="lj-nav-btn-plain" onclick="toggleNavDropdown(this)">Cố vấn 1-1 <i class="ti ti-chevron-down lj-nav-chevron" aria-hidden="true"></i></button>
-      <div class="lj-dropdown">
-        <a class="lj-di" href="advisor.html">
-          <div class="lj-di-icon"><i class="ti ti-user-star" aria-hidden="true"></i></div>
-          <div>
-            <div class="lj-di-title">Profile Advisor</div>
-            <div class="lj-di-sub">Tìm advisor phù hợp với định hướng của bạn</div>
-          </div>
-        </a>
-        <div class="lj-dropdown-divider"></div>
-        <a class="lj-di" href="pricing.html">
-          <div class="lj-di-icon"><i class="ti ti-calendar-event" aria-hidden="true"></i></div>
-          <div>
-            <div class="lj-di-title">Các gói meeting 1-1 <span class="lj-dropdown-badge">Phổ biến</span></div>
-            <div class="lj-di-sub">Buổi đầu miễn phí · 3–7 sessions/gói</div>
-          </div>
-        </a>
-      </div>
-    </div>
-
-    <div class="lj-nav-item">
-      <button class="lj-nav-btn-plain" onclick="toggleNavDropdown(this)">Khoá học <i class="ti ti-chevron-down lj-nav-chevron" aria-hidden="true"></i></button>
-      <div class="lj-dropdown">
-        <a class="lj-di" href="land_your_dream_job.html">
-          <div class="lj-di-icon"><i class="ti ti-rocket" aria-hidden="true"></i></div>
-          <div>
-            <div class="lj-di-title">Land Your Dream Job <span class="lj-dropdown-badge">Đang xem</span></div>
-            <div class="lj-di-sub">Marketing · Sales · FMCG · Fields · Case Study</div>
-          </div>
-        </a>
-        <div class="lj-dropdown-divider"></div>
-        <a class="lj-di" href="logistics_operation_cracking.html">
-          <div class="lj-di-icon"><i class="ti ti-truck-delivery" aria-hidden="true"></i></div>
-          <div>
-            <div class="lj-di-title">Logistics Operation Cracking</div>
-            <div class="lj-di-sub">Logistics Operation · E-Logistics · FMCG · Case Study</div>
-          </div>
-        </a>
-        <div class="lj-dropdown-divider"></div>
-        <a class="lj-di" href="supply_chain_principles.html">
-          <div class="lj-di-icon"><i class="ti ti-topology-star-3" aria-hidden="true"></i></div>
-          <div>
-            <div class="lj-di-title">Supply Chain Principles</div>
-            <div class="lj-di-sub">Planning · Sourcing · Procurement · Manufacturing · Logistics</div>
-          </div>
-        </a>
-      </div>
-    </div>
-
-    <div class="lj-nav-item">
-      <button class="lj-nav-btn-plain" onclick="toggleNavDropdown(this)">Thành công <i class="ti ti-chevron-down lj-nav-chevron" aria-hidden="true"></i></button>
-      <div class="lj-dropdown">
-        <a class="lj-di" href="success_stories.html">
-          <div class="lj-di-icon"><i class="ti ti-trophy" aria-hidden="true"></i></div>
-          <div>
-            <div class="lj-di-title">Câu chuyện thành công</div>
-            <div class="lj-di-sub">Hành trình vào MNC từ sinh viên thật</div>
-          </div>
-        </a>
-        <div class="lj-dropdown-divider"></div>
-        <a class="lj-di" href="feedback.html">
-          <div class="lj-di-icon"><i class="ti ti-message-circle-2" aria-hidden="true"></i></div>
-          <div>
-            <div class="lj-di-title">Feedback dịch vụ</div>
-            <div class="lj-di-sub">~80% advisee nhận offer sau khi hoàn thành</div>
-          </div>
-        </a>
-      </div>
-    </div>
-
-    <a href="blog.html">Blog</a>
-    <button class="lj-btn-nav" onclick="openConsultWidget()">Đăng ký tư vấn</button>
-  </div>
-</nav>
-<div class="lj-nav-backdrop" id="ljNavBackdrop" onclick="closeMobileNav()"></div>
+<div id="lj-nav-root"></div>
 
 <section class="hero">
   <div class="wrap hero-split">
@@ -1312,43 +1184,6 @@ function cwConfirm(){
   });
 }
 
-function toggleNavDropdown(btn) {
-  var item = btn.closest('.lj-nav-item');
-  var wasOpen = item.classList.contains('open');
-  document.querySelectorAll('.lj-nav-item.open').forEach(function(el){ el.classList.remove('open'); });
-  if (!wasOpen) item.classList.add('open');
-}
-document.addEventListener('click', function(e){
-  if (!e.target.closest('.lj-nav-item')) {
-    document.querySelectorAll('.lj-nav-item.open').forEach(function(el){ el.classList.remove('open'); });
-  }
-});
-document.addEventListener('keydown', function(e){
-  if (e.key === 'Escape') {
-    document.querySelectorAll('.lj-nav-item.open').forEach(function(el){ el.classList.remove('open'); });
-  }
-});
-
-function toggleMobileNav(){
-  var links = document.querySelector('.lj-nav-links');
-  var backdrop = document.getElementById('ljNavBackdrop');
-  var btn = document.querySelector('.lj-nav-toggle');
-  if(!links) return;
-  var isOpen = links.classList.toggle('open');
-  if(backdrop) backdrop.classList.toggle('open', isOpen);
-  if(btn) btn.setAttribute('aria-expanded', isOpen);
-  document.body.style.overflow = isOpen ? 'hidden' : '';
-}
-function closeMobileNav(){
-  var links = document.querySelector('.lj-nav-links');
-  var backdrop = document.getElementById('ljNavBackdrop');
-  var btn = document.querySelector('.lj-nav-toggle');
-  if(!links) return;
-  links.classList.remove('open');
-  if(backdrop) backdrop.classList.remove('open');
-  if(btn) btn.setAttribute('aria-expanded', 'false');
-  document.body.style.overflow = '';
-}
 
 /* ── animation: scroll reveal, stat count-up, nav shadow ── */
 (function(){
@@ -1408,16 +1243,6 @@ function closeMobileNav(){
     statEls.forEach(function(el){ statIo.observe(el); });
   }
 
-  /* nav shadow on scroll */
-  var nav = document.querySelector('.lj-nav');
-  if(nav){
-    var onScroll = function(){
-      if(window.scrollY > 8){ nav.classList.add('scrolled'); }
-      else { nav.classList.remove('scrolled'); }
-    };
-    window.addEventListener('scroll', onScroll, { passive:true });
-    onScroll();
-  }
 })();
 /* ── Slideshow ảnh đi field: tự động crossfade, có chấm bấm để chuyển tay ── */
 (function(){
@@ -1463,5 +1288,7 @@ function closeMobileNav(){
   resetTimer();
 })();
 </script>
+<script src="nav.js"></script>
+<script>initSharedNav();</script>
 </body>
 </html>
