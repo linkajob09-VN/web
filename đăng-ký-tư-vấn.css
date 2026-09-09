@@ -1,0 +1,31 @@
+/* ════════════════════════════════════════════════════════════
+   LinkaJob — Widget "Đăng ký tư vấn" dùng chung cho mọi trang
+   Cách dùng: <link rel="stylesheet" href="widget.css"> trong <head>
+   ════════════════════════════════════════════════════════════ */
+
+.cw-overlay{ position:fixed; inset:0; background:transparent; z-index:998; display:none;}
+.cw-overlay.show{ display:block;}
+.cw-box{ position:fixed; bottom:20px; right:20px; width:360px; max-width:calc(100vw - 32px); max-height:calc(100vh - 40px); background:var(--paper); border:.5px solid var(--line); border-radius:18px; box-shadow:0 20px 60px rgba(28,28,28,.18); z-index:999; display:flex; flex-direction:column; overflow:hidden;}
+.cw-head{ display:flex; align-items:flex-start; justify-content:space-between; padding:18px 20px 14px; border-bottom:.5px solid var(--line); flex-shrink:0;}
+.cw-title{ font-family:'Montserrat',sans-serif; font-size:15px; font-weight:700; color:var(--text);}
+.cw-sub{ font-size:12px; color:var(--muted); margin-top:3px;}
+.cw-close{ background:rgba(28,28,28,.05); border:none; width:28px; height:28px; border-radius:8px; color:var(--muted); cursor:pointer; display:flex; align-items:center; justify-content:center; flex-shrink:0;}
+.cw-close:hover{ background:rgba(28,28,28,.1); color:var(--text);}
+.cw-close i{ font-size:15px;}
+.cw-step{ padding:18px 20px 20px; overflow-y:auto;}
+.cw-field{ margin-bottom:14px;}
+.cw-field label{ display:block; font-size:12px; color:var(--muted); font-family:'Montserrat',sans-serif; font-weight:500; margin-bottom:6px;}
+.cw-field label span{ color:var(--orange);}
+.cw-field input, .cw-field select, .cw-field textarea{ width:100%; background:#fff; border:.5px solid var(--line); border-radius:9px; padding:10px 12px; color:var(--text); font-size:13px; font-family:'Montserrat',sans-serif; outline:none; box-sizing:border-box;}
+.cw-field input[type=file]{ padding:8px 12px; font-size:12px; cursor:pointer;}
+.cw-field-hint{ font-size:10.5px; color:var(--muted-2); margin-top:5px;}
+.cw-field input::placeholder, .cw-field textarea::placeholder{ color:var(--muted-2);}
+.cw-field input:focus, .cw-field select:focus, .cw-field textarea:focus{ border-color:var(--orange);}
+.cw-field textarea{ resize:none; line-height:1.5;}
+.cw-field select{ appearance:none;}
+.cw-note{ display:flex; gap:8px; align-items:flex-start; font-size:11.5px; color:var(--muted); line-height:1.6; background:var(--orange-tint-2); border:.5px solid rgba(252,82,41,.15); border-radius:10px; padding:10px 12px; margin-bottom:16px;}
+.cw-note i{ color:var(--orange); font-size:14px; flex-shrink:0; margin-top:1px;}
+.cw-next{ width:100%; background:var(--orange); color:#fff; font-family:'Montserrat',sans-serif; font-weight:700; font-size:13.5px; padding:12px; border-radius:100px; border:none; cursor:pointer;}
+.cw-next:disabled{ opacity:.35; cursor:not-allowed;}
+
+@media(max-width:480px){ .cw-box{ left:16px; right:16px; bottom:16px; width:auto;} }
