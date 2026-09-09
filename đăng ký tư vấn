@@ -1,0 +1,97 @@
+<div class="cw-overlay" id="cwOverlay" onclick="if(event.target===this)closeConsultWidget()">
+  <div class="cw-box" id="cwBox">
+    <div class="cw-head">
+      <div>
+        <div class="cw-title">Đăng ký tư vấn</div>
+        <div class="cw-sub" id="cwSub">Điền thông tin để được tư vấn miễn phí</div>
+      </div>
+      <button class="cw-close" onclick="closeConsultWidget()"><i class="ti ti-x" aria-hidden="true"></i></button>
+    </div>
+
+    <div class="cw-step" id="cwStep1">
+      <div class="cw-field">
+        <label>Họ và tên <span>*</span></label>
+        <input type="text" id="cwName" placeholder="Nguyễn Văn A" oninput="cwCheckStep1()">
+      </div>
+      <div class="cw-field">
+        <label>Số điện thoại (Zalo/WhatsApp) <span>*</span></label>
+        <input type="tel" id="cwPhone" placeholder="(+84) 9xx xxx xxx" oninput="cwCheckStep1()">
+      </div>
+      <div class="cw-field">
+        <label>Email <span>*</span></label>
+        <input type="email" id="cwEmail" placeholder="email@example.com" oninput="cwCheckStep1()">
+      </div>
+      <div class="cw-field">
+        <label>Quan tâm dịch vụ</label>
+        <select id="cwService">
+          <option value="Cố vấn 1-1" selected>Cố vấn 1-1</option>
+          <option value="Khoá học">Khoá học</option>
+          <option value="Chưa rõ — cần tư vấn thêm">Chưa rõ — cần tư vấn thêm</option>
+        </select>
+      </div>
+      <div class="cw-field">
+        <label>Bạn hiện là</label>
+        <select id="cwCustomerType">
+          <option value="">-- Chọn --</option>
+          <option value="Sinh viên">Sinh viên</option>
+          <option value="Mới tốt nghiệp">Mới tốt nghiệp</option>
+          <option value="Đã đi làm">Đã đi làm</option>
+        </select>
+      </div>
+      <div class="cw-field">
+        <label>Phòng ban / vị trí quan tâm</label>
+        <select id="cwInterestedDept">
+          <option value="">-- Chọn --</option>
+          <option value="Marketing">Marketing</option>
+          <option value="Sales/Kinh doanh">Sales/Kinh doanh</option>
+          <option value="Tài chính/Kế toán">Tài chính/Kế toán</option>
+          <option value="Chuỗi cung ứng/Logistics">Chuỗi cung ứng/Logistics</option>
+          <option value="Nhân sự">Nhân sự</option>
+          <option value="Data/Công nghệ">Data/Công nghệ</option>
+          <option value="Vận hành">Vận hành</option>
+          <option value="Tư vấn/Consulting">Tư vấn/Consulting</option>
+          <option value="Khác">Khác</option>
+        </select>
+      </div>
+      <div class="cw-field">
+        <label>Khu vực sinh sống / làm việc</label>
+        <select id="cwRegion">
+          <option value="">-- Chọn --</option>
+          <option value="Miền Bắc">Miền Bắc</option>
+          <option value="Miền Trung">Miền Trung</option>
+          <option value="Miền Nam">Miền Nam</option>
+        </select>
+      </div>
+      <div class="cw-field">
+        <label>Biết đến LinkaJob qua đâu</label>
+        <select id="cwSource">
+          <option value="">-- Chọn --</option>
+          <option value="Facebook">Facebook</option>
+          <option value="Instagram">Instagram</option>
+          <option value="Threads">Threads</option>
+          <option value="TikTok">TikTok</option>
+          <option value="Được giới thiệu">Được giới thiệu</option>
+          <option value="Khác">Khác</option>
+        </select>
+      </div>
+      <div class="cw-field">
+        <label>Câu hỏi muốn tư vấn<span>*</span></label>
+        <textarea id="cwQuestion" rows="3" placeholder="VD: Mình muốn hỏi thêm về cố vấn 1-1 sẽ diễn ra như nào..." oninput="cwCheckStep1()"></textarea>
+      </div>
+      <div class="cw-field">
+        <label>Gửi CV gần nhất của bạn<span>*</span></label>
+        <input type="file" id="cwCv" accept=".pdf,.doc,.docx" onchange="cwCheckStep1()">
+        <div class="cw-field-hint" id="cwCvHint">Định dạng PDF/DOC/DOCX, tối đa 5MB</div>
+      </div>
+      <div class="cw-note"><i class="ti ti-video" aria-hidden="true"></i> LinkaJob sẽ liên hệ với bạn qua Zalo, bạn để ý tin nhắn người lạ nhé.</div>
+      <button class="cw-next" id="cwBtn1" onclick="cwSubmitLead()" disabled>Gửi đăng ký </button>
+    </div>
+
+    <div class="cw-step" id="cwStep2" style="display:none">
+      <div class="cw-note" style="text-align:center;padding:20px 4px;font-size:14px;line-height:1.6">
+        <i class="ti ti-circle-check" aria-hidden="true" style="font-size:32px;color:var(--orange);display:block;margin-bottom:10px"></i>
+        <div id="cwSuccessDetail"></div>
+      </div>
+    </div>
+  </div>
+</div>
