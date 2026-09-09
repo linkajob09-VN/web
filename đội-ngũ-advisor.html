@@ -454,7 +454,7 @@ body{font-family:'Montserrat',sans-serif;background:#F5F4F1;color:#1C1C1C;overfl
       <div id="mSubmitStatus" style="display:none;margin-top:10px;padding:10px 12px;border-radius:8px;font-size:12.5px;line-height:1.5;"></div>
       <div class="mnav">
         <button class="mback" onclick="goStep(2)">← Sửa thông tin</button>
-        <button class="mdone" id="mBtnDone" onclick="submitBooking()">Đã chuyển khoản ✓</button>
+        <button class="mdone" id="mBtnDone" onclick="submitBooking()">Tiếp tục thanh toán →</button>
       </div>
     </div>
  
@@ -751,12 +751,21 @@ function setSubmitStatus(kind, msg){
 function submitBooking(){
   var btn = document.getElementById('mBtnDone');
   if(btn.disabled) return; // chặn double-click
- 
+
+  // Validate bắt buộc
+  var name  = document.getElementById('mName').value.trim();
+  var phone = document.getElementById('mPhone').value.trim();
+  var email = document.getElementById('mEmail').value.trim();
+  if (!name || !phone || !email) {
+    setSubmitStatus('error', '⚠ Vui lòng điền đầy đủ họ tên, số điện thoại và email.');
+    return;
+  }
+
   var payload = {
-    action          : 'createBooking',
-    advisee_name    : document.getElementById('mName').value.trim(),
-    advisee_phone   : document.getElementById('mPhone').value.trim(),
-    advisee_email   : document.getElementById('mEmail').value.trim(),
+    action          : 'createBookingWithPayment',
+    advisee_name    : name,
+    advisee_phone   : phone,
+    advisee_email   : email,
     advisee_year    : document.getElementById('mYear').value || '',
     advisee_industry: '',
     advisee_goal    : buildGoalText(),
@@ -764,29 +773,37 @@ function submitBooking(){
     advisor_email   : '',
     package_name    : S.pkg
   };
- 
+
   btn.disabled = true;
-  btn.textContent = 'Đang gửi...';
-  setSubmitStatus('pending', 'Đang gửi thông tin đặt lịch...');
- 
+  btn.textContent = 'Đang xử lý...';
+  setSubmitStatus('pending', 'Đang tạo đơn hàng, vui lòng chờ...');
+
   fetch(WEBAPP_URL, {
     method : 'POST',
-    // Cố tình dùng text/plain để tránh CORS preflight (Apps Script không tự xử lý OPTIONS).
-    // doPost() ở backend vẫn JSON.parse(e.postData.contents) như thường.
     headers: { 'Content-Type': 'text/plain;charset=utf-8' },
     body   : JSON.stringify(payload)
   })
   .then(function(res){ return res.json(); })
   .then(function(data){
     if(!data.success) throw new Error(data.error || 'Lỗi không xác định từ server');
-    setSubmitStatus('success', '✓ Đã ghi nhận! Mã booking: '+data.booking_id+'. Đội LinkaJob sẽ xác nhận và gửi link đặt lịch trong 24h.');
-    btn.textContent = 'Hoàn tất ✓';
-    setTimeout(closeCheckout, 2800);
+
+    // Chuyển sang trang thanh toán QR
+    var paymentUrl = 'payment.html'
+      + '?order_id=' + encodeURIComponent(data.order_id || '')
+      + '&amount='   + encodeURIComponent(data.amount   || 0)
+      + '&desc='     + encodeURIComponent(S.pkg || 'Gói cố vấn LinkaJob')
+      + '&name='     + encodeURIComponent(name)
+      + '&booking_id=' + encodeURIComponent(data.booking_id || '');
+
+    setSubmitStatus('success', '✓ Đơn hàng đã tạo! Đang chuyển sang trang thanh toán...');
+    btn.textContent = 'Chuyển hướng...';
+
+    setTimeout(function(){ window.location.href = paymentUrl; }, 800);
   })
   .catch(function(err){
-    setSubmitStatus('error', '⚠ Gửi thất bại ('+err.message+'). Vui lòng thử lại hoặc gửi bill qua contact@linkajob.vn.');
+    setSubmitStatus('error', '⚠ Gửi thất bại (' + err.message + '). Vui lòng thử lại hoặc liên hệ contact@linkajob.vn.');
     btn.disabled = false;
-    btn.textContent = 'Đã chuyển khoản ✓';
+    btn.textContent = 'Tiếp tục thanh toán →';
   });
 }
  
