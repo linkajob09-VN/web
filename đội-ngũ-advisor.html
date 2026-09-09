@@ -38,34 +38,34 @@ body{font-family:'Montserrat',sans-serif;background:#F5F4F1;color:#1C1C1C;overfl
 .grid-wrap{padding:20px 32px 0;}
 .grid-count{font-size:11px;color:rgba(28,28,28,.35);margin-bottom:16px;font-family:'Montserrat',sans-serif;}
 .grid-count span{color:rgba(28,28,28,.6);}
-.adv-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;}
+.adv-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;}
  
-/* ── ADVISOR CARD (list) ── */
-.acard{background:#fff;border:.5px solid rgba(28,28,28,.08);border-radius:16px;overflow:hidden;transition:border-color .2s,transform .2s,box-shadow .2s;display:flex;flex-direction:column;}
-.acard:hover{border-color:rgba(252,82,41,.35);transform:translateY(-3px);box-shadow:0 8px 24px rgba(252,82,41,.08);}
+/* ── ADVISOR CARD (photo-forward, matches team-page reference) ── */
+.acard{background:#fff;border:.5px solid rgba(28,28,28,.08);border-radius:16px;overflow:hidden;transition:border-color .2s,transform .2s,box-shadow .2s;display:flex;flex-direction:column;cursor:pointer;}
+.acard:hover{border-color:rgba(252,82,41,.35);transform:translateY(-3px);box-shadow:0 10px 28px rgba(28,28,28,.1);}
  
-.acard-top{padding:18px 16px 0;display:flex;flex-direction:column;align-items:center;text-align:center;}
-.acard-ava{width:64px;height:64px;border-radius:50%;background:linear-gradient(135deg,#fdf1ee,#fce8e2);display:flex;align-items:center;justify-content:center;font-family:'Montserrat',sans-serif;font-size:20px;font-weight:700;color:#fc5229;border:.5px solid rgba(252,82,41,.15);margin-bottom:12px;position:relative;flex-shrink:0;overflow:hidden;}
-.acard-ava img{width:100%;height:100%;object-fit:cover;border-radius:50%;}
-.acard-verified{position:absolute;bottom:0;right:0;width:18px;height:18px;background:#fc5229;border-radius:50%;display:flex;align-items:center;justify-content:center;border:2px solid #fff;}
-.acard-verified i{font-size:9px;color:#fff;}
-.acard-name{font-family:'Montserrat',sans-serif;font-size:14px;font-weight:700;color:#1C1C1C;margin-bottom:3px;line-height:1.2;}
-.acard-role{font-size:11px;color:rgba(28,28,28,.45);margin-bottom:2px;}
-.acard-co{font-size:11px;color:rgba(28,28,28,.32);display:flex;align-items:center;justify-content:center;gap:5px;margin-bottom:14px;}
-.acard-co-dot{width:4px;height:4px;border-radius:50%;background:#fc5229;}
+.acard-topbar{height:4px;width:100%;background:#fc5229;flex-shrink:0;}
  
-/* industry + program tags */
-.acard-tags{padding:0 14px;display:flex;flex-wrap:wrap;gap:4px;justify-content:center;margin-bottom:12px;}
-.atag{font-size:10px;font-family:'Montserrat',sans-serif;font-weight:500;padding:2px 8px;border-radius:4px;}
-.atag-ind{background:rgba(252,82,41,.08);color:rgba(252,82,41,.65);border:.5px solid rgba(252,82,41,.1);}
-.atag-prog{background:rgba(28,28,28,.04);color:rgba(28,28,28,.38);border:.5px solid rgba(28,28,28,.08);}
+.acard-photo{position:relative;width:100%;aspect-ratio:1/1;background:#EDEBE6;overflow:hidden;flex-shrink:0;}
+.acard-photo img{width:100%;height:100%;object-fit:cover;display:block;filter:grayscale(.15);transition:filter .25s;}
+.acard:hover .acard-photo img{filter:grayscale(0);}
+.acard-photo .ph-fallback{width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-family:'Montserrat',sans-serif;font-size:34px;font-weight:700;color:rgba(28,28,28,.18);background:linear-gradient(135deg,#f3f1ec,#e9e6df);}
  
-/* perforated line */
-.acard-perf{margin:0 14px 12px;height:.5px;background:repeating-linear-gradient(90deg,rgba(28,28,28,.1) 0,rgba(28,28,28,.1) 4px,transparent 4px,transparent 8px);}
+.acard-match{position:absolute;top:8px;right:8px;width:26px;height:26px;border-radius:8px;background:rgba(252,82,41,.92);display:flex;align-items:center;justify-content:center;box-shadow:0 2px 6px rgba(0,0,0,.18);}
+.acard-match i{font-size:13px;color:#fff;}
  
-/* bottom action */
-.acard-btn{margin:0 14px 14px;padding:9px;background:transparent;border:.5px solid rgba(28,28,28,.12);border-radius:100px;font-family:'Montserrat',sans-serif;font-weight:600;font-size:12px;color:rgba(28,28,28,.45);cursor:pointer;transition:all .2s;width:calc(100% - 28px);}
-.acard:hover .acard-btn,.acard-btn:hover{background:rgba(252,82,41,.08);border-color:rgba(252,82,41,.3);color:#fc5229;}
+.acard-culogo{position:absolute;right:10px;bottom:-14px;width:40px;height:40px;border-radius:10px;background:#fff;border:.5px solid rgba(28,28,28,.1);box-shadow:0 3px 10px rgba(0,0,0,.12);display:flex;align-items:center;justify-content:center;overflow:hidden;font-family:'Montserrat',sans-serif;font-size:11px;font-weight:700;color:rgba(28,28,28,.5);}
+.acard-culogo img{width:100%;height:100%;object-fit:contain;padding:5px;}
+ 
+.acard-body{padding:22px 14px 12px;flex:1;display:flex;flex-direction:column;}
+.acard-name{font-family:'Montserrat',sans-serif;font-size:13.5px;font-weight:800;letter-spacing:.01em;color:#1C1C1C;text-transform:uppercase;margin-bottom:8px;line-height:1.25;}
+.acard-bullets{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:5px;flex:1;}
+.acard-bullets li{font-size:11.5px;line-height:1.5;color:rgba(28,28,28,.55);padding-left:12px;position:relative;}
+.acard-bullets li::before{content:'';position:absolute;left:0;top:6px;width:4px;height:4px;border-radius:50%;background:#fc5229;}
+ 
+.acard-foot{padding:12px 14px 14px;}
+.acard-tag{display:inline-flex;align-items:center;gap:6px;font-size:10px;font-family:'Montserrat',sans-serif;font-weight:600;padding:4px 10px;border-radius:100px;border:.5px solid rgba(28,28,28,.12);color:rgba(28,28,28,.5);text-transform:uppercase;letter-spacing:.03em;}
+.acard-tag-dot{width:6px;height:6px;border-radius:50%;background:#fc5229;flex-shrink:0;}
  
 /* ── CTA STRIP ── */
 .cta-strip{margin:40px 32px 0;background:#fff;border:.5px solid rgba(252,82,41,.15);border-radius:14px;padding:20px 24px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;}
@@ -235,6 +235,53 @@ body{font-family:'Montserrat',sans-serif;background:#F5F4F1;color:#1C1C1C;overfl
 .mnext{background:#fc5229;color:#fff;font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:12px;padding:9px 22px;border-radius:100px;border:none;cursor:pointer;margin-left:auto;transition:opacity .2s;}
 .mnext:hover{opacity:.88;}.mnext:disabled{background:rgba(252,82,41,.22);cursor:not-allowed;}
 .mdone{background:#1A1A1A;border:.5px solid rgba(252,82,41,.28);color:#fc5229;font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:12px;padding:9px 20px;border-radius:100px;cursor:pointer;margin-left:auto;}
+
+/* ═══════════════════════════════════════
+   RESPONSIVE / MOBILE
+   ═══════════════════════════════════════ */
+@media (max-width:1024px){
+  .adv-grid{grid-template-columns:repeat(3,1fr);}
+}
+@media (max-width:680px){
+  .hero{padding:40px 18px 28px;}
+  .hero h1{font-size:28px;letter-spacing:-1px;}
+  .hero-sub{font-size:13px;margin-bottom:20px;}
+  .hero-stats{flex-wrap:wrap;max-width:340px;border-radius:12px;}
+  .hstat{flex:1 1 50%;border-right:.5px solid rgba(255,255,255,.07);border-bottom:.5px solid rgba(255,255,255,.07);padding:12px 8px;}
+  .hstat:nth-child(2n){border-right:none;}
+  .hstat:nth-last-child(-n+2){border-bottom:none;}
+  .hstat-num{font-size:18px;}
+
+  .filter-wrap{padding:18px 14px 0;gap:5px;}
+  .fbtn{padding:5px 11px;font-size:11px;}
+
+  .grid-wrap{padding:16px 14px 0;}
+  .grid-count{margin-bottom:10px;}
+  .adv-grid{grid-template-columns:repeat(2,1fr);gap:8px;}
+
+  .acard-body{padding:14px 10px 8px;}
+  .acard-name{font-size:11.5px;margin-bottom:6px;}
+  .acard-bullets{gap:4px;}
+  .acard-bullets li{font-size:10px;line-height:1.4;padding-left:10px;}
+  .acard-foot{padding:8px 10px 10px;}
+  .acard-tag{font-size:8.5px;padding:3px 8px;gap:4px;}
+  .acard-culogo{width:32px;height:32px;right:8px;bottom:-11px;border-radius:8px;}
+  .acard-match{width:22px;height:22px;top:6px;right:6px;border-radius:6px;}
+  .acard-match i{font-size:11px;}
+
+  .cta-strip{margin:28px 14px 0;padding:16px 16px;flex-direction:column;align-items:flex-start;}
+  .cta-strip-btn{width:100%;text-align:center;}
+
+  .footer{padding:18px 14px;}
+
+  .drawer{width:100%;}
+}
+@media (max-width:380px){
+  .adv-grid{gap:6px;}
+  .acard-body{padding:12px 8px 6px;}
+  .acard-name{font-size:10.5px;}
+  .acard-bullets li{font-size:9.5px;}
+}
 </style>
 <link rel="stylesheet" href="nav.css">
 </head>
@@ -454,7 +501,7 @@ body{font-family:'Montserrat',sans-serif;background:#F5F4F1;color:#1C1C1C;overfl
       <div id="mSubmitStatus" style="display:none;margin-top:10px;padding:10px 12px;border-radius:8px;font-size:12.5px;line-height:1.5;"></div>
       <div class="mnav">
         <button class="mback" onclick="goStep(2)">← Sửa thông tin</button>
-        <button class="mdone" id="mBtnDone" onclick="submitBooking()">Tiếp tục thanh toán →</button>
+        <button class="mdone" id="mBtnDone" onclick="submitBooking()">Đã chuyển khoản ✓</button>
       </div>
     </div>
  
@@ -508,7 +555,26 @@ function avaInner(photo, initials){
   }
   return initials;
 }
- 
+
+/* Accent đồng nhất (đen) cho vạch đầu thẻ, icon match, tag ngành — không phân biệt màu theo ngành nữa */
+var CARD_ACCENT = '#1C1C1C';
+function getIndColor(indArr){
+  return CARD_ACCENT;
+}
+
+/* Badge logo công ty — nếu sheet có field company_logo/logo thì dùng ảnh, còn không thì fallback initials công ty.
+   Ghi chú: cần thêm cột "company_logo" (URL ảnh) trong Google Sheet advisor để hiện logo thật thay vì chữ viết tắt. */
+function culogoInner(a){
+  if(a.companyLogo){
+    return '<img src="'+a.companyLogo+'" alt="" loading="lazy" onerror="this.parentElement.textContent=\''+coInitials(a.co)+'\';">';
+  }
+  return coInitials(a.co);
+}
+function coInitials(co){
+  var parts = String(co||'').split(' ').filter(Boolean);
+  return parts.map(function(p){ return p[0]; }).join('').slice(0,3).toUpperCase() || '—';
+}
+
 function renderAdvisorGrid() {
   var grid = document.getElementById('advGrid');
   if (ADVISORS.length === 0) {
@@ -518,18 +584,25 @@ function renderAdvisorGrid() {
   }
   var html = '';
   ADVISORS.forEach(function(a){
-    var tagsHtml = '';
-    a.ind.slice(0,2).forEach(function(t){ tagsHtml += '<span class="atag atag-ind">'+t+'</span>'; });
-    html += '<div class="acard" data-ind="'+a.ind.join(' ').toLowerCase()+'" data-id="'+a.id+'">'
-      + '<div class="acard-top">'
-      +   '<div class="acard-ava">'+avaInner(a.photo, a.initials)+'<div class="acard-verified"><i class="ti ti-check"></i></div></div>'
-      +   '<div class="acard-name">'+a.name+'</div>'
-      +   '<div class="acard-role">'+a.role+'</div>'
-      +   '<div class="acard-co"><span class="acard-co-dot"></span>'+a.co+'</div>'
+    var accent = getIndColor(a.ind);
+    var bulletsHtml = '<li>'+a.role+(a.co ? ' tại '+a.co : '')+'</li>';
+    (a.prog||[]).slice(0,2).forEach(function(t){ bulletsHtml += '<li>'+t+'</li>'; });
+    var primaryInd = (a.ind && a.ind[0]) ? a.ind[0] : '';
+    var photoHtml = a.photo
+      ? '<img src="'+a.photo+'" alt="" loading="lazy" onerror="this.replaceWith(Object.assign(document.createElement(\'div\'),{className:\'ph-fallback\',textContent:\''+a.initials+'\'}));">'
+      : '<div class="ph-fallback">'+a.initials+'</div>';
+    html += '<div class="acard" data-ind="'+a.ind.join(' ').toLowerCase()+'" data-id="'+a.id+'" onclick="openDrawer('+a.id+')">'
+      + '<div class="acard-topbar" style="background:'+accent+'"></div>'
+      + '<div class="acard-photo">'
+      +   photoHtml
+      +   '<div class="acard-match" style="background:'+accent+'"><i class="ti ti-sparkles"></i></div>'
+      +   '<div class="acard-culogo">'+culogoInner(a)+'</div>'
       + '</div>'
-      + '<div class="acard-tags">'+tagsHtml+'</div>'
-      + '<div class="acard-perf"></div>'
-      + '<button class="acard-btn" onclick="openDrawer('+a.id+')">Chi tiết về Advisor →</button>'
+      + '<div class="acard-body">'
+      +   '<div class="acard-name">'+a.name+'</div>'
+      +   '<ul class="acard-bullets">'+bulletsHtml+'</ul>'
+      + '</div>'
+      + (primaryInd ? '<div class="acard-foot"><span class="acard-tag"><span class="acard-tag-dot" style="background:'+accent+'"></span>'+primaryInd+'</span></div>' : '')
       + '</div>';
   });
   grid.innerHTML = html;
@@ -751,21 +824,12 @@ function setSubmitStatus(kind, msg){
 function submitBooking(){
   var btn = document.getElementById('mBtnDone');
   if(btn.disabled) return; // chặn double-click
-
-  // Validate bắt buộc
-  var name  = document.getElementById('mName').value.trim();
-  var phone = document.getElementById('mPhone').value.trim();
-  var email = document.getElementById('mEmail').value.trim();
-  if (!name || !phone || !email) {
-    setSubmitStatus('error', '⚠ Vui lòng điền đầy đủ họ tên, số điện thoại và email.');
-    return;
-  }
-
+ 
   var payload = {
-    action          : 'createBookingWithPayment',
-    advisee_name    : name,
-    advisee_phone   : phone,
-    advisee_email   : email,
+    action          : 'createBooking',
+    advisee_name    : document.getElementById('mName').value.trim(),
+    advisee_phone   : document.getElementById('mPhone').value.trim(),
+    advisee_email   : document.getElementById('mEmail').value.trim(),
     advisee_year    : document.getElementById('mYear').value || '',
     advisee_industry: '',
     advisee_goal    : buildGoalText(),
@@ -773,37 +837,29 @@ function submitBooking(){
     advisor_email   : '',
     package_name    : S.pkg
   };
-
+ 
   btn.disabled = true;
-  btn.textContent = 'Đang xử lý...';
-  setSubmitStatus('pending', 'Đang tạo đơn hàng, vui lòng chờ...');
-
+  btn.textContent = 'Đang gửi...';
+  setSubmitStatus('pending', 'Đang gửi thông tin đặt lịch...');
+ 
   fetch(WEBAPP_URL, {
     method : 'POST',
+    // Cố tình dùng text/plain để tránh CORS preflight (Apps Script không tự xử lý OPTIONS).
+    // doPost() ở backend vẫn JSON.parse(e.postData.contents) như thường.
     headers: { 'Content-Type': 'text/plain;charset=utf-8' },
     body   : JSON.stringify(payload)
   })
   .then(function(res){ return res.json(); })
   .then(function(data){
     if(!data.success) throw new Error(data.error || 'Lỗi không xác định từ server');
-
-    // Chuyển sang trang thanh toán QR
-    var paymentUrl = 'payment.html'
-      + '?order_id=' + encodeURIComponent(data.order_id || '')
-      + '&amount='   + encodeURIComponent(data.amount   || 0)
-      + '&desc='     + encodeURIComponent(S.pkg || 'Gói cố vấn LinkaJob')
-      + '&name='     + encodeURIComponent(name)
-      + '&booking_id=' + encodeURIComponent(data.booking_id || '');
-
-    setSubmitStatus('success', '✓ Đơn hàng đã tạo! Đang chuyển sang trang thanh toán...');
-    btn.textContent = 'Chuyển hướng...';
-
-    setTimeout(function(){ window.location.href = paymentUrl; }, 800);
+    setSubmitStatus('success', '✓ Đã ghi nhận! Mã booking: '+data.booking_id+'. Đội LinkaJob sẽ xác nhận và gửi link đặt lịch trong 24h.');
+    btn.textContent = 'Hoàn tất ✓';
+    setTimeout(closeCheckout, 2800);
   })
   .catch(function(err){
-    setSubmitStatus('error', '⚠ Gửi thất bại (' + err.message + '). Vui lòng thử lại hoặc liên hệ contact@linkajob.vn.');
+    setSubmitStatus('error', '⚠ Gửi thất bại ('+err.message+'). Vui lòng thử lại hoặc gửi bill qua contact@linkajob.vn.');
     btn.disabled = false;
-    btn.textContent = 'Tiếp tục thanh toán →';
+    btn.textContent = 'Đã chuyển khoản ✓';
   });
 }
  
