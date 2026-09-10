@@ -567,6 +567,7 @@ function fetchAdvisorsFromSheet() {
           name: a.name || '',
           role: a.role || '',
           co: a.company || '',
+          companyLogo: toDirectImageUrl(a.company_logo || a.company_logo_url || a.logo_url || ''),
           ind: a.industry ? a.industry.split(',').map(function(t){ return t.trim(); }).filter(Boolean) : [],
           prog: parseListField(a.experience_json || a.prev_experience || a.experience),
           message: a.message || a.bio || '',
@@ -622,8 +623,15 @@ function renderAdvisorGrid() {
   var html = '';
   ADVISORS.forEach(function(a){
     var accent = getIndColor(a.ind);
-    var bulletsHtml = '<li>'+a.role+(a.co ? ' tại '+a.co : '')+'</li>';
-    (a.prog||[]).slice(0,2).forEach(function(t){ bulletsHtml += '<li>'+t+'</li>'; });
+    // Nếu đã có experience_json (a.prog) thì dùng luôn danh sách đó làm bullet —
+    // vì dòng đầu tiên trong đó thường đã là vị trí hiện tại (dateRange "Hiện tại"),
+    // trùng với role+company nên không ghép thêm nữa để tránh lặp lại 2 lần.
+    var bulletsHtml;
+    if (a.prog && a.prog.length) {
+      bulletsHtml = a.prog.slice(0,3).map(function(t){ return '<li>'+t+'</li>'; }).join('');
+    } else {
+      bulletsHtml = '<li>'+a.role+(a.co ? ' tại '+a.co : '')+'</li>';
+    }
     var primaryInd = (a.ind && a.ind[0]) ? a.ind[0] : '';
     var photoHtml = a.photo
       ? '<img src="'+a.photo+'" alt="" loading="lazy" onerror="this.replaceWith(Object.assign(document.createElement(\'div\'),{className:\'ph-fallback\',textContent:\''+a.initials+'\'}));">'
