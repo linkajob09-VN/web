@@ -496,24 +496,6 @@ body{font-family:'Montserrat',sans-serif;background:#F5F4F1;color:#1C1C1C;overfl
 </div>
  
  
-
-<script>
-// ===== PREVIEW-ONLY MOCK DATA (xóa khối này khi deploy thật, file gốc vẫn fetch từ Google Sheet) =====
-window.__PREVIEW_MOCK__ = [
-  {initials:'DA', photo:'', name:'Đặng Ngọc Anh', role:'Distribution Management', co:'Generali Vietnam', ind:['Finance'], prog:[], supports:[]},
-  {initials:'TL', photo:'', name:'Đoàn Thanh Loan', role:'Analytics Team Lead', co:'MoMo', ind:['Tech'], prog:['Former Senior Data Analyst tại MoMo (2020–2022)'], supports:[]},
-  {initials:'BN', photo:'', name:'Đinh Phạm Bảo Nghi', role:'Assistant Brand Manager – Marketing', co:'Unilever', ind:['Marketing'], prog:['Marketing Executive tại Unilever (2021–2023)'], supports:[]},
-  {initials:'DT', photo:'', name:'Nguyễn Đan Thi', role:'Ops Efficiency Lead', co:'SPX Express', ind:['Supply Chain'], prog:['Management Trainee tại DHL Supply Chain (2019–2021)'], supports:[]},
-  {initials:'HN', photo:'', name:'Harry Nguyễn', role:'Digital Strategy & PMO Lead', co:'FMCG Corp', ind:['FMCG'], prog:['Trade Management Trainee tại BAT (2018–2020)'], supports:[]},
-  {initials:'LV', photo:'', name:'Lê Văn Khoa', role:'Audit Senior', co:'Big4 VN', ind:['Audit / Big 4'], prog:['Kiểm toán viên tại PwC Vietnam (2019–2022)','Trợ lý kiểm toán tại Deloitte (2017–2019)'],
-    supports:[
-      {icon:'ti-circle-check', title:'Review CV', desc:'Chỉnh sửa CV chuẩn ATS, nhấn mạnh điểm mạnh phù hợp ngành Audit/Finance'},
-      {icon:'ti-circle-check', title:'Mock phỏng vấn', desc:'Luyện tập tình huống phỏng vấn thực tế tại Big4 và tập đoàn'},
-      {icon:'ti-circle-check', title:'Định hướng lộ trình', desc:''}
-    ]},
-  {initials:'TT', photo:'', name:'Trần Thảo Trang', role:'E-Commerce Executive', co:'Shopee', ind:['E-Commerce'], prog:[], supports:[]},
-];
-</script>
 <script>
 /* ─── CONFIG ─── */
 // URL Web App lấy từ: Deploy → Web App → Anyone (sau khi chạy setupProperties() + setupTriggers() trong Code.gs)
@@ -573,12 +555,6 @@ function parseListField(val){
 }
 
 function fetchAdvisorsFromSheet() {
-  if (window.__PREVIEW_MOCK__) {
-    ADVISORS = window.__PREVIEW_MOCK__.map(function(a, idx){
-      return { id: idx, initials: a.initials, photo: a.photo, name: a.name, role: a.role, co: a.co, ind: a.ind, prog: a.prog, message:'Đây là nội dung xem trước — dữ liệu thật sẽ lấy từ Google Sheet.', supports:a.supports, feedbacks:[] };
-    });
-    return Promise.resolve();
-  }
   return fetch(WEBAPP_URL + '?action=getAdvisors&only_active=1')
     .then(function(r){ return r.json(); })
     .then(function(res){
