@@ -282,19 +282,21 @@ body{font-family:'Montserrat',sans-serif;background:#F5F4F1;color:#1C1C1C;overfl
   .acard-bullets li{font-size:9.5px;}
 }
 </style>
-<link rel="stylesheet" href="nav.css">
 <link rel="stylesheet" href="đăng-ký-tư-vấn.css">
 </head>
 <body>
 
 <!-- NAV -->
 <div id="lj-nav-root"></div>
+<script src="nav.js"></script>
+<script>initSharedNav();</script>
 
 
 <!-- HERO -->
 <section class="hero">
   <div class="hero-eyebrow"><span class="hero-eyebrow-dot"></span>Đang làm thật · Không phải coach lý thuyết</div>
   <h1>Gặp người đã đi<br><em>con đường bạn đang chọn.</em></h1>
+
   <p class="hero-sub">25+ advisor đang làm việc tại MNC — mỗi người hiểu rõ JD, vòng phỏng vấn và văn hoá công ty của ngành họ từ bên trong.</p>
   <div class="hero-stats">
     <div class="hstat"><div class="hstat-num">25+</div><div class="hstat-lbl">Advisors</div></div>
@@ -338,7 +340,7 @@ body{font-family:'Montserrat',sans-serif;background:#F5F4F1;color:#1C1C1C;overfl
     <div class="cta-strip-t">Chưa biết nên chọn advisor nào?</div>
     <div class="cta-strip-s">LinkaJob sẽ match advisor phù hợp nhất với ngành và mục tiêu của bạn — miễn phí.</div>
   </div>
-  <button class="cta-strip-btn" onclick="openConsultWidget('','','','')">Nhờ LinkaJob tư vấn →</button>
+  <button class="cta-strip-btn" onclick="openCheckout('','','','')">Nhờ LinkaJob tư vấn →</button>
 </div>
  
 <!-- FOOTER -->
@@ -454,11 +456,11 @@ body{font-family:'Montserrat',sans-serif;background:#F5F4F1;color:#1C1C1C;overfl
       </div>
     </div>
  
-    <!-- step 3: xác nhận + QR -->
+    <!-- step 3: xác nhận + chuyển sang trang thanh toán -->
     <div class="mpanel" id="mp3">
       <div class="mpl">Bước 3 / 3</div>
-      <div class="mpt">Xác nhận & Thanh toán</div>
-      <div class="mps">Kiểm tra lại, sau đó quét QR để hoàn tất.</div>
+      <div class="mpt">Xác nhận đặt lịch</div>
+      <div class="mps">Kiểm tra lại thông tin, sau đó tiến hành thanh toán qua QR.</div>
       <div class="cbox">
         <div class="crow"><span class="cl">Gói</span><div><div class="cv o" id="cvPkg">—</div><div class="ce" onclick="goStep(1)">Đổi gói</div></div></div>
         <div class="crow"><span class="cl">Buổi</span><div class="cv" id="cvSess">—</div></div>
@@ -469,39 +471,11 @@ body{font-family:'Montserrat',sans-serif;background:#F5F4F1;color:#1C1C1C;overfl
         <div class="crow"><span class="cl">SĐT</span><div class="cv" id="cvPhone" style="font-weight:400;font-size:11px;">—</div></div>
       </div>
       <div class="total-row"><div class="total-l">Tổng thanh toán</div><div class="total-p" id="cvTotal">—</div></div>
-      <div class="pay-wrap">
-        <div class="pay-qr">
-          <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-            <rect width="100" height="100" fill="white"/>
-            <rect x="5" y="5" width="28" height="28" rx="2" fill="none" stroke="#111" stroke-width="4"/><rect x="11" y="11" width="16" height="16" fill="#111"/>
-            <rect x="67" y="5" width="28" height="28" rx="2" fill="none" stroke="#111" stroke-width="4"/><rect x="73" y="11" width="16" height="16" fill="#111"/>
-            <rect x="5" y="67" width="28" height="28" rx="2" fill="none" stroke="#111" stroke-width="4"/><rect x="11" y="73" width="16" height="16" fill="#111"/>
-            <rect x="40" y="5" width="5" height="5" fill="#111"/><rect x="48" y="5" width="5" height="5" fill="#111"/><rect x="56" y="5" width="5" height="5" fill="#111"/>
-            <rect x="40" y="13" width="5" height="5" fill="#111"/><rect x="56" y="13" width="5" height="5" fill="#111"/>
-            <rect x="40" y="21" width="5" height="5" fill="#111"/><rect x="48" y="21" width="5" height="5" fill="#111"/>
-            <rect x="5" y="40" width="5" height="5" fill="#111"/><rect x="13" y="40" width="5" height="5" fill="#111"/>
-            <rect x="5" y="48" width="5" height="5" fill="#111"/><rect x="21" y="48" width="5" height="5" fill="#111"/>
-            <rect x="40" y="40" width="5" height="5" fill="#111"/><rect x="56" y="40" width="5" height="5" fill="#111"/>
-            <rect x="72" y="40" width="5" height="5" fill="#111"/><rect x="88" y="40" width="5" height="5" fill="#111"/>
-            <rect x="40" y="64" width="5" height="5" fill="#111"/><rect x="56" y="64" width="5" height="5" fill="#111"/>
-            <rect x="40" y="72" width="5" height="5" fill="#111"/><rect x="48" y="72" width="5" height="5" fill="#111"/>
-            <rect x="40" y="80" width="5" height="5" fill="#111"/><rect x="56" y="80" width="5" height="5" fill="#111"/>
-            <text x="50" y="97" text-anchor="middle" font-size="5.5" fill="#fc5229" font-family="Arial" font-weight="bold">LinkaJob</text>
-          </svg>
-        </div>
-        <div class="pay-det">
-          <div class="pay-bank">Chuyển khoản ngân hàng</div>
-          <div class="prow"><span class="pl">Ngân hàng</span><span class="pv">Vietcombank · MB Bank</span></div>
-          <div class="prow"><span class="pl">Chủ TK</span><span class="pv">LINKAJOB</span></div>
-          <div class="prow"><span class="pl">Số tiền</span><span class="pv o" id="payAmt">—</span></div>
-          <div class="prow"><span class="pl">Nội dung CK</span><span class="pv o" id="payCk">—</span></div>
-        </div>
-      </div>
-      <div class="pay-note">Gửi bill qua <strong>contact@linkajob.vn</strong> hoặc inbox Facebook/Instagram. Nhận <strong>link đặt lịch trong 24h</strong>.</div>
+      <div class="pay-note">Bấm "Tiến hành thanh toán" để chuyển sang trang quét mã QR — hệ thống tự động xác nhận khi nhận được chuyển khoản, không cần gửi bill thủ công.</div>
       <div id="mSubmitStatus" style="display:none;margin-top:10px;padding:10px 12px;border-radius:8px;font-size:12.5px;line-height:1.5;"></div>
       <div class="mnav">
         <button class="mback" onclick="goStep(2)">← Sửa thông tin</button>
-        <button class="mdone" id="mBtnDone" onclick="submitBooking()">Đã chuyển khoản ✓</button>
+        <button class="mdone" id="mBtnDone" onclick="submitBooking()">Tiến hành thanh toán →</button>
       </div>
     </div>
  
@@ -518,6 +492,18 @@ var WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbx7Bd9VvoyzfiiezQV9huo
 /* ─── ADVISOR DATA (fetch thật từ Google Sheet) ─── */
 var ADVISORS = [];
  
+/* Chuyển link "xem" Google Drive (.../file/d/ID/view...) hoặc (open?id=ID)
+   thành link ảnh xem trực tiếp được, dùng cho thẻ <img>.
+   Lưu ý: file trên Drive phải để chế độ chia sẻ "Anyone with the link". */
+function toDirectImageUrl(url){
+  if(!url) return '';
+  url = String(url).trim();
+  var m = url.match(/drive\.google\.com\/file\/d\/([^/]+)/);
+  if(!m) m = url.match(/[?&]id=([^&]+)/);
+  if(m && m[1]) return 'https://lh3.googleusercontent.com/d/' + m[1];
+  return url;
+}
+
 function fetchAdvisorsFromSheet() {
   return fetch(WEBAPP_URL + '?action=getAdvisors&only_active=1')
     .then(function(r){ return r.json(); })
@@ -526,7 +512,7 @@ function fetchAdvisorsFromSheet() {
         return {
           id: idx,
           initials: (a.initials || '').toUpperCase() || mkInitialsFallback(a.name),
-          photo: a.photo || a.photo_url || a.avatar || a.image || a.image_url || '',
+          photo: toDirectImageUrl(a.photo || a.photo_url || a.avatar || a.image || a.image_url || ''),
           name: a.name || '',
           role: a.role || '',
           co: a.company || '',
@@ -610,7 +596,7 @@ function renderAdvisorGrid() {
 }
  
 /* ─── State ─── */
-var S={adv:'',advRole:'',advCo:'',advInitials:'',pkg:'',sess:'',priceLabel:'',priceNum:0};
+var S={adv:'',advRole:'',advCo:'',advInitials:'',pkg:'',sess:'',priceLabel:'',priceNum:0,orderId:''};
 var currentAdvisorId = -1;
  
 /* ─── PRESELECTED PACKAGE (từ pricing.html ?package=...) ─── */
@@ -753,6 +739,7 @@ function goStep(step){
   if(step===3){
     var n = document.getElementById('mName').value.trim();
     var ck = 'LJ '+S.pkg.toUpperCase()+' '+n.split(' ').pop().toUpperCase();
+    S.orderId = ck;
     document.getElementById('cvPkg').textContent = 'Gói '+S.pkg;
     document.getElementById('cvSess').textContent = S.sess;
     document.getElementById('cvAdv').textContent = S.adv||'LinkaJob sẽ match';
@@ -761,8 +748,6 @@ function goStep(step){
     document.getElementById('cvEmail').textContent = document.getElementById('mEmail').value;
     document.getElementById('cvPhone').textContent = document.getElementById('mPhone').value;
     document.getElementById('cvTotal').textContent = S.priceLabel+'.000 đ';
-    document.getElementById('payAmt').textContent = S.priceNum.toLocaleString('vi-VN')+'.000 đ';
-    document.getElementById('payCk').textContent = ck;
     setCtx('Gói '+S.pkg+' · '+(S.adv||'LinkaJob'), 'Tổng: '+S.priceLabel+'.000 đ');
   } else if(step===2){
     setCtx((S.adv||'LinkaJob')+' · Gói '+S.pkg, S.sess);
@@ -824,9 +809,10 @@ function setSubmitStatus(kind, msg){
 function submitBooking(){
   var btn = document.getElementById('mBtnDone');
   if(btn.disabled) return; // chặn double-click
- 
+
   var payload = {
     action          : 'createBooking',
+    order_id        : S.orderId || '',
     advisee_name    : document.getElementById('mName').value.trim(),
     advisee_phone   : document.getElementById('mPhone').value.trim(),
     advisee_email   : document.getElementById('mEmail').value.trim(),
@@ -837,11 +823,11 @@ function submitBooking(){
     advisor_email   : '',
     package_name    : S.pkg
   };
- 
+
   btn.disabled = true;
   btn.textContent = 'Đang gửi...';
-  setSubmitStatus('pending', 'Đang gửi thông tin đặt lịch...');
- 
+  setSubmitStatus('pending', 'Đang ghi nhận đặt lịch...');
+
   fetch(WEBAPP_URL, {
     method : 'POST',
     // Cố tình dùng text/plain để tránh CORS preflight (Apps Script không tự xử lý OPTIONS).
@@ -852,14 +838,19 @@ function submitBooking(){
   .then(function(res){ return res.json(); })
   .then(function(data){
     if(!data.success) throw new Error(data.error || 'Lỗi không xác định từ server');
-    setSubmitStatus('success', '✓ Đã ghi nhận! Mã booking: '+data.booking_id+'. Đội LinkaJob sẽ xác nhận và gửi link đặt lịch trong 24h.');
-    btn.textContent = 'Hoàn tất ✓';
-    setTimeout(closeCheckout, 2800);
+    // Chuyển sang trang thanh toán thật (QR động + tự xác nhận), thay vì gửi bill thủ công.
+    var params = new URLSearchParams({
+      order_id: data.booking_id || S.orderId || '',
+      amount  : S.priceNum * 1000,
+      desc    : 'Gói ' + S.pkg + (S.adv ? ' · Cố vấn ' + S.adv : ''),
+      name    : payload.advisee_name
+    });
+    window.location.href = 'thanh-toán.html?' + params.toString();
   })
   .catch(function(err){
     setSubmitStatus('error', '⚠ Gửi thất bại ('+err.message+'). Vui lòng thử lại hoặc gửi bill qua contact@linkajob.vn.');
     btn.disabled = false;
-    btn.textContent = 'Đã chuyển khoản ✓';
+    btn.textContent = 'Tiến hành thanh toán →';
   });
 }
  
@@ -877,44 +868,11 @@ function renderSteps(active){
   });
   document.getElementById('msteps').innerHTML = html;
 }
-  /* ─── NAV DROPDOWN: bấm để mở/đóng, hoạt động cả trên mobile ─── */
-function toggleNavDropdown(btn) {
-  var item = btn.closest('.lj-nav-item');
-  var wasOpen = item.classList.contains('open');
-  document.querySelectorAll('.lj-nav-item.open').forEach(function(el){ el.classList.remove('open'); });
-  if (!wasOpen) item.classList.add('open');
-}
-document.addEventListener('click', function(e){
-  if (!e.target.closest('.lj-nav-item')) {
-    document.querySelectorAll('.lj-nav-item.open').forEach(function(el){ el.classList.remove('open'); });
-  }
-});
-document.addEventListener('keydown', function(e){
-  if (e.key === 'Escape') {
-    document.querySelectorAll('.lj-nav-item.open').forEach(function(el){ el.classList.remove('open'); });
-  }
-});
- 
-function toggleMobileNav(){
-  var links = document.querySelector('.lj-nav-links');
-  var backdrop = document.getElementById('ljNavBackdrop');
-  var btn = document.querySelector('.lj-nav-toggle');
-  if(!links) return;
-  var isOpen = links.classList.toggle('open');
-  if(backdrop) backdrop.classList.toggle('open', isOpen);
-  if(btn) btn.setAttribute('aria-expanded', isOpen);
-  document.body.style.overflow = isOpen ? 'hidden' : '';
-}
-function closeMobileNav(){
-  var links = document.querySelector('.lj-nav-links');
-  var backdrop = document.getElementById('ljNavBackdrop');
-  var btn = document.querySelector('.lj-nav-toggle');
-  if(!links) return;
-  links.classList.remove('open');
-  if(backdrop) backdrop.classList.remove('open');
-  if(btn) btn.setAttribute('aria-expanded', 'false');
-  document.body.style.overflow = '';
-}
 </script>
+
+<!-- WIDGET "ĐĂNG KÝ TƯ VẤN" — dùng chung, nút "Đăng ký tư vấn" trên nav gọi openConsultWidget() -->
+<div id="lj-widget-root"></div>
+<script src="đăng-ký-tư-vấn.js"></script>
+<script>initConsultWidget();</script>
 </body>
 </html>
