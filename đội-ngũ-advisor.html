@@ -67,17 +67,17 @@ body{font-family:'Montserrat',sans-serif;background:#F5F4F1;color:#1C1C1C;overfl
 .acard-tag-dot{width:6px;height:6px;border-radius:50%;background:#fc5229;flex-shrink:0;}
  
 /* ── CTA STRIP ── */
-.cta-strip{margin:40px 32px 0;background:#fff;border:.5px solid rgba(252,82,41,.15);border-radius:14px;padding:20px 24px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;}
-.cta-strip-t{font-family:'Montserrat',sans-serif;font-size:14px;font-weight:700;color:#1C1C1C;}
-.cta-strip-s{font-size:12px;color:rgba(28,28,28,.45);margin-top:2px;}
-.cta-strip-btn{background:#fc5229;color:#fff;font-family:'Montserrat',sans-serif;font-weight:700;font-size:12px;padding:10px 22px;border-radius:100px;border:none;cursor:pointer;white-space:nowrap;}
- 
+.cta-strip{margin:56px 0 0;background:#0D0D0D;padding:44px 32px;display:flex;align-items:center;justify-content:center;flex-direction:column;text-align:center;gap:14px;}
+.cta-strip-t{font-family:'Montserrat',sans-serif;font-size:22px;font-weight:700;color:#F0F0F0;}
+.cta-strip-s{font-size:13px;color:rgba(240,240,240,.45);max-width:440px;line-height:1.6;}
+.cta-strip-btn{background:#fc5229;color:#fff;font-family:'Montserrat',sans-serif;font-weight:700;font-size:13px;padding:13px 28px;border-radius:100px;border:none;cursor:pointer;white-space:nowrap;margin-top:6px;}
+
 /* ── FOOTER ── */
-.footer{padding:24px 32px;border-top:.5px solid rgba(28,28,28,.08);margin-top:56px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;background:#F5F4F1;}
+.footer{padding:24px 32px;border-top:.5px solid rgba(255,255,255,.08);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;background:#0D0D0D;}
 .footer-logo{font-family:'Montserrat',sans-serif;font-weight:700;font-size:15px;color:#fc5229;text-decoration:none;}
-.footer-copy{font-size:11px;color:rgba(28,28,28,.3);}
+.footer-copy{font-size:11px;color:rgba(240,240,240,.28);}
 .footer-links{display:flex;gap:18px;}
-.footer-links a{font-size:11px;color:rgba(28,28,28,.35);text-decoration:none;}
+.footer-links a{font-size:11px;color:rgba(240,240,240,.35);text-decoration:none;}
  
 /* ═══════════════════════════════════════
    DETAIL DRAWER (slides in from right)
@@ -274,8 +274,9 @@ body{font-family:'Montserrat',sans-serif;background:#F5F4F1;color:#1C1C1C;overfl
   .acard-match{width:22px;height:22px;top:6px;right:6px;border-radius:6px;}
   .acard-match i{font-size:11px;}
 
-  .cta-strip{margin:28px 14px 0;padding:16px 16px;flex-direction:column;align-items:flex-start;}
-  .cta-strip-btn{width:100%;text-align:center;}
+  .cta-strip{margin:36px 0 0;padding:32px 20px;}
+  .cta-strip-t{font-size:18px;}
+  .cta-strip-btn{width:100%;max-width:280px;text-align:center;}
 
   .footer{padding:18px 14px;}
 
@@ -830,7 +831,7 @@ function resetForm(){
   var y=document.getElementById('mYear');if(y)y.value='';
   var b=document.getElementById('mBtn2');if(b)b.disabled=true;
   var st=document.getElementById('mSubmitStatus');if(st){st.style.display='none';st.textContent='';}
-  var bd=document.getElementById('mBtnDone');if(bd){bd.disabled=false;bd.textContent='Đã chuyển khoản ✓';}
+  var bd=document.getElementById('mBtnDone');if(bd){bd.disabled=false;bd.textContent='Tiến hành thanh toán →';}
 }
  
 function showPanel(id){
