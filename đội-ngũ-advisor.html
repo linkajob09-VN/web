@@ -107,6 +107,12 @@ body{font-family:'Montserrat',sans-serif;background:#F5F4F1;color:#1C1C1C;overfl
  
 /* tags row */
 .d-tags{padding:16px 24px 0;display:flex;flex-wrap:wrap;gap:5px;}
+.d-exp-bullets{list-style:none;padding:0 24px;margin:0;display:flex;flex-direction:column;gap:7px;}
+.d-exp-bullets li{font-size:12.5px;line-height:1.55;color:rgba(240,240,240,.5);padding-left:14px;position:relative;}
+.d-exp-bullets li::before{content:'';position:absolute;left:0;top:7px;width:4px;height:4px;border-radius:50%;background:#fc5229;}
+.atag{font-size:10.5px;font-family:'Montserrat',sans-serif;font-weight:500;padding:3px 10px;border-radius:100px;}
+.atag-ind{background:rgba(252,82,41,.12);color:#fc5229;border:.5px solid rgba(252,82,41,.2);}
+.atag-prog{background:rgba(255,255,255,.06);color:rgba(240,240,240,.5);border:.5px solid rgba(255,255,255,.1);}
  
 /* message from advisor */
 .d-section{padding:20px 24px 0;}
@@ -373,7 +379,13 @@ body{font-family:'Montserrat',sans-serif;background:#F5F4F1;color:#1C1C1C;overfl
     </div>
  
     <div class="d-tags" id="dTags"></div>
- 
+
+    <!-- kinh nghiệm trước đó -->
+    <div class="d-section" id="dExpSection" style="display:none">
+      <div class="d-sec-label">Kinh nghiệm trước đó</div>
+      <ul class="d-exp-bullets" id="dExp"></ul>
+    </div>
+
     <!-- message -->
     <div class="d-section">
       <div class="d-sec-label">Lời nhắn từ Advisor</div>
@@ -381,7 +393,7 @@ body{font-family:'Montserrat',sans-serif;background:#F5F4F1;color:#1C1C1C;overfl
     </div>
  
     <!-- support -->
-    <div class="d-section">
+    <div class="d-section" id="dSupportsSection" style="display:none">
       <div class="d-sec-label">Mình có thể hỗ trợ bạn</div>
       <div class="d-supports" id="dSupports"></div>
     </div>
@@ -484,6 +496,24 @@ body{font-family:'Montserrat',sans-serif;background:#F5F4F1;color:#1C1C1C;overfl
 </div>
  
  
+
+<script>
+// ===== PREVIEW-ONLY MOCK DATA (xóa khối này khi deploy thật, file gốc vẫn fetch từ Google Sheet) =====
+window.__PREVIEW_MOCK__ = [
+  {initials:'DA', photo:'', name:'Đặng Ngọc Anh', role:'Distribution Management', co:'Generali Vietnam', ind:['Finance'], prog:[], supports:[]},
+  {initials:'TL', photo:'', name:'Đoàn Thanh Loan', role:'Analytics Team Lead', co:'MoMo', ind:['Tech'], prog:['Former Senior Data Analyst tại MoMo (2020–2022)'], supports:[]},
+  {initials:'BN', photo:'', name:'Đinh Phạm Bảo Nghi', role:'Assistant Brand Manager – Marketing', co:'Unilever', ind:['Marketing'], prog:['Marketing Executive tại Unilever (2021–2023)'], supports:[]},
+  {initials:'DT', photo:'', name:'Nguyễn Đan Thi', role:'Ops Efficiency Lead', co:'SPX Express', ind:['Supply Chain'], prog:['Management Trainee tại DHL Supply Chain (2019–2021)'], supports:[]},
+  {initials:'HN', photo:'', name:'Harry Nguyễn', role:'Digital Strategy & PMO Lead', co:'FMCG Corp', ind:['FMCG'], prog:['Trade Management Trainee tại BAT (2018–2020)'], supports:[]},
+  {initials:'LV', photo:'', name:'Lê Văn Khoa', role:'Audit Senior', co:'Big4 VN', ind:['Audit / Big 4'], prog:['Kiểm toán viên tại PwC Vietnam (2019–2022)','Trợ lý kiểm toán tại Deloitte (2017–2019)'],
+    supports:[
+      {icon:'ti-circle-check', title:'Review CV', desc:'Chỉnh sửa CV chuẩn ATS, nhấn mạnh điểm mạnh phù hợp ngành Audit/Finance'},
+      {icon:'ti-circle-check', title:'Mock phỏng vấn', desc:'Luyện tập tình huống phỏng vấn thực tế tại Big4 và tập đoàn'},
+      {icon:'ti-circle-check', title:'Định hướng lộ trình', desc:''}
+    ]},
+  {initials:'TT', photo:'', name:'Trần Thảo Trang', role:'E-Commerce Executive', co:'Shopee', ind:['E-Commerce'], prog:[], supports:[]},
+];
+</script>
 <script>
 /* ─── CONFIG ─── */
 // URL Web App lấy từ: Deploy → Web App → Anyone (sau khi chạy setupProperties() + setupTriggers() trong Code.gs)
@@ -495,6 +525,18 @@ var ADVISORS = [];
 /* Chuyển link "xem" Google Drive (.../file/d/ID/view...) hoặc (open?id=ID)
    thành link ảnh xem trực tiếp được, dùng cho thẻ <img>.
    Lưu ý: file trên Drive phải để chế độ chia sẻ "Anyone with the link". */
+/* Nhận field "hỗ trợ" — mỗi dòng 1 mục dạng "Tiêu đề | Mô tả".
+   Nếu dòng không có dấu "|" thì coi cả dòng là tiêu đề, để trống mô tả.
+   Icon dùng chung 1 icon generic (dấu tick) cho mọi mục. */
+function parseSupportsField(val){
+  if (Array.isArray(val)) return val; // backend đã trả sẵn {icon,title,desc}
+  if (!val) return [];
+  return String(val).split('\n').map(function(line){ return line.trim(); }).filter(Boolean).map(function(line){
+    var parts = line.split('|');
+    return { icon: 'ti-circle-check', title: (parts[0]||'').trim(), desc: (parts[1]||'').trim() };
+  });
+}
+
 function toDirectImageUrl(url){
   if(!url) return '';
   url = String(url).trim();
@@ -504,7 +546,39 @@ function toDirectImageUrl(url){
   return url;
 }
 
+/* Nhận field "kinh nghiệm trước đó" — cột thật trong Sheet là experience_json,
+   mảng object dạng [{"title":"Brand Manager","company":"XYZ Corp","dateRange":"T7/2022 – Hiện tại","desc":"..."}].
+   Format lại thành chuỗi hiển thị 1 dòng/mục: "Title tại Company (dateRange)".
+   Vẫn hỗ trợ fallback nếu cột là mảng string thường (không có title/company). */
+function parseListField(val){
+  var arr;
+  if (Array.isArray(val)) {
+    arr = val;
+  } else if (val) {
+    var s = String(val).trim();
+    if (s.startsWith('[')) {
+      try { arr = JSON.parse(s); } catch(e){ arr = null; }
+    }
+    if (!arr) return s.split(/\n|,/).map(function(t){ return t.trim(); }).filter(Boolean);
+  } else {
+    return [];
+  }
+  return arr.filter(Boolean).map(function(item){
+    if (typeof item === 'string') return item;
+    var line = item.title || '';
+    if (item.company) line += (line ? ' tại ' : '') + item.company;
+    if (item.dateRange) line += ' (' + item.dateRange + ')';
+    return line;
+  }).filter(Boolean);
+}
+
 function fetchAdvisorsFromSheet() {
+  if (window.__PREVIEW_MOCK__) {
+    ADVISORS = window.__PREVIEW_MOCK__.map(function(a, idx){
+      return { id: idx, initials: a.initials, photo: a.photo, name: a.name, role: a.role, co: a.co, ind: a.ind, prog: a.prog, message:'Đây là nội dung xem trước — dữ liệu thật sẽ lấy từ Google Sheet.', supports:a.supports, feedbacks:[] };
+    });
+    return Promise.resolve();
+  }
   return fetch(WEBAPP_URL + '?action=getAdvisors&only_active=1')
     .then(function(r){ return r.json(); })
     .then(function(res){
@@ -517,9 +591,9 @@ function fetchAdvisorsFromSheet() {
           role: a.role || '',
           co: a.company || '',
           ind: a.industry ? a.industry.split(',').map(function(t){ return t.trim(); }).filter(Boolean) : [],
-          prog: [],
+          prog: parseListField(a.experience_json || a.prev_experience || a.experience),
           message: a.message || a.bio || '',
-          supports: [],
+          supports: parseSupportsField(a.support_items || a.can_help || a.supports_text),
           feedbacks: Array.isArray(a.feedbacks) ? a.feedbacks.map(function(f){
             return { badge: '✓ Feedback', text: f.text || '', name: f.from || '', school: '', initials: mkInitialsFallback(f.from||'') };
           }) : [],
@@ -654,18 +728,32 @@ function openDrawer(id){
   document.getElementById('dMessage').innerHTML = a.message;
   document.getElementById('dBtnBook').textContent = 'Đặt lịch với '+a.name.split(' ').pop()+' →';
  
-  /* tags */
+  /* tags: chỉ hiện ngành, không gộp kinh nghiệm vào đây nữa */
   var tagsHtml = '';
   a.ind.forEach(function(t){ tagsHtml += '<span class="atag atag-ind">'+t+'</span>'; });
-  a.prog.forEach(function(t){ tagsHtml += '<span class="atag atag-prog">'+t+'</span>'; });
   document.getElementById('dTags').innerHTML = tagsHtml;
+
+  /* kinh nghiệm trước đó — ẩn cả mục nếu chưa có dữ liệu */
+  var expSection = document.getElementById('dExpSection');
+  if (a.prog && a.prog.length) {
+    document.getElementById('dExp').innerHTML = a.prog.map(function(t){ return '<li>'+t+'</li>'; }).join('');
+    expSection.style.display = '';
+  } else {
+    expSection.style.display = 'none';
+  }
  
-  /* supports */
-  var supHtml = '';
-  a.supports.forEach(function(s){
-    supHtml += '<div class="d-sup"><div class="d-sup-icon"><i class="ti '+s.icon+'"></i></div><div><div class="d-sup-title">'+s.title+'</div><div class="d-sup-desc">'+s.desc+'</div></div></div>';
-  });
-  document.getElementById('dSupports').innerHTML = supHtml;
+  /* supports — ẩn cả mục nếu chưa có dữ liệu */
+  var supSection = document.getElementById('dSupportsSection');
+  if (a.supports && a.supports.length) {
+    var supHtml = '';
+    a.supports.forEach(function(s){
+      supHtml += '<div class="d-sup"><div class="d-sup-icon"><i class="ti '+s.icon+'"></i></div><div><div class="d-sup-title">'+s.title+'</div>'+(s.desc?'<div class="d-sup-desc">'+s.desc+'</div>':'')+'</div></div>';
+    });
+    document.getElementById('dSupports').innerHTML = supHtml;
+    supSection.style.display = '';
+  } else {
+    supSection.style.display = 'none';
+  }
  
   /* feedbacks */
   var fbHtml = '';
