@@ -56,20 +56,20 @@ h1,h2,h3,h4{font-family:'Montserrat',sans-serif; font-weight:700; letter-spacing
 /* consult widget */
 
 /* hero */
-.hero{ background:var(--dark); padding:72px 0 48px; text-align:center;}
+.hero{ background:radial-gradient(circle at 50% -5%, rgba(252,82,41,.08), transparent 55%), var(--paper); padding:72px 0 48px; text-align:center;}
 .hero .eyebrow{ margin-bottom:20px;}
-.hero h1{ font-size:40px; color:var(--text-dark); letter-spacing:-1.6px; margin-bottom:14px; white-space:nowrap;}
+.hero h1{ font-size:40px; color:var(--text); letter-spacing:-1.6px; margin-bottom:14px; white-space:nowrap;}
 @media(max-width:640px){ .hero h1{ font-size:26px; white-space:normal;} }
 .hero h1 em{ color:var(--orange); font-style:normal;}
-.hero .sub{ font-size:15px; color:var(--muted-dark); max-width:480px; margin:0 auto 30px; line-height:1.7;}
+.hero .sub{ font-size:15px; color:var(--muted); max-width:480px; margin:0 auto 30px; line-height:1.7;}
 .hero-cta{ display:flex; gap:12px; justify-content:center; flex-wrap:wrap; margin-bottom:36px;}
-.hero-stats{ display:flex; gap:40px; justify-content:center; flex-wrap:wrap; max-width:640px; margin:52px auto 0; padding-top:32px; border-top:.5px solid var(--line-dark);}
+.hero-stats{ display:flex; gap:40px; justify-content:center; flex-wrap:wrap; max-width:640px; margin:52px auto 0; padding-top:32px; border-top:.5px solid var(--line);}
 .hstat{ text-align:center;}
 .hstat-num{ font-family:'Montserrat',sans-serif; font-size:34px; font-weight:700; color:var(--orange); line-height:1;}
-.hstat-lbl{ font-size:11px; color:var(--muted-dark-2); margin-top:5px; text-transform:uppercase; letter-spacing:.06em;}
+.hstat-lbl{ font-size:11px; color:var(--muted-2); margin-top:5px; text-transform:uppercase; letter-spacing:.06em;}
 
-/* wave divider — nối liền từ hero đen xuống các section bên dưới (cũng đen) */
-.wave{ background:var(--dark); line-height:0;}
+/* wave divider — nối từ hero sáng xuống dải advisor nền đen bên dưới */
+.wave{ background:var(--paper); line-height:0;}
 .wave svg{ width:100%; height:36px; display:block;}
 
 /* sections */
@@ -264,22 +264,22 @@ footer span{ color:var(--orange);}
 .hp-adv-track{display:flex;gap:16px;width:max-content;animation:hpAdvScroll 40s linear infinite;}
 .hp-adv-track:hover{animation-play-state:paused;}
 @keyframes hpAdvScroll{ from{transform:translateX(0);} to{transform:translateX(-50%);} }
-.hp-adv-card{width:220px;flex:none;background:var(--paper-2);border:.5px solid var(--line);border-radius:16px;overflow:hidden;transition:border-color .2s,transform .2s,box-shadow .2s;display:flex;flex-direction:column;cursor:pointer;}
-.hp-adv-card:hover{border-color:rgba(252,82,41,.35);transform:translateY(-3px);box-shadow:0 10px 28px rgba(28,28,28,.1);}
+.hp-adv-card{width:220px;flex:none;background:var(--dark-card);border:.5px solid var(--line-dark);border-radius:16px;overflow:hidden;transition:border-color .2s,transform .2s,box-shadow .2s;display:flex;flex-direction:column;cursor:pointer;}
+.hp-adv-card:hover{border-color:rgba(252,82,41,.4);transform:translateY(-3px);box-shadow:0 10px 28px rgba(0,0,0,.3);}
 .hp-adv-topbar{height:4px;width:100%;background:var(--orange);flex-shrink:0;}
-.hp-adv-photo{position:relative;width:100%;aspect-ratio:1/1;background:#EDEBE6;overflow:hidden;flex-shrink:0;}
+.hp-adv-photo{position:relative;width:100%;aspect-ratio:1/1;background:#252525;overflow:hidden;flex-shrink:0;}
 .hp-adv-photo img{width:100%;height:100%;object-fit:cover;display:block;filter:grayscale(.15);transition:filter .25s;}
 .hp-adv-card:hover .hp-adv-photo img{filter:grayscale(0);}
-.hp-adv-photo .hp-ph-fallback{width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-family:'Montserrat',sans-serif;font-size:34px;font-weight:700;color:rgba(28,28,28,.18);background:linear-gradient(135deg,#f3f1ec,#e9e6df);}
-.hp-adv-match{position:absolute;top:8px;right:8px;width:26px;height:26px;border-radius:8px;background:rgba(252,82,41,.92);display:flex;align-items:center;justify-content:center;box-shadow:0 2px 6px rgba(0,0,0,.18);}
+.hp-adv-photo .hp-ph-fallback{width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-family:'Montserrat',sans-serif;font-size:34px;font-weight:700;color:var(--orange);background:linear-gradient(135deg,#252525,#1a1a1a);}
+.hp-adv-match{position:absolute;top:8px;right:8px;width:26px;height:26px;border-radius:8px;background:rgba(252,82,41,.92);display:flex;align-items:center;justify-content:center;box-shadow:0 2px 6px rgba(0,0,0,.3);}
 .hp-adv-match i{font-size:13px;color:#fff;}
-.hp-adv-culogo{position:absolute;right:10px;bottom:-14px;width:40px;height:40px;border-radius:10px;background:#fff;border:.5px solid rgba(28,28,28,.1);box-shadow:0 3px 10px rgba(0,0,0,.12);display:flex;align-items:center;justify-content:center;overflow:hidden;font-family:'Montserrat',sans-serif;font-size:11px;font-weight:700;color:rgba(28,28,28,.5);}
+.hp-adv-culogo{position:absolute;right:10px;bottom:-14px;width:40px;height:40px;border-radius:10px;background:#fff;border:.5px solid rgba(0,0,0,.1);box-shadow:0 3px 10px rgba(0,0,0,.35);display:flex;align-items:center;justify-content:center;overflow:hidden;font-family:'Montserrat',sans-serif;font-size:11px;font-weight:700;color:rgba(28,28,28,.5);}
 .hp-adv-culogo img{width:100%;height:100%;object-fit:contain;padding:5px;}
 .hp-adv-body{padding:22px 14px 12px;flex:1;display:flex;flex-direction:column;}
-.hp-adv-name{font-family:'Montserrat',sans-serif;font-size:13px;font-weight:800;letter-spacing:.01em;color:var(--text);text-transform:uppercase;margin-bottom:6px;line-height:1.25;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.hp-adv-role{font-size:11px;line-height:1.5;color:var(--muted);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+.hp-adv-name{font-family:'Montserrat',sans-serif;font-size:13px;font-weight:800;letter-spacing:.01em;color:var(--text-dark);text-transform:uppercase;margin-bottom:6px;line-height:1.25;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.hp-adv-role{font-size:11px;line-height:1.5;color:var(--muted-dark);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
 .hp-adv-foot{padding:0 14px 16px;}
-.hp-adv-tag{display:inline-flex;align-items:center;gap:6px;font-size:10px;font-family:'Montserrat',sans-serif;font-weight:600;padding:4px 10px;border-radius:100px;border:.5px solid var(--line);color:var(--muted);text-transform:uppercase;letter-spacing:.03em;}
+.hp-adv-tag{display:inline-flex;align-items:center;gap:6px;font-size:10px;font-family:'Montserrat',sans-serif;font-weight:600;padding:4px 10px;border-radius:100px;border:.5px solid var(--line-dark);color:var(--muted-dark);text-transform:uppercase;letter-spacing:.03em;}
 .hp-adv-tag-dot{width:6px;height:6px;border-radius:50%;background:var(--orange);flex-shrink:0;}
 @media(max-width:560px){ .hp-adv-card{width:170px;} .hp-adv-body{padding:14px 10px 8px;} .hp-adv-name{font-size:11px;} .hp-adv-role{font-size:10px;} }
 
@@ -492,14 +492,14 @@ button:focus-visible, a:focus-visible, .lj-nav-btn-plain:focus-visible, .fbtn:fo
 <section class="hero">
   <div class="wrap">
     <div style="display:flex; flex-direction:row; align-items:center; justify-content:center; gap:10px; margin-bottom:32px;">
-      <span class="eyebrow on-dark" style="margin-bottom:0;">Career advisor</span>
-      <a class="eyebrow on-dark" style="margin-bottom:0;">Career course</a>
+      <span class="eyebrow" style="margin-bottom:0;">Career advisor</span>
+      <a class="eyebrow" style="margin-bottom:0;">Career course</a>
     </div>
     <h1 style="white-space:normal;">Kết nối 1-1 với Advisor <br><em>đang làm tại các tập đoàn đa quốc gia</em></h1>
     <p class="sub"> Để ứng tuyển & làm việc tại các công ty đa quốc gia không mơ hồ, không tự ti và hiểu rõ yêu cầu nhà tuyển dụng.</p>
     <div class="hero-cta">
       <button class="btn btn-orange" onclick="openConsultWidget()">Đăng ký tư vấn miễn phí</button>
-      <a href="success-stories.html" class="btn btn-ghost-dark">Xem câu chuyện thành công</a>
+      <a href="success-stories.html" class="btn btn-ghost-light">Xem câu chuyện thành công</a>
     </div>
     <div class="hero-stats">
       <div class="hstat"><div class="hstat-num">200+</div><div class="hstat-lbl">Kết nối đã diễn ra</div></div>
@@ -512,10 +512,10 @@ button:focus-visible, a:focus-visible, .lj-nav-btn-plain:focus-visible, .fbtn:fo
 
 <div class="wave"><svg viewBox="0 0 1440 40" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none"><path d="M0,40 C360,0 1080,0 1440,40 L1440,40 L0,40 Z" fill="#0D0D0D"/></svg></div>
 
-<section style="padding:44px 0;">
+<section class="on-dark" style="padding:44px 0;">
   <div class="hp-adv-viewport">
     <div class="hp-adv-track" id="hpAdvGrid">
-      <div style="padding:20px;color:var(--muted-2);font-size:12.5px;">Đang tải đội ngũ advisor…</div>
+      <div style="padding:20px;color:var(--muted-dark-2);font-size:12.5px;">Đang tải đội ngũ advisor…</div>
     </div>
   </div>
 </section>
