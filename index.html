@@ -264,22 +264,22 @@ footer span{ color:var(--orange);}
 .hp-adv-track{display:flex;gap:16px;width:max-content;animation:hpAdvScroll 40s linear infinite;}
 .hp-adv-track:hover{animation-play-state:paused;}
 @keyframes hpAdvScroll{ from{transform:translateX(0);} to{transform:translateX(-50%);} }
-.hp-adv-card{width:220px;flex:none;background:var(--dark-card);border:.5px solid var(--line-dark);border-radius:16px;overflow:hidden;transition:border-color .2s,transform .2s,box-shadow .2s;display:flex;flex-direction:column;cursor:pointer;}
+.hp-adv-card{width:220px;flex:none;background:#fff;border:.5px solid rgba(28,28,28,.08);border-radius:16px;overflow:hidden;transition:border-color .2s,transform .2s,box-shadow .2s;display:flex;flex-direction:column;cursor:pointer;}
 .hp-adv-card:hover{border-color:rgba(252,82,41,.4);transform:translateY(-3px);box-shadow:0 10px 28px rgba(0,0,0,.3);}
 .hp-adv-topbar{height:4px;width:100%;background:var(--orange);flex-shrink:0;}
-.hp-adv-photo{position:relative;width:100%;aspect-ratio:1/1;background:#252525;overflow:hidden;flex-shrink:0;}
+.hp-adv-photo{position:relative;width:100%;aspect-ratio:1/1;background:#EDEBE6;overflow:hidden;flex-shrink:0;}
 .hp-adv-photo img{width:100%;height:100%;object-fit:cover;display:block;filter:grayscale(.15);transition:filter .25s;}
 .hp-adv-card:hover .hp-adv-photo img{filter:grayscale(0);}
-.hp-adv-photo .hp-ph-fallback{width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-family:'Montserrat',sans-serif;font-size:34px;font-weight:700;color:var(--orange);background:linear-gradient(135deg,#252525,#1a1a1a);}
+.hp-adv-photo .hp-ph-fallback{width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-family:'Montserrat',sans-serif;font-size:34px;font-weight:700;color:var(--orange);background:linear-gradient(135deg,#f3f1ec,#e9e6df);}
 .hp-adv-match{position:absolute;top:8px;right:8px;width:26px;height:26px;border-radius:8px;background:rgba(252,82,41,.92);display:flex;align-items:center;justify-content:center;box-shadow:0 2px 6px rgba(0,0,0,.3);}
 .hp-adv-match i{font-size:13px;color:#fff;}
-.hp-adv-culogo{position:absolute;right:10px;bottom:-14px;width:40px;height:40px;border-radius:10px;background:#fff;border:.5px solid rgba(0,0,0,.1);box-shadow:0 3px 10px rgba(0,0,0,.35);display:flex;align-items:center;justify-content:center;overflow:hidden;font-family:'Montserrat',sans-serif;font-size:11px;font-weight:700;color:rgba(28,28,28,.5);}
+.hp-adv-culogo{position:absolute;right:10px;bottom:-14px;width:40px;height:40px;border-radius:10px;background:#fff;border:.5px solid rgba(0,0,0,.1);box-shadow:0 3px 10px rgba(0,0,0,.2);display:flex;align-items:center;justify-content:center;overflow:hidden;font-family:'Montserrat',sans-serif;font-size:11px;font-weight:700;color:rgba(28,28,28,.5);}
 .hp-adv-culogo img{width:100%;height:100%;object-fit:contain;padding:5px;}
 .hp-adv-body{padding:22px 14px 12px;flex:1;display:flex;flex-direction:column;}
-.hp-adv-name{font-family:'Montserrat',sans-serif;font-size:13px;font-weight:800;letter-spacing:.01em;color:var(--text-dark);text-transform:uppercase;margin-bottom:6px;line-height:1.25;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.hp-adv-role{font-size:11px;line-height:1.5;color:var(--muted-dark);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+.hp-adv-name{font-family:'Montserrat',sans-serif;font-size:13px;font-weight:800;letter-spacing:.01em;color:#1C1C1C;text-transform:uppercase;margin-bottom:6px;line-height:1.25;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.hp-adv-role{font-size:11px;line-height:1.5;color:rgba(28,28,28,.5);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
 .hp-adv-foot{padding:0 14px 16px;}
-.hp-adv-tag{display:inline-flex;align-items:center;gap:6px;font-size:10px;font-family:'Montserrat',sans-serif;font-weight:600;padding:4px 10px;border-radius:100px;border:.5px solid var(--line-dark);color:var(--muted-dark);text-transform:uppercase;letter-spacing:.03em;}
+.hp-adv-tag{display:inline-flex;align-items:center;gap:6px;font-size:10px;font-family:'Montserrat',sans-serif;font-weight:700;padding:4px 10px;border-radius:100px;background:rgba(252,82,41,.1);color:var(--orange);text-transform:uppercase;letter-spacing:.03em;}
 .hp-adv-tag-dot{width:6px;height:6px;border-radius:50%;background:var(--orange);flex-shrink:0;}
 @media(max-width:560px){ .hp-adv-card{width:170px;} .hp-adv-body{padding:14px 10px 8px;} .hp-adv-name{font-size:11px;} .hp-adv-role{font-size:10px;} }
 
@@ -430,7 +430,7 @@ footer span{ color:var(--orange);}
 .btn-svc:hover{ background:var(--orange); color:#fff;}
 
 /* final CTA orange block */
-.cta-wrap{ padding:0 32px 72px; background:var(--dark);}
+.cta-wrap{ padding:72px 32px; background:var(--dark);}
 .cta-box{ background:var(--orange); border-radius:22px; padding:56px 48px; text-align:center; max-width:1120px; margin:0 auto;}
 .cta-box h2{ font-size:32px; font-weight:700; letter-spacing:-1.2px; color:#fff; margin-bottom:10px; line-height:1.15;}
 .cta-box p{ font-size:14.5px; color:rgba(255,255,255,.85); margin-bottom:28px;}
@@ -510,13 +510,13 @@ button:focus-visible, a:focus-visible, .lj-nav-btn-plain:focus-visible, .fbtn:fo
   </div>
 </section>
 
-<div class="wave"><svg viewBox="0 0 1440 40" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none"><path d="M0,40 C360,0 1080,0 1440,40 L1440,40 L0,40 Z" fill="#0D0D0D"/></svg></div>
 
-<section class="on-paper" style="padding:44px 0;">
+<section class="on-dark" style="padding:44px 0;">
   <div class="wrap">
-    <div class="section-head">
-      <span class="eyebrow"><span class="eyebrow-dot"></span>Đội ngũ Advisor</span>
-</div>
+    <div class="section-head" style="margin-bottom:24px;">
+      <span class="eyebrow on-dark"><span class="eyebrow-dot"></span>Đội ngũ Advisor</span>
+    </div>
+  </div>
   <div class="hp-adv-viewport">
     <div class="hp-adv-track" id="hpAdvGrid">
       <div style="padding:20px;color:var(--muted-dark-2);font-size:12.5px;">Đang tải đội ngũ advisor…</div>
@@ -575,7 +575,7 @@ button:focus-visible, a:focus-visible, .lj-nav-btn-plain:focus-visible, .fbtn:fo
   </div>
 </section>
 
-<section style="padding-top:0;">
+<section>
   <div class="wrap">
     <div class="section-head">
       <span class="eyebrow"><span class="eyebrow-dot"></span>Dịch vụ</span>
