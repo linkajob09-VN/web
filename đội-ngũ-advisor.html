@@ -1,6 +1,8 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
+<link rel="preconnect" href="https://script.google.com">
+<link rel="dns-prefetch" href="https://script.google.com">
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Đội ngũ Advisor · LinkaJob</title>
@@ -555,30 +557,61 @@ function parseListField(val){
   }).filter(Boolean);
 }
 
+/* Cache kết quả getAdvisors vào sessionStorage — trong 1 phiên truy cập
+   (tab đang mở), nếu người dùng qua lại giữa các trang (index.html,
+   đội-ngũ-advisor.html) trong vòng 10 phút thì dùng lại dữ liệu cũ,
+   không gọi lại Apps Script mỗi lần load trang. */
+var HP_CACHE_KEY = 'lj_advisors_cache_v1';
+var HP_CACHE_TTL_MS = 10 * 60 * 1000; // 10 phút
+
+function getCachedAdvisorsRaw(){
+  try {
+    var raw = sessionStorage.getItem(HP_CACHE_KEY);
+    if (!raw) return null;
+    var parsed = JSON.parse(raw);
+    if (!parsed || (Date.now() - parsed.ts) > HP_CACHE_TTL_MS) return null;
+    return parsed.data;
+  } catch(e){ return null; }
+}
+function setCachedAdvisorsRaw(data){
+  try { sessionStorage.setItem(HP_CACHE_KEY, JSON.stringify({ ts: Date.now(), data: data })); } catch(e){}
+}
+
 function fetchAdvisorsFromSheet() {
+  var cached = getCachedAdvisorsRaw();
+  if (cached) {
+    buildAdvisorsFromRaw(cached);
+    return Promise.resolve();
+  }
   return fetch(WEBAPP_URL + '?action=getAdvisors&only_active=1')
     .then(function(r){ return r.json(); })
     .then(function(res){
-      ADVISORS = (res && res.data) ? res.data.map(function(a, idx){
-        return {
-          id: idx,
-          initials: (a.initials || '').toUpperCase() || mkInitialsFallback(a.name),
-          photo: toDirectImageUrl(a.photo || a.photo_url || a.avatar || a.image || a.image_url || ''),
-          name: a.name || '',
-          role: a.role || '',
-          co: a.company || '',
-          companyLogo: toDirectImageUrl(a.company_logo || a.company_logo_url || a.logo_url || ''),
-          ind: a.industry ? a.industry.split(',').map(function(t){ return t.trim(); }).filter(Boolean) : [],
-          prog: parseListField(a.experience_json || a.prev_experience || a.experience),
-          message: a.message || a.bio || '',
-          supports: parseSupportsField(a.support_items || a.can_help || a.supports_text),
-          feedbacks: Array.isArray(a.feedbacks) ? a.feedbacks.map(function(f){
-            return { badge: '✓ Feedback', text: f.text || '', name: f.from || '', school: '', initials: mkInitialsFallback(f.from||'') };
-          }) : [],
-        };
-      }) : [];
+      var data = (res && res.data) ? res.data : [];
+      setCachedAdvisorsRaw(data);
+      buildAdvisorsFromRaw(data);
     })
     .catch(function(){ ADVISORS = []; });
+}
+
+function buildAdvisorsFromRaw(data){
+  ADVISORS = data.map(function(a, idx){
+    return {
+      id: idx,
+      initials: (a.initials || '').toUpperCase() || mkInitialsFallback(a.name),
+      photo: toDirectImageUrl(a.photo || a.photo_url || a.avatar || a.image || a.image_url || ''),
+      name: a.name || '',
+      role: a.role || '',
+      co: a.company || '',
+      companyLogo: toDirectImageUrl(a.company_logo || a.company_logo_url || a.logo_url || ''),
+      ind: a.industry ? a.industry.split(',').map(function(t){ return t.trim(); }).filter(Boolean) : [],
+      prog: parseListField(a.experience_json || a.prev_experience || a.experience),
+      message: a.message || a.bio || '',
+      supports: parseSupportsField(a.support_items || a.can_help || a.supports_text),
+      feedbacks: Array.isArray(a.feedbacks) ? a.feedbacks.map(function(f){
+        return { badge: '✓ Feedback', text: f.text || '', name: f.from || '', school: '', initials: mkInitialsFallback(f.from||'') };
+      }) : [],
+    };
+  });
 }
  
 function mkInitialsFallback(name) {
