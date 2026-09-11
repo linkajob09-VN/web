@@ -333,13 +333,21 @@ body{font-family:'Montserrat',sans-serif;background:#F5F4F1;color:#1C1C1C;overfl
   <button class="fbtn" onclick="doFilter(this,'marketing')">Marketing</button>
 </div>
  
+<!-- GRID -->
+<div class="grid-wrap">
+  <div class="grid-count"><span id="countNum">0</span> advisors</div>
+  <div class="adv-grid" id="advGrid">
+  <div style="grid-column:1/-1;text-align:center;padding:40px;color:rgba(28,28,28,.35);font-family:'Montserrat',sans-serif;font-size:13px;">Đang tải danh sách advisor...</div>
+</div>
+</div>
+ 
 <!-- CTA STRIP -->
 <div class="cta-strip">
   <div>
     <div class="cta-strip-t">Chưa biết Advisor nào phù hợp cố vấn với bạn?</div>
     <div class="cta-strip-s">LinkaJob sẽ giúp bạn match advisor phù hợp nhất với ngành và mục tiêu của bạn & hoàn toàn miễn phí.</div>
   </div>
-  <button class="cta-strip-btn" onclick="openConsultWidget('','','','')">Nhờ LinkaJob tư vấn →</button>
+  <button class="cta-strip-btn" onclick="openConsultWidget()">Nhờ LinkaJob tư vấn →</button>
 </div>
  
 <!-- FOOTER -->
