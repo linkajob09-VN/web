@@ -4645,7 +4645,7 @@ function renderAdvisorNewForm() {
   });
   html += '</div>';
 
-  html += '<div class="card"><div class="form-footer"><button class="submit-btn" onclick="saveNewAdvisor()">Thêm Advisor</button></div></div>';
+  html += '<div class="card"><div class="form-footer"><button class="btn-secondary" style="width:auto;padding:10px 20px" onclick="navTo(\'adv-list\')">Huỷ</button><button class="submit-btn" onclick="saveNewAdvisor()">Thêm Advisor</button></div></div>';
   return html;
 }
 
@@ -4685,7 +4685,7 @@ function saveNewAdvisor() {
     industry: document.getElementById('na-tags').value.trim(),
     email: email, phone: phone,
     bio: document.getElementById('na-bio').value.trim(),
-    experience: experience,
+    experience: experience, products: products, support_items: supportItems,
   }).then(function(res){
     if (res && res.success) {
       toast('Đã thêm ' + name + ' — cần vào Sheet đổi is_active = TRUE để hiện trên web ✅', 'success');
@@ -4737,7 +4737,7 @@ function renderAdvisorModule() {
 
   // Active advisor cards
   html += '<div class="card"><div class="card-header"><div class="card-header-left">Advisor đang hoạt động</div>';
-  html += '<button class="submit-btn" style="padding:8px 16px;font-size:13px" onclick="toast(\'Form thêm Advisor mới (demo)\',\'success\')">+ Thêm Advisor mới</button></div>';
+  html += '<button class="submit-btn" style="padding:8px 16px;font-size:13px" onclick="document.getElementById(\'main-content\').innerHTML = renderAdvisorNewForm()">+ Thêm Advisor mới</button></div>';
   html += '<div style="padding:0 20px">' + searchBoxHtml('advisor-list-tbody', 'Tìm theo tên, chức danh, email...') + '</div>';
   if (active.length === 0) {
     html += '<div class="empty-state"><div class="icon">👤</div>Chưa có advisor nào</div>';
@@ -5168,6 +5168,7 @@ function saveAdvisorEdit(advisorId) {
     email: a.email, phone: a.phone, zalo_id: a.contact,
     bio: a.bio, message: a.message, photo_url: a.photo,
     experience: a.experience, products: a.products, feedbacks: a.feedbacks,
+    support_items: a.supportItems,
   }).then(function(res){
     if (res && res.success) toast('Đã lưu & đồng bộ lên Sheet ✅', 'success');
     else toast('Lỗi khi lưu lên Sheet: ' + (res && res.error), 'error');
