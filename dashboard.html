@@ -4848,24 +4848,13 @@ function renderStaffAdvisorDetail(advisorId) {
     html += '</div>';
   }
 
-  // Feedback tự động lấy từ feedback thật của Advisee sau mỗi buổi meeting
-  var realFeedbacks = [];
-  MOCK.advisees.filter(function(ae){ return ae.advisor === a.name; }).forEach(function(ae){
-    ae.sessions.forEach(function(s){
-      if (s.feedback) realFeedbacks.push({ key: ae.id + '-' + s.no, from: ae.name, rating: s.feedback.rating, text: s.feedback.text });
-    });
-  });
-  a.hiddenFeedback = a.hiddenFeedback || [];
-
-  html += '<div><div style="font-size:10.5px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;margin-bottom:6px">Feedback nhận được <span style="font-weight:400;text-transform:none;letter-spacing:0">(tự động lấy sau mỗi buổi meeting)</span></div>';
-  if (realFeedbacks.length === 0) {
+  html += '<div><div style="font-size:10.5px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;margin-bottom:6px">Feedback đang hiển thị trên web</div>';
+  var fbList = Array.isArray(a.feedbacks) ? a.feedbacks : [];
+  if (fbList.length === 0) {
     html += '<span style="font-size:12.5px;color:var(--muted);font-style:italic">Chưa có feedback nào</span>';
   } else {
-    realFeedbacks.forEach(function(f){
-      var isHidden = a.hiddenFeedback.indexOf(f.key) > -1;
-      var stars = '';
-      for (var si2=1; si2<=5; si2++) stars += (si2 <= f.rating ? '★' : '☆');
-      html += '<div style="background:var(--bg);border-radius:8px;padding:10px 12px;margin-bottom:6px;font-size:12.5px;' + (isHidden?'opacity:.5':'') + '"><span style="color:#F59E0B">' + stars + '</span> <span style="color:var(--text)">"' + f.text + '"</span> <span style="color:var(--muted)">— ' + f.from + '</span>' + (isHidden ? ' <span style="color:var(--muted);font-style:italic">(đã ẩn khỏi web)</span>' : '') + '</div>';
+    fbList.forEach(function(f){
+      html += '<div style="background:var(--bg);border-radius:8px;padding:10px 12px;margin-bottom:6px;font-size:12.5px"><span style="color:var(--text)">"' + f.text + '"</span> <span style="color:var(--muted)">— ' + (f.from || f.name || '') + '</span></div>';
     });
   }
   html += '</div>';
@@ -4973,6 +4962,21 @@ function toggleAdvisorActive(advisorId) {
 }
 
 var _eaExpIdx = 0;
+var _eaFbIdx = 0;
+
+function eaFbRowHtml(idx, fb) {
+  fb = fb || {};
+  return '<div class="ea-fb-row" data-idx="' + idx + '" style="background:var(--white);border:1.5px solid var(--border);border-radius:10px;padding:12px;margin-bottom:10px;position:relative">' +
+    '<button type="button" onclick="this.closest(\'.ea-fb-row\').remove()" style="position:absolute;top:8px;right:8px;background:none;border:none;color:var(--muted);cursor:pointer;font-size:16px;line-height:1">×</button>' +
+    '<input class="form-input ea-fb-from" placeholder="Tên Advisee (VD: Trần Gia Hân)" value="' + (fb.from || fb.name || '') + '" style="margin-bottom:8px">' +
+    '<textarea class="form-textarea ea-fb-text" rows="2" placeholder="Nội dung feedback">' + (fb.text || '') + '</textarea>' +
+    '</div>';
+}
+
+function addFeedbackRow(containerId, fb) {
+  var container = document.getElementById(containerId || 'ea-fb-list');
+  container.insertAdjacentHTML('beforeend', eaFbRowHtml(_eaFbIdx++, fb));
+}
 
 function eaExpRowHtml(idx, ex) {
   ex = ex || {};
@@ -5078,24 +5082,31 @@ function openEditAdvisorModal(advisorId) {
   body += '</div>';
 
   // ── 7. Feedback hiển thị trên web ──
-  var realFeedbacksEdit = [];
+  // Gộp 2 nguồn: (a) feedback đã lưu từ trước trong feedbacks_json — bao gồm cả
+  // feedback cũ (2 năm trước, nhập tay từ Form/Zalo/Facebook cũ) lẫn feedback
+  // buổi meeting thật đã được thêm vào trước đó; (b) feedback buổi meeting MỚI
+  // phát sinh (từ session thật) mà admin chưa từng thêm vào danh sách hiển thị.
+  // Toàn bộ danh sách dưới đây có thể thêm/sửa/xoá tự do, không còn tách rời
+  // giữa "tự động" và "nhập tay" — admin có thể bổ sung feedback cũ ở đây.
+  _eaFbIdx = 0;
+  var existingFb = Array.isArray(a.feedbacks) ? a.feedbacks.slice() : [];
+  var existingFbKeys = existingFb.map(function(f){ return ((f.from||f.name||'') + '|' + (f.text||'')).trim(); });
   MOCK.advisees.filter(function(ae){ return ae.advisor === a.name; }).forEach(function(ae){
     ae.sessions.forEach(function(s){
-      if (s.feedback) realFeedbacksEdit.push({ key: ae.id + '-' + s.no, from: ae.name, rating: s.feedback.rating, text: s.feedback.text });
+      if (!s.feedback || !s.feedback.text) return;
+      var key = (ae.name + '|' + s.feedback.text).trim();
+      if (existingFbKeys.indexOf(key) === -1) {
+        existingFb.push({ from: ae.name, text: s.feedback.text });
+        existingFbKeys.push(key);
+      }
     });
   });
-  a.hiddenFeedback = a.hiddenFeedback || [];
-  if (realFeedbacksEdit.length > 0) {
-    body += '<div class="ea-section"><div class="ea-section-title">⭐ Feedback hiển thị trên web</div>';
-    realFeedbacksEdit.forEach(function(f){
-      var checked = a.hiddenFeedback.indexOf(f.key) === -1;
-      body += '<label style="display:flex;align-items:flex-start;gap:10px;background:var(--white);border:1.5px solid var(--border);border-radius:10px;padding:9px 14px;cursor:pointer;margin-bottom:6px">' +
-        '<input type="checkbox" class="ea-fb-cb" value="' + f.key + '" ' + (checked?'checked':'') + ' style="margin-top:2px">' +
-        '<div style="flex:1;font-size:12.5px"><span style="color:#F59E0B">' + '★'.repeat(f.rating) + '☆'.repeat(5-f.rating) + '</span> "' + f.text + '" <span style="color:var(--muted)">— ' + f.from + '</span></div>' +
-        '</label>';
-    });
-    body += '</div>';
-  }
+
+  body += '<div class="ea-section"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">' +
+    '<div class="ea-section-title" style="margin-bottom:0">⭐ Feedback hiển thị trên web <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted)">(gồm cả feedback cũ nhập tay)</span></div>' +
+    '<button type="button" class="update-btn" onclick="addFeedbackRow(\'ea-fb-list\')">+ Thêm feedback</button></div>' +
+    '<div id="ea-fb-list">' + existingFb.map(function(fb){ var h = eaFbRowHtml(_eaFbIdx, fb); _eaFbIdx++; return h; }).join('') + '</div>' +
+    '</div>';
 
   body += '</div>';
 
@@ -5157,8 +5168,13 @@ function saveAdvisorEdit(advisorId) {
 
   a.products = Array.from(document.querySelectorAll('.ea-pkg-cb:checked')).map(function(cb){ return cb.value; });
 
-  var uncheckedFb = Array.from(document.querySelectorAll('.ea-fb-cb')).filter(function(cb){ return !cb.checked; }).map(function(cb){ return cb.value; });
-  if (document.querySelector('.ea-fb-cb')) a.hiddenFeedback = uncheckedFb;
+  a.feedbacks = [];
+  document.querySelectorAll('#ea-fb-list .ea-fb-row').forEach(function(row){
+    var from = row.querySelector('.ea-fb-from').value.trim();
+    var text = row.querySelector('.ea-fb-text').value.trim();
+    if (!from || !text) return; // bỏ dòng trống (vd người dùng bấm "+ Thêm" nhưng không điền)
+    a.feedbacks.push({ from: from, text: text });
+  });
 
   apiPost({
     action: 'updateAdvisor',
