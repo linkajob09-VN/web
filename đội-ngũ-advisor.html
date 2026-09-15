@@ -109,8 +109,8 @@ body{font-family:'Montserrat',sans-serif;background:#F5F4F1;color:#1C1C1C;overfl
  
 /* tags row */
 .d-tags{padding:16px 24px 0;display:flex;flex-wrap:wrap;gap:5px;}
-.d-exp-bullets{list-style:none;padding:0 24px;margin:0;display:flex;flex-direction:column;gap:7px;}
-.d-exp-bullets li{font-size:12.5px;line-height:1.55;color:rgba(240,240,240,.5);padding-left:14px;position:relative;}
+.d-exp-bullets{list-style:none;margin:0 24px;padding:14px 16px;background:#F5F3EF;border-radius:12px;display:flex;flex-direction:column;gap:7px;}
+.d-exp-bullets li{font-size:12.5px;line-height:1.55;color:#1A1A1A;padding-left:14px;position:relative;}
 .d-exp-bullets li::before{content:'';position:absolute;left:0;top:7px;width:4px;height:4px;border-radius:50%;background:#fc5229;}
 .atag{font-size:10.5px;font-family:'Montserrat',sans-serif;font-weight:500;padding:3px 10px;border-radius:100px;}
 .atag-ind{background:rgba(252,82,41,.12);color:#fc5229;border:.5px solid rgba(252,82,41,.2);}
@@ -118,18 +118,18 @@ body{font-family:'Montserrat',sans-serif;background:#F5F4F1;color:#1C1C1C;overfl
  
 /* message from advisor */
 .d-section{padding:20px 24px 0;}
-.d-sec-label{font-size:10px;color:rgba(240,240,240,.25);letter-spacing:.1em;text-transform:uppercase;font-family:'Montserrat',sans-serif;margin-bottom:10px;}
+.d-sec-label{font-size:11px;font-weight:700;color:#fc5229;letter-spacing:.1em;text-transform:uppercase;font-family:'Montserrat',sans-serif;margin-bottom:10px;}
 .d-message{background:#1A1A1A;border:.5px solid rgba(255,255,255,.07);border-radius:12px;padding:16px 18px;font-size:13px;color:rgba(240,240,240,.55);line-height:1.75;position:relative;}
 .d-message::before{content:'"';font-family:'Montserrat',sans-serif;font-size:40px;color:rgba(252,82,41,.2);line-height:1;position:absolute;top:8px;left:14px;}
 .d-message p{padding-left:20px;}
  
 /* support items */
 .d-supports{display:flex;flex-direction:column;gap:8px;}
-.d-sup{display:flex;align-items:flex-start;gap:10px;padding:11px 14px;background:#1A1A1A;border:.5px solid rgba(255,255,255,.06);border-radius:10px;}
-.d-sup-icon{width:28px;height:28px;border-radius:8px;background:rgba(252,82,41,.08);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.d-sup{display:flex;align-items:flex-start;gap:10px;padding:11px 14px;background:#F5F3EF;border:.5px solid rgba(0,0,0,.06);border-radius:10px;}
+.d-sup-icon{width:28px;height:28px;border-radius:8px;background:rgba(252,82,41,.12);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:14px;}
 .d-sup-icon i{font-size:14px;color:#fc5229;}
-.d-sup-title{font-family:'Montserrat',sans-serif;font-size:13px;font-weight:600;color:#F0F0F0;margin-bottom:2px;}
-.d-sup-desc{font-size:11px;color:rgba(240,240,240,.38);line-height:1.5;}
+.d-sup-title{font-family:'Montserrat',sans-serif;font-size:13px;font-weight:700;color:#111;margin-bottom:2px;}
+.d-sup-desc{font-size:11.5px;color:rgba(0,0,0,.6);line-height:1.5;}
  
 /* feedback */
 .d-feedbacks{display:flex;flex-direction:column;gap:8px;}
@@ -152,11 +152,17 @@ body{font-family:'Montserrat',sans-serif;background:#F5F4F1;color:#1C1C1C;overfl
 /* ═══════════════════════════════════
    CHECKOUT MODAL (Flow 2)
    ═══════════════════════════════════ */
-.m-overlay{position:fixed;inset:0;background:rgba(0,0,0,.85);backdrop-filter:blur(8px);z-index:900;display:flex;align-items:center;justify-content:center;padding:16px;opacity:0;pointer-events:none;transition:opacity .22s;}
+.m-overlay{position:fixed;inset:0;background:rgba(0,0,0,.75);backdrop-filter:blur(6px);z-index:900;display:block;opacity:0;pointer-events:none;transition:opacity .22s;}
 .m-overlay.open{opacity:1;pointer-events:auto;}
-.m-modal{background:#141414;border:.5px solid rgba(255,255,255,.1);border-radius:20px;width:100%;max-width:520px;max-height:90vh;overflow-y:auto;transform:translateY(14px);transition:transform .22s;}
-.m-overlay.open .m-modal{transform:translateY(0);}
-.mh{padding:20px 22px 0;display:flex;align-items:flex-start;justify-content:space-between;}
+/* Widget đăng ký gói: drawer trượt từ phải, đồng bộ với drawer thông tin Advisor */
+.m-modal{position:fixed;top:0;right:0;height:100%;width:460px;max-width:92vw;background:#141414;border-left:.5px solid rgba(255,255,255,.1);border-radius:0;overflow-y:auto;-webkit-overflow-scrolling:touch;transform:translateX(100%);transition:transform .28s cubic-bezier(.22,.61,.36,1);}
+.m-overlay.open .m-modal{transform:translateX(0);}
+@media(max-width:560px){
+  /* Trên điện thoại: chiếm gần trọn màn hình, chừa 1 dải nhỏ phía trên để thoát nhanh */
+  .m-modal{width:100%;max-width:100%;top:auto;bottom:0;height:94%;border-left:none;border-top:.5px solid rgba(255,255,255,.1);border-radius:18px 18px 0 0;transform:translateY(100%);}
+  .m-overlay.open .m-modal{transform:translateY(0);}
+}
+.mh{padding:20px 22px 0;display:flex;align-items:flex-start;justify-content:space-between;position:sticky;top:0;background:#141414;z-index:5;}
 .mh-title{font-family:'Montserrat',sans-serif;font-size:15px;font-weight:700;color:#F0F0F0;}
 .mh-sub{font-size:11px;color:rgba(240,240,240,.28);margin-top:2px;}
 .mxbtn{width:28px;height:28px;border-radius:50%;background:rgba(255,255,255,.06);border:none;color:rgba(240,240,240,.4);font-size:15px;cursor:pointer;display:flex;align-items:center;justify-content:center;}
@@ -237,6 +243,20 @@ body{font-family:'Montserrat',sans-serif;background:#F5F4F1;color:#1C1C1C;overfl
 .pay-note strong{color:#F0F0F0;font-weight:500;}
 /* nav btns */
 .mnav{display:flex;gap:8px;align-items:center;margin-top:16px;padding-top:14px;border-top:.5px solid rgba(255,255,255,.05);}
+@media(max-width:560px){
+  /* Tối ưu widget đăng ký trên điện thoại: giảm padding thừa, tăng vùng chạm,
+     và ghim thanh nút Tiếp theo/Quay lại xuống đáy để luôn bấm được. */
+  .mh{padding:16px 16px 0;}
+  .msteps{padding:12px 16px 0;}
+  .mbody{padding:14px 16px 20px;}
+  .pkgitem{padding:14px 13px;gap:10px;}
+  .pkg-n{font-size:14px;}
+  .pkg-s{font-size:11.5px;line-height:1.45;}
+  .pkg-p{font-size:15px;}
+  .mnav{position:sticky;bottom:0;background:#141414;margin-top:14px;padding:12px 0 calc(12px + env(safe-area-inset-bottom));}
+  .mnav button{min-height:46px;font-size:14px;}
+  .m-modal input,.m-modal select,.m-modal textarea{font-size:16px;} /* >=16px để iOS không tự zoom khi focus */
+}
 .mback{background:transparent;border:.5px solid rgba(255,255,255,.1);color:rgba(240,240,240,.4);font-family:'Space Grotesk',sans-serif;font-weight:500;font-size:12px;padding:9px 16px;border-radius:100px;cursor:pointer;transition:all .2s;}
 .mback:hover{border-color:rgba(255,255,255,.22);color:#F0F0F0;}
 .mnext{background:#fc5229;color:#fff;font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:12px;padding:9px 22px;border-radius:100px;border:none;cursor:pointer;margin-left:auto;transition:opacity .2s;}
@@ -397,7 +417,7 @@ body{font-family:'Montserrat',sans-serif;background:#F5F4F1;color:#1C1C1C;overfl
  
     <!-- support -->
     <div class="d-section" id="dSupportsSection" style="display:none">
-      <div class="d-sec-label">Mình có thể hỗ trợ bạn</div>
+      <div class="d-sec-label">Advisor hỗ trợ bạn</div>
       <div class="d-supports" id="dSupports"></div>
     </div>
  
@@ -442,11 +462,8 @@ body{font-family:'Montserrat',sans-serif;background:#F5F4F1;color:#1C1C1C;overfl
         <div class="apb-ava" id="mApbAva">LJ</div>
         <div><div class="apb-badge">Advisor đã chọn</div><div class="apb-name" id="mApbName">LinkaJob sẽ match cho bạn</div><div class="apb-role" id="mApbRole">Tư vấn miễn phí trước khi chọn</div></div>
       </div>
-      <div class="pkglist">
-        <div class="pkgitem" data-pkg="Trial" onclick="selPkg(this,'Trial','1 buổi · 30 phút','419',419)"><div class="pkg-l"><div class="pkg-n">Trial</div><div class="pkg-s">1 buổi · 30 phút · Thử trước khi commit</div></div><div class="pkg-p">419k</div><div class="pkg-r"><i class="ti ti-check"></i></div></div>
-        <div class="pkgitem" data-pkg="Co-Ban" onclick="selPkg(this,'Cơ Bản','2 buổi · 45–60 phút','799',799)"><div class="pkg-l"><div class="pkg-n">Cơ Bản</div><div class="pkg-s">2 buổi · 45–60 phút · CV + định hướng</div></div><div class="pkg-p">799k</div><div class="pkg-r"><i class="ti ti-check"></i></div></div>
-        <div class="pkgitem pop" data-pkg="Dac-Biet" onclick="selPkg(this,'Đặc Biệt','4 buổi · 45–60 phút','1.499',1499)"><div class="pkg-l"><div class="pkg-n">Đặc Biệt <span class="pkg-pb">Phổ biến</span></div><div class="pkg-s">4 buổi · 45–60 phút · CV + phỏng vấn đầy đủ</div></div><div class="pkg-p">1.499k</div><div class="pkg-r"><i class="ti ti-check"></i></div></div>
-        <div class="pkgitem" data-pkg="Chuyen-Sau" onclick="selPkg(this,'Chuyên Sâu','6 buổi · 45–60 phút','2.199',2199)"><div class="pkg-l"><div class="pkg-n">Chuyên Sâu</div><div class="pkg-s">6 buổi · 45–60 phút · Hành trình toàn diện</div></div><div class="pkg-p">2.199k</div><div class="pkg-r"><i class="ti ti-check"></i></div></div>
+      <div class="pkglist" id="pkgList">
+        <div style="padding:20px;text-align:center;color:rgba(240,240,240,.4);font-size:13px">Đang tải gói...</div>
       </div>
       <div class="mnav"><button class="mnext" id="mBtn1" onclick="goStep(2)" disabled>Tiếp theo →</button></div>
     </div>
@@ -692,22 +709,79 @@ var S={adv:'',advRole:'',advCo:'',advInitials:'',pkg:'',sess:'',priceLabel:'',pr
 var currentAdvisorId = -1;
  
 /* ─── PRESELECTED PACKAGE (từ pricing.html ?package=...) ─── */
-var PKG_DATA = {
-  'Trial'      : {name:'Trial',      sess:'1 buổi · 30 phút',   priceLabel:'419',   priceNum:419},
-  'Co-Ban'     : {name:'Cơ Bản',     sess:'2 buổi · 45–60 phút', priceLabel:'799',   priceNum:799},
-  'Dac-Biet'   : {name:'Đặc Biệt',   sess:'4 buổi · 45–60 phút', priceLabel:'1.499', priceNum:1499},
-  'Chuyen-Sau' : {name:'Chuyên Sâu', sess:'6 buổi · 45–60 phút', priceLabel:'2.199', priceNum:2199}
-};
+/* Gói lấy động từ Google Sheet (cùng nguồn với trang đăng-ký-cố-vấn-advisor.html),
+   thay cho danh sách cứng trước đây — đổi giá/gói trên Sheet là web tự cập nhật. */
+var PKG_DATA = {};
+
+function pkgSlugify(name){
+  return String(name||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'')
+    .replace(/đ/g,'d').replace(/Đ/g,'D')
+    .trim().replace(/\s+/g,'-').replace(/[^a-zA-Z0-9-]/g,'');
+}
+
+function fmtPkgPrice(n){
+  n = Number(n) || 0;
+  var k = Math.round(n / 1000);
+  return k >= 1000 ? (k/1000).toFixed(3).replace('.', '.') : String(k);
+}
+
+function loadPackagesForBooking(){
+  return fetch(WEBAPP_URL + '?action=getPackages&only_active=1')
+    .then(function(r){ return r.json(); })
+    .then(function(res){
+      var pkgs = (res && res.data) ? res.data : [];
+      pkgs = pkgs.filter(function(p){ return p.active === true || p.active === 'TRUE' || p.active === 'true'; });
+      pkgs.sort(function(a,b){ return (Number(a.sort_order)||0) - (Number(b.sort_order)||0); });
+
+      PKG_DATA = {};
+      var html = '';
+      pkgs.forEach(function(p){
+        var slug = pkgSlugify(p.name);
+        var mins = p.duration_minutes || 60;
+        var sessTxt = (p.sessions_unlimited === true || p.sessions_unlimited === 'TRUE')
+          ? 'Không giới hạn buổi'
+          : (p.sessions || 0) + ' buổi';
+        var sess = sessTxt + ' · ' + mins + ' phút';
+        var isContact = String(p.price_mode||'').toLowerCase() === 'contact';
+        var priceLabel = isContact ? 'Liên hệ' : fmtPkgPrice(p.price);
+        var priceHtml = isContact ? 'Liên hệ' : priceLabel + 'k';
+        var badge = p.badge_label ? ' <span class="pkg-pb">' + p.badge_label + '</span>' : '';
+
+        PKG_DATA[slug] = { name: p.name, sess: sess, priceLabel: priceLabel, priceNum: isContact ? 0 : (Number(p.price)||0) };
+
+        html += '<div class="pkgitem' + (p.badge_label ? ' pop' : '') + '" data-pkg="' + slug + '" onclick="applyPackageSelection(\'' + slug + '\')">' +
+          '<div class="pkg-l"><div class="pkg-n">' + p.name + badge + '</div>' +
+          '<div class="pkg-s">' + sess + '</div></div>' +
+          '<div class="pkg-p">' + priceHtml + '</div>' +
+          '<div class="pkg-r"><i class="ti ti-check"></i></div></div>';
+      });
+
+      var wrap = document.getElementById('pkgList');
+      if (wrap) {
+        wrap.innerHTML = html || '<div style="padding:20px;text-align:center;color:rgba(240,240,240,.4);font-size:13px">Chưa có gói nào.</div>';
+      }
+      // Nếu người dùng vào từ link ?package=... thì chọn sẵn gói đó
+      if (presetPackage && PKG_DATA[presetPackage]) applyPackageSelection(presetPackage);
+    })
+    .catch(function(){
+      var wrap = document.getElementById('pkgList');
+      if (wrap) wrap.innerHTML = '<div style="padding:20px;text-align:center;color:rgba(240,240,240,.4);font-size:13px">Không tải được danh sách gói. Vui lòng thử lại.</div>';
+    });
+}
 var urlParams = new URLSearchParams(window.location.search);
 var presetPackage = urlParams.get('package');
-if(presetPackage && !PKG_DATA[presetPackage]) presetPackage = null;
- 
+
 document.addEventListener('DOMContentLoaded', function(){
-  if(presetPackage){
-    document.getElementById('presetPkgName').textContent = PKG_DATA[presetPackage].name;
-    document.getElementById('presetBanner').style.display = 'flex';
-  }
   fetchAdvisorsFromSheet().then(renderAdvisorGrid);
+  // Gói tải bất đồng bộ; banner "đã chọn sẵn gói" chỉ hiện sau khi biết gói có thật
+  loadPackagesForBooking().then(function(){
+    if (presetPackage && PKG_DATA[presetPackage]) {
+      document.getElementById('presetPkgName').textContent = PKG_DATA[presetPackage].name;
+      document.getElementById('presetBanner').style.display = 'flex';
+    } else {
+      presetPackage = null;
+    }
+  });
 });
  
 function applyPackageSelection(slug){
@@ -765,7 +839,11 @@ function openDrawer(id){
   if (a.supports && a.supports.length) {
     var supHtml = '';
     a.supports.forEach(function(s){
-      supHtml += '<div class="d-sup"><div class="d-sup-icon"><i class="ti '+s.icon+'"></i></div><div><div class="d-sup-title">'+s.title+'</div>'+(s.desc?'<div class="d-sup-desc">'+s.desc+'</div>':'')+'</div></div>';
+      var ic = String(s.icon || '').trim();
+      // Dashboard lưu icon dạng emoji; bản cũ lưu dạng class Tabler ("ti-xxx").
+      // Hỗ trợ cả 2 để không vỡ dữ liệu cũ.
+      var iconHtml = /^ti-/.test(ic) ? '<i class="ti ' + ic + '"></i>' : (ic || '✦');
+      supHtml += '<div class="d-sup"><div class="d-sup-icon">'+iconHtml+'</div><div><div class="d-sup-title">'+s.title+'</div>'+(s.desc?'<div class="d-sup-desc">'+s.desc+'</div>':'')+'</div></div>';
     });
     document.getElementById('dSupports').innerHTML = supHtml;
     supSection.style.display = '';
