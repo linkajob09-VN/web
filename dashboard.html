@@ -3263,7 +3263,8 @@ function saveConsultProgress(cid) {
 }
 
 // CX (hoặc sale phụ trách) sửa tên/SĐT/email của khách đăng ký tư vấn.
-// Advisee cũng có thể tự sửa các trường này qua dashboard riêng của họ (xem renderAdviseeSelfProfile).
+// Lưu ý: khả năng cho ADVISEE tự sửa thông tin này cần làm ở trang dashboard
+// riêng của advisee (không nằm trong file dashboard.html này) — xem ghi chú cuối phản hồi.
 function saveConsultContactInfo(cid) {
   var c = MOCK.consultations.find(function(x){ return x.id === cid; });
   if (!c) return;
