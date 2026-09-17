@@ -5157,25 +5157,32 @@ function openEditAdvisorModal(advisorId) {
   });
   body += '</div>';
 
-  // ── 7. Feedback hiển thị trên web ──
-  var realFeedbacksEdit = [];
+   // ── 7. Feedback hiển thị trên web ──
+  // Gộp 2 nguồn: (a) feedback đã lưu từ trước trong feedbacks_json — bao gồm cả
+  // feedback cũ (2 năm trước, nhập tay từ Form/Zalo/Facebook cũ) lẫn feedback
+  // buổi meeting thật đã được thêm vào trước đó; (b) feedback buổi meeting MỚI
+  // phát sinh (từ session thật) mà admin chưa từng thêm vào danh sách hiển thị.
+  // Toàn bộ danh sách dưới đây có thể thêm/sửa/xoá tự do, không còn tách rời
+  // giữa "tự động" và "nhập tay" — admin có thể bổ sung feedback cũ ở đây.
+  _eaFbIdx = 0;
+  var existingFb = Array.isArray(a.feedbacks) ? a.feedbacks.slice() : [];
+  var existingFbKeys = existingFb.map(function(f){ return ((f.from||f.name||'') + '|' + (f.text||'')).trim(); });
   MOCK.advisees.filter(function(ae){ return ae.advisor === a.name; }).forEach(function(ae){
     ae.sessions.forEach(function(s){
-      if (s.feedback) realFeedbacksEdit.push({ key: ae.id + '-' + s.no, from: ae.name, rating: s.feedback.rating, text: s.feedback.text });
+      if (!s.feedback || !s.feedback.text) return;
+      var key = (ae.name + '|' + s.feedback.text).trim();
+      if (existingFbKeys.indexOf(key) === -1) {
+        existingFb.push({ from: ae.name, text: s.feedback.text });
+        existingFbKeys.push(key);
+      }
     });
   });
-  a.hiddenFeedback = a.hiddenFeedback || [];
-  if (realFeedbacksEdit.length > 0) {
-    body += '<div class="ea-section"><div class="ea-section-title">⭐ Feedback hiển thị trên web</div>';
-    realFeedbacksEdit.forEach(function(f){
-      var checked = a.hiddenFeedback.indexOf(f.key) === -1;
-      body += '<label style="display:flex;align-items:flex-start;gap:10px;background:var(--white);border:1.5px solid var(--border);border-radius:10px;padding:9px 14px;cursor:pointer;margin-bottom:6px">' +
-        '<input type="checkbox" class="ea-fb-cb" value="' + f.key + '" ' + (checked?'checked':'') + ' style="margin-top:2px">' +
-        '<div style="flex:1;font-size:12.5px"><span style="color:#F59E0B">' + '★'.repeat(f.rating) + '☆'.repeat(5-f.rating) + '</span> "' + f.text + '" <span style="color:var(--muted)">— ' + f.from + '</span></div>' +
-        '</label>';
-    });
-    body += '</div>';
-  }
+
+  body += '<div class="ea-section"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">' +
+    '<div class="ea-section-title" style="margin-bottom:0">⭐ Feedback hiển thị trên web <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted)">(gồm cả feedback cũ nhập tay)</span></div>' +
+    '<button type="button" class="update-btn" onclick="addFeedbackRow(\'ea-fb-list\')">+ Thêm feedback</button></div>' +
+    '<div id="ea-fb-list">' + existingFb.map(function(fb){ var h = eaFbRowHtml(_eaFbIdx, fb); _eaFbIdx++; return h; }).join('') + '</div>' +
+    '</div>';
 
   body += '</div>';
 
@@ -5237,8 +5244,13 @@ function saveAdvisorEdit(advisorId) {
 
   a.products = Array.from(document.querySelectorAll('.ea-pkg-cb:checked')).map(function(cb){ return cb.value; });
 
-  var uncheckedFb = Array.from(document.querySelectorAll('.ea-fb-cb')).filter(function(cb){ return !cb.checked; }).map(function(cb){ return cb.value; });
-  if (document.querySelector('.ea-fb-cb')) a.hiddenFeedback = uncheckedFb;
+  a.feedbacks = [];
+  document.querySelectorAll('#ea-fb-list .ea-fb-row').forEach(function(row){
+    var from = row.querySelector('.ea-fb-from').value.trim();
+    var text = row.querySelector('.ea-fb-text').value.trim();
+    if (!from || !text) return; // bỏ dòng trống (vd người dùng bấm "+ Thêm" nhưng không điền)
+    a.feedbacks.push({ from: from, text: text });
+  });
 
   apiPost({
     action: 'updateAdvisor',
@@ -5248,6 +5260,7 @@ function saveAdvisorEdit(advisorId) {
     email: a.email, phone: a.phone, zalo_id: a.contact,
     bio: a.bio, message: a.message, photo_url: a.photo,
     experience: a.experience, products: a.products, feedbacks: a.feedbacks,
+    support_items: a.supportItems,
   }).then(function(res){
     if (res && res.success) toast('Đã lưu & đồng bộ lên Sheet ✅', 'success');
     else toast('Lỗi khi lưu lên Sheet: ' + (res && res.error), 'error');
@@ -5272,7 +5285,6 @@ function openAdvisorSelfEditModal() {
   closeUserMenu();
   openEditAdvisorModal(a.id);
 }
-
 // ════════════════════════════════════════════════════════════
 //  MODULE 3: ADVISEE
 // ════════════════════════════════════════════════════════════
