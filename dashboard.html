@@ -1626,6 +1626,8 @@ function mergeLeadRow(r) {
     studentYear: r.student_year || '', experienceYears: r.experience_years || '',
     interestedDept: r.interested_dept || '', interestedLevel: r.interested_level || '',
     sourceChannel: r.source_channel || '',
+    // MỚI: 2 field khách điền ở widget "Đăng ký tư vấn" — trước đây bị bỏ sót
+    question: r.question || '', cvLink: r.cv_link || '',
   };
   if (!existing) MOCK.consultations.push(obj);
   return obj;
@@ -2732,6 +2734,20 @@ function persistLead(c) {
       desire: (c.profile && c.profile.desire) || '',
       barrier: (c.profile && c.profile.barrier) || '',
       follow_up: (c.profile && c.profile.followUp) || '',
+      // MỚI (fix — các field này trước đây bị "Lưu hồ sơ" set vào c.profile nhưng
+      // KHÔNG được gửi lên Sheet ở persistLead(), nên sửa xong tưởng đã lưu mà
+      // tải lại trang là mất y nguyên. Nay gửi đầy đủ.
+      customer_type: (c.profile && c.profile.customerType) || '',
+      region: (c.profile && c.profile.region) || '',
+      student_year: (c.profile && c.profile.studentYear) || '',
+      experience_years: (c.profile && c.profile.experienceYears) || '',
+      interested_dept: (c.profile && c.profile.interestedDept) || '',
+      interested_level: (c.profile && c.profile.interestedLevel) || '',
+      source_channel: (c.profile && c.profile.sourceChannel) || '',
+      // MỚI: 2 field khách điền ở widget "Đăng ký tư vấn" nhưng trước đây
+      // chưa từng được đọc/hiện/lưu ở trang chi tiết lead.
+      question: (c.profile && c.profile.question) || '',
+      cv_link: (c.profile && c.profile.cvLink) || '',
       session_id: c.sessionId || '',
     }).then(function(res){
       if (res && res.success && isNew && res.lead_id) c.id = res.lead_id;
@@ -2748,7 +2764,7 @@ function persistLead(c) {
 // Ghi 1 dòng nhật ký cho lead lên Sheet (tab LeadLogs).
 function persistLeadLog(leadId, entry) {
   if (!leadId) return; // lead chưa có id thật (chưa lưu xong) — bỏ qua, log vẫn còn trong bộ nhớ tạm
-  apiPost({ action: 'addLeadLog', lead_id: leadId, time_label: entry.time, text: entry.text })
+  apiPost({ action: 'addLeadLog', lead_id: leadId, time_label: entry.time, text: entry.text, user: entry.user || '' })
     .catch(function(err){ console.warn('Lỗi lưu nhật ký:', err.message); });
 }
 
@@ -3106,7 +3122,7 @@ function navToConsultationDetail(cid) {
   apiGet('getLeadLogs', { lead_id: c.id }).then(function(res){
     var rows = (res && res.data) ? res.data : [];
     if (rows.length === 0) return;
-    c.log = rows.map(function(r){ return { time: r.time_label, text: r.text }; });
+    c.log = rows.map(function(r){ return { time: r.time_label, text: r.text, user: r.user || '' }; });
     var mc = document.getElementById('main-content');
     if (mc) mc.innerHTML = renderConsultationDetail(cid);
   }).catch(function(err){ console.warn('Không tải được nhật ký:', err.message); });
@@ -3125,83 +3141,75 @@ function renderConsultationDetail(cid) {
   html += '<span style="color:var(--border)">›</span><span style="color:var(--muted)">' + c.name + '</span>';
   html += '</div>';
 
-  // Thông tin khách hàng + lịch meeting
-  html += '<div class="card" style="margin-bottom:16px"><div style="padding:22px 24px">';
-  html += '<div style="display:flex;gap:16px;align-items:flex-start;margin-bottom:16px">';
+  // ── Card 1: Thông tin khách hàng — TOÀN BỘ nội dung khách điền ở widget
+  // "Đăng ký tư vấn", Staff sửa được trực tiếp vì quá trình tư vấn có thể
+  // phát sinh điều chỉnh (khách đổi ý định, cập nhật CV mới...). ──
+  html += '<div class="card" style="margin-bottom:16px">';
+  html += '<div class="card-header"><div class="card-header-left">Thông tin khách hàng</div></div>';
+  html += '<div style="padding:0 24px 20px">';
+  html += '<div style="display:flex;gap:16px;align-items:flex-start;margin-bottom:4px">';
   html += avatarCircle(c.name, 52);
-  html += '<div style="flex:1">';
-  html += '<div class="form-grid" style="grid-template-columns:1.3fr 1fr 1fr;gap:8px;margin-bottom:2px">';
+  html += '<div class="form-grid" style="grid-template-columns:1fr 1fr 1fr;gap:16px;padding:0;flex:1">';
   html += '<div><div class="form-label">Họ tên</div><input class="form-input" id="cv-name" value="' + (c.name||'').replace(/"/g,'&quot;') + '"></div>';
   html += '<div><div class="form-label">SĐT</div><input class="form-input" id="cv-phone" value="' + (c.phone||'').replace(/"/g,'&quot;') + '"></div>';
   html += '<div><div class="form-label">Email</div><input class="form-input" id="cv-email" value="' + (c.email||'').replace(/"/g,'&quot;') + '"></div>';
-  html += '</div>';
-  html += '<button type="button" class="update-btn" style="margin-top:8px;font-size:12px;padding:6px 12px" onclick="saveConsultContactInfo(\'' + c.id + '\')">Lưu thông tin liên hệ</button>';
-  html += '</div>';
-  html += '<div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end">';
-  html += '<span style="background:var(--bg);color:var(--muted);font-size:12px;font-weight:600;padding:4px 12px;border-radius:100px">Nguồn: ' + c.source + '</span>';
-  html += '<span style="background:var(--brand-light);color:var(--brand);font-size:12px;font-weight:700;padding:4px 12px;border-radius:100px">' + c.consultAbout + '</span>';
   html += '</div></div>';
 
-  if (c.date) {
-    html += '<div style="display:flex;align-items:center;justify-content:space-between;background:#EFF6FF;border:1.5px solid #BFDBFE;border-radius:10px;padding:12px 16px">';
-    html += '<div style="font-size:13px;color:#1D4ED8"><b>📅 ' + fmtDateStr(c.date) + ' · ' + c.time + '</b></div>';
-    if (c.meetLink) html += '<a href="' + c.meetLink + '" target="_blank" class="detail-btn">🎥 Vào Meet</a>';
-    html += '</div>';
-  } else {
-    html += '<div style="background:#FFFBEB;border:1.5px solid #FDE68A;border-radius:10px;padding:16px">';
-    html += '<div style="font-size:13px;font-weight:700;color:#92400E;margin-bottom:10px">⚠ Khách chưa đặt lịch — chốt lịch tư vấn tại đây</div>';
-    html += '<div style="display:grid;grid-template-columns:1fr 1fr 2fr;gap:10px">';
-    html += '<div><div class="form-label">Ngày</div><input class="form-input" id="cv-newdate" type="date" style="margin-top:4px"></div>';
-    html += '<div><div class="form-label">Giờ</div><input class="form-input" id="cv-newtime" type="time" style="margin-top:4px"></div>';
-    html += '<div><div class="form-label">Link Meet</div><div style="display:flex;gap:6px;margin-top:4px">';
-    html += '<input class="form-input" id="cv-newlink" placeholder="Bấm nút bên phải để tạo tự động, hoặc dán link tay" style="flex:1">';
-    html += '<button type="button" class="update-btn" style="flex-shrink:0;white-space:nowrap" id="cv-genmeet-btn" onclick="generateMeetForConsult(\'' + c.id + '\')">🎥 Tạo Meet</button>';
-    html += '</div></div>';
-    html += '</div>';
-    html += '<button class="login-btn" style="width:auto;padding:9px 20px;margin-top:12px;font-size:13px" onclick="scheduleConsultation(\'' + c.id + '\')">Xác nhận đặt lịch</button>';
-    html += '</div>';
-  }
-  html += '</div></div>';
-
-  // Form trạng thái & tiến trình (giống cột trong Sheet)
-  html += '<div class="card" style="margin-bottom:16px"><div class="card-header"><div class="card-header-left">Tiến trình tư vấn</div></div>';
-  html += '<div class="form-grid">';
-  html += '<div><div class="form-label">Status tư vấn</div><select class="form-select" id="cv-status">' + CONSULT_STATUS.map(function(st){ return '<option' + (st===c.status?' selected':'') + '>' + st + '</option>'; }).join('') + '</select></div>';
-  html += '<div><div class="form-label">Kết quả</div><select class="form-select" id="cv-result">' + CONSULT_RESULT.map(function(r){ return '<option' + (r===c.result?' selected':'') + '>' + (r||'— Chưa có —') + '</option>'; }).join('') + '</select></div>';
-  html += '<div><div class="form-label">Tư vấn dịch vụ</div><select class="form-select" id="cv-consultabout">' + CONSULT_ABOUT_OPTIONS.map(function(o){ return '<option' + (o===c.consultAbout?' selected':'') + '>' + o + '</option>'; }).join('') + (CONSULT_ABOUT_OPTIONS.indexOf(c.consultAbout) === -1 && c.consultAbout ? '<option selected>' + c.consultAbout + '</option>' : '') + '</select></div>';
-  html += '<div class="full"><div class="form-label">Next step (kèm deadline)</div><div style="display:grid;grid-template-columns:2fr 1fr;gap:10px"><input class="form-input" id="cv-nextstep" value="' + (c.nextStep||'') + '" placeholder="Việc cần làm tiếp theo..."><input class="form-input" id="cv-deadline" type="date" value="' + (c.nextStepDeadline||'') + '"></div></div>';
-  html += '</div>';
-  html += '<div class="form-footer"><button class="submit-btn" onclick="saveConsultProgress(\'' + c.id + '\')">Lưu tiến trình</button></div>';
-  html += '</div>';
-
-  // Hồ sơ khách hàng
-  html += '<div class="card" style="margin-bottom:16px"><div class="card-header"><div class="card-header-left">Hồ sơ khách hàng</div></div>';
-  html += '<div class="form-grid">';
+  html += '<div class="form-grid" style="padding:16px 0 0">';
+  html += '<div><div class="form-label">Nguồn</div><input class="form-input" id="cv-topsource" value="' + (c.source||'').replace(/"/g,'&quot;') + '"></div>';
+  html += '<div><div class="form-label">Quan tâm dịch vụ</div><select class="form-select" id="cv-consultabout">' + CONSULT_ABOUT_OPTIONS.map(function(o){ return '<option' + (o===c.consultAbout?' selected':'') + '>' + o + '</option>'; }).join('') + (CONSULT_ABOUT_OPTIONS.indexOf(c.consultAbout) === -1 && c.consultAbout ? '<option selected>' + c.consultAbout + '</option>' : '') + '</select></div>';
   html += '<div><div class="form-label">Bạn hiện là</div><select class="form-select" id="cv-customertype" onchange="cvToggleCustomerTypeFields()"><option value="">-- Chọn --</option><option value="Sinh viên"' + (p.customerType==='Sinh viên'?' selected':'') + '>Sinh viên</option><option value="Đã đi làm"' + (p.customerType==='Đã đi làm'?' selected':'') + '>Đã đi làm</option></select></div>';
-  html += '<div><div class="form-label">Khu vực</div><select class="form-select" id="cv-region"><option value="">-- Chọn --</option>' + ['Miền Bắc','Miền Trung','Miền Nam'].map(function(r){ return '<option' + (p.region===r?' selected':'') + '>' + r + '</option>'; }).join('') + '</select></div>';
   html += '<div id="cv-studentyear-wrap" style="display:' + (p.customerType==='Sinh viên'?'block':'none') + '"><div class="form-label">Sinh viên năm mấy</div><select class="form-select" id="cv-studentyear"><option value="">-- Chọn --</option>' + ['Năm 1','Năm 2','Năm 3','Năm 4','Đã tốt nghiệp'].map(function(y){ return '<option' + (p.studentYear===y?' selected':'') + '>' + y + '</option>'; }).join('') + '</select></div>';
   html += '<div id="cv-expyears-wrap" style="display:' + (p.customerType==='Đã đi làm'?'block':'none') + '"><div class="form-label">Kinh nghiệm bao lâu</div><select class="form-select" id="cv-expyears"><option value="">-- Chọn --</option>' + ['Dưới 1 năm','1-2 năm','2-5 năm','5-10 năm','Trên 10 năm'].map(function(y){ return '<option' + (p.experienceYears===y?' selected':'') + '>' + y + '</option>'; }).join('') + '</select></div>';
   html += '<div><div class="form-label">Phòng ban / vị trí quan tâm</div><select class="form-select" id="cv-interesteddept"><option value="">-- Chọn --</option>' + ['Marketing','Sales/Kinh doanh','Tài chính/Kế toán','Chuỗi cung ứng/Logistics','Nhân sự','Data/Công nghệ','Vận hành','Tư vấn/Consulting','Khác'].map(function(d){ return '<option' + (p.interestedDept===d?' selected':'') + '>' + d + '</option>'; }).join('') + '</select></div>';
   html += '<div><div class="form-label">Level quan tâm</div><select class="form-select" id="cv-interestedlevel"><option value="">-- Chọn --</option>' + ['Intern','Fresh Graduate','Junior','Senior','Manager trở lên'].map(function(l){ return '<option' + (p.interestedLevel===l?' selected':'') + '>' + l + '</option>'; }).join('') + '</select></div>';
+  html += '<div><div class="form-label">Khu vực</div><select class="form-select" id="cv-region"><option value="">-- Chọn --</option>' + ['Miền Bắc','Miền Trung','Miền Nam'].map(function(r){ return '<option' + (p.region===r?' selected':'') + '>' + r + '</option>'; }).join('') + '</select></div>';
   html += '<div><div class="form-label">Biết đến LinkaJob qua đâu</div><select class="form-select" id="cv-source"><option value="">-- Chọn --</option>' + ['Facebook','Instagram','Threads','TikTok','Được giới thiệu','Khác'].map(function(s){ return '<option' + (p.sourceChannel===s?' selected':'') + '>' + s + '</option>'; }).join('') + '</select></div>';
+  html += '<div class="full"><div class="form-label">Câu hỏi muốn tư vấn</div><textarea class="form-textarea" id="cv-question" rows="2">' + (p.question||'') + '</textarea></div>';
+  html += '<div class="full"><div class="form-label">CV</div><div style="display:flex;gap:8px"><input class="form-input" id="cv-cvlink" placeholder="Link CV khách gửi..." value="' + (p.cvLink||'').replace(/"/g,'&quot;') + '" style="flex:1">' + (p.cvLink ? '<a href="' + p.cvLink + '" target="_blank" class="update-btn" style="flex-shrink:0;white-space:nowrap">🔗 Mở CV</a>' : '') + '</div></div>';
+  html += '</div>';
+
+  // Lịch tư vấn — gộp vào cùng card, sửa được (đổi lịch khi cần), có nút tạo Meet nhanh
+  html += '<div style="margin:4px 24px 0;padding:16px;border-radius:10px;background:var(--bg);border:1.5px solid var(--border)">';
+  html += '<div class="form-label" style="margin-bottom:10px">📅 Lịch tư vấn' + (!c.date ? ' <span style="color:#B45309;font-weight:700">— chưa chốt lịch</span>' : '') + '</div>';
+  html += '<div style="display:grid;grid-template-columns:1fr 1fr 2fr;gap:10px">';
+  html += '<div><input class="form-input" id="cv-date" type="date" value="' + (c.date||'') + '"></div>';
+  html += '<div><input class="form-input" id="cv-time" type="time" value="' + (c.time||'') + '"></div>';
+  html += '<div style="display:flex;gap:6px">';
+  html += '<input class="form-input" id="cv-meetlink" placeholder="Link Google Meet..." value="' + (c.meetLink||'').replace(/"/g,'&quot;') + '" style="flex:1">';
+  html += '<button type="button" class="update-btn" style="flex-shrink:0;white-space:nowrap" id="cv-genmeet-btn" onclick="generateMeetForConsult(\'' + c.id + '\')">🎥 Tạo Meet</button>';
+  html += (c.meetLink ? '<a href="' + c.meetLink + '" target="_blank" class="detail-btn" style="flex-shrink:0">Vào Meet</a>' : '');
+  html += '</div></div></div>';
+  html += '</div></div>';
+
+  // ── Card 2: Tiến trình tư vấn — ghi chú/đánh giá nội bộ của Staff ──
+  html += '<div class="card" style="margin-bottom:16px"><div class="card-header"><div class="card-header-left">Tiến trình tư vấn (nội bộ)</div></div>';
+  html += '<div class="form-grid">';
+  html += '<div><div class="form-label">Status tư vấn</div><select class="form-select" id="cv-status">' + CONSULT_STATUS.map(function(st){ return '<option' + (st===c.status?' selected':'') + '>' + st + '</option>'; }).join('') + '</select></div>';
+  html += '<div><div class="form-label">Kết quả</div><select class="form-select" id="cv-result">' + CONSULT_RESULT.map(function(r){ return '<option' + (r===c.result?' selected':'') + '>' + (r||'— Chưa có —') + '</option>'; }).join('') + '</select></div>';
+  html += '<div class="full"><div class="form-label">Next step (kèm deadline)</div><div style="display:grid;grid-template-columns:2fr 1fr;gap:10px"><input class="form-input" id="cv-nextstep" value="' + (c.nextStep||'') + '" placeholder="Việc cần làm tiếp theo..."><input class="form-input" id="cv-deadline" type="date" value="' + (c.nextStepDeadline||'') + '"></div></div>';
   html += '<div class="full"><div class="form-label">Học vấn</div><input class="form-input" id="cv-education" value="' + (p.education||'') + '"></div>';
   html += '<div class="full"><div class="form-label">Kinh nghiệm</div><input class="form-input" id="cv-experience" value="' + (p.experience||'') + '"></div>';
   html += '<div class="full"><div class="form-label">Mong muốn</div><textarea class="form-textarea" id="cv-desire" rows="2">' + (p.desire||'') + '</textarea></div>';
   html += '<div class="full"><div class="form-label">Barrier (rào cản)</div><textarea class="form-textarea" id="cv-barrier" rows="2">' + (p.barrier||'') + '</textarea></div>';
   html += '<div class="full"><div class="form-label">Follow up</div><textarea class="form-textarea" id="cv-followup" rows="2">' + (p.followUp||'') + '</textarea></div>';
   html += '</div>';
-  html += '<div class="form-footer"><button class="submit-btn" onclick="saveConsultProfile(\'' + c.id + '\')">Lưu hồ sơ</button></div>';
   html += '</div>';
 
-  // Nhật ký meeting
-  html += '<div class="card"><div class="card-header"><div class="card-header-left">📝 Nhật ký meeting (' + c.log.length + ')</div></div>';
+  // ── 1 nút lưu duy nhất cho TOÀN BỘ trang ──
+  html += '<div style="display:flex;justify-content:flex-end;margin-bottom:16px">';
+  html += '<button class="submit-btn" id="cv-save-all-btn" onclick="saveConsultationAll(\'' + c.id + '\')">💾 Lưu tất cả thay đổi</button>';
+  html += '</div>';
+
+  // ── Nhật ký hoạt động — gộp chung ghi chú tay + log tự động khi Lưu (đổi field gì, lúc nào, ai đổi) ──
+  html += '<div class="card"><div class="card-header"><div class="card-header-left">📝 Nhật ký hoạt động (' + c.log.length + ')</div></div>';
   html += '<div style="padding:4px 24px 20px">';
   if (c.log.length === 0) {
-    html += '<div class="empty-state" style="padding:24px 0"><div class="icon">🗒</div>Chưa có ghi chú nào</div>';
+    html += '<div class="empty-state" style="padding:24px 0"><div class="icon">🗒</div>Chưa có hoạt động nào</div>';
   } else {
     c.log.slice().reverse().forEach(function(entry){
       html += '<div style="padding:12px 0;border-bottom:1px solid var(--border)">';
-      html += '<div style="font-size:11px;font-weight:700;color:var(--muted);margin-bottom:4px">' + entry.time + '</div>';
+      html += '<div style="font-size:11px;font-weight:700;color:var(--muted);margin-bottom:4px">' + entry.time + (entry.user ? ' · ' + entry.user : '') + '</div>';
       html += '<div style="font-size:13px;color:var(--text);line-height:1.65;white-space:pre-line">' + entry.text + '</div>';
       html += '</div>';
     });
@@ -3216,12 +3224,12 @@ function renderConsultationDetail(cid) {
 function generateMeetForConsult(cid) {
   var c = MOCK.consultations.find(function(x){ return x.id === cid; });
   if (!c) return;
-  var d = document.getElementById('cv-newdate').value;
-  var t = document.getElementById('cv-newtime').value;
+  var d = document.getElementById('cv-date').value;
+  var t = document.getElementById('cv-time').value;
   if (!d || !t) { toast('Chọn ngày và giờ trước khi tạo Meet', 'error'); return; }
 
   var btn = document.getElementById('cv-genmeet-btn');
-  var linkInput = document.getElementById('cv-newlink');
+  var linkInput = document.getElementById('cv-meetlink');
   var oldLabel = btn.textContent;
   btn.textContent = '⏳ Đang tạo...';
   btn.disabled = true;
@@ -3240,7 +3248,7 @@ function generateMeetForConsult(cid) {
     if (res && res.success && res.meetLink) {
       linkInput.value = res.meetLink;
       btn.textContent = '✓ Đã tạo';
-      toast('Đã tạo Google Meet tự động ✅', 'success');
+      toast('Đã tạo Google Meet tự động — bấm "Lưu tất cả thay đổi" để lưu lại ✅', 'success');
     } else {
       btn.textContent = oldLabel;
       toast('Không tạo được Meet tự động — dán link tay vào ô bên cạnh nhé', 'error');
@@ -3252,54 +3260,6 @@ function generateMeetForConsult(cid) {
   });
 }
 
-function scheduleConsultation(cid) {
-  var c = MOCK.consultations.find(function(x){ return x.id === cid; });
-  if (!c) return;
-  var d = document.getElementById('cv-newdate').value;
-  var t = document.getElementById('cv-newtime').value;
-  if (!d || !t) { toast('Vui lòng chọn ngày và giờ', 'error'); return; }
-  c.date = d; c.time = t;
-  c.meetLink = document.getElementById('cv-newlink').value.trim();
-  c.status = 'Đã chốt lịch';
-  var now = new Date();
-  var entry = { time: pad(now.getDate())+'/'+pad(now.getMonth()+1)+'/'+now.getFullYear()+' '+pad(now.getHours())+':'+pad(now.getMinutes()), text: 'Đã chốt lịch tư vấn: ' + fmtDateStr(d) + ' · ' + t + (c.meetLink?' — Link: ' + c.meetLink:'') };
-  c.log.push(entry);
-  toast('Đã chốt lịch tư vấn cho ' + c.name + ' ✅', 'success');
-  navToConsultationDetail(cid);
-  persistLead(c).then(function(){ persistLeadLog(c.id, entry); });
-}
-
-function saveConsultProgress(cid) {
-  var c = MOCK.consultations.find(function(x){ return x.id === cid; });
-  if (!c) return;
-  c.status = document.getElementById('cv-status').value;
-  var resultVal = document.getElementById('cv-result').value;
-  c.result = resultVal === '— Chưa có —' ? '' : resultVal;
-  var aboutEl = document.getElementById('cv-consultabout');
-  if (aboutEl) c.consultAbout = aboutEl.value;
-  c.nextStep = document.getElementById('cv-nextstep').value.trim();
-  c.nextStepDeadline = document.getElementById('cv-deadline').value;
-  toast('Đã lưu tiến trình tư vấn', 'success');
-  navToConsultationDetail(cid);
-  persistLead(c);
-}
-
-// CX (hoặc sale phụ trách) sửa tên/SĐT/email của khách đăng ký tư vấn.
-// Lưu ý: khả năng cho ADVISEE tự sửa thông tin này cần làm ở trang dashboard
-// riêng của advisee (không nằm trong file dashboard.html này) — xem ghi chú cuối phản hồi.
-function saveConsultContactInfo(cid) {
-  var c = MOCK.consultations.find(function(x){ return x.id === cid; });
-  if (!c) return;
-  var name = document.getElementById('cv-name').value.trim();
-  var phone = document.getElementById('cv-phone').value.trim();
-  var email = document.getElementById('cv-email').value.trim();
-  if (!name) { toast('Họ tên không được để trống', 'error'); return; }
-  c.name = name; c.phone = phone; c.email = email;
-  toast('Đã lưu thông tin liên hệ', 'success');
-  navToConsultationDetail(cid);
-  persistLead(c);
-}
-
 function cvToggleCustomerTypeFields() {
   var v = document.getElementById('cv-customertype').value;
   var sw = document.getElementById('cv-studentyear-wrap');
@@ -3308,16 +3268,80 @@ function cvToggleCustomerTypeFields() {
   if (ew) ew.style.display = (v === 'Đã đi làm') ? 'block' : 'none';
 }
 
-function saveConsultProfile(cid) {
+// ── LƯU TẤT CẢ — 1 nút duy nhất cho toàn bộ trang chi tiết lead.
+// So sánh giá trị mới với giá trị cũ theo từng field có nhãn tiếng Việt sẵn,
+// chỉ những field thực sự đổi mới bị ghi vào Nhật ký hoạt động, kèm thời gian
+// và tài khoản Staff đang đăng nhập (currentUser.name). ──
+function saveConsultationAll(cid) {
   var c = MOCK.consultations.find(function(x){ return x.id === cid; });
   if (!c) return;
+
+  var nameVal = document.getElementById('cv-name').value.trim();
+  if (!nameVal) { toast('Họ tên không được để trống', 'error'); return; }
+
+  var btn = document.getElementById('cv-save-all-btn');
+  if (btn) { btn.disabled = true; btn.textContent = '⏳ Đang lưu...'; }
+
+  // { field: [nhãn hiển thị, giá trị cũ, giá trị mới] }
+  var resultVal = document.getElementById('cv-result').value;
+  resultVal = resultVal === '— Chưa có —' ? '' : resultVal;
+
+  var checks = [
+    ['Họ tên', c.name, nameVal],
+    ['SĐT', c.phone, document.getElementById('cv-phone').value.trim()],
+    ['Email', c.email, document.getElementById('cv-email').value.trim()],
+    ['Nguồn', c.source, document.getElementById('cv-topsource').value.trim()],
+    ['Quan tâm dịch vụ', c.consultAbout, document.getElementById('cv-consultabout').value],
+    ['Bạn hiện là', c.profile.customerType, document.getElementById('cv-customertype').value],
+    ['Sinh viên năm mấy', c.profile.studentYear, document.getElementById('cv-studentyear').value],
+    ['Kinh nghiệm bao lâu', c.profile.experienceYears, document.getElementById('cv-expyears').value],
+    ['Phòng ban/vị trí quan tâm', c.profile.interestedDept, document.getElementById('cv-interesteddept').value],
+    ['Level quan tâm', c.profile.interestedLevel, document.getElementById('cv-interestedlevel').value],
+    ['Khu vực', c.profile.region, document.getElementById('cv-region').value],
+    ['Biết đến LinkaJob qua đâu', c.profile.sourceChannel, document.getElementById('cv-source').value],
+    ['Câu hỏi muốn tư vấn', c.profile.question, document.getElementById('cv-question').value.trim()],
+    ['CV', c.profile.cvLink, document.getElementById('cv-cvlink').value.trim()],
+    ['Ngày tư vấn', c.date, document.getElementById('cv-date').value],
+    ['Giờ tư vấn', c.time, document.getElementById('cv-time').value],
+    ['Link Meet', c.meetLink, document.getElementById('cv-meetlink').value.trim()],
+    ['Status tư vấn', c.status, document.getElementById('cv-status').value],
+    ['Kết quả', c.result, resultVal],
+    ['Next step', c.nextStep, document.getElementById('cv-nextstep').value.trim()],
+    ['Deadline next step', c.nextStepDeadline, document.getElementById('cv-deadline').value],
+    ['Học vấn', c.profile.education, document.getElementById('cv-education').value.trim()],
+    ['Kinh nghiệm', c.profile.experience, document.getElementById('cv-experience').value.trim()],
+    ['Mong muốn', c.profile.desire, document.getElementById('cv-desire').value.trim()],
+    ['Barrier', c.profile.barrier, document.getElementById('cv-barrier').value.trim()],
+    ['Follow up', c.profile.followUp, document.getElementById('cv-followup').value.trim()],
+  ];
+
+  var changedLines = [];
+  checks.forEach(function(row){
+    var oldV = row[1] || '', newV = row[2] || '';
+    if (oldV !== newV) {
+      changedLines.push('• ' + row[0] + ': "' + (oldV || '(trống)') + '" → "' + (newV || '(trống)') + '"');
+    }
+  });
+
+  // Áp giá trị mới vào object local
+  c.name = nameVal;
+  c.phone = document.getElementById('cv-phone').value.trim();
+  c.email = document.getElementById('cv-email').value.trim();
+  c.source = document.getElementById('cv-topsource').value.trim();
+  c.consultAbout = document.getElementById('cv-consultabout').value;
+  c.date = document.getElementById('cv-date').value;
+  c.time = document.getElementById('cv-time').value;
+  c.meetLink = document.getElementById('cv-meetlink').value.trim();
+  c.status = document.getElementById('cv-status').value;
+  c.result = resultVal;
+  c.nextStep = document.getElementById('cv-nextstep').value.trim();
+  c.nextStepDeadline = document.getElementById('cv-deadline').value;
   c.profile = {
     education: document.getElementById('cv-education').value.trim(),
     experience: document.getElementById('cv-experience').value.trim(),
     desire: document.getElementById('cv-desire').value.trim(),
     barrier: document.getElementById('cv-barrier').value.trim(),
     followUp: document.getElementById('cv-followup').value.trim(),
-    // MỚI (fix 2026-08-24): field báo cáo marketing/kinh doanh theo tháng/quý
     customerType: document.getElementById('cv-customertype').value,
     region: document.getElementById('cv-region').value,
     studentYear: document.getElementById('cv-studentyear').value,
@@ -3325,10 +3349,23 @@ function saveConsultProfile(cid) {
     interestedDept: document.getElementById('cv-interesteddept').value,
     interestedLevel: document.getElementById('cv-interestedlevel').value,
     sourceChannel: document.getElementById('cv-source').value,
+    question: document.getElementById('cv-question').value.trim(),
+    cvLink: document.getElementById('cv-cvlink').value.trim(),
   };
-  toast('Đã lưu hồ sơ khách hàng', 'success');
+
+  var savePromise = persistLead(c);
+
+  if (changedLines.length > 0) {
+    var now = new Date();
+    var timeLabel = pad(now.getDate())+'/'+pad(now.getMonth()+1)+'/'+now.getFullYear()+' '+pad(now.getHours())+':'+pad(now.getMinutes());
+    var whoName = (currentUser && currentUser.name) ? currentUser.name : 'Không rõ tài khoản';
+    var entry = { time: timeLabel, user: whoName, text: '✏️ Cập nhật ' + changedLines.length + ' thông tin:\n' + changedLines.join('\n') };
+    c.log.push(entry);
+    savePromise.then(function(){ persistLeadLog(c.id, entry); });
+  }
+
   navToConsultationDetail(cid);
-  persistLead(c);
+  toast(changedLines.length > 0 ? 'Đã lưu ' + changedLines.length + ' thay đổi' : 'Không có thay đổi nào', 'success');
 }
 
 function addConsultLog(cid) {
@@ -3337,7 +3374,8 @@ function addConsultLog(cid) {
   var text = document.getElementById('cv-newlog').value.trim();
   if (!text) { toast('Vui lòng nhập nội dung ghi chú', 'error'); return; }
   var now = new Date();
-  var entry = { time: pad(now.getDate())+'/'+pad(now.getMonth()+1)+'/'+now.getFullYear()+' '+pad(now.getHours())+':'+pad(now.getMinutes()), text: text };
+  var whoName = (currentUser && currentUser.name) ? currentUser.name : '';
+  var entry = { time: pad(now.getDate())+'/'+pad(now.getMonth()+1)+'/'+now.getFullYear()+' '+pad(now.getHours())+':'+pad(now.getMinutes()), user: whoName, text: text };
   c.log.push(entry);
   toast('Đã thêm ghi chú vào nhật ký', 'success');
   navToConsultationDetail(cid);
