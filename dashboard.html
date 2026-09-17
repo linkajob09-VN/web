@@ -2798,7 +2798,7 @@ function renderStaffMemberDetail(staffId, tab, selfView) {
   html += '</div></div>';
 
   // Local tab switcher (giống role-tabbar của Advisor)
-  var leadCount = MOCK.consultations.filter(function(c){ return c.staff === s.name && !c.date; }).length;
+  var leadCount = MOCK.consultations.filter(function(c){ return c.staff === s.name && !c.date && !isHiddenOnDashboard(c) && c.result !== 'Đăng ký'; }).length;
   var TABS = [
     { id:'consult', icon:'📞', label:'Lịch tư vấn' },
     { id:'leads', icon:'⚠', label:'Khách chưa đặt lịch', badge: leadCount },
@@ -2825,7 +2825,7 @@ function renderStaffMemberDetail(staffId, tab, selfView) {
 
 // ── Tab 1: Lịch tư vấn cần tham gia ──
 function renderStaffConsultTab(s) {
-  var mine = MOCK.consultations.filter(function(c){ return c.staff === s.name && !!c.date; });
+  var mine = MOCK.consultations.filter(function(c){ return c.staff === s.name && !!c.date && !isHiddenOnDashboard(c); });
   var now = new Date();
 
   var upcoming = mine.filter(function(c){ return new Date(c.date + 'T' + (c.time||'00:00')) >= now; })
@@ -2971,7 +2971,7 @@ function confirmCreateAdviseeFromConsult(cid) {
   
 // ── Tab: Khách chưa đặt lịch — cần liên hệ ──
 function renderStaffLeadsTab(s) {
-  var leads = MOCK.consultations.filter(function(c){ return c.staff === s.name && !c.date; });
+  var leads = MOCK.consultations.filter(function(c){ return c.staff === s.name && !c.date && !isHiddenOnDashboard(c) && c.result !== 'Đăng ký'; });
 
   var html = '<div class="card"><div class="card-header"><div class="card-header-left">⚠ Khách chưa đặt lịch — cần liên hệ (' + leads.length + ')</div>';
   html += '<span style="font-size:12px;color:var(--muted)">Khách chỉ để lại thông tin, chưa tự chốt được giờ meeting</span></div>';
@@ -3065,6 +3065,17 @@ const CONSULT_STATUS = ['Chưa liên hệ','Đang liên hệ','Đã chốt lịc
 // 'Đã đóng' = quá Ngày 3 mà khách chưa chốt được lịch (theo SOP mục 3.2)
 // 'Tạm đóng' = quá Ngày 3 sau meeting mà khách không phản hồi thanh toán
 const CONSULT_RESULT = ['','Cân nhắc thêm','Không phản hồi','Từ chối','Đăng ký'];
+
+// Tư vấn dịch vụ — đúng field "quan tâm dịch vụ" khách chọn ở widget đăng ký tư vấn,
+// staff có thể sửa lại trong lúc tư vấn nếu nhu cầu khách thay đổi.
+const CONSULT_ABOUT_OPTIONS = ['Cố vấn 1-1','Khoá học','Cả 2'];
+
+// Status khiến lead/consultation KHÔNG hiển thị trên dashboard Admin/Sale nữa —
+// dữ liệu vẫn còn nguyên trong Sheet ("Excel"), chỉ ẩn ở giao diện.
+var HIDDEN_ON_DASHBOARD_STATUS = ['Đã đóng','Tạm đóng'];
+function isHiddenOnDashboard(c){
+  return HIDDEN_ON_DASHBOARD_STATUS.indexOf(c.status) > -1;
+}
   
 function navToConsultationDetail(cid) {
   document.getElementById('main-content').innerHTML = renderConsultationDetail(cid);
@@ -3096,8 +3107,14 @@ function renderConsultationDetail(cid) {
   html += '<div class="card" style="margin-bottom:16px"><div style="padding:22px 24px">';
   html += '<div style="display:flex;gap:16px;align-items:flex-start;margin-bottom:16px">';
   html += avatarCircle(c.name, 52);
-  html += '<div style="flex:1"><div style="font-size:18px;font-weight:800;margin-bottom:2px">' + c.name + '</div>';
-  html += '<div style="font-size:13px;color:var(--muted)">' + c.phone + ' · ' + c.email + '</div></div>';
+  html += '<div style="flex:1">';
+  html += '<div class="form-grid" style="grid-template-columns:1.3fr 1fr 1fr;gap:8px;margin-bottom:2px">';
+  html += '<div><div class="form-label">Họ tên</div><input class="form-input" id="cv-name" value="' + (c.name||'').replace(/"/g,'&quot;') + '"></div>';
+  html += '<div><div class="form-label">SĐT</div><input class="form-input" id="cv-phone" value="' + (c.phone||'').replace(/"/g,'&quot;') + '"></div>';
+  html += '<div><div class="form-label">Email</div><input class="form-input" id="cv-email" value="' + (c.email||'').replace(/"/g,'&quot;') + '"></div>';
+  html += '</div>';
+  html += '<button type="button" class="update-btn" style="margin-top:8px;font-size:12px;padding:6px 12px" onclick="saveConsultContactInfo(\'' + c.id + '\')">Lưu thông tin liên hệ</button>';
+  html += '</div>';
   html += '<div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end">';
   html += '<span style="background:var(--bg);color:var(--muted);font-size:12px;font-weight:600;padding:4px 12px;border-radius:100px">Nguồn: ' + c.source + '</span>';
   html += '<span style="background:var(--brand-light);color:var(--brand);font-size:12px;font-weight:700;padding:4px 12px;border-radius:100px">' + c.consultAbout + '</span>';
@@ -3129,6 +3146,7 @@ function renderConsultationDetail(cid) {
   html += '<div class="form-grid">';
   html += '<div><div class="form-label">Status tư vấn</div><select class="form-select" id="cv-status">' + CONSULT_STATUS.map(function(st){ return '<option' + (st===c.status?' selected':'') + '>' + st + '</option>'; }).join('') + '</select></div>';
   html += '<div><div class="form-label">Kết quả</div><select class="form-select" id="cv-result">' + CONSULT_RESULT.map(function(r){ return '<option' + (r===c.result?' selected':'') + '>' + (r||'— Chưa có —') + '</option>'; }).join('') + '</select></div>';
+  html += '<div><div class="form-label">Tư vấn dịch vụ</div><select class="form-select" id="cv-consultabout">' + CONSULT_ABOUT_OPTIONS.map(function(o){ return '<option' + (o===c.consultAbout?' selected':'') + '>' + o + '</option>'; }).join('') + (CONSULT_ABOUT_OPTIONS.indexOf(c.consultAbout) === -1 && c.consultAbout ? '<option selected>' + c.consultAbout + '</option>' : '') + '</select></div>';
   html += '<div class="full"><div class="form-label">Next step (kèm deadline)</div><div style="display:grid;grid-template-columns:2fr 1fr;gap:10px"><input class="form-input" id="cv-nextstep" value="' + (c.nextStep||'') + '" placeholder="Việc cần làm tiếp theo..."><input class="form-input" id="cv-deadline" type="date" value="' + (c.nextStepDeadline||'') + '"></div></div>';
   html += '</div>';
   html += '<div class="form-footer"><button class="submit-btn" onclick="saveConsultProgress(\'' + c.id + '\')">Lưu tiến trình</button></div>';
@@ -3235,9 +3253,26 @@ function saveConsultProgress(cid) {
   c.status = document.getElementById('cv-status').value;
   var resultVal = document.getElementById('cv-result').value;
   c.result = resultVal === '— Chưa có —' ? '' : resultVal;
+  var aboutEl = document.getElementById('cv-consultabout');
+  if (aboutEl) c.consultAbout = aboutEl.value;
   c.nextStep = document.getElementById('cv-nextstep').value.trim();
   c.nextStepDeadline = document.getElementById('cv-deadline').value;
   toast('Đã lưu tiến trình tư vấn', 'success');
+  navToConsultationDetail(cid);
+  persistLead(c);
+}
+
+// CX (hoặc sale phụ trách) sửa tên/SĐT/email của khách đăng ký tư vấn.
+// Advisee cũng có thể tự sửa các trường này qua dashboard riêng của họ (xem renderAdviseeSelfProfile).
+function saveConsultContactInfo(cid) {
+  var c = MOCK.consultations.find(function(x){ return x.id === cid; });
+  if (!c) return;
+  var name = document.getElementById('cv-name').value.trim();
+  var phone = document.getElementById('cv-phone').value.trim();
+  var email = document.getElementById('cv-email').value.trim();
+  if (!name) { toast('Họ tên không được để trống', 'error'); return; }
+  c.name = name; c.phone = phone; c.email = email;
+  toast('Đã lưu thông tin liên hệ', 'success');
   navToConsultationDetail(cid);
   persistLead(c);
 }
@@ -3509,7 +3544,30 @@ function renderStaffKpiTab(s) {
   return html;
 }
 
+// Dò trùng khách theo email / SĐT / tên (không phân biệt hoa-thường, khoảng trắng) —
+// dùng để gộp thông tin khi 1 lead "Đăng ký" trùng với 1 advisee đã có booking thật.
+function normContact(v){ return String(v||'').trim().toLowerCase(); }
+function findMatchingAdvisee(lead){
+  var lEmail = normContact(lead.email), lPhone = normContact(lead.phone), lName = normContact(lead.name);
+  return MOCK.advisees.find(function(ae){
+    if (lEmail && normContact(ae.email) === lEmail) return true;
+    if (lPhone && normContact(ae.phone) === lPhone) return true;
+    if (lName && normContact(ae.name) === lName) return true;
+    return false;
+  });
+}
+
 function renderStaffCareTab(s) {
+  // Lead đã "Đăng ký" của đúng staff này — tách 2 nhóm: đã khớp advisee thật / chưa có booking
+  var registeredLeads = MOCK.consultations.filter(function(c){ return c.staff === s.name && c.result === 'Đăng ký'; });
+  var pendingBookingLeads = [];
+  registeredLeads.forEach(function(lead){
+    var match = findMatchingAdvisee(lead);
+    if (!match) pendingBookingLeads.push(lead);
+    // Nếu match tồn tại, thông tin của lead coi như đã được "chăm sóc" qua đúng hồ sơ advisee đó —
+    // không tạo dòng riêng để tránh trùng lặp hiển thị.
+  });
+
   var html = '<div class="card"><div class="card-header"><div class="card-header-left">Khách hàng cần chăm sóc (' + MOCK.advisees.length + ')</div>';
   html += '<span style="font-size:12px;color:var(--muted)">Advisee đã đăng ký gói cố vấn hoặc khoá học</span></div>';
 
@@ -3572,6 +3630,27 @@ function renderStaffCareTab(s) {
     html += '</div>'; // đóng #care-list
   }
   html += '</div>';
+
+  // ── Khách đã "Đăng ký" qua tư vấn/web nhưng CHƯA có booking gói/lịch chính thức ──
+  // Chuyển từ mục "đăng ký mới" sang đây theo yêu cầu; khi có booking thật khớp
+  // tên/email/SĐT, khách sẽ tự động chỉ còn hiện ở danh sách advisee phía trên (không trùng).
+  if (pendingBookingLeads.length > 0) {
+    html += '<div class="card" style="margin-top:16px"><div class="card-header"><div class="card-header-left">Khách đã đăng ký — chờ xác nhận gói (' + pendingBookingLeads.length + ')</div>';
+    html += '<span style="font-size:12px;color:var(--muted)">Đã chuyển kết quả "Đăng ký" từ tư vấn, chưa ghi nhận booking gói/lịch chính thức</span></div>';
+    pendingBookingLeads.forEach(function(lead){
+      html += '<div style="padding:14px 24px;border-top:1px solid var(--border);display:flex;align-items:center;gap:14px;flex-wrap:wrap">';
+      html += avatarCircle(lead.name, 40);
+      html += '<div style="flex:1;min-width:180px">';
+      html += '<div style="font-weight:700;font-size:14px">' + lead.name + '</div>';
+      html += '<div style="font-size:12px;color:var(--muted)">' + (lead.email||'—') + ' · ' + (lead.phone||'—') + '</div>';
+      html += '</div>';
+      html += '<span style="background:var(--brand-light);color:var(--brand);font-size:12px;font-weight:700;padding:4px 12px;border-radius:100px">' + lead.consultAbout + '</span>';
+      html += '<button class="detail-btn" onclick="navToConsultationDetail(\'' + lead.id + '\')" style="flex-shrink:0;margin-left:auto">Chi tiết →</button>';
+      html += '</div>';
+    });
+    html += '</div>';
+  }
+
   return html;
 }
 
@@ -4645,7 +4724,7 @@ function renderAdvisorNewForm() {
   });
   html += '</div>';
 
-  html += '<div class="card"><div class="form-footer"><button class="btn-secondary" style="width:auto;padding:10px 20px" onclick="navTo(\'adv-list\')">Huỷ</button><button class="submit-btn" onclick="saveNewAdvisor()">Thêm Advisor</button></div></div>';
+  html += '<div class="card"><div class="form-footer"><button class="submit-btn" onclick="saveNewAdvisor()">Thêm Advisor</button></div></div>';
   return html;
 }
 
@@ -4685,7 +4764,7 @@ function saveNewAdvisor() {
     industry: document.getElementById('na-tags').value.trim(),
     email: email, phone: phone,
     bio: document.getElementById('na-bio').value.trim(),
-    experience: experience, products: products, support_items: supportItems,
+    experience: experience,
   }).then(function(res){
     if (res && res.success) {
       toast('Đã thêm ' + name + ' — cần vào Sheet đổi is_active = TRUE để hiện trên web ✅', 'success');
@@ -4737,7 +4816,7 @@ function renderAdvisorModule() {
 
   // Active advisor cards
   html += '<div class="card"><div class="card-header"><div class="card-header-left">Advisor đang hoạt động</div>';
-  html += '<button class="submit-btn" style="padding:8px 16px;font-size:13px" onclick="document.getElementById(\'main-content\').innerHTML = renderAdvisorNewForm()">+ Thêm Advisor mới</button></div>';
+  html += '<button class="submit-btn" style="padding:8px 16px;font-size:13px" onclick="toast(\'Form thêm Advisor mới (demo)\',\'success\')">+ Thêm Advisor mới</button></div>';
   html += '<div style="padding:0 20px">' + searchBoxHtml('advisor-list-tbody', 'Tìm theo tên, chức danh, email...') + '</div>';
   if (active.length === 0) {
     html += '<div class="empty-state"><div class="icon">👤</div>Chưa có advisor nào</div>';
@@ -4848,13 +4927,24 @@ function renderStaffAdvisorDetail(advisorId) {
     html += '</div>';
   }
 
-  html += '<div><div style="font-size:10.5px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;margin-bottom:6px">Feedback đang hiển thị trên web</div>';
-  var fbList = Array.isArray(a.feedbacks) ? a.feedbacks : [];
-  if (fbList.length === 0) {
+  // Feedback tự động lấy từ feedback thật của Advisee sau mỗi buổi meeting
+  var realFeedbacks = [];
+  MOCK.advisees.filter(function(ae){ return ae.advisor === a.name; }).forEach(function(ae){
+    ae.sessions.forEach(function(s){
+      if (s.feedback) realFeedbacks.push({ key: ae.id + '-' + s.no, from: ae.name, rating: s.feedback.rating, text: s.feedback.text });
+    });
+  });
+  a.hiddenFeedback = a.hiddenFeedback || [];
+
+  html += '<div><div style="font-size:10.5px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;margin-bottom:6px">Feedback nhận được <span style="font-weight:400;text-transform:none;letter-spacing:0">(tự động lấy sau mỗi buổi meeting)</span></div>';
+  if (realFeedbacks.length === 0) {
     html += '<span style="font-size:12.5px;color:var(--muted);font-style:italic">Chưa có feedback nào</span>';
   } else {
-    fbList.forEach(function(f){
-      html += '<div style="background:var(--bg);border-radius:8px;padding:10px 12px;margin-bottom:6px;font-size:12.5px"><span style="color:var(--text)">"' + f.text + '"</span> <span style="color:var(--muted)">— ' + (f.from || f.name || '') + '</span></div>';
+    realFeedbacks.forEach(function(f){
+      var isHidden = a.hiddenFeedback.indexOf(f.key) > -1;
+      var stars = '';
+      for (var si2=1; si2<=5; si2++) stars += (si2 <= f.rating ? '★' : '☆');
+      html += '<div style="background:var(--bg);border-radius:8px;padding:10px 12px;margin-bottom:6px;font-size:12.5px;' + (isHidden?'opacity:.5':'') + '"><span style="color:#F59E0B">' + stars + '</span> <span style="color:var(--text)">"' + f.text + '"</span> <span style="color:var(--muted)">— ' + f.from + '</span>' + (isHidden ? ' <span style="color:var(--muted);font-style:italic">(đã ẩn khỏi web)</span>' : '') + '</div>';
     });
   }
   html += '</div>';
@@ -4962,21 +5052,6 @@ function toggleAdvisorActive(advisorId) {
 }
 
 var _eaExpIdx = 0;
-var _eaFbIdx = 0;
-
-function eaFbRowHtml(idx, fb) {
-  fb = fb || {};
-  return '<div class="ea-fb-row" data-idx="' + idx + '" style="background:var(--white);border:1.5px solid var(--border);border-radius:10px;padding:12px;margin-bottom:10px;position:relative">' +
-    '<button type="button" onclick="this.closest(\'.ea-fb-row\').remove()" style="position:absolute;top:8px;right:8px;background:none;border:none;color:var(--muted);cursor:pointer;font-size:16px;line-height:1">×</button>' +
-    '<input class="form-input ea-fb-from" placeholder="Tên Advisee (VD: Trần Gia Hân)" value="' + (fb.from || fb.name || '') + '" style="margin-bottom:8px">' +
-    '<textarea class="form-textarea ea-fb-text" rows="2" placeholder="Nội dung feedback">' + (fb.text || '') + '</textarea>' +
-    '</div>';
-}
-
-function addFeedbackRow(containerId, fb) {
-  var container = document.getElementById(containerId || 'ea-fb-list');
-  container.insertAdjacentHTML('beforeend', eaFbRowHtml(_eaFbIdx++, fb));
-}
 
 function eaExpRowHtml(idx, ex) {
   ex = ex || {};
@@ -5082,31 +5157,24 @@ function openEditAdvisorModal(advisorId) {
   body += '</div>';
 
   // ── 7. Feedback hiển thị trên web ──
-  // Gộp 2 nguồn: (a) feedback đã lưu từ trước trong feedbacks_json — bao gồm cả
-  // feedback cũ (2 năm trước, nhập tay từ Form/Zalo/Facebook cũ) lẫn feedback
-  // buổi meeting thật đã được thêm vào trước đó; (b) feedback buổi meeting MỚI
-  // phát sinh (từ session thật) mà admin chưa từng thêm vào danh sách hiển thị.
-  // Toàn bộ danh sách dưới đây có thể thêm/sửa/xoá tự do, không còn tách rời
-  // giữa "tự động" và "nhập tay" — admin có thể bổ sung feedback cũ ở đây.
-  _eaFbIdx = 0;
-  var existingFb = Array.isArray(a.feedbacks) ? a.feedbacks.slice() : [];
-  var existingFbKeys = existingFb.map(function(f){ return ((f.from||f.name||'') + '|' + (f.text||'')).trim(); });
+  var realFeedbacksEdit = [];
   MOCK.advisees.filter(function(ae){ return ae.advisor === a.name; }).forEach(function(ae){
     ae.sessions.forEach(function(s){
-      if (!s.feedback || !s.feedback.text) return;
-      var key = (ae.name + '|' + s.feedback.text).trim();
-      if (existingFbKeys.indexOf(key) === -1) {
-        existingFb.push({ from: ae.name, text: s.feedback.text });
-        existingFbKeys.push(key);
-      }
+      if (s.feedback) realFeedbacksEdit.push({ key: ae.id + '-' + s.no, from: ae.name, rating: s.feedback.rating, text: s.feedback.text });
     });
   });
-
-  body += '<div class="ea-section"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">' +
-    '<div class="ea-section-title" style="margin-bottom:0">⭐ Feedback hiển thị trên web <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted)">(gồm cả feedback cũ nhập tay)</span></div>' +
-    '<button type="button" class="update-btn" onclick="addFeedbackRow(\'ea-fb-list\')">+ Thêm feedback</button></div>' +
-    '<div id="ea-fb-list">' + existingFb.map(function(fb){ var h = eaFbRowHtml(_eaFbIdx, fb); _eaFbIdx++; return h; }).join('') + '</div>' +
-    '</div>';
+  a.hiddenFeedback = a.hiddenFeedback || [];
+  if (realFeedbacksEdit.length > 0) {
+    body += '<div class="ea-section"><div class="ea-section-title">⭐ Feedback hiển thị trên web</div>';
+    realFeedbacksEdit.forEach(function(f){
+      var checked = a.hiddenFeedback.indexOf(f.key) === -1;
+      body += '<label style="display:flex;align-items:flex-start;gap:10px;background:var(--white);border:1.5px solid var(--border);border-radius:10px;padding:9px 14px;cursor:pointer;margin-bottom:6px">' +
+        '<input type="checkbox" class="ea-fb-cb" value="' + f.key + '" ' + (checked?'checked':'') + ' style="margin-top:2px">' +
+        '<div style="flex:1;font-size:12.5px"><span style="color:#F59E0B">' + '★'.repeat(f.rating) + '☆'.repeat(5-f.rating) + '</span> "' + f.text + '" <span style="color:var(--muted)">— ' + f.from + '</span></div>' +
+        '</label>';
+    });
+    body += '</div>';
+  }
 
   body += '</div>';
 
@@ -5168,13 +5236,8 @@ function saveAdvisorEdit(advisorId) {
 
   a.products = Array.from(document.querySelectorAll('.ea-pkg-cb:checked')).map(function(cb){ return cb.value; });
 
-  a.feedbacks = [];
-  document.querySelectorAll('#ea-fb-list .ea-fb-row').forEach(function(row){
-    var from = row.querySelector('.ea-fb-from').value.trim();
-    var text = row.querySelector('.ea-fb-text').value.trim();
-    if (!from || !text) return; // bỏ dòng trống (vd người dùng bấm "+ Thêm" nhưng không điền)
-    a.feedbacks.push({ from: from, text: text });
-  });
+  var uncheckedFb = Array.from(document.querySelectorAll('.ea-fb-cb')).filter(function(cb){ return !cb.checked; }).map(function(cb){ return cb.value; });
+  if (document.querySelector('.ea-fb-cb')) a.hiddenFeedback = uncheckedFb;
 
   apiPost({
     action: 'updateAdvisor',
@@ -5184,7 +5247,6 @@ function saveAdvisorEdit(advisorId) {
     email: a.email, phone: a.phone, zalo_id: a.contact,
     bio: a.bio, message: a.message, photo_url: a.photo,
     experience: a.experience, products: a.products, feedbacks: a.feedbacks,
-    support_items: a.supportItems,
   }).then(function(res){
     if (res && res.success) toast('Đã lưu & đồng bộ lên Sheet ✅', 'success');
     else toast('Lỗi khi lưu lên Sheet: ' + (res && res.error), 'error');
