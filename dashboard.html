@@ -118,7 +118,7 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
 
 /* ── MAIN CONTENT ── */
 .main-area { flex: 1; overflow-y: auto; background: var(--bg); }
-.content { max-width: 920px; margin: 0 auto; padding: 28px 24px; }
+.content { max-width: 1600px; margin: 0 auto; padding: 28px 24px; }
 .content.narrow { max-width: 640px; }
 
 /* Legacy tab-bar */
@@ -1718,40 +1718,62 @@ function renderNewRegistrationsList(leads) {
   if (leads.length === 0) {
     html += '<div class="empty-state"><div class="icon">📭</div>Chưa có khách nào đăng ký từ website</div>';
   } else {
-    html += '<div style="padding:16px 24px 0">' + searchBoxHtml('new-reg-list', 'Tìm theo tên, SĐT, email...') + '</div>';
-    html += '<div id="new-reg-list">';
+    html += '<div style="padding:16px 24px 0">' + searchBoxHtml('new-reg-tbody', 'Tìm theo tên, SĐT, email...') + '</div>';
+    var saleStaff = sheetData.staffList.filter(function(st){ return st.role === 'Sale' && st.active; });
+
+    html += '<div style="overflow-x:auto"><table class="bookings-table"><thead><tr>' +
+      '<th>KHÁCH HÀNG</th><th>TRẠNG THÁI TƯ VẤN</th><th>THỜI GIAN / LINK</th><th>DỊCH VỤ QUAN TÂM</th><th>KẾT QUẢ</th><th>NV PHỤ TRÁCH</th>' +
+      '</tr></thead><tbody id="new-reg-tbody">';
+
     leads.forEach(function(r){
       var obj = mergeLeadRow(r);
       if (!obj) return;
-      var assignedTo = (obj.staff || '').trim();
       var searchKey = (obj.name + ' ' + obj.phone + ' ' + obj.email).toLowerCase().replace(/"/g,'');
-      html += '<div data-search="' + searchKey + '" style="display:flex;align-items:center;gap:14px;padding:16px 24px;border-top:1px solid var(--border);flex-wrap:wrap">';
-      html += avatarCircle(obj.name || '?', 40);
-      html += '<div style="flex:1;min-width:200px">';
-      html += '<div style="font-weight:700;font-size:14px">' + (obj.name || 'Khách hàng') + (obj.consultAbout ? ' <span style="font-weight:400;color:var(--muted);font-size:12px">· ' + obj.consultAbout + '</span>' : '') + '</div>';
-      html += '<div style="font-size:12px;color:var(--muted)">' + (obj.phone||'—') + (obj.email ? ' · ' + obj.email : '') + (obj.source ? ' · ' + obj.source : '') + '</div>';
-      html += '</div>';
+      html += '<tr data-search="' + searchKey + '">';
+
+      // Cột 1 — tên/SĐT/email, bấm vào đây mở chi tiết (thay cho nút "Chi tiết →" cũ)
+      html += '<td><div style="cursor:pointer" onclick="navToConsultationDetail(\'' + obj.id + '\')">' +
+        '<div style="font-weight:700;font-size:13.5px">' + (obj.name || 'Khách hàng') + '</div>' +
+        '<div style="font-size:12px;color:var(--muted)">' + (obj.phone||'—') + '</div>' +
+        '<div style="font-size:12px;color:var(--muted)">' + (obj.email||'—') + '</div>' +
+        '</div></td>';
+
+      // Cột 2 — trạng thái tư vấn (dropdown, sửa trực tiếp)
+      html += '<td><select class="form-select" style="font-size:12.5px;padding:6px 8px" onclick="event.stopPropagation()" onchange="updateLeadStatusInline(\'' + obj.id + '\', this.value)">' +
+        CONSULT_STATUS.map(function(s){ return '<option value="' + s + '"' + (obj.status===s?' selected':'') + '>' + s + '</option>'; }).join('') +
+        '</select></td>';
+
+      // Cột 3 — thời gian tư vấn + link Meet
       if (obj.date) {
-        html += '<div class="session-time"><strong>' + fmtDateStr(obj.date) + '</strong>' + obj.time + '</div>';
-        if (obj.meetLink) html += '<a href="' + obj.meetLink + '" target="_blank" class="detail-btn">🎥 Meet</a>';
+        html += '<td><div style="font-size:12.5px"><strong>' + fmtDateStr(obj.date) + '</strong> · ' + obj.time + '</div>' +
+          (obj.meetLink ? '<a href="' + obj.meetLink + '" target="_blank" class="detail-btn" style="margin-top:4px;display:inline-block" onclick="event.stopPropagation()">🎥 Meet</a>' : '') + '</td>';
       } else {
-        html += '<span class="badge" style="background:#FEF3C7;color:#92400E">Chưa chọn giờ</span>';
+        html += '<td><span class="badge" style="background:#FEF3C7;color:#92400E">Chưa chọn giờ</span></td>';
       }
-      if (assignedTo) {
-        html += '<span class="badge badge-confirmed">✓ ' + assignedTo + '</span>';
-        html += '<button class="update-btn" onclick="openAssignRegModal(\'' + obj.id + '\')">Đổi</button>';
-      } else {
-        html += '<button class="update-btn" style="border-color:var(--green);color:var(--green)" onclick="autoAssignReg(\'' + obj.id + '\')">🎯 Tự động</button>';
-        html += '<button class="login-btn" style="width:auto;padding:8px 16px;font-size:13px" onclick="openAssignRegModal(\'' + obj.id + '\')">Phân công →</button>';
-      }
-      html += '<button class="detail-btn" onclick="navToConsultationDetail(\'' + obj.id + '\')">Chi tiết →</button>';
-      html += '</div>';
+
+      // Cột 4 — dịch vụ quan tâm (chỉ hiển thị, không sửa)
+      html += '<td style="font-size:12.5px">' + (obj.consultAbout || '—') + '</td>';
+
+      // Cột 5 — kết quả (dropdown, sửa trực tiếp — dùng handleConsultResultChange để giữ nguyên
+      // luồng tự mở form tạo Advisee khi chọn "Đăng ký", đã làm ở bản trước)
+      html += '<td><select class="form-select" style="font-size:12.5px;padding:6px 8px" onclick="event.stopPropagation()" onchange="handleConsultResultChange(\'' + obj.id + '\', this.value)">' +
+        CONSULT_RESULT.map(function(rs){ var label = rs || '— Chưa có —'; return '<option value="' + label + '"' + ((obj.result||'')===rs?' selected':'') + '>' + label + '</option>'; }).join('') +
+        '</select></td>';
+
+      // Cột 6 — NV phụ trách (dropdown, sửa trực tiếp)
+      html += '<td><select class="form-select" style="font-size:12.5px;padding:6px 8px" onclick="event.stopPropagation()" onchange="assignRegToStaff(\'' + obj.id + '\', this.value)">' +
+        '<option value=""' + (!obj.staff?' selected':'') + '>— Chưa gán —</option>' +
+        saleStaff.map(function(st){ return '<option value="' + st.name + '"' + (obj.staff===st.name?' selected':'') + '>' + st.name + '</option>'; }).join('') +
+        '</select></td>';
+
+      html += '</tr>';
     });
-    html += '</div>'; // đóng #new-reg-list
+    html += '</tbody></table></div>';
   }
   html += '</div>';
   return html;
 }
+
 
 // ── "Tạo đơn mới" — cho admin quản lý Fanpage/IG/TikTok chủ động tạo hồ sơ
 //    khách khi có lead nhắn tin trên các nền tảng đó, để team Sale đi tư vấn.
