@@ -85,8 +85,19 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
 .dash-body { display: flex; flex: 1; min-height: calc(100vh - 52px); }
 
 /* ── SIDEBAR (Staff only) ── */
-.sidebar { width: 220px; flex-shrink: 0; background: var(--white); border-right: 1px solid var(--border); padding: 16px 0; display: flex; flex-direction: column; position: sticky; top: 52px; height: calc(100vh - 52px); overflow-y: auto; }
+.sidebar { width: 220px; flex-shrink: 0; background: var(--white); border-right: 1px solid var(--border); padding: 16px 0; display: flex; flex-direction: column; position: sticky; top: 52px; height: calc(100vh - 52px); overflow-y: auto; transition: width .18s ease; }
 .sidebar.hidden { display: none; }
+.sidebar-wrap { position: relative; flex-shrink: 0; }
+.sidebar-toggle-btn { position: absolute; top: 14px; right: -11px; width: 22px; height: 22px; border-radius: 50%; background: var(--white); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 12px; line-height: 1; color: var(--muted); z-index: 20; padding: 0; box-shadow: 0 1px 3px rgba(0,0,0,.1); }
+.sidebar-toggle-btn:hover { background: var(--bg); color: var(--text); }
+/* ── Thu gọn sidebar: chỉ còn icon, ẩn nhãn/submenu ── */
+.sidebar.collapsed { width: 64px; }
+.sidebar.collapsed .nav-label { display: none; }
+.sidebar.collapsed .chevron { display: none; }
+.sidebar.collapsed .nav-sub { display: none !important; }
+.sidebar.collapsed .nav-group-header { justify-content: center; padding: 10px 0; }
+.sidebar.collapsed .nav-group-header .nav-icon { margin-right: 0; }
+.sidebar.collapsed .nav-single { justify-content: center; padding: 10px 0; gap: 0; }
 
 /* Nav group (accordion) */
 .nav-group { }
@@ -461,11 +472,24 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
 
   <!-- BODY -->
   <div class="dash-body">
-    <nav class="sidebar" id="sidebar"></nav>
+    <div class="sidebar-wrap" id="sidebar-wrap">
+      <nav class="sidebar" id="sidebar"></nav>
+      <button class="sidebar-toggle-btn" id="sidebar-toggle-btn" onclick="toggleSidebarCollapse()" title="Thu gọn / mở rộng menu">‹</button>
+    </div>
     <div class="main-area">
       <div class="content" id="main-content"></div>
     </div>
   </div>
+  <script>
+    // Khôi phục trạng thái thu gọn ngay khi vừa load trang (trước khi sidebar
+    // có nội dung), tránh hiện sidebar to rồi mới co lại giật hình.
+    try {
+      if (localStorage.getItem('lj_sidebar_collapsed') === '1') {
+        document.getElementById('sidebar').classList.add('collapsed');
+        document.getElementById('sidebar-toggle-btn').textContent = '›';
+      }
+    } catch(e){}
+  </script>
 
   <!-- Legacy tab-bar (ẩn, vẫn giữ để không lỗi JS cũ) -->
   <div class="tab-bar" id="tab-bar" style="display:none"></div>
@@ -1014,19 +1038,19 @@ function buildSidebar(role) {
     if (group.children && group.children.length > 0) {
       // Accordion group
       html += '<div class="nav-group" id="ng-' + group.id + '">';
-      html += '<div class="nav-group-header" id="ngh-' + group.id + '" onclick="toggleNavGroup(\'' + group.id + '\')">';
-      html += '<span><span class="nav-icon">' + group.icon + '</span>' + group.label + '</span>';
+      html += '<div class="nav-group-header" id="ngh-' + group.id + '" onclick="onNavGroupHeaderClick(\'' + group.id + '\')">';
+      html += '<span><span class="nav-icon">' + group.icon + '</span><span class="nav-label">' + group.label + '</span></span>';
       html += '<span class="chevron">▼</span>';
       html += '</div>';
       html += '<div class="nav-sub" id="ns-' + group.id + '">';
       group.children.forEach(function(child) {
-        html += '<div class="nav-item" id="ni-' + child.id + '" onclick="navTo(\'' + child.id + '\')">' + child.label + '</div>';
+        html += '<div class="nav-item" id="ni-' + child.id + '" onclick="navTo(\'' + child.id + '\')"><span class="nav-label">' + child.label + '</span></div>';
       });
       html += '</div></div>';
     } else {
       // Single item (no children)
       html += '<div class="nav-single" id="ni-' + group.id + '" onclick="navTo(\'' + group.id + '\')">';
-      html += '<span class="nav-icon">' + group.icon + '</span>' + group.label;
+      html += '<span class="nav-icon">' + group.icon + '</span><span class="nav-label">' + group.label + '</span>';
       html += '</div>';
     }
   });
@@ -1043,6 +1067,23 @@ function buildSidebar(role) {
       navTo(firstGroup.id);
     }
   }
+}
+
+// ── Thu gọn/mở rộng sidebar, nhớ trạng thái qua localStorage ──
+function toggleSidebarCollapse() {
+  var sidebar = document.getElementById('sidebar');
+  var btn = document.getElementById('sidebar-toggle-btn');
+  var collapsed = sidebar.classList.toggle('collapsed');
+  if (btn) btn.textContent = collapsed ? '›' : '‹';
+  try { localStorage.setItem('lj_sidebar_collapsed', collapsed ? '1' : '0'); } catch(e){}
+}
+
+// Bấm vào 1 nhóm menu lúc sidebar đang thu gọn → tự mở rộng lại sidebar trước,
+// vì icon-only không đủ chỗ hiện danh sách menu con.
+function onNavGroupHeaderClick(groupId) {
+  var sidebar = document.getElementById('sidebar');
+  if (sidebar.classList.contains('collapsed')) toggleSidebarCollapse();
+  toggleNavGroup(groupId);
 }
 
 function toggleNavGroup(groupId) {
