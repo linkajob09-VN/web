@@ -520,8 +520,12 @@ const PACKAGES_FALLBACK = {
   'Chuyên Sâu': { price: 2199000, sessions: 6, days: 56 },
 };
 
-function loadPackagesFromSheet(callback) {
-  apiGet('getPackages', {}).then(function(res){
+// force=true buộc tải lại từ Sheet (dùng cho nút "Làm mới"); mặc định bỏ qua
+// nếu đã tải trong session này — tránh gọi lại Apps Script (chậm) mỗi lần
+// chuyển qua chuyển lại 1 trang đã xem.
+function loadPackagesFromSheet(callback, force) {
+  if (packagesLoaded && !force) { if (callback) callback(); return Promise.resolve(); }
+  return apiGet('getPackages', {}).then(function(res){
     if (res && res.success && Array.isArray(res.data) && res.data.length) {
       PACKAGES_RAW = res.data;
       PACKAGES = {};
@@ -617,8 +621,9 @@ function normalizeAdvisorFromSheet(a) {
   };
 }
 
-function loadAdvisorsFromSheet(callback) {
-  apiGet('getAdvisors', {}).then(function(res){
+function loadAdvisorsFromSheet(callback, force) {
+  if (advisorsLoaded && !force) { if (callback) callback(); return Promise.resolve(); }
+  return apiGet('getAdvisors', {}).then(function(res){
     if (res && res.data) {
       sheetData.advisors = res.data.map(normalizeAdvisorFromSheet);
     } else {
