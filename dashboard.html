@@ -2902,6 +2902,77 @@ function renderStaffMemberDetail(staffId, tab, selfView) {
   return html;
 }
 
+// ── Bảng dùng chung cho mọi danh sách khách/lịch tư vấn — cấu trúc cột GIỐNG HỆT
+// bảng "Danh sách đăng ký" ở trang "Khách đăng ký tư vấn mới": KHÁCH HÀNG | TRẠNG
+// THÁI TƯ VẤN | (cột giữa tuỳ nơi gọi) | DỊCH VỤ QUAN TÂM | KẾT QUẢ | NV PHỤ TRÁCH.
+// opts.middleLabel: tiêu đề cột giữa. opts.middleHtml(c): nội dung cột giữa.
+function renderConsultMasterTable(list, containerId, opts) {
+  if (list.length === 0) {
+    return '<div class="empty-state"><div class="icon">📭</div>Chưa có buổi nào</div>';
+  }
+  var saleStaff = sheetData.staffList.filter(function(st){ return st.role === 'Sale' && st.active; });
+
+  var html = '<div style="overflow-x:auto"><table class="bookings-table" style="min-width:900px"><thead><tr>' +
+    '<th>KHÁCH HÀNG</th><th>TRẠNG THÁI TƯ VẤN</th><th>' + opts.middleLabel + '</th><th>DỊCH VỤ QUAN TÂM</th><th>KẾT QUẢ</th><th>NV PHỤ TRÁCH</th>' +
+    '</tr></thead><tbody' + (containerId ? ' id="' + containerId + '"' : '') + '>';
+
+  list.forEach(function(c){
+    var searchKey = (c.name + ' ' + (c.phone||'') + ' ' + (c.email||'')).toLowerCase().replace(/"/g,'');
+    html += '<tr data-search="' + searchKey + '">';
+
+    // Cột 1 — tên/SĐT/email, bấm vào mở chi tiết
+    html += '<td style="min-width:150px"><div style="cursor:pointer" onclick="navToConsultationDetail(\'' + c.id + '\')">' +
+      '<div style="font-weight:700;font-size:13.5px">' + (c.name || 'Khách hàng') + '</div>' +
+      '<div style="font-size:12px;color:var(--muted)">' + (c.phone||'—') + '</div>' +
+      '<div style="font-size:12px;color:var(--muted)">' + (c.email||'') + '</div>' +
+      '</div></td>';
+
+    // Cột 2 — trạng thái tư vấn (dropdown, sửa trực tiếp)
+    html += '<td><select class="form-select" style="font-size:12.5px;padding:6px 8px" onclick="event.stopPropagation()" onchange="updateLeadStatusInline(\'' + c.id + '\', this.value)">' +
+      CONSULT_STATUS.map(function(s){ return '<option value="' + s + '"' + (c.status===s?' selected':'') + '>' + s + '</option>'; }).join('') +
+      '</select></td>';
+
+    // Cột 3 — tuỳ nơi gọi (thời gian/link hoặc next step)
+    html += '<td style="min-width:170px">' + opts.middleHtml(c) + '</td>';
+
+    // Cột 4 — dịch vụ quan tâm (chỉ hiển thị)
+    html += '<td style="font-size:12.5px">' + (c.consultAbout || '—') + '</td>';
+
+    // Cột 5 — kết quả (dropdown, sửa trực tiếp)
+    html += '<td><select class="form-select" style="font-size:12.5px;padding:6px 8px" onclick="event.stopPropagation()" onchange="handleConsultResultChange(\'' + c.id + '\', this.value)">' +
+      CONSULT_RESULT.map(function(rs){ var label = rs || '— Chưa có —'; return '<option value="' + label + '"' + ((c.result||'')===rs?' selected':'') + '>' + label + '</option>'; }).join('') +
+      '</select></td>';
+
+    // Cột 6 — NV phụ trách (dropdown, sửa trực tiếp)
+    html += '<td><select class="form-select" style="font-size:12.5px;padding:6px 8px" onclick="event.stopPropagation()" onchange="assignRegToStaff(\'' + c.id + '\', this.value)">' +
+      '<option value=""' + (!c.staff?' selected':'') + '>— Chưa gán —</option>' +
+      saleStaff.map(function(st){ return '<option value="' + st.name + '"' + (c.staff===st.name?' selected':'') + '>' + st.name + '</option>'; }).join('') +
+      '</select></td>';
+
+    html += '</tr>';
+  });
+
+  html += '</tbody></table></div>';
+  return html;
+}
+
+// Cột "THỜI GIAN / LINK" — dùng cho "Lịch tư vấn sắp tới" và "Khách chưa đặt lịch"
+function consultTimeLinkCellHtml(c) {
+  if (c.date) {
+    return '<div style="font-size:12.5px"><strong>' + fmtDateStr(c.date) + '</strong> · ' + c.time + '</div>' +
+      (c.meetLink ? '<a href="' + c.meetLink + '" target="_blank" class="detail-btn" style="margin-top:4px;display:inline-block" onclick="event.stopPropagation()">🎥 Meet</a>' : '');
+  }
+  return '<span class="badge" style="background:#FEF3C7;color:#92400E">Chưa chọn giờ</span>';
+}
+
+// Cột "NEXT STEP" — dùng cho "Khách đã tư vấn" thay vì hiện lại thời gian tư vấn
+// (buổi đã xong nên xem giờ cũ không còn giá trị, cần biết bước tiếp theo hơn)
+function consultNextStepCellHtml(c) {
+  if (!c.nextStep) return '<span style="color:var(--muted);font-size:12.5px">— Chưa có —</span>';
+  return '<div style="font-size:12.5px">' + c.nextStep + '</div>' +
+    (c.nextStepDeadline ? '<div style="font-size:11px;color:var(--muted);margin-top:2px">Hạn: ' + fmtDateStr(c.nextStepDeadline) + '</div>' : '');
+}
+
 // ── Tab 1: Lịch tư vấn cần tham gia ──
 function renderStaffConsultTab(s) {
   var mine = MOCK.consultations.filter(function(c){ return c.staff === s.name && !!c.date && !isHiddenOnDashboard(c); });
@@ -2915,40 +2986,14 @@ function renderStaffConsultTab(s) {
   var html = '';
   html += '<div class="card"><div class="card-header"><div class="card-header-left">📅 Lịch tư vấn sắp tới (' + upcoming.length + ')</div></div>';
   if (upcoming.length > 0) html += '<div style="padding:0 20px">' + searchBoxHtml('consult-upcoming-tbody', 'Tìm theo tên, email, SĐT...') + '</div>';
-  html += renderConsultTable(upcoming, 'consult-upcoming-tbody');
+  html += renderConsultMasterTable(upcoming, 'consult-upcoming-tbody', { middleLabel: 'THỜI GIAN / LINK', middleHtml: consultTimeLinkCellHtml });
   html += '</div>';
 
   html += '<div class="card"><div class="card-header"><div class="card-header-left">✅ Khách hàng đã tư vấn (' + past.length + ')</div></div>';
   if (past.length > 0) html += '<div style="padding:0 20px">' + searchBoxHtml('consult-past-tbody', 'Tìm theo tên, email, SĐT...') + '</div>';
-  html += renderConsultTable(past, 'consult-past-tbody');
+  html += renderConsultMasterTable(past, 'consult-past-tbody', { middleLabel: 'NEXT STEP', middleHtml: consultNextStepCellHtml });
   html += '</div>';
 
-  return html;
-}
-
-function renderConsultTable(list, containerId) {
-  if (list.length === 0) {
-    return '<div class="empty-state"><div class="icon">📭</div>Chưa có buổi nào</div>';
-  }
-  var html = '<div style="overflow-x:auto"><table class="bookings-table" style="min-width:820px"><thead><tr>' +
-    '<th>KHÁCH HÀNG</th><th>EMAIL / SĐT</th><th>THỜI GIAN TƯ VẤN</th><th>TƯ VẤN SẢN PHẨM</th><th>KẾT QUẢ</th>' +
-    '</tr></thead><tbody' + (containerId ? ' id="' + containerId + '"' : '') + '>';
-
-  list.forEach(function(c){
-    var searchKey = (c.name + ' ' + (c.phone||'') + ' ' + (c.email||'')).toLowerCase().replace(/"/g,'');
-    html += '<tr data-search="' + searchKey + '">';
-    html += '<td style="min-width:130px"><div style="font-weight:700;font-size:13px">' + c.name + '</div></td>';
-    html += '<td style="font-size:12.5px;color:var(--muted);min-width:150px">' + (c.phone||'—') + '<br>' + (c.email||'') + '</td>';
-    html += '<td style="min-width:170px"><div style="font-size:13px;font-weight:600">' + fmtDateStr(c.date) + ' · ' + c.time + '</div>' +
-      (c.meetLink ? '<a href="' + c.meetLink + '" target="_blank" class="detail-btn" style="margin-top:4px;font-size:11.5px;padding:4px 9px">🎥 Meet</a>' : '') + '</td>';
-    html += '<td style="font-size:12.5px">' + c.consultAbout + '</td>';
-    html += '<td><select class="form-select" style="padding:6px 10px;font-size:12.5px;min-width:150px" onchange="handleConsultResultChange(\'' + c.id + '\', this.value)">' +
-      CONSULT_RESULT.map(function(r){ return '<option' + (r===c.result?' selected':'') + '>' + (r||'— Chưa có —') + '</option>'; }).join('') +
-      '</select></td>';
-    html += '</tr>';
-  });
-
-  html += '</tbody></table></div>';
   return html;
 }
 
@@ -3059,26 +3104,7 @@ function renderStaffLeadsTab(s) {
     html += '<div class="empty-state"><div class="icon">✅</div>Không có khách nào đang chờ liên hệ</div>';
   } else {
     html += '<div style="padding:0 20px">' + searchBoxHtml('leads-nolichhen-tbody', 'Tìm theo tên, email, SĐT...') + '</div>';
-    html += '<div style="overflow-x:auto"><table class="bookings-table" style="min-width:820px"><thead><tr>' +
-      '<th>KHÁCH HÀNG</th><th>EMAIL / SĐT</th><th>THỜI GIAN LEAD</th><th>ĐÃ LIÊN HỆ</th><th></th>' +
-      '</tr></thead><tbody id="leads-nolichhen-tbody">';
-
-    leads.forEach(function(c){
-      var leadInfo = getLeadFreshness(c);
-      var searchKey = (c.name + ' ' + (c.phone||'') + ' ' + (c.email||'')).toLowerCase().replace(/"/g,'');
-      html += '<tr data-search="' + searchKey + '">';
-      html += '<td style="min-width:140px"><div style="font-weight:700;font-size:13px">' + c.name + '</div></td>';
-      html += '<td style="font-size:12.5px;color:var(--muted);min-width:150px">' + (c.phone||'—') + '<br>' + (c.email||'') + '</td>';
-      html += '<td style="min-width:190px"><span style="background:' + leadInfo.bg + ';color:' + leadInfo.color + ';font-size:11.5px;font-weight:700;padding:3px 9px;border-radius:100px;display:inline-block">' + leadInfo.label + '</span></td>';
-      html += '<td style="min-width:200px">' +
-        '<div style="display:flex;gap:6px">' +
-        '<input class="form-input" style="padding:6px 8px;font-size:12px" type="date" value="' + (c.contactedDate||'') + '" onchange="updateLeadContactedInline(\'' + c.id + '\',\'contactedDate\',this.value)">' +
-        '<input class="form-input" style="padding:6px 8px;font-size:12px" type="time" value="' + (c.contactedTime||'') + '" onchange="updateLeadContactedInline(\'' + c.id + '\',\'contactedTime\',this.value)">' +
-        '</div></td>';
-      html += '<td><button class="login-btn" style="width:auto;white-space:nowrap;padding:8px 14px;font-size:12.5px" onclick="navToConsultationDetail(\'' + c.id + '\')">📋 Chốt lịch tư vấn →</button></td>';
-      html += '</tr>';
-    });
-    html += '</tbody></table></div>';
+    html += renderConsultMasterTable(leads, 'leads-nolichhen-tbody', { middleLabel: 'THỜI GIAN / LINK', middleHtml: consultTimeLinkCellHtml });
   }
   html += '</div>';
   return html;
