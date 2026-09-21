@@ -694,7 +694,7 @@ function renderAdvisorGrid() {
     var photoHtml = a.photo
       ? '<img src="'+a.photo+'" alt="" loading="lazy" onerror="this.replaceWith(Object.assign(document.createElement(\'div\'),{className:\'ph-fallback\',textContent:\''+a.initials+'\'}));">'
       : '<div class="ph-fallback">'+a.initials+'</div>';
-    html += '<div class="acard" data-ind="'+a.ind.join(' ').toLowerCase()+'" data-id="'+a.id+'" onclick="openDrawer('+a.id+')">'
+    html += '<div class="acard" data-ind="'+a.ind.join(' ').toLowerCase()+'" data-id="'+a.id+'" onclick="openDrawer(\''+a.id+'\')">'
       + '<div class="acard-topbar" style="background:'+accent+'"></div>'
       + '<div class="acard-photo">'
       +   photoHtml
