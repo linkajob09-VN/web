@@ -523,6 +523,46 @@ const PACKAGES_FALLBACK = {
 // force=true buộc tải lại từ Sheet (dùng cho nút "Làm mới"); mặc định bỏ qua
 // nếu đã tải trong session này — tránh gọi lại Apps Script (chậm) mỗi lần
 // chuyển qua chuyển lại 1 trang đã xem.
+// Gộp cả 3 lệnh gọi (Packages + StaffList + Advisors) thành 1 request duy nhất
+// lúc đăng nhập — dùng action 'getBootstrap' ở backend. Nếu action đó lỗi vì
+// lý do gì (vd bản Code.gs cũ chưa có action này), tự rơi về gọi 3 lệnh riêng
+// như trước để không làm gãy đăng nhập.
+function loadBootstrapData() {
+  return apiGet('getBootstrap', {}).then(function(res){
+    if (!res || !res.success) throw new Error('bootstrap thất bại');
+
+    var pkgList = Array.isArray(res.packages) ? res.packages : [];
+    PACKAGES_RAW = pkgList;
+    PACKAGES = {};
+    pkgList.forEach(function(p){
+      var isActive = p.active === true || p.active === 'TRUE' || p.active === 'true';
+      if (isActive) {
+        PACKAGES[p.name] = {
+          price: (p.price === '' || p.price === null || p.price === undefined) ? 0 : p.price,
+          sessions: Number(p.sessions) || 0,
+          days: Number(p.days) || 0,
+          package_id: p.package_id,
+        };
+      }
+    });
+    if (pkgList.length === 0) PACKAGES = Object.assign({}, PACKAGES_FALLBACK);
+    packagesLoaded = true;
+
+    sheetData.staffList = Array.isArray(res.staffList) ? res.staffList.map(normalizeStaffFromSheet) : [];
+    staffListLoaded = true;
+
+    sheetData.advisors = Array.isArray(res.advisors) ? res.advisors.map(normalizeAdvisorFromSheet) : [];
+    advisorsLoaded = true;
+  }).catch(function(err){
+    console.warn('getBootstrap lỗi, rơi về gọi riêng lẻ 3 lệnh cũ:', err.message);
+    return Promise.all([
+      loadPackagesFromSheet(),
+      loadStaffListFromSheet(),
+      loadAdvisorsFromSheet(),
+    ]);
+  });
+}
+
 function loadPackagesFromSheet(callback, force) {
   if (packagesLoaded && !force) { if (callback) callback(); return Promise.resolve(); }
   return apiGet('getPackages', {}).then(function(res){
@@ -749,8 +789,9 @@ function normalizeStaffFromSheet(s) {
     leadLimit: Number(s.lead_limit) || 30,
   };
 }
-function loadStaffListFromSheet(callback) {
-  apiGet('getStaffList', {}).then(function(res){
+function loadStaffListFromSheet(callback, force) {
+  if (staffListLoaded && !force) { if (callback) callback(); return Promise.resolve(); }
+  return apiGet('getStaffList', {}).then(function(res){
     sheetData.staffList = (res && res.data) ? res.data.map(normalizeStaffFromSheet) : [];
     staffListLoaded = true;
     if (callback) callback();
@@ -804,7 +845,11 @@ function applyLoggedInUser(u) {
   // Nạp gói meeting THẬT từ Sheet trước khi render trang đầu tiên — đảm bảo
   // mọi nơi dùng PACKAGES (form đặt lịch, gán gói cho advisee...) đều thấy
   // dữ liệu mới nhất ngay từ lần render đầu, không bị race condition.
-  loadPackagesFromSheet(function(){
+  // Gộp Gói meeting + Nhân viên + Advisor thành ĐÚNG 1 lượt gọi Apps Script
+  // (action getBootstrap) — mỗi lượt gọi Web App tốn thêm phụ phí cố định
+  // ngoài thời gian đọc Sheet, nên gộp 3 lượt thành 1 tiết kiệm rõ hơn cả
+  // việc chỉ gọi song song 3 lượt riêng.
+  loadBootstrapData().then(function(){
     buildTabBar(u.role);
 
     // Với Admin (điều hướng qua sidebar + navTo), buildTabBar/buildSidebar tự
@@ -2435,7 +2480,8 @@ function renderStaffListPage() {
   // Bảng danh sách
   html += '<div class="card">';
   html += '<div class="card-header"><div class="card-header-left">Danh sách nhân viên</div>';
-  html += '<button class="submit-btn" style="padding:8px 16px;font-size:13px" onclick="openAddStaffModal()">+ Thêm nhân viên</button>';
+  html += '<div style="display:flex;gap:8px"><button class="refresh-btn" onclick="loadStaffListFromSheet(function(){ renderStaff(\'stf-list\'); }, true)">↻ Làm mới</button>';
+  html += '<button class="submit-btn" style="padding:8px 16px;font-size:13px" onclick="openAddStaffModal()">+ Thêm nhân viên</button></div>';
   html += '</div>';
   if (sheetData.staffList.length === 0) {
     html += '<div class="empty-state"><div class="icon">📭</div>Chưa có nhân viên nào trong tab SalesConfig</div></div>';
@@ -3846,7 +3892,7 @@ function saveNewStaff() {
     if (res && res.success) {
       toast('Đã thêm ' + name + ' — mật khẩu tạm đã gửi qua email ✅', 'success');
       closeModal();
-      loadStaffListFromSheet(function(){ navTo('stf-list'); });
+      loadStaffListFromSheet(function(){ navTo('stf-list'); }, true);
     } else {
       toast('Lỗi: ' + (res && res.error ? res.error : 'không thêm được'), 'error');
       if (btn) { btn.innerHTML = 'Thêm nhân viên'; btn.disabled = false; }
@@ -4503,7 +4549,7 @@ function loadProductsPageAsync() {
   c.innerHTML = pageHeader('Sản phẩm', 'Thêm / sửa / ẩn các gói meeting — thay đổi được lưu thẳng vào Sheet và áp dụng ngay cho form đặt lịch') + skeletonRows(3);
   loadPackagesFromSheet(function(){
     c.innerHTML = renderProductsPage();
-  });
+  }, true);
 }
 
 function renderProductsPage() {
@@ -4949,7 +4995,8 @@ function renderAdvisorModule() {
 
   // Active advisor cards
   html += '<div class="card"><div class="card-header"><div class="card-header-left">Advisor đang hoạt động</div>';
-  html += '<button class="submit-btn" style="padding:8px 16px;font-size:13px" onclick="toast(\'Form thêm Advisor mới (demo)\',\'success\')">+ Thêm Advisor mới</button></div>';
+  html += '<div style="display:flex;gap:8px"><button class="refresh-btn" onclick="loadAdvisorsFromSheet(function(){ renderStaff(\'advisor-mod\'); }, true)">↻ Làm mới</button>';
+  html += '<button class="submit-btn" style="padding:8px 16px;font-size:13px" onclick="toast(\'Form thêm Advisor mới (demo)\',\'success\')">+ Thêm Advisor mới</button></div></div>';
   html += '<div style="padding:0 20px">' + searchBoxHtml('advisor-list-tbody', 'Tìm theo tên, chức danh, email...') + '</div>';
   if (active.length === 0) {
     html += '<div class="empty-state"><div class="icon">👤</div>Chưa có advisor nào</div>';
