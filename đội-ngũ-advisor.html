@@ -94,6 +94,10 @@ body{font-family:'Montserrat',sans-serif;background:#F5F4F1;color:#1C1C1C;overfl
 .dh-label{font-size:11px;color:rgba(240,240,240,.28);font-family:'Montserrat',sans-serif;letter-spacing:.08em;text-transform:uppercase;}
 .dclose{width:30px;height:30px;border-radius:50%;background:rgba(255,255,255,.06);border:none;color:rgba(240,240,240,.4);font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .15s;}
 .dclose:hover{background:rgba(255,255,255,.12);color:#F0F0F0;}
+.dh-actions{display:flex;align-items:center;gap:8px;}
+.dh-copy-btn{height:30px;padding:0 12px;border-radius:100px;background:rgba(252,82,41,.12);border:.5px solid rgba(252,82,41,.25);color:#fc5229;font-size:11.5px;font-weight:600;font-family:'Montserrat',sans-serif;cursor:pointer;display:flex;align-items:center;gap:5px;transition:background .15s;white-space:nowrap;}
+.dh-copy-btn:hover{background:rgba(252,82,41,.2);}
+.dh-copy-btn.copied{background:rgba(34,197,94,.15);border-color:rgba(34,197,94,.35);color:#4ade80;}
  
 /* drawer identity */
 .d-identity{padding:24px 24px 0;display:flex;gap:16px;align-items:flex-start;}
@@ -389,7 +393,10 @@ body{font-family:'Montserrat',sans-serif;background:#F5F4F1;color:#1C1C1C;overfl
  
     <div class="dh">
       <div class="dh-label">Thông tin Advisor</div>
-      <button class="dclose" onclick="closeDrawer()"><i class="ti ti-x"></i></button>
+      <div class="dh-actions">
+        <button class="dh-copy-btn" id="dhCopyBtn" onclick="copyAdvisorLink()">🔗 Copy link</button>
+        <button class="dclose" onclick="closeDrawer()"><i class="ti ti-x"></i></button>
+      </div>
     </div>
  
     <!-- identity -->
@@ -614,7 +621,7 @@ function fetchAdvisorsFromSheet() {
 function buildAdvisorsFromRaw(data){
   ADVISORS = data.map(function(a, idx){
     return {
-      id: idx,
+      id: a.advisor_id || idx,
       initials: (a.initials || '').toUpperCase() || mkInitialsFallback(a.name),
       photo: toDirectImageUrl(a.photo || a.photo_url || a.avatar || a.image || a.image_url || ''),
       name: a.name || '',
@@ -773,7 +780,13 @@ var urlParams = new URLSearchParams(window.location.search);
 var presetPackage = urlParams.get('package');
 
 document.addEventListener('DOMContentLoaded', function(){
-  fetchAdvisorsFromSheet().then(renderAdvisorGrid);
+  fetchAdvisorsFromSheet().then(function(){
+    renderAdvisorGrid();
+    // Mở sẵn đúng advisor nếu link có kèm mã, ví dụ:
+    // đội-ngũ-advisor.html?advisor=ADV003
+    var presetAdvisorId = urlParams.get('advisor');
+    if (presetAdvisorId && findAdvisorById(presetAdvisorId)) openDrawer(presetAdvisorId);
+  });
   // Gói tải bất đồng bộ; banner "đã chọn sẵn gói" chỉ hiện sau khi biết gói có thật
   loadPackagesForBooking().then(function(){
     if (presetPackage && PKG_DATA[presetPackage]) {
@@ -811,8 +824,14 @@ function doFilter(btn, ind){
 }
  
 /* ─── DRAWER ─── */
+function findAdvisorById(id){
+  // So sánh dạng chuỗi vì id có thể là số (index cũ) hoặc mã advisor_id dạng chữ từ Sheet
+  return ADVISORS.find(function(x){ return String(x.id) === String(id); });
+}
+
 function openDrawer(id){
-  var a = ADVISORS[id];
+  var a = findAdvisorById(id);
+  if(!a) return;
   currentAdvisorId = id;
   document.getElementById('dAva').innerHTML = avaInner(a.photo, a.initials) + '<div class="d-verified"><i class="ti ti-check"></i></div>';
   document.getElementById('dName').textContent = a.name;
@@ -867,13 +886,29 @@ function closeDrawer(){
   document.getElementById('drawerOv').classList.remove('open');
   document.body.style.overflow = '';
 }
+
+function copyAdvisorLink(){
+  if (currentAdvisorId == null) return;
+  var url = window.location.origin + window.location.pathname + '?advisor=' + encodeURIComponent(currentAdvisorId);
+  var btn = document.getElementById('dhCopyBtn');
+  navigator.clipboard.writeText(url).then(function(){
+    if (!btn) return;
+    var old = btn.innerHTML;
+    btn.innerHTML = '✓ Đã copy';
+    btn.classList.add('copied');
+    setTimeout(function(){ btn.innerHTML = old; btn.classList.remove('copied'); }, 1800);
+  }).catch(function(){
+    prompt('Copy link advisor này:', url);
+  });
+}
  
 function handleDrawerBg(e){
   if(e.target === document.getElementById('drawerOv')) closeDrawer();
 }
  
 function bookFromDrawer(){
-  var a = ADVISORS[currentAdvisorId];
+  var a = findAdvisorById(currentAdvisorId);
+  if(!a) return;
   closeDrawer();
   openCheckout(a.name, a.role, a.co, a.initials, a.photo);
 }
