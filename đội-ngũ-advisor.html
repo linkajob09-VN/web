@@ -54,7 +54,7 @@ body{font-family:'Montserrat',sans-serif;background:#F5F4F1;color:#1C1C1C;overfl
 .grid-wrap{padding:20px 32px 0;}
 .grid-count{font-size:11px;color:rgba(28,28,28,.35);margin-bottom:16px;font-family:'Montserrat',sans-serif;}
 .grid-count span{color:rgba(28,28,28,.6);}
-.adv-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;}
+.adv-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:20px;}
  
 /* ── ADVISOR CARD (photo-forward, matches team-page reference) ── */
 .acard{background:#fff;border:.5px solid rgba(28,28,28,.08);border-radius:16px;overflow:hidden;transition:border-color .2s,transform .2s,box-shadow .2s;display:flex;flex-direction:column;cursor:pointer;}
@@ -62,7 +62,7 @@ body{font-family:'Montserrat',sans-serif;background:#F5F4F1;color:#1C1C1C;overfl
  
 .acard-topbar{height:4px;width:100%;background:#fc5229;flex-shrink:0;}
  
-.acard-photo{position:relative;width:100%;aspect-ratio:1/1;background:#EDEBE6;overflow:hidden;flex-shrink:0;}
+.acard-photo{position:relative;width:100%;aspect-ratio:4/3;background:#EDEBE6;overflow:hidden;flex-shrink:0;}
 .acard-photo img{width:100%;height:100%;object-fit:cover;display:block;filter:grayscale(.15);transition:filter .25s;}
 .acard:hover .acard-photo img{filter:grayscale(0);}
 .acard-photo .ph-fallback{width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-family:'Montserrat',sans-serif;font-size:34px;font-weight:700;color:rgba(28,28,28,.18);background:linear-gradient(135deg,#f3f1ec,#e9e6df);}
@@ -74,9 +74,9 @@ body{font-family:'Montserrat',sans-serif;background:#F5F4F1;color:#1C1C1C;overfl
 .acard-culogo img{width:100%;height:100%;object-fit:contain;padding:5px;}
  
 .acard-body{padding:22px 14px 12px;flex:1;display:flex;flex-direction:column;}
-.acard-name{font-family:'Montserrat',sans-serif;font-size:13.5px;font-weight:800;letter-spacing:.01em;color:#1C1C1C;text-transform:uppercase;margin-bottom:8px;line-height:1.25;}
+.acard-name{font-family:'Montserrat',sans-serif;font-size:16px;font-weight:800;letter-spacing:.01em;color:#1C1C1C;text-transform:uppercase;margin-bottom:8px;line-height:1.25;}
 .acard-bullets{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:5px;flex:1;}
-.acard-bullets li{font-size:11.5px;line-height:1.5;color:rgba(28,28,28,.55);padding-left:12px;position:relative;}
+.acard-bullets li{font-size:13px;line-height:1.55;color:rgba(28,28,28,.55);padding-left:12px;position:relative;}
 .acard-bullets li::before{content:'';position:absolute;left:0;top:6px;width:4px;height:4px;border-radius:50%;background:#fc5229;}
  
 .acard-foot{padding:12px 14px 14px;}
@@ -283,7 +283,7 @@ body{font-family:'Montserrat',sans-serif;background:#F5F4F1;color:#1C1C1C;overfl
    RESPONSIVE / MOBILE
    ═══════════════════════════════════════ */
 @media (max-width:1024px){
-  .adv-grid{grid-template-columns:repeat(3,1fr);}
+  .adv-grid{grid-template-columns:repeat(2,1fr);gap:14px;}
 }
 @media (max-width:680px){
   .hero{padding:40px 18px 28px;}
@@ -300,7 +300,7 @@ body{font-family:'Montserrat',sans-serif;background:#F5F4F1;color:#1C1C1C;overfl
 
   .grid-wrap{padding:16px 14px 0;}
   .grid-count{margin-bottom:10px;}
-  .adv-grid{grid-template-columns:repeat(2,1fr);gap:8px;}
+  .adv-grid{grid-template-columns:1fr;gap:14px;}
 
   .acard-body{padding:14px 10px 8px;}
   .acard-name{font-size:11.5px;margin-bottom:6px;}
