@@ -13,6 +13,21 @@
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
 html{scroll-behavior:smooth;}
 body{font-family:'Montserrat',sans-serif;background:#F5F4F1;color:#1C1C1C;overflow-x:hidden;}
+
+/* Tự khai báo sẵn bộ biến màu sáng ở đây — không phụ thuộc nav.css bên ngoài
+   có cập nhật hay chưa, tránh trường hợp nav.css trên server bị cũ làm vỡ
+   giao diện modal đặt lịch/thanh toán (nền trong suốt, lộ nền tối phía sau). */
+:root{
+  --paper:#F5F4F1;
+  --paper-2:#FFFFFF;
+  --orange-tint:rgba(252,82,41,.1);
+  --orange-tint-2:rgba(252,82,41,.06);
+  --text:#1C1C1C;
+  --muted:rgba(28,28,28,.45);
+  --muted-2:rgba(28,28,28,.3);
+  --line:rgba(28,28,28,.1);
+}
+
  
  
  
