@@ -2045,65 +2045,25 @@ function renderStaffListPage() {
 }
 
 function openExtendModal(aeId) {
-  var ae = MOCK.advisees.find(function(x){ return x.id === aeId; })
-        || sheetData.advisees && sheetData.advisees.find(function(x){ return x.id === aeId; });
   document.getElementById('modal-title').textContent = '📅 Gia hạn thời gian sử dụng';
   document.getElementById('modal-body').innerHTML =
     '<div style="text-align:center;padding:8px 0 16px">' +
     '<div style="font-size:40px;margin-bottom:12px">⏱</div>' +
-    '<div style="font-size:15px;font-weight:700;color:var(--text);margin-bottom:6px">Cộng thêm 7 ngày sử dụng</div>' +
-    '<div style="font-size:13px;color:var(--muted);line-height:1.7;margin-bottom:16px">Gói của bạn sẽ được gia hạn thêm <strong>7 ngày</strong> kể từ ngày hết hạn hiện tại.</div>' +
+    '<div style="font-size:15px;font-weight:700;color:var(--text);margin-bottom:6px">Cộng thêm 1 tháng sử dụng</div>' +
+    '<div style="font-size:13px;color:var(--muted);line-height:1.7;margin-bottom:16px">Gói của bạn sẽ được gia hạn thêm <strong>30 ngày</strong> kể từ ngày hết hạn hiện tại.</div>' +
     '<div style="background:var(--brand-light);border:1.5px solid #FECACA;border-radius:12px;padding:14px 20px;display:inline-block">' +
-    '<div style="font-size:28px;font-weight:800;color:var(--brand)">200.000đ</div>' +
-    '<div style="font-size:12px;color:var(--muted);margin-top:2px">Thanh toán qua QR — tự động xác nhận</div>' +
-    '</div></div>' +
+    '<div style="font-size:24px;font-weight:800;color:var(--brand)">100.000đ</div>' +
+    '<div style="font-size:12px;color:var(--muted);margin-top:2px">Thanh toán 1 lần</div>' +
+    '</div>' +
+    '</div>' +
     '<div style="background:#F9FAFB;border-radius:10px;padding:12px 16px;font-size:13px;color:var(--muted);line-height:1.65">' +
-    'Sau khi bấm <strong style="color:var(--text)">Tiếp tục thanh toán</strong>, bạn sẽ được chuyển sang trang QR. ' +
-    'Quét mã và thanh toán — hệ thống tự động gia hạn ngay khi nhận được tiền.' +
+    'Sau khi chuyển khoản <strong style="color:var(--text)">100.000đ</strong> với nội dung <strong style="color:var(--brand)">GIA HAN ' + (currentUser.name||'').split(' ').pop().toUpperCase() + '</strong>, ' +
+    'gửi bill về <strong>contact@linkajob.vn</strong> hoặc inbox Facebook. Đội LinkaJob xác nhận trong <strong>2h</strong>.' +
     '</div>';
   document.getElementById('modal-actions').innerHTML =
     '<button class="btn-secondary" onclick="closeModal()" style="width:auto;padding:10px 20px">Đóng</button>' +
-    '<button class="login-btn" id="btn-renew-pay" onclick="submitRenewPayment(\'' + (aeId||'') + '\')" style="width:auto;padding:10px 24px">Tiếp tục thanh toán →</button>';
+    '<button class="login-btn" onclick="toast(\'Đã ghi nhận! Vui lòng chuyển khoản và gửi bill xác nhận.\',\'success\');closeModal()" style="width:auto;padding:10px 24px">Xác nhận gia hạn</button>';
   document.getElementById('modal-overlay').classList.add('open');
-}
-
-function submitRenewPayment(aeId) {
-  var btn = document.getElementById('btn-renew-pay');
-  btn.disabled = true;
-  btn.textContent = 'Đang tạo đơn...';
-
-  var ae = (sheetData.advisees && sheetData.advisees.find(function(x){ return x.id === aeId; }))
-        || (sheetData.bookings && sheetData.bookings.find(function(b){ return b.advisee_email === currentUser.email; }));
-
-  var payload = {
-    action:         'renewBooking',
-    booking_id:     (ae && (ae.booking_id || ae.id)) || aeId || '',
-    advisee_name:   currentUser.name  || '',
-    advisee_email:  currentUser.email || '',
-    advisee_phone:  currentUser.phone || '',
-  };
-
-  fetch(API, {
-    method: 'POST',
-    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-    body: JSON.stringify(payload)
-  })
-  .then(function(r){ return r.json(); })
-  .then(function(res){
-    if (!res.success) throw new Error(res.error || 'Lỗi server');
-    var url = 'thanht-toán.html'
-      + '?order_id=' + encodeURIComponent(res.order_id || '')
-      + '&amount=200000'
-      + '&desc=' + encodeURIComponent('Gia hạn 7 ngày')
-      + '&name='  + encodeURIComponent(currentUser.name || '');
-    closeModal();
-    window.location.href = url;
-  })
-  .catch(function(err){
-    btn.disabled = false;
-    btn.textContent = 'Tiếp tục thanh toán →';
-    toast('Lỗi: ' + err.message, 'error');
-  });
 }
 
 function openSwitchAdvisorModal(aeId) {
@@ -4918,8 +4878,7 @@ function openSessionDetailModal(aeId, sessionNo) {
 
   // Feedback của Advisee cho Advisor (nếu có)
   if (s.feedback) {
-    body += '<div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;margin:14px 0 8px">3 điều bạn học/nhận được sau buổi cố vấn
-    </div>';
+    body += '<div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;margin:14px 0 8px">3 điều bạn học/nhận được sau buổi cố vấn</div>';
     body += '<div style="background:#FFF7ED;border:1.5px solid #FED7AA;border-radius:10px;padding:12px 14px">';
     var stars = '';
     for (var i=1;i<=5;i++) stars += '<span style="color:' + (i<=s.feedback.rating?'#F59E0B':'#D1D5DB') + ';font-size:15px">★</span>';
