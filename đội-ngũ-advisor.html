@@ -787,8 +787,35 @@ function loadPackagesForBooking(){
 var urlParams = new URLSearchParams(window.location.search);
 var presetPackage = urlParams.get('package');
 
+// FIX: feedback đội-ngũ-advisor.html trước giờ đọc từ cột feedbacks_json tĩnh
+// trên tab Advisors (gần như luôn rỗng vì chẳng ai nhập tay), trong khi feedback
+// thật advisee gửi lại nằm ở tab AdvisorReviews riêng (được ghi qua action
+// submitAdviseeFeedback từ trang advisor_advisee.html). Cần gọi thêm action
+// getAdvisorReviews cho từng advisor để lấy đúng feedback thật.
+function fetchAdvisorReviewsFor(name){
+  return fetch(WEBAPP_URL + '?action=getAdvisorReviews&advisor=' + encodeURIComponent(name))
+    .then(function(r){ return r.json(); })
+    .then(function(res){ return (res && res.data) ? res.data : []; })
+    .catch(function(){ return []; });
+}
+function attachRealFeedbacks(){
+  return Promise.all(ADVISORS.map(function(a){
+    return fetchAdvisorReviewsFor(a.name).then(function(reviews){
+      // Chỉ ghi đè khi có feedback thật, để không mất dữ liệu nếu feedbacks_json
+      // có được nhập tay riêng cho advisor nào đó.
+      if (reviews.length) {
+        a.feedbacks = reviews.map(function(f){
+          return { badge:'✓ Feedback', text: f.text || '', name: f.advisee_name || 'Advisee', school:'', initials: mkInitialsFallback(f.advisee_name||''), rating: Number(f.rating)||0 };
+        });
+      }
+    });
+  }));
+}
+
 document.addEventListener('DOMContentLoaded', function(){
   fetchAdvisorsFromSheet().then(function(){
+    return attachRealFeedbacks();
+  }).then(function(){
     renderAdvisorGrid();
     // Mở sẵn đúng advisor nếu link có kèm mã, ví dụ:
     // đội-ngũ-advisor.html?advisor=ADV003
@@ -882,7 +909,8 @@ function openDrawer(id){
   /* feedbacks */
   var fbHtml = '';
   a.feedbacks.forEach(function(f){
-    fbHtml += '<div class="d-fb"><div class="d-fb-badge">'+f.badge+'</div><div class="d-fb-text">'+f.text+'</div><div class="d-fb-author"><div class="d-fb-ava">'+f.initials+'</div><div><div class="d-fb-name">'+f.name+'</div><div class="d-fb-school">'+f.school+'</div></div></div></div>';
+    var starsHtml = f.rating ? '<span style="color:#F59E0B;font-size:12px;margin-left:6px">' + '★'.repeat(f.rating) + '<span style="color:rgba(240,240,240,.2)">' + '★'.repeat(5-f.rating) + '</span></span>' : '';
+    fbHtml += '<div class="d-fb"><div class="d-fb-badge">'+f.badge+starsHtml+'</div><div class="d-fb-text">'+f.text+'</div><div class="d-fb-author"><div class="d-fb-ava">'+f.initials+'</div><div><div class="d-fb-name">'+f.name+'</div><div class="d-fb-school">'+f.school+'</div></div></div></div>';
   });
   document.getElementById('dFeedbacks').innerHTML = fbHtml;
  
