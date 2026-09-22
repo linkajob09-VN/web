@@ -1149,9 +1149,21 @@ function buildAdviseeFromBooking(b, allSessions) {
       ? { cvLink: row.prep_cv_link || '', question: row.prep_question || '', otherLinks: row.prep_other_links || '', submittedAt: row.prep_submitted_at || '' }
       : null;
 
+    // FIX: backend cũng đã ghép sẵn feedback_rating/feedback_text/feedback_created_at
+    // (từ AdvisorReviews) và advisor_note_summary/advisor_note_feedback/advisor_note_action_items
+    // /advisor_note_created_at (từ AdvisorNotes) vào từng dòng session — trước đây bị bỏ qua,
+    // luôn gán null nên load lại trang là mất hết feedback/nhận xét đã gửi, hiện lại form trống
+    // bắt gửi lại. Nay đọc đúng ra để hiển thị lại dữ liệu đã lưu, cả 2 chiều advisor/advisee.
+    var feedbackObj = (row.feedback_rating || row.feedback_text)
+      ? { rating: Number(row.feedback_rating) || 0, text: row.feedback_text || '', createdAt: row.feedback_created_at || '' }
+      : null;
+    var advisorNotesObj = row.advisor_note_summary
+      ? { summary: row.advisor_note_summary || '', feedback: row.advisor_note_feedback || '', actionItems: row.advisor_note_action_items || '', submittedAt: row.advisor_note_created_at || '' }
+      : null;
+
     sessions.push({
       no: no, date: schedDate || null, timeStart: schedTime || null, timeEnd: timeEnd,
-      status: status, feedback: null, meetLink: row.meet_link || '', prepInfo: prepInfo, advisorNotes: null,
+      status: status, feedback: feedbackObj, meetLink: row.meet_link || '', prepInfo: prepInfo, advisorNotes: advisorNotesObj,
       session_id: row.session_id,
     });
   }
