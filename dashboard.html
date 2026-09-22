@@ -5257,6 +5257,24 @@ function addExperienceRow(containerId) {
   container.insertAdjacentHTML('beforeend', eaExpRowHtml(_eaExpIdx++));
 }
 
+// ── FIX: 2 hàm này được gọi ở openEditAdvisorModal()/nút "+ Thêm feedback"
+// nhưng trước đây chưa từng được định nghĩa → mở modal Chỉnh sửa hồ sơ cho
+// bất kỳ advisor nào đã có feedback sẽ ném ReferenceError và modal không mở
+// được. Viết theo đúng pattern của eaExpRowHtml/addExperienceRow ở trên. ──
+var _eaFbIdx = 0;
+function eaFbRowHtml(idx, fb) {
+  fb = fb || {};
+  return '<div class="ea-fb-row" data-idx="' + idx + '" style="background:var(--white);border:1.5px solid var(--border);border-radius:10px;padding:12px;margin-bottom:10px;position:relative">' +
+    '<button type="button" onclick="this.closest(\'.ea-fb-row\').remove()" style="position:absolute;top:8px;right:8px;background:none;border:none;color:var(--muted);cursor:pointer;font-size:16px;line-height:1">×</button>' +
+    '<input class="form-input ea-fb-from" placeholder="Tên người feedback (VD: Trần Gia Hân)" value="' + (fb.from || fb.name || '') + '" style="margin-bottom:8px">' +
+    '<textarea class="form-textarea ea-fb-text" rows="2" placeholder="Nội dung feedback">' + (fb.text || '') + '</textarea>' +
+    '</div>';
+}
+function addFeedbackRow(containerId) {
+  var container = document.getElementById(containerId || 'ea-fb-list');
+  container.insertAdjacentHTML('beforeend', eaFbRowHtml(_eaFbIdx++));
+}
+
 function openEditAdvisorModal(advisorId) {
   var a = sheetData.advisors.find(function(x){ return x.id === advisorId; });
   if (!a) return;
