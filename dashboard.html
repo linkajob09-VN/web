@@ -5107,24 +5107,46 @@ function renderStaffAdvisorDetail(advisorId) {
     html += '</div>';
   }
 
-  // Feedback tự động lấy từ feedback thật của Advisee sau mỗi buổi meeting
-  var realFeedbacks = [];
+  // ── FIX: panel preview này trước đây CHỈ lấy feedback thật từ session
+  // (s.feedback, có rating sao) → bất kỳ feedback nào staff tự thêm/sửa thủ
+  // công trong modal "Chỉnh sửa hồ sơ" (lưu vào a.feedbacks, KHÔNG có sao)
+  // đều không hiện ở đây, khiến preview không phản ánh đúng những gì đã sửa.
+  // Gộp lại đúng theo logic dedupe đã dùng trong openEditAdvisorModal():
+  // a.feedbacks (thủ công, có thể không có rating) + feedback thật từ session
+  // chưa từng được gộp vào a.feedbacks trước đó. ──
+  var displayFb = Array.isArray(a.feedbacks) ? a.feedbacks.slice() : [];
+  var displayFbKeys = displayFb.map(function(f){ return ((f.from||f.name||'') + '|' + (f.text||'')).trim(); });
   MOCK.advisees.filter(function(ae){ return ae.advisor === a.name; }).forEach(function(ae){
     ae.sessions.forEach(function(s){
-      if (s.feedback) realFeedbacks.push({ key: ae.id + '-' + s.no, from: ae.name, rating: s.feedback.rating, text: s.feedback.text });
+      if (!s.feedback || !s.feedback.text) return;
+      var key = (ae.name + '|' + s.feedback.text).trim();
+      var idx = displayFbKeys.indexOf(key);
+      if (idx === -1) {
+        displayFb.push({ from: ae.name, text: s.feedback.text, rating: s.feedback.rating, key: ae.id + '-' + s.no });
+        displayFbKeys.push(key);
+      } else if (displayFb[idx].rating === undefined || displayFb[idx].rating === null) {
+        // Feedback này đã được admin nhập tay trước đó (không có sao) nhưng thực ra
+        // trùng với 1 feedback thật có sao từ session — bổ sung lại rating cho đúng.
+        displayFb[idx].rating = s.feedback.rating;
+      }
     });
   });
   a.hiddenFeedback = a.hiddenFeedback || [];
 
-  html += '<div><div style="font-size:10.5px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;margin-bottom:6px">Feedback nhận được <span style="font-weight:400;text-transform:none;letter-spacing:0">(tự động lấy sau mỗi buổi meeting)</span></div>';
-  if (realFeedbacks.length === 0) {
+  html += '<div><div style="font-size:10.5px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;margin-bottom:6px">Feedback nhận được <span style="font-weight:400;text-transform:none;letter-spacing:0">(tự động sau buổi meeting + nhập tay)</span></div>';
+  if (displayFb.length === 0) {
     html += '<span style="font-size:12.5px;color:var(--muted);font-style:italic">Chưa có feedback nào</span>';
   } else {
-    realFeedbacks.forEach(function(f){
-      var isHidden = a.hiddenFeedback.indexOf(f.key) > -1;
-      var stars = '';
-      for (var si2=1; si2<=5; si2++) stars += (si2 <= f.rating ? '★' : '☆');
-      html += '<div style="background:var(--bg);border-radius:8px;padding:10px 12px;margin-bottom:6px;font-size:12.5px;' + (isHidden?'opacity:.5':'') + '"><span style="color:#F59E0B">' + stars + '</span> <span style="color:var(--text)">"' + f.text + '"</span> <span style="color:var(--muted)">— ' + f.from + '</span>' + (isHidden ? ' <span style="color:var(--muted);font-style:italic">(đã ẩn khỏi web)</span>' : '') + '</div>';
+    displayFb.forEach(function(f){
+      var isHidden = f.key && a.hiddenFeedback.indexOf(f.key) > -1;
+      var hasRating = (f.rating !== undefined && f.rating !== null && f.rating !== '');
+      var starsHtml = '';
+      if (hasRating) {
+        var stars = '';
+        for (var si2=1; si2<=5; si2++) stars += (si2 <= f.rating ? '★' : '☆');
+        starsHtml = '<span style="color:#F59E0B">' + stars + '</span> ';
+      }
+      html += '<div style="background:var(--bg);border-radius:8px;padding:10px 12px;margin-bottom:6px;font-size:12.5px;' + (isHidden?'opacity:.5':'') + '">' + starsHtml + '<span style="color:var(--text)">"' + (f.text||'') + '"</span> <span style="color:var(--muted)">— ' + (f.from||f.name||'') + '</span>' + (isHidden ? ' <span style="color:var(--muted);font-style:italic">(đã ẩn khỏi web)</span>' : '') + '</div>';
     });
   }
   html += '</div>';
