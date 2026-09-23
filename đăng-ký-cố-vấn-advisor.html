@@ -54,56 +54,32 @@
 .sp-pkg{display:inline-block;font-size:9px;font-weight:700;font-family:'Space Grotesk',sans-serif;letter-spacing:.06em;text-transform:uppercase;background:rgba(252,82,41,.12);color:#fc5229;padding:2px 8px;border-radius:4px;white-space:nowrap;}
 .sp-pkg.placeholder{background:rgba(255,255,255,.05);color:rgba(240,240,240,.25);}
 
-/* ── PRICING TABLE ── */
+/* ── PRICING JOURNEY (option 2 — gói theo hành trình, thay bảng so sánh cũ) ── */
 .pt-section{padding:60px 32px 0;}
-.pt-wrap{overflow-x:auto; border-radius:20px; border:.5px solid rgba(255,255,255,.08); background:#141414;}
-table.pt{width:100%; border-collapse:collapse; min-width:780px;}
-table.pt th,table.pt td{padding:0; text-align:center;}
-table.pt th:first-child,table.pt td:first-child{text-align:left;}
-table.pt th:not(:first-child),table.pt td:not(:first-child){border-left:1px solid rgba(255,255,255,.07);}
-
-/* header */
-.pt-thead th{padding:26px 24px; border-bottom:1px solid rgba(255,255,255,.1); position:sticky; top:0; background:#141414; z-index:5;}
-.pt-thead .pt-th-feat{font-family:'Space Grotesk',sans-serif; font-size:13px; font-weight:700; color:rgba(240,240,240,.5); text-transform:uppercase; letter-spacing:.08em; padding-left:24px; vertical-align:bottom;}
-.pt-thead .pt-th{padding-top:22px;}
-.pt-thead th.hi{ background:linear-gradient(180deg, rgba(252,82,41,.14), #141414 85%); border-top:3px solid #fc5229; padding-top:20px;}
-.pt-th-inner{display:flex;flex-direction:column;align-items:center;gap:7px;}
-.pt-th-name{font-family:'Space Grotesk',sans-serif;font-size:13px;font-weight:700;color:rgba(240,240,240,.55);text-transform:uppercase;letter-spacing:.08em;}
-.pt-th-name.hi{color:#fc5229;}
-.pt-th-price{font-family:'Space Grotesk',sans-serif;font-size:26px;font-weight:700;color:#F0F0F0;letter-spacing:-0.5px;}
-.pt-th-price.hi{color:#fc5229; font-size:28px;}
-.pt-th-sessions{font-size:12.5px;color:rgba(240,240,240,.4);margin-top:2px;}
-.pt-th-pop{background:#fc5229;color:#fff;font-family:'Space Grotesk',sans-serif;font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:4px 12px;border-radius:100px;display:inline-flex;align-items:center;gap:4px;margin-bottom:6px;box-shadow:0 4px 12px rgba(252,82,41,.35);}
-
-/* group label */
-.pt-group td{font-family:'Space Grotesk',sans-serif;font-size:12px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--accent-text,rgba(240,240,240,.55));padding:32px 24px 12px;border-bottom:none;background:rgba(255,255,255,.025);position:relative;}
-.pt-group td:first-child{padding-left:24px;}
-.pt-group td::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--accent,rgba(252,82,41,.4));}
-.pt-group:first-child td{padding-top:24px;}
-
-/* data rows */
-.pt-row{background:var(--row-tint,transparent);}
-.pt-row td{padding:22px 24px;border-bottom:.5px solid rgba(255,255,255,.06);font-size:14.5px;color:rgba(240,240,240,.68);vertical-align:middle;line-height:1.35;}
-.pt-row td:first-child{padding-left:24px;color:rgba(240,240,240,.9);font-weight:600;min-width:220px;position:relative;box-shadow:inset 3px 0 0 var(--accent,transparent);}
-.pt-row td small{display:block;font-size:11.5px;color:rgba(240,240,240,.4);margin-top:4px;font-weight:400;line-height:1.4;}
-.pt-row td.hi{background:rgba(252,82,41,.07);}
-.pt-row:last-child td{border-bottom:none;}
-.pt-row:hover td{background:rgba(255,255,255,.02);}
-.pt-row:hover td.hi{background:rgba(252,82,41,.1);}
-.pt-check{display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:50%;background:rgba(252,82,41,.14);color:#fc5229;font-size:14px;}
-.pt-dash{color:rgba(255,255,255,.16);font-size:14px;}
-.pt-val{font-family:'Space Grotesk',sans-serif;font-size:14px;font-weight:600;color:#F0F0F0;}
-.pt-val.hi{color:#fc5229;}
-
-/* CTA row */
-.pt-cta-row td{padding:26px 24px;border-bottom:none;background:transparent;}
-.pt-cta-row td:first-child{padding-left:24px;}
-.pt-cta-row td.hi{background:rgba(252,82,41,.07);}
-.pt-btn{width:100%;padding:13px;border-radius:100px;font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:13.5px;cursor:pointer;border:none;transition:all .2s;white-space:nowrap;}
-.pt-btn-ghost{background:transparent;color:rgba(240,240,240,.6);border:.5px solid rgba(255,255,255,.16);}
-.pt-btn-ghost:hover{background:rgba(255,255,255,.06);color:#F0F0F0;border-color:rgba(255,255,255,.3);}
-.pt-btn-main{background:#fc5229;color:#fff;box-shadow:0 8px 20px rgba(252,82,41,.3);}
-.pt-btn-main:hover{background:#e84820;transform:translateY(-1px);}
+.pj-wrap{padding:4px 2px;}
+.pj-scrollhint{display:none;text-align:center;font-size:10px;font-family:'Space Grotesk',sans-serif;color:rgba(240,240,240,.3);margin-top:14px;}
+.pj-journey{position:relative;display:grid;gap:20px;}
+.pj-line{position:absolute;top:19px;height:1px;background:rgba(255,255,255,.1);z-index:0;}
+.pj-stage{position:relative;display:flex;flex-direction:column;z-index:1;}
+.pj-dot{width:38px;height:38px;border-radius:50%;background:#1A1A1A;border:1px solid rgba(255,255,255,.14);display:flex;align-items:center;justify-content:center;font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:15px;color:rgba(240,240,240,.5);margin-bottom:16px;flex-shrink:0;}
+.pj-stage.hi .pj-dot{background:#fc5229;border-color:#fc5229;color:#fff;}
+.pj-card{background:#141414;border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:22px;display:flex;flex-direction:column;flex:1;position:relative;}
+.pj-card.hi{background:linear-gradient(165deg, rgba(252,82,41,.14), #141414 70%);border-color:rgba(252,82,41,.35);}
+.pj-badge{position:absolute;top:-11px;left:50%;transform:translateX(-50%);background:#fc5229;color:#fff;font-family:'Space Grotesk',sans-serif;font-size:10px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;padding:4px 12px;border-radius:100px;white-space:nowrap;box-shadow:0 4px 12px rgba(252,82,41,.35);}
+.pj-name{font-family:'Space Grotesk',sans-serif;font-size:16px;font-weight:700;color:#F0F0F0;margin-bottom:6px;}
+.pj-price{font-family:'Space Grotesk',sans-serif;font-size:24px;font-weight:700;color:#F0F0F0;letter-spacing:-.3px;margin-bottom:2px;}
+.pj-card.hi .pj-price{color:#fc5229;}
+.pj-meta{font-size:12.5px;color:rgba(240,240,240,.4);margin-bottom:16px;line-height:1.6;}
+.pj-benefits{list-style:none;flex:1;margin-bottom:16px;display:flex;flex-direction:column;gap:8px;}
+.pj-benefit-group{font-family:'Space Grotesk',sans-serif;font-size:10.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#fc5229;margin-top:10px;}
+.pj-benefit-group:first-child{margin-top:0;}
+.pj-benefits li{display:flex;align-items:flex-start;gap:8px;font-size:13px;color:rgba(240,240,240,.65);line-height:1.5;}
+.pj-benefits li i{color:#fc5229;font-size:13px;margin-top:2px;flex-shrink:0;}
+.pj-btn{margin-top:auto;width:100%;padding:12px;border-radius:100px;font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:13.5px;cursor:pointer;border:none;transition:all .2s;white-space:nowrap;text-align:center;text-decoration:none;display:block;}
+.pj-btn-ghost{background:transparent;color:rgba(240,240,240,.6);border:.5px solid rgba(255,255,255,.16);}
+.pj-btn-ghost:hover{background:rgba(255,255,255,.06);color:#F0F0F0;border-color:rgba(255,255,255,.3);}
+.pj-btn-main{background:#fc5229;color:#fff;box-shadow:0 8px 20px rgba(252,82,41,.3);}
+.pj-btn-main:hover{background:#e84820;}
 
 /* ── ADVISOR NOTE ── */
 .adv-note{margin:28px 32px 0;background:#1A1A1A;border:.5px solid rgba(255,255,255,.07);border-radius:14px;padding:18px 22px;display:flex;align-items:flex-start;gap:12px;}
@@ -178,10 +154,78 @@ table.pt th:not(:first-child),table.pt td:not(:first-child){border-left:1px soli
   .cta-box h2{ font-size:22px;}
   .lj-footer{ padding:20px; flex-direction:column; text-align:center;}
   table.pt{ min-width:640px;}
-  .pt-wrap{ position:relative;}
-  .pt-wrap::after{ content:'← Vuốt để xem thêm →'; display:block; text-align:center; font-size:10px; font-family:'Space Grotesk',sans-serif; color:rgba(240,240,240,.3); margin-top:8px;}
-  .pt-row td:first-child, .pt-group td:first-child{ position:sticky; left:0; background:#0D0D0D; z-index:1;}
+  .pj-journey{ grid-template-columns:1fr !important; gap:14px;}
+  .pj-line{ display:none;}
+  .pj-stage{ flex-direction:row; gap:14px; align-items:flex-start;}
+  .pj-dot{ margin-bottom:0;}
 }
+/* ── LIGHT ZONE (Social Proof → Pricing → Payment → FAQ → CTA cuối → Footer) ──
+   Hero + How it works giữ nguyên nền đen (ấn tượng đầu, "chất").
+   Từ đây về sau là lúc khách cân nhắc & ra quyết định mua — chuyển nền
+   sáng/ấm để tạo cảm giác tin tưởng, gần gũi, dễ đọc hơn trên mobile,
+   thay vì bảng màu đen-cam dễ liên tưởng app/tool hơn là dịch vụ có
+   con người đồng hành. Cam vẫn là màu CTA duy nhất, không đổi. ── */
+:root{
+  --lj-light-bg:#FAF6F0; --lj-light-surface:#FFFFFF; --lj-light-surface-alt:#FFF1E6;
+  --lj-light-border:#EAE1D3; --lj-light-text:#211C16; --lj-light-text-dim:#6B6255; --lj-light-text-faint:#A79C8C;
+  --lj-accent-dark:#D8481E;
+}
+.lj-light-zone{background:var(--lj-light-bg); color:var(--lj-light-text);}
+.lj-light-zone .sec-label{color:var(--lj-light-text-faint);}
+.lj-light-zone .sec-title{color:var(--lj-light-text);}
+
+.lj-light-zone .sp-card{background:var(--lj-light-surface); border-color:var(--lj-light-border);}
+.lj-light-zone .sp-card.real{background:var(--lj-light-surface-alt); border-color:#FFD2B8;}
+.lj-light-zone .sp-quote{color:var(--lj-light-text-dim);}
+.lj-light-zone .sp-name{color:var(--lj-light-text);}
+.lj-light-zone .sp-role{color:var(--lj-light-text-faint);}
+.lj-light-zone .sp-pkg.placeholder{background:#F0E9DD; color:var(--lj-light-text-faint);}
+.lj-light-zone .sp-more a{color:var(--lj-light-text-dim);}
+.lj-light-zone .sp-more a:hover{color:#fc5229;}
+
+.lj-light-zone .pj-line{background:var(--lj-light-border);}
+.lj-light-zone .pj-dot{background:var(--lj-light-surface); border-color:var(--lj-light-border); color:var(--lj-light-text-faint);}
+.lj-light-zone .pj-card{background:var(--lj-light-surface); border-color:var(--lj-light-border);}
+.lj-light-zone .pj-card.hi{background:linear-gradient(165deg,#FFE3D0,var(--lj-light-surface) 70%); border-color:#FFB08C;}
+.lj-light-zone .pj-name{color:var(--lj-light-text);}
+.lj-light-zone .pj-price{color:var(--lj-light-text);}
+.lj-light-zone .pj-card.hi .pj-price{color:var(--lj-accent-dark);}
+.lj-light-zone .pj-meta{color:var(--lj-light-text-faint);}
+.lj-light-zone .pj-benefit-group{color:var(--lj-accent-dark);}
+.lj-light-zone .pj-benefits li{color:var(--lj-light-text-dim);}
+.lj-light-zone .pj-btn-ghost{background:var(--lj-light-surface); color:var(--lj-light-text-dim); border-color:var(--lj-light-border);}
+.lj-light-zone .pj-btn-ghost:hover{background:#F5EFE4; color:var(--lj-light-text); border-color:#DCD2C2;}
+.lj-light-zone .pj-scrollhint{color:var(--lj-light-text-faint);}
+
+.lj-light-zone .adv-note{background:var(--lj-light-surface); border-color:var(--lj-light-border);}
+.lj-light-zone .adv-note-icon{background:#F0E9DD;}
+.lj-light-zone .adv-note-icon i{color:var(--lj-light-text-faint);}
+.lj-light-zone .adv-note-title{color:var(--lj-light-text);}
+.lj-light-zone .adv-note-sub{color:var(--lj-light-text-faint);}
+.lj-light-zone .adv-note-sub strong{color:var(--lj-light-text-dim);}
+
+.lj-light-zone .pay-inner{background:var(--lj-light-surface); border-color:var(--lj-light-border);}
+.lj-light-zone .pay-title{color:var(--lj-light-text);}
+.lj-light-zone .pay-sub{color:var(--lj-light-text-faint);}
+.lj-light-zone .pay-text{color:var(--lj-light-text-dim);}
+.lj-light-zone .pay-text strong{color:var(--lj-light-text);}
+.lj-light-zone .qr-box{border:1px solid var(--lj-light-border);}
+.lj-light-zone .qr-label{color:var(--lj-light-text-faint);}
+.lj-light-zone .qr-bank{color:var(--lj-light-text-dim);}
+.lj-light-zone .qr-hint{color:var(--lj-light-text-faint);}
+
+.lj-light-zone .faq-item{background:var(--lj-light-surface); border-color:var(--lj-light-border);}
+.lj-light-zone .faq-q span{color:var(--lj-light-text);}
+.lj-light-zone .faq-q i{color:var(--lj-light-text-faint);}
+.lj-light-zone .faq-item.open .faq-q i{color:#fc5229;}
+.lj-light-zone .faq-a{color:var(--lj-light-text-dim);}
+
+.lj-light-zone .lj-footer{border-top-color:var(--lj-light-border);}
+.lj-light-zone .lj-logo{color:var(--lj-light-text);}
+.lj-light-zone .lj-footer-copy{color:var(--lj-light-text-faint);}
+.lj-light-zone .lj-footer-links a{color:var(--lj-light-text-faint);}
+.lj-light-zone .lj-footer-links a:hover{color:var(--lj-accent-dark);}
+
 </style>
 <link rel="stylesheet" href="nav.css">
 </head>
@@ -231,6 +275,7 @@ table.pt th:not(:first-child),table.pt td:not(:first-child){border-left:1px soli
   <button class="how-cta-btn" onclick="window.open('https://linkajob.vn/lien-he/','_blank')">Đặt lịch tư vấn miễn phí</button>
 </div>
 
+<div class="lj-light-zone">
 <!-- 3. SOCIAL PROOF — Người khác dùng có tốt không? -->
 <section class="sp-section">
   <div class="sec-label">Từ advisee thật</div>
@@ -278,14 +323,10 @@ table.pt th:not(:first-child),table.pt td:not(:first-child){border-left:1px soli
 <section class="pt-section">
   <div class="sec-label">Các gói</div>
   <div class="sec-title">Chọn gói phù hợp.</div>
-  <div class="pt-wrap">
-    <table class="pt">
-      <thead id="pt-thead">
-        <tr class="pt-thead"><th class="pt-th-feat">Nội dung hỗ trợ</th><th class="pt-th" colspan="4" style="text-align:center;font-weight:400;color:rgba(240,240,240,.4);font-size:13px;padding:24px 0">Đang tải bảng giá...</th></tr>
-      </thead>
-      <tbody id="pt-tbody"></tbody>
-    </table>
+  <div class="pj-wrap" id="pj-wrap">
+    <div style="text-align:center;color:rgba(240,240,240,.4);font-size:13px;padding:24px 0">Đang tải bảng giá...</div>
   </div>
+  <div class="pj-scrollhint" id="pj-scrollhint">← Vuốt để xem thêm →</div>
 </section>
 
 <!-- ADVISOR NOTE -->
@@ -392,6 +433,7 @@ table.pt th:not(:first-child),table.pt td:not(:first-child){border-left:1px soli
   <div class="lj-footer-copy">© 2025 LinkaJob · Kết nối Cố vấn, Xây dựng Sự nghiệp</div>
   <div class="lj-footer-links"><a href="#">Giới thiệu</a><a href="#">Blog</a><a href="https://linkajob.vn/lien-he/">Liên hệ</a></div>
 </footer>
+</div><!-- /.lj-light-zone -->
 
 </div>
 <script>
@@ -434,26 +476,13 @@ function pricingEscHtml(s) {
   return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
 
-function renderPricingTable(packages, featuresByPkg) {
-  var colCount = packages.length + 1;
+function renderPricingJourney(packages, featuresByPkg) {
   var highlightIdx = packages.findIndex(function(p){ return p.badge_label && String(p.badge_label).trim(); });
+  var n = packages.length || 1;
 
-  // ── Header (1 cột / gói, tự co giãn theo số gói thật đang bán) ──
-  var theadHtml = '<tr class="pt-thead"><th class="pt-th-feat">Nội dung hỗ trợ</th>';
-  packages.forEach(function(p, i){
-    var isHi = i === highlightIdx;
-    theadHtml += '<th class="pt-th' + (isHi ? ' hi' : '') + '"><div class="pt-th-inner">';
-    if (isHi) theadHtml += '<div class="pt-th-pop">' + pricingEscHtml(p.badge_label) + '</div>';
-    theadHtml += '<div class="pt-th-name' + (isHi ? ' hi' : '') + '">' + pricingEscHtml(p.name) + '</div>';
-    theadHtml += '<div class="pt-th-price' + (isHi ? ' hi' : '') + '">' + pricingFmtPriceK(p) + '</div>';
-    theadHtml += '<div class="pt-th-sessions">' + pricingFmtSessions(p) + ' · ' + (Number(p.duration_minutes) || 60) + ' phút</div>';
-    theadHtml += '</div></th>';
-  });
-  theadHtml += '</tr>';
-
-  // ── Gom TẤT CẢ dòng "nhóm + tên mục" xuất hiện ở bất kỳ gói nào, giữ thứ
-  //    tự theo sort_order — để dòng nào gói này không có thì gói kia vẫn
-  //    thấy đúng vị trí (tự hiện dấu — nếu gói đó không có dòng này). ──
+  // ── Gom tất cả "nhóm + tên mục" xuất hiện ở bất kỳ gói nào, giữ đúng thứ
+  //    tự sort_order — dùng để duyệt benefit của từng gói theo 1 thứ tự
+  //    nhất quán (giống logic gộp rowKeys của bảng so sánh cũ). ──
   var rowKeys = [];
   var seen = {};
   packages.forEach(function(p){
@@ -467,71 +496,51 @@ function renderPricingTable(packages, featuresByPkg) {
   });
   rowKeys.sort(function(a, b){ return a.sort_order - b.sort_order; });
 
-  // ── MỚI: mỗi NHÓM ("Chủ đề CV", "Chủ đề phỏng vấn"...) được gán 1 màu
-  //    riêng, xoay vòng theo bảng màu — để mắt lướt xuống là nhận ra ngay
-  //    đang ở section nào, thay vì phải đọc chữ tiêu đề nhỏ. Màu áp cho:
-  //    vạch màu bên trái + chữ tiêu đề nhóm + lớp nền rất nhạt phủ cả dòng. ──
-  var PT_PALETTE = ['#fc5229', '#38bdf8', '#34d399', '#a78bfa', '#fbbf24', '#f472b6'];
-  function hexToRgba(hex, alpha) {
-    var h = hex.replace('#', '');
-    var r = parseInt(h.substring(0, 2), 16), g = parseInt(h.substring(2, 4), 16), b = parseInt(h.substring(4, 6), 16);
-    return 'rgba(' + r + ',' + g + ',' + b + ',' + alpha + ')';
-  }
-  var groupOrder = ['Thời hạn & hồ sơ'];
-  rowKeys.forEach(function(rk){
-    if (rk.group_label && groupOrder.indexOf(rk.group_label) === -1) groupOrder.push(rk.group_label);
-  });
-  var groupColor = {};
-  groupOrder.forEach(function(g, idx){ groupColor[g] = PT_PALETTE[idx % PT_PALETTE.length]; });
+  var halfColPct = 50 / n;
+  var journeyHtml = '<div class="pj-journey" style="grid-template-columns:repeat(' + n + ',1fr)">' +
+    '<div class="pj-line" style="left:calc(' + halfColPct + '% - 1px);right:calc(' + halfColPct + '% - 1px)"></div>';
 
-  var tbodyHtml = '';
-  // "Thời hạn sử dụng" luôn hiện đầu tiên — lấy trực tiếp từ Packages (days), không phải từ PackageFeatures.
-  var thHanColor = groupColor['Thời hạn & hồ sơ'];
-  tbodyHtml += '<tr class="pt-group" style="--accent:' + thHanColor + ';--accent-text:' + thHanColor + '"><td colspan="' + colCount + '">Thời hạn & hồ sơ</td></tr>';
-  tbodyHtml += '<tr class="pt-row" style="--accent:' + thHanColor + ';--row-tint:' + hexToRgba(thHanColor, 0.035) + '"><td>Thời hạn sử dụng</td>';
   packages.forEach(function(p, i){
     var isHi = i === highlightIdx;
-    tbodyHtml += '<td' + (isHi ? ' class="hi"' : '') + '><span class="pt-val' + (isHi ? ' hi' : '') + '">' + pricingFmtDuration(p.days) + '</span></td>';
-  });
-  tbodyHtml += '</tr>';
+    var slug = pricingSlugify(p.name);
 
-  var lastGroup = 'Thời hạn & hồ sơ';
-  rowKeys.forEach(function(rk){
-    if (rk.group_label && rk.group_label !== lastGroup) {
-      var gColor = groupColor[rk.group_label];
-      tbodyHtml += '<tr class="pt-group" style="--accent:' + gColor + ';--accent-text:' + gColor + '"><td colspan="' + colCount + '">' + pricingEscHtml(rk.group_label) + '</td></tr>';
-      lastGroup = rk.group_label;
-    }
-    var rowColor = groupColor[rk.group_label] || thHanColor;
-    tbodyHtml += '<tr class="pt-row" style="--accent:' + rowColor + ';--row-tint:' + hexToRgba(rowColor, 0.035) + '"><td>' + pricingEscHtml(rk.feature_label) + '</td>';
-    packages.forEach(function(p, i){
-      var isHi = i === highlightIdx;
+    // Danh sách benefit của gói này — chỉ những dòng KHÔNG phải "dash",
+    // theo đúng thứ tự rowKeys; chèn tiêu đề nhóm khi đổi nhóm.
+    var benefitsHtml = '';
+    var lastGroup = null;
+    rowKeys.forEach(function(rk){
       var feat = (featuresByPkg[p.package_id] || []).find(function(f){
         return String(f.group_label || '').trim() === rk.group_label && String(f.feature_label || '').trim() === rk.feature_label;
       });
       var val = feat ? feat.value : 'dash';
-      var cell;
-      if (val === 'check') cell = '<i class="ti ti-check pt-check"></i>';
-      else if (!val || val === 'dash') cell = '<span class="pt-dash">—</span>';
-      else cell = '<span class="pt-val' + (isHi ? ' hi' : '') + '">' + pricingEscHtml(val) + '</span>';
-      tbodyHtml += '<td' + (isHi ? ' class="hi"' : '') + '>' + cell + '</td>';
+      if (!val || val === 'dash') return;
+      if (rk.group_label && rk.group_label !== lastGroup) {
+        benefitsHtml += '<div class="pj-benefit-group">' + pricingEscHtml(rk.group_label) + '</div>';
+        lastGroup = rk.group_label;
+      }
+      var label = pricingEscHtml(rk.feature_label);
+      if (val !== 'check') label += ' — ' + pricingEscHtml(val);
+      benefitsHtml += '<li><i class="ti ti-check"></i>' + label + '</li>';
     });
-    tbodyHtml += '</tr>';
-  });
+    if (!benefitsHtml) benefitsHtml = '<li style="color:rgba(240,240,240,.35)">Chưa có nội dung hỗ trợ được thêm.</li>';
 
-  // ── Dòng nút CTA — link thẳng sang đội-ngũ-advisor.html?package=<slug> ──
-  tbodyHtml += '<tr class="pt-cta-row"><td></td>';
-  packages.forEach(function(p, i){
-    var isHi = i === highlightIdx;
-    var slug = pricingSlugify(p.name);
-    tbodyHtml += '<td' + (isHi ? ' class="hi"' : '') + '><button class="pt-btn ' + (isHi ? 'pt-btn-main' : 'pt-btn-ghost') + '" onclick="location.href=\'đội-ngũ-advisor.html?package=' + slug + '\'">Chọn ' + pricingEscHtml(p.name) + '</button></td>';
+    journeyHtml += '<div class="pj-stage' + (isHi ? ' hi' : '') + '">';
+    journeyHtml += '<div class="pj-dot">' + (i + 1) + '</div>';
+    journeyHtml += '<div class="pj-card' + (isHi ? ' hi' : '') + '">';
+    if (isHi) journeyHtml += '<div class="pj-badge">' + pricingEscHtml(p.badge_label) + '</div>';
+    journeyHtml += '<div class="pj-name">' + pricingEscHtml(p.name) + '</div>';
+    journeyHtml += '<div class="pj-price">' + pricingFmtPriceK(p) + '</div>';
+    journeyHtml += '<div class="pj-meta">' + pricingFmtSessions(p) + ' · ' + pricingFmtDuration(p.days) + ' sử dụng · ' + (Number(p.duration_minutes) || 60) + ' phút/buổi</div>';
+    journeyHtml += '<ul class="pj-benefits">' + benefitsHtml + '</ul>';
+    journeyHtml += '<button class="pj-btn ' + (isHi ? 'pj-btn-main' : 'pj-btn-ghost') + '" onclick="location.href=\'đội-ngũ-advisor.html?package=' + slug + '\'">Chọn ' + pricingEscHtml(p.name) + '</button>';
+    journeyHtml += '</div></div>';
   });
-  tbodyHtml += '</tr>';
+  journeyHtml += '</div>';
 
-  var theadEl = document.getElementById('pt-thead');
-  var tbodyEl = document.getElementById('pt-tbody');
-  if (theadEl) theadEl.innerHTML = theadHtml;
-  if (tbodyEl) tbodyEl.innerHTML = tbodyHtml;
+  var wrapEl = document.getElementById('pj-wrap');
+  if (wrapEl) wrapEl.innerHTML = journeyHtml;
+  var hintEl = document.getElementById('pj-scrollhint');
+  if (hintEl) hintEl.style.display = n > 2 ? 'block' : 'none';
 }
 
 function loadPricingTable() {
@@ -541,8 +550,8 @@ function loadPricingTable() {
   ]).then(function(results){
     var pkgRes = results[0], featRes = results[1];
     if (!pkgRes || !pkgRes.success || !Array.isArray(pkgRes.data) || !pkgRes.data.length) {
-      var tbodyEl = document.getElementById('pt-tbody');
-      if (tbodyEl) tbodyEl.innerHTML = '<tr><td colspan="5" style="padding:24px;color:rgba(240,240,240,.4)">Không tải được bảng giá — vui lòng thử lại sau.</td></tr>';
+      var wrapEl = document.getElementById('pj-wrap');
+      if (wrapEl) wrapEl.innerHTML = '<div style="padding:24px;color:rgba(240,240,240,.4);text-align:center">Không tải được bảng giá — vui lòng thử lại sau.</div>';
       return;
     }
     var packages = pkgRes.data.slice().sort(function(a, b){ return (Number(a.sort_order) || 0) - (Number(b.sort_order) || 0); });
@@ -554,10 +563,10 @@ function loadPricingTable() {
         featuresByPkg[pid].push(f);
       });
     }
-    renderPricingTable(packages, featuresByPkg);
+    renderPricingJourney(packages, featuresByPkg);
   }).catch(function(){
-    var tbodyEl = document.getElementById('pt-tbody');
-    if (tbodyEl) tbodyEl.innerHTML = '<tr><td colspan="5" style="padding:24px;color:rgba(240,240,240,.4)">Không tải được bảng giá — vui lòng thử lại sau.</td></tr>';
+    var wrapEl = document.getElementById('pj-wrap');
+    if (wrapEl) wrapEl.innerHTML = '<div style="padding:24px;color:rgba(240,240,240,.4);text-align:center">Không tải được bảng giá — vui lòng thử lại sau.</div>';
   });
 }
 document.addEventListener('DOMContentLoaded', loadPricingTable);
