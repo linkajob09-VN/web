@@ -1078,7 +1078,7 @@ function submitBooking(){
   if(btn.disabled) return; // chặn double-click
 
   var payload = {
-    action          : 'createBooking',
+    action          : 'createBookingWithPayment',
     order_id        : S.orderId || '',
     advisee_name    : document.getElementById('mName').value.trim(),
     advisee_phone   : document.getElementById('mPhone').value.trim(),
@@ -1105,14 +1105,13 @@ function submitBooking(){
   .then(function(res){ return res.json(); })
   .then(function(data){
     if(!data.success) throw new Error(data.error || 'Lỗi không xác định từ server');
-    // Chuyển sang trang thanh toán thật (QR động + tự xác nhận), thay vì gửi bill thủ công.
-    var params = new URLSearchParams({
-      order_id: data.booking_id || S.orderId || '',
-      amount  : S.priceNum * 1000,
-      desc    : 'Gói ' + S.pkg + (S.adv ? ' · Cố vấn ' + S.adv : ''),
-      name    : payload.advisee_name
-    });
-    window.location.href = 'thanh-toán.html?' + params.toString();
+    // Chuyển sang trang thanh toán thật (QR động + tự xác nhận).
+    // payment_url do backend trả về đã có đúng order_id (định dạng DH...)
+    // và đúng số tiền (VND đầy đủ, không nhân thêm 1000 ở đây nữa),
+    // đồng thời đơn hàng đã được ghi vào sheet Payments để webhook SePay
+    // có dữ liệu đối chiếu khi khách chuyển khoản.
+    if (!data.payment_url) throw new Error('Server không trả về payment_url');
+    window.location.href = data.payment_url;
   })
   .catch(function(err){
     setSubmitStatus('error', '⚠ Gửi thất bại ('+err.message+'). Vui lòng thử lại hoặc gửi bill qua contact@linkajob.vn.');
