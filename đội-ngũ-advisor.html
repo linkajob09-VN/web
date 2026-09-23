@@ -101,7 +101,7 @@ body{font-family:'Montserrat',sans-serif;background:#F5F4F1;color:#1C1C1C;overfl
    ═══════════════════════════════════════ */
 .drawer-overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);backdrop-filter:blur(6px);z-index:800;opacity:0;pointer-events:none;transition:opacity .25s;}
 .drawer-overlay.open{opacity:1;pointer-events:auto;}
-.drawer{position:fixed;top:0;right:0;bottom:0;width:480px;background:#111;border-left:.5px solid rgba(255,255,255,.09);z-index:801;transform:translateX(100%);transition:transform .28s cubic-bezier(.22,1,.36,1);overflow-y:auto;display:flex;flex-direction:column;}
+.drawer{position:fixed;top:0;right:0;bottom:0;width:640px;max-width:94vw;background:#111;border-left:.5px solid rgba(255,255,255,.09);z-index:801;transform:translateX(100%);transition:transform .28s cubic-bezier(.22,1,.36,1);overflow-y:auto;display:flex;flex-direction:column;}
 .drawer-overlay.open .drawer{transform:translateX(0);}
  
 /* drawer header */
@@ -170,7 +170,7 @@ body{font-family:'Montserrat',sans-serif;background:#F5F4F1;color:#1C1C1C;overfl
 .m-overlay{position:fixed;inset:0;background:rgba(28,28,28,.45);backdrop-filter:blur(6px);z-index:900;display:block;opacity:0;pointer-events:none;transition:opacity .22s;}
 .m-overlay.open{opacity:1;pointer-events:auto;}
 /* Widget đăng ký gói: drawer trượt từ phải, đồng bộ với drawer thông tin Advisor */
-.m-modal{position:fixed;top:0;right:0;height:100%;width:460px;max-width:92vw;background:var(--paper);border-left:.5px solid var(--line);border-radius:0;overflow-y:auto;-webkit-overflow-scrolling:touch;transform:translateX(100%);transition:transform .28s cubic-bezier(.22,.61,.36,1);}
+.m-modal{position:fixed;top:0;right:0;height:100%;width:640px;max-width:94vw;background:var(--paper);border-left:.5px solid var(--line);border-radius:0;overflow-y:auto;-webkit-overflow-scrolling:touch;transform:translateX(100%);transition:transform .28s cubic-bezier(.22,.61,.36,1);}
 .m-overlay.open .m-modal{transform:translateX(0);}
 @media(max-width:560px){
   /* Trên điện thoại: chiếm gần trọn màn hình, chừa 1 dải nhỏ phía trên để thoát nhanh */
@@ -256,6 +256,12 @@ body{font-family:'Montserrat',sans-serif;background:#F5F4F1;color:#1C1C1C;overfl
 .pv.o{color:#fc5229;}
 .pay-note{background:var(--orange-tint-2);border:.5px solid rgba(252,82,41,.14);border-radius:9px;padding:10px 13px;font-size:11px;color:var(--muted);line-height:1.65;}
 .pay-note strong{color:var(--text);font-weight:600;}
+.pay-warn{background:#FFF8E6;border:.5px solid rgba(217,119,6,.22);border-radius:10px;padding:13px 15px;margin-bottom:12px;}
+.pay-warn-title{display:flex;align-items:center;gap:7px;font-family:'Montserrat',sans-serif;font-weight:700;font-size:12.5px;color:var(--text);margin-bottom:8px;}
+.pay-warn-title i{color:#D97706;font-size:14px;}
+.pay-warn ul{margin:0;padding-left:18px;}
+.pay-warn li{font-size:11.5px;color:#7A5B10;line-height:1.65;margin-bottom:6px;}
+.pay-warn li:last-child{margin-bottom:0;}
 /* nav btns */
 .mnav{display:flex;gap:8px;align-items:center;margin-top:16px;padding-top:14px;border-top:.5px solid var(--line);}
 @media(max-width:560px){
@@ -519,6 +525,13 @@ body{font-family:'Montserrat',sans-serif;background:#F5F4F1;color:#1C1C1C;overfl
         <div class="crow"><span class="cl">SĐT</span><div class="cv" id="cvPhone" style="font-weight:400;font-size:11px;">—</div></div>
       </div>
       <div class="total-row"><div class="total-l">Tổng thanh toán</div><div class="total-p" id="cvTotal">—</div></div>
+      <div class="pay-warn">
+        <div class="pay-warn-title"><i class="ti ti-alert-triangle"></i> Lưu ý:</div>
+        <ul>
+          <li>Các gói giá sẽ không được hoàn trả phí.</li>
+          <li>Trong trường hợp bạn không dùng hết số buổi meeting trong gói đã đăng ký, vui lòng đăng ký gói mới để được tiếp tục sử dụng dịch vụ. LinkaJob không gia hạn thời hạn các gói dưới bất kỳ lý do nào.</li>
+        </ul>
+      </div>
       <div class="pay-note">Bấm "Tiến hành thanh toán" để chuyển sang trang quét mã QR — hệ thống tự động xác nhận khi nhận được chuyển khoản, không cần gửi bill thủ công.</div>
       <div id="mSubmitStatus" style="display:none;margin-top:10px;padding:10px 12px;border-radius:8px;font-size:12.5px;line-height:1.5;"></div>
       <div class="mnav">
