@@ -22,7 +22,7 @@
 .trust-item i{font-size:13px;color:#fc5229;}
 
 /* ── HOW IT WORKS ── */
-.how{margin:40px 32px 0;background:#1A1A1A;border:.5px solid rgba(255,255,255,.08);border-radius:18px 18px 0 0;padding:32px 32px 28px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:0;}
+.how{margin:40px 32px 0;background:#1A1A1A;border:.5px solid rgba(255,255,255,.08);border-radius:18px 18px 0 0;padding:32px 32px 28px;display:grid;grid-template-columns:repeat(4,1fr);gap:0;}
 .how-step{display:flex;flex-direction:column;align-items:center;text-align:center;padding:0 24px;position:relative;}
 .how-step:not(:last-child)::after{content:'';position:absolute;right:0;top:22px;width:.5px;height:36px;background:rgba(255,255,255,.08);transform:translateY(-50%);}
 .how-tag{display:inline-block;font-size:9px;font-weight:700;font-family:'Space Grotesk',sans-serif;letter-spacing:.07em;text-transform:uppercase;background:rgba(252,82,41,.12);color:#fc5229;padding:2px 8px;border-radius:4px;margin-bottom:10px;}
@@ -89,23 +89,6 @@
 .adv-note-sub{font-size:12px;color:rgba(240,240,240,.38);line-height:1.6;}
 .adv-note-sub strong{color:rgba(240,240,240,.6);font-weight:500;}
 
-/* ── PAYMENT ── */
-.pay-section{padding:52px 32px 0;}
-.pay-inner{background:#1A1A1A;border:.5px solid rgba(255,255,255,.07);border-radius:20px;padding:36px 40px;display:grid;grid-template-columns:1fr 180px;gap:48px;align-items:start;}
-.pay-title{font-family:'Space Grotesk',sans-serif;font-size:22px;font-weight:700;letter-spacing:-.8px;color:#F0F0F0;margin-bottom:8px;}
-.pay-sub{font-size:13px;color:rgba(240,240,240,.38);line-height:1.7;margin-bottom:28px;}
-.pay-steps{display:flex;flex-direction:column;gap:14px;}
-.pay-step{display:flex;gap:12px;align-items:flex-start;}
-.pay-num{width:22px;height:22px;border-radius:50%;border:.5px solid rgba(252,82,41,.4);display:flex;align-items:center;justify-content:center;font-family:'Space Grotesk',sans-serif;font-size:11px;font-weight:700;color:#fc5229;flex-shrink:0;margin-top:1px;}
-.pay-text{font-size:13px;color:rgba(240,240,240,.5);line-height:1.55;}
-.pay-text strong{color:#F0F0F0;font-weight:500;}
-.qr-wrap{display:flex;flex-direction:column;align-items:center;gap:10px;}
-.qr-box{width:148px;height:148px;background:#fff;border-radius:14px;display:flex;align-items:center;justify-content:center;padding:12px;}
-.qr-box svg{width:100%;height:100%;}
-.qr-label{font-size:11px;color:rgba(240,240,240,.3);font-family:'Space Grotesk',sans-serif;text-align:center;}
-.qr-bank{font-size:12px;color:rgba(240,240,240,.5);font-family:'Space Grotesk',sans-serif;font-weight:500;}
-.qr-hint{font-size:10px;color:rgba(240,240,240,.2);font-family:'Space Grotesk',sans-serif;font-style:italic;}
-
 /* ── FAQ ── */
 .faq-section{padding:52px 32px 0;}
 .faq-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:28px;}
@@ -138,8 +121,6 @@
   .how-step:not(:last-child){ padding-bottom:20px; border-bottom:.5px solid rgba(255,255,255,.08);}
   .how-cta{ margin:0 20px; flex-direction:column; text-align:center; padding:18px 22px;}
   .sp-grid{ grid-template-columns:1fr; gap:12px;}
-  .pay-inner{ grid-template-columns:1fr; gap:24px; padding:28px 24px;}
-  .qr-wrap{ order:-1;}
   .faq-grid{ grid-template-columns:1fr;}
 }
 @media(max-width:640px){
@@ -147,7 +128,7 @@
   .hero h1{ font-size:28px; letter-spacing:-1px;}
   .hero-sub{ font-size:13px;}
   .trust-row{ gap:12px 16px;}
-  .sp-section, .pt-section, .pay-section, .faq-section{ padding-left:20px; padding-right:20px;}
+  .sp-section, .pt-section, .faq-section{ padding-left:20px; padding-right:20px;}
   .adv-note{ margin:24px 20px 0; padding:16px 18px;}
   .cta-wrap{ padding:40px 20px 48px;}
   .cta-box{ padding:36px 24px;}
@@ -171,6 +152,17 @@
   --lj-accent-dark:#D8481E;
 }
 .lj-light-zone{background:var(--lj-light-bg); color:var(--lj-light-text);}
+.lj-light-zone .eyebrow{background:var(--lj-light-surface); border-color:var(--lj-light-border); color:var(--lj-light-text-faint);}
+.lj-light-zone .hero h1{color:var(--lj-light-text);}
+.lj-light-zone .hero-sub{color:var(--lj-light-text-faint);}
+.lj-light-zone .trust-item{color:var(--lj-light-text-dim);}
+.lj-light-zone .how{background:var(--lj-light-surface); border-color:var(--lj-light-border);}
+.lj-light-zone .how-step:not(:last-child)::after{background:var(--lj-light-border);}
+.lj-light-zone .how-title{color:var(--lj-light-text);}
+.lj-light-zone .how-sub{color:var(--lj-light-text-faint);}
+.lj-light-zone .how-cta{background:var(--lj-light-surface-alt); border-color:#FFD2B8;}
+.lj-light-zone .how-cta span{color:var(--lj-light-text-dim);}
+.lj-light-zone .how-cta strong{color:var(--lj-light-text);}
 .lj-light-zone .sec-label{color:var(--lj-light-text-faint);}
 .lj-light-zone .sec-title{color:var(--lj-light-text);}
 
@@ -204,16 +196,6 @@
 .lj-light-zone .adv-note-sub{color:var(--lj-light-text-faint);}
 .lj-light-zone .adv-note-sub strong{color:var(--lj-light-text-dim);}
 
-.lj-light-zone .pay-inner{background:var(--lj-light-surface); border-color:var(--lj-light-border);}
-.lj-light-zone .pay-title{color:var(--lj-light-text);}
-.lj-light-zone .pay-sub{color:var(--lj-light-text-faint);}
-.lj-light-zone .pay-text{color:var(--lj-light-text-dim);}
-.lj-light-zone .pay-text strong{color:var(--lj-light-text);}
-.lj-light-zone .qr-box{border:1px solid var(--lj-light-border);}
-.lj-light-zone .qr-label{color:var(--lj-light-text-faint);}
-.lj-light-zone .qr-bank{color:var(--lj-light-text-dim);}
-.lj-light-zone .qr-hint{color:var(--lj-light-text-faint);}
-
 .lj-light-zone .faq-item{background:var(--lj-light-surface); border-color:var(--lj-light-border);}
 .lj-light-zone .faq-q span{color:var(--lj-light-text);}
 .lj-light-zone .faq-q i{color:var(--lj-light-text-faint);}
@@ -226,6 +208,25 @@
 .lj-light-zone .lj-footer-links a{color:var(--lj-light-text-faint);}
 .lj-light-zone .lj-footer-links a:hover{color:var(--lj-accent-dark);}
 
+/* ── DARK ZONE (chỉ phần "Chọn gói phù hợp") — phục lại đúng bảng màu đen
+   gốc bên trong trang giờ đã sáng, để khu vực này vẫn nổi bật riêng. ── */
+.lj-light-zone .lj-dark-zone{background:#0D0D0D; padding-bottom:56px;}
+.lj-light-zone .lj-dark-zone .sec-label{color:rgba(240,240,240,.28);}
+.lj-light-zone .lj-dark-zone .sec-title{color:#F0F0F0;}
+.lj-light-zone .lj-dark-zone .pj-line{background:rgba(255,255,255,.1);}
+.lj-light-zone .lj-dark-zone .pj-dot{background:#1A1A1A; border-color:rgba(255,255,255,.14); color:rgba(240,240,240,.5);}
+.lj-light-zone .lj-dark-zone .pj-card{background:#141414; border-color:rgba(255,255,255,.08);}
+.lj-light-zone .lj-dark-zone .pj-card.hi{background:linear-gradient(165deg, rgba(252,82,41,.14), #141414 70%); border-color:rgba(252,82,41,.35);}
+.lj-light-zone .lj-dark-zone .pj-name{color:#F0F0F0;}
+.lj-light-zone .lj-dark-zone .pj-price{color:#F0F0F0;}
+.lj-light-zone .lj-dark-zone .pj-card.hi .pj-price{color:#fc5229;}
+.lj-light-zone .lj-dark-zone .pj-meta{color:rgba(240,240,240,.4);}
+.lj-light-zone .lj-dark-zone .pj-benefit-group{color:#fc5229;}
+.lj-light-zone .lj-dark-zone .pj-benefits li{color:rgba(240,240,240,.65);}
+.lj-light-zone .lj-dark-zone .pj-btn-ghost{background:transparent; color:rgba(240,240,240,.6); border-color:rgba(255,255,255,.16);}
+.lj-light-zone .lj-dark-zone .pj-btn-ghost:hover{background:rgba(255,255,255,.06); color:#F0F0F0; border-color:rgba(255,255,255,.3);}
+.lj-light-zone .lj-dark-zone .pj-scrollhint{color:rgba(240,240,240,.3);}
+
 </style>
 <link rel="stylesheet" href="nav.css">
 </head>
@@ -235,6 +236,8 @@
 <!-- NAV -->
 <div id="lj-nav-root"></div>
 
+
+<div class="lj-light-zone">
 
 <!-- 1. HERO — Tôi có đúng chỗ không? -->
 <section class="hero">
@@ -252,19 +255,25 @@
 <!-- 2. HOW IT WORKS — Cách này hoạt động thế nào? -->
 <div class="how">
   <div class="how-step">
-    <div class="how-tag">Bước 1 · Miễn phí</div>
-    <div class="how-icon"><i class="ti ti-headset"></i></div>
-    <div class="how-title">Tư vấn chọn gói</div>
-    <div class="how-sub">Gặp đội hỗ trợ LinkaJob · được tư vấn gói phù hợp và match với advisor đúng chuyên môn</div>
+    <div class="how-tag">Bước 1</div>
+    <div class="how-icon"><i class="ti ti-list-details"></i></div>
+    <div class="how-title">Tìm hiểu về gói cố vấn</div>
+    <div class="how-sub">Xem các gói meeting, so sánh nội dung hỗ trợ và chọn mức phù hợp với giai đoạn ứng tuyển của bạn</div>
   </div>
   <div class="how-step">
     <div class="how-tag">Bước 2</div>
-    <div class="how-icon"><i class="ti ti-credit-card"></i></div>
-    <div class="how-title">Thanh toán & xác nhận</div>
-    <div class="how-sub">Chuyển khoản qua QR · nhận link đặt lịch trong 24h</div>
+    <div class="how-icon"><i class="ti ti-user-search"></i></div>
+    <div class="how-title">Chọn Career Advisor</div>
+    <div class="how-sub">Được match với advisor đúng ngành, đúng vị trí bạn đang nhắm tới</div>
   </div>
   <div class="how-step">
     <div class="how-tag">Bước 3</div>
+    <div class="how-icon"><i class="ti ti-credit-card"></i></div>
+    <div class="how-title">Thanh toán & xác nhận</div>
+    <div class="how-sub">Đội hỗ trợ xác nhận và gửi link đặt lịch trong 24h</div>
+  </div>
+  <div class="how-step">
+    <div class="how-tag">Bước 4</div>
     <div class="how-icon"><i class="ti ti-user-star"></i></div>
     <div class="how-title">Bắt đầu đồng hành</div>
     <div class="how-sub">Đặt từng buổi theo lịch advisor · linh hoạt trong thời hạn gói</div>
@@ -275,7 +284,6 @@
   <button class="how-cta-btn" onclick="window.open('https://linkajob.vn/lien-he/','_blank')">Đặt lịch tư vấn miễn phí</button>
 </div>
 
-<div class="lj-light-zone">
 <!-- 3. SOCIAL PROOF — Người khác dùng có tốt không? -->
 <section class="sp-section">
   <div class="sec-label">Từ advisee thật</div>
@@ -319,6 +327,7 @@
   <div class="sp-more"><a href="success_stories.html">Xem thêm câu chuyện thành công từ advisee →</a></div>
 </section>
 
+<div class="lj-dark-zone">
 <!-- 4. PRICING TABLE — Tôi nên chọn gì? -->
 <section class="pt-section">
   <div class="sec-label">Các gói</div>
@@ -328,6 +337,7 @@
   </div>
   <div class="pj-scrollhint" id="pj-scrollhint">← Vuốt để xem thêm →</div>
 </section>
+</div><!-- /.lj-dark-zone -->
 
 <!-- ADVISOR NOTE -->
 <div class="adv-note">
@@ -337,54 +347,6 @@
     <div class="adv-note-sub">Mỗi gói mặc định gắn với <strong>1 advisor cố định</strong>. Muốn đổi — ví dụ gặp advisor A để sửa CV ngành FMCG, rồi gặp advisor B để luyện interview ngành Tech — phí đổi là <strong>+100.000đ/lần</strong>. Liên hệ đội hỗ trợ để sắp xếp.</div>
   </div>
 </div>
-
-<!-- 5. PAYMENT — Thanh toán thế nào? -->
-<section class="pay-section">
-  <div class="pay-inner">
-    <div>
-      <div class="sec-label">Thanh toán</div>
-      <h2 class="pay-title">Chuyển khoản, xong trong 5 phút.</h2>
-      <p class="pay-sub">Không cần tài khoản, không cần thẻ. Quét QR → chuyển khoản → đội hỗ trợ xác nhận và gửi link đặt lịch.</p>
-      <div class="pay-steps">
-        <div class="pay-step"><div class="pay-num">1</div><div class="pay-text">Đăng ký tư vấn → được <strong>tư vấn gói & match advisor phù hợp</strong></div></div>
-        <div class="pay-step"><div class="pay-num">2</div><div class="pay-text"><strong>Quét QR</strong> bên cạnh · ghi rõ <strong>Họ tên + tên gói</strong></div></div>
-        <div class="pay-step"><div class="pay-num">3</div><div class="pay-text">Gửi bill qua <strong>contact@linkajob.vn</strong> hoặc inbox Facebook/Instagram</div></div>
-        <div class="pay-step"><div class="pay-num">4</div><div class="pay-text">Nhận <strong>link đặt lịch</strong> trong 24h · tự chọn thời gian trống của advisor</div></div>
-      </div>
-    </div>
-    <div class="qr-wrap">
-      <div class="qr-box">
-        <!-- Thay bằng: <img src="qr-chuyen-khoan.png" style="width:100%;border-radius:4px;"> -->
-        <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-          <rect width="100" height="100" fill="white"/>
-          <rect x="5" y="5" width="28" height="28" rx="3" fill="none" stroke="#0D0D0D" stroke-width="4"/><rect x="11" y="11" width="16" height="16" rx="1" fill="#0D0D0D"/>
-          <rect x="67" y="5" width="28" height="28" rx="3" fill="none" stroke="#0D0D0D" stroke-width="4"/><rect x="73" y="11" width="16" height="16" rx="1" fill="#0D0D0D"/>
-          <rect x="5" y="67" width="28" height="28" rx="3" fill="none" stroke="#0D0D0D" stroke-width="4"/><rect x="11" y="73" width="16" height="16" rx="1" fill="#0D0D0D"/>
-          <rect x="40" y="5" width="5" height="5" fill="#0D0D0D"/><rect x="48" y="5" width="5" height="5" fill="#0D0D0D"/><rect x="56" y="5" width="5" height="5" fill="#0D0D0D"/>
-          <rect x="40" y="13" width="5" height="5" fill="#0D0D0D"/><rect x="56" y="13" width="5" height="5" fill="#0D0D0D"/>
-          <rect x="40" y="21" width="5" height="5" fill="#0D0D0D"/><rect x="48" y="21" width="5" height="5" fill="#0D0D0D"/>
-          <rect x="5" y="40" width="5" height="5" fill="#0D0D0D"/><rect x="13" y="40" width="5" height="5" fill="#0D0D0D"/>
-          <rect x="5" y="48" width="5" height="5" fill="#0D0D0D"/><rect x="21" y="48" width="5" height="5" fill="#0D0D0D"/>
-          <rect x="5" y="56" width="5" height="5" fill="#0D0D0D"/><rect x="13" y="56" width="5" height="5" fill="#0D0D0D"/>
-          <rect x="40" y="40" width="5" height="5" fill="#0D0D0D"/><rect x="48" y="40" width="5" height="5" fill="#0D0D0D"/><rect x="56" y="40" width="5" height="5" fill="#0D0D0D"/><rect x="64" y="40" width="5" height="5" fill="#0D0D0D"/>
-          <rect x="40" y="48" width="5" height="5" fill="#0D0D0D"/><rect x="56" y="48" width="5" height="5" fill="#0D0D0D"/><rect x="64" y="48" width="5" height="5" fill="#0D0D0D"/>
-          <rect x="40" y="56" width="5" height="5" fill="#0D0D0D"/><rect x="48" y="56" width="5" height="5" fill="#0D0D0D"/>
-          <rect x="72" y="40" width="5" height="5" fill="#0D0D0D"/><rect x="80" y="40" width="5" height="5" fill="#0D0D0D"/><rect x="88" y="40" width="5" height="5" fill="#0D0D0D"/>
-          <rect x="72" y="48" width="5" height="5" fill="#0D0D0D"/><rect x="88" y="48" width="5" height="5" fill="#0D0D0D"/>
-          <rect x="80" y="56" width="5" height="5" fill="#0D0D0D"/><rect x="88" y="56" width="5" height="5" fill="#0D0D0D"/>
-          <rect x="40" y="64" width="5" height="5" fill="#0D0D0D"/><rect x="56" y="64" width="5" height="5" fill="#0D0D0D"/><rect x="64" y="64" width="5" height="5" fill="#0D0D0D"/><rect x="72" y="64" width="5" height="5" fill="#0D0D0D"/>
-          <rect x="40" y="72" width="5" height="5" fill="#0D0D0D"/><rect x="48" y="72" width="5" height="5" fill="#0D0D0D"/><rect x="64" y="72" width="5" height="5" fill="#0D0D0D"/><rect x="80" y="72" width="5" height="5" fill="#0D0D0D"/><rect x="88" y="72" width="5" height="5" fill="#0D0D0D"/>
-          <rect x="40" y="80" width="5" height="5" fill="#0D0D0D"/><rect x="56" y="80" width="5" height="5" fill="#0D0D0D"/><rect x="72" y="80" width="5" height="5" fill="#0D0D0D"/>
-          <rect x="40" y="88" width="5" height="5" fill="#0D0D0D"/><rect x="48" y="88" width="5" height="5" fill="#0D0D0D"/><rect x="56" y="88" width="5" height="5" fill="#0D0D0D"/><rect x="72" y="88" width="5" height="5" fill="#0D0D0D"/><rect x="88" y="88" width="5" height="5" fill="#0D0D0D"/>
-          <text x="50" y="97" text-anchor="middle" font-size="6" fill="#fc5229" font-family="Arial" font-weight="bold">LinkaJob</text>
-        </svg>
-      </div>
-      <div class="qr-label">Quét để thanh toán</div>
-      <div class="qr-bank">Vietcombank · MB Bank</div>
-      <div class="qr-hint">← Thay bằng QR thật</div>
-    </div>
-  </div>
-</section>
 
 <!-- 6. FAQ — Xử lý objection cuối -->
 <section class="faq-section">
