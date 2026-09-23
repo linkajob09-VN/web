@@ -256,6 +256,22 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
 .update-btn.green { border-color: var(--green); color: var(--green); }
 .update-btn.green:hover { background: var(--green); color: #fff; }
 
+/* ── Sản phẩm: card gói meeting (thay bảng dữ liệu thô bằng card trực quan) ── */
+.pkg-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 16px; padding: 20px 24px; }
+.pkg-card { position: relative; border: 1.5px solid var(--border); border-radius: var(--radius-md); padding: 22px 18px 18px; background: var(--white); transition: box-shadow .15s, border-color .15s; }
+.pkg-card:hover { box-shadow: var(--shadow); border-color: #C9C4BC; }
+.pkg-card.is-hidden { opacity: .5; }
+.pkg-card.is-hi { border-color: var(--brand); background: linear-gradient(180deg, var(--brand-light), var(--white) 65%); }
+.pkg-card-badge { position: absolute; top: -10px; left: 16px; background: var(--brand); color: #fff; font-size: 10.5px; font-weight: 700; padding: 3px 11px; border-radius: 100px; white-space: nowrap; }
+.pkg-card-status { position: absolute; top: 14px; right: 14px; }
+.pkg-card-name { font-size: 14px; font-weight: 700; margin: 4px 0 8px; padding-right: 70px; }
+.pkg-card-price { font-size: 22px; font-weight: 800; color: var(--brand); line-height: 1.15; margin-bottom: 14px; }
+.pkg-card-price.contact { font-size: 16px; }
+.pkg-card-meta { font-size: 12.5px; color: var(--muted); line-height: 1.8; margin-bottom: 16px; }
+.pkg-card-meta b { color: var(--text); font-weight: 600; }
+.pkg-card-actions { display: flex; gap: 6px; flex-wrap: wrap; padding-top: 12px; border-top: 1px solid var(--border); }
+.pkg-card-actions .update-btn, .pkg-card-actions .detail-btn { flex: 1; text-align: center; padding: 7px 8px; font-size: 12px; }
+
 .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.4); display: flex; align-items: center; justify-content: center; z-index: 100; opacity: 0; pointer-events: none; transition: opacity .2s; }
 .modal-overlay.open { opacity: 1; pointer-events: all; }
 .modal { background: var(--white); border-radius: var(--radius-lg); width: 100%; max-width: 480px; margin: 16px; box-shadow: 0 20px 60px rgba(0,0,0,.2); transform: translateY(16px); transition: transform .2s; }
@@ -518,6 +534,12 @@ const PACKAGES_FALLBACK = {
   'Cơ Bản':     { price: 799000,  sessions: 2, days: 14 },
   'Đặc Biệt':   { price: 1499000, sessions: 4, days: 28 },
   'Chuyên Sâu': { price: 2199000, sessions: 6, days: 56 },
+  // VVIP: coaching chuyên sâu, đồng hành đến khi có Offer — "sessions" dùng
+  // 999 để xấp xỉ "không giới hạn" vì object fallback này không có cờ
+  // sessions_unlimited như PACKAGES_RAW tải từ Sheet. 2 mốc giá theo đúng
+  // 2 lựa chọn thời hạn (4 tháng / 6 tháng), mỗi mốc là 1 gói riêng.
+  'VVIP (4 tháng)': { price: 8000000, sessions: 999, days: 120 },
+  'VVIP (6 tháng)': { price: 10000000, sessions: 999, days: 180 },
 };
 
 // force=true buộc tải lại từ Sheet (dùng cho nút "Làm mới"); mặc định bỏ qua
@@ -2383,8 +2405,8 @@ const MOCK = {
       advisor:'Nguyễn Vũ Trí Kiên',
       sessions:[
         {no:1, date:'2026-06-24', timeStart:'20:00', timeEnd:'21:00', status:'done', feedback:null, meetLink:'https://meet.google.com/abc-defg-hij',
-          prepInfo:{cvLink:'https://drive.google.com/file/cv-han', question:'Em muốn hỏi về cách xây dựng portfolio Marketing và định hướng vào MNC trong năm đầu ra trường.', otherLinks:'LinkedIn: linkedin.com/in/giahan | Portfolio: notion.so/giahan', submittedAt:'2026-06-23 18:00'},
-          advisorNotes:{summary:'Đã trao đổi về lộ trình vào MNC cho fresh graduate ngành Marketing. Phân tích CV hiện tại — cần bổ sung số liệu kết quả cụ thể vào mỗi mục kinh nghiệm. Thảo luận các vị trí phù hợp: Brand Trainee, Marketing Executive tại Unilever, P&G, Masan.', feedback:'Bạn Hân có tư duy tốt và chủ động đặt câu hỏi. CV hiện tại cần trình bày lại theo cấu trúc STAR. Nên thêm 1–2 project cá nhân nổi bật.', actionItems:'1. Cập nhật CV theo template đã chia sẻ.\n2. Viết lại 3 bullet point kinh nghiệm thực tập theo cấu trúc "Làm gì → Kết quả đo được".\n3. Đọc case study Unilever GP trên LinkedIn.', submittedAt:'2026-06-24 21:45'}},
+          prepInfo:{cvLink:'https://drive.google.com/file/cv-han', question:'Em muốn hỏi về cách xây dựng portfolio Marketing và định hướng vào công ty đa quốc gia trong năm đầu ra trường.', otherLinks:'LinkedIn: linkedin.com/in/giahan | Portfolio: notion.so/giahan', submittedAt:'2026-06-23 18:00'},
+          advisorNotes:{summary:'Đã trao đổi về lộ trình vào công ty đa quốc gia cho fresh graduate ngành Marketing. Phân tích CV hiện tại — cần bổ sung số liệu kết quả cụ thể vào mỗi mục kinh nghiệm. Thảo luận các vị trí phù hợp: Brand Trainee, Marketing Executive tại Unilever, P&G, Masan.', feedback:'Bạn Hân có tư duy tốt và chủ động đặt câu hỏi. CV hiện tại cần trình bày lại theo cấu trúc STAR. Nên thêm 1–2 project cá nhân nổi bật.', actionItems:'1. Cập nhật CV theo template đã chia sẻ.\n2. Viết lại 3 bullet point kinh nghiệm thực tập theo cấu trúc "Làm gì → Kết quả đo được".\n3. Đọc case study Unilever GP trên LinkedIn.', submittedAt:'2026-06-24 21:45'}},
         {no:2, date:'2026-07-03', timeStart:'19:00', timeEnd:'20:00', status:'feedback', feedback:null, meetLink:'https://meet.google.com/abc-defg-hij',
           prepInfo:{cvLink:'https://drive.google.com/file/cv-han-v2', question:'Anh ơi, em đã update CV theo góp ý buổi 1. Anh review giúp em và cho em biết cần cải thiện thêm gì để apply vào Unilever Graduate Programme không?', otherLinks:'CV v2: drive.google.com/cv-v2 | JD Unilever: unilever.com/careers/gp', submittedAt:'2026-07-02 20:30'},
           advisorNotes:null},
@@ -4556,30 +4578,35 @@ function renderProductsPage() {
   let html = pageHeader('Sản phẩm', 'Thêm / sửa / ẩn các gói meeting — thay đổi được lưu thẳng vào Sheet và áp dụng ngay cho form đặt lịch');
   html += '<div class="card"><div class="card-header"><div class="card-header-left">Gói meeting (' + PACKAGES_RAW.length + ')</div>' +
     '<button class="update-btn" onclick="openPackageEditor()">+ Thêm gói mới</button></div>';
-  html += '<table class="bookings-table"><thead><tr><th>TÊN GÓI</th><th>GIÁ</th><th>SỐ BUỔI</th><th>HẠN DÙNG</th><th>THỜI LƯỢNG/BUỔI</th><th>TRẠNG THÁI</th><th></th></tr></thead><tbody>';
   if (!PACKAGES_RAW.length) {
-    html += '<tr><td colspan="7" style="text-align:center;color:var(--muted);padding:24px 0">Chưa có gói meeting nào — bấm "+ Thêm gói mới" để tạo gói đầu tiên.</td></tr>';
+    html += '<div style="text-align:center;color:var(--muted);padding:32px 24px">Chưa có gói meeting nào — bấm "+ Thêm gói mới" để tạo gói đầu tiên.</div>';
+  } else {
+    html += '<div class="pkg-grid">';
+    PACKAGES_RAW.forEach(function(p){
+      var isActive = p.active === true || p.active === 'TRUE' || p.active === 'true';
+      var isContactPrice = p.price_mode === 'contact';
+      var isSessionsUnlimited = p.sessions_unlimited === true || p.sessions_unlimited === 'TRUE' || p.sessions_unlimited === 'true';
+      var isAdvisorUnlimited = p.advisor_unlimited === true || p.advisor_unlimited === 'TRUE' || p.advisor_unlimited === 'true';
+      var hasBadge = !!p.badge_label;
+      html += '<div class="pkg-card' + (isActive ? '' : ' is-hidden') + (hasBadge ? ' is-hi' : '') + '">';
+      if (hasBadge) html += '<div class="pkg-card-badge">' + p.badge_label + '</div>';
+      html += '<div class="pkg-card-status">' + (isActive ? '<span class="badge badge-confirmed">Đang bán</span>' : '<span class="badge badge-cancelled">Đã ẩn</span>') + '</div>';
+      html += '<div class="pkg-card-name">' + p.name + '</div>';
+      html += '<div class="pkg-card-price' + (isContactPrice ? ' contact' : '') + '">' + (isContactPrice ? 'Liên hệ' : fmtPkgPrice(p.price)) + '</div>';
+      html += '<div class="pkg-card-meta">' +
+        '<b>' + (isSessionsUnlimited ? 'Không giới hạn buổi' : (p.sessions + ' buổi')) + '</b>' + (isAdvisorUnlimited ? ' · Advisor tự do' : '') + '<br>' +
+        p.days + ' ngày sử dụng · ' + (Number(p.duration_minutes) || 60) + ' phút/buổi' +
+        '</div>';
+      html += '<div class="pkg-card-actions">' +
+        '<button class="update-btn" onclick="openPackageEditor(' + esc(p) + ')">✎ Sửa</button>' +
+        '<button class="detail-btn" onclick="togglePackageActive(\'' + p.package_id + '\',' + (!isActive) + ')">' + (isActive ? 'Ẩn' : 'Bật lại') + '</button>' +
+        '<button class="detail-btn" onclick="deletePackageConfirm(' + esc(p) + ')">Xoá</button>' +
+        '</div>';
+      html += '</div>';
+    });
+    html += '</div>';
   }
-  PACKAGES_RAW.forEach(function(p){
-    var isActive = p.active === true || p.active === 'TRUE' || p.active === 'true';
-    var isContactPrice = p.price_mode === 'contact';
-    var isSessionsUnlimited = p.sessions_unlimited === true || p.sessions_unlimited === 'TRUE' || p.sessions_unlimited === 'true';
-    var isAdvisorUnlimited = p.advisor_unlimited === true || p.advisor_unlimited === 'TRUE' || p.advisor_unlimited === 'true';
-    html += '<tr>';
-    html += '<td><b>' + p.name + '</b>' + (p.badge_label ? ' <span class="badge" style="background:#FFE9E4;color:var(--brand);font-size:10.5px">' + p.badge_label + '</span>' : '') + '</td>';
-    html += '<td>' + (isContactPrice ? '<span style="color:var(--brand);font-weight:600">Liên hệ</span>' : fmtPkgPrice(p.price)) + '</td>';
-    html += '<td>' + (isSessionsUnlimited ? 'Không giới hạn' : (p.sessions + ' buổi')) + (isAdvisorUnlimited ? ' <span style="font-size:10.5px;color:var(--muted)">· Advisor tự do</span>' : '') + '</td>';
-    html += '<td>' + p.days + ' ngày</td>';
-    html += '<td>' + (Number(p.duration_minutes) || 60) + ' phút</td>';
-    html += '<td>' + (isActive ? '<span class="badge badge-confirmed">Đang bán</span>' : '<span class="badge badge-cancelled">Đã ẩn</span>') + '</td>';
-    html += '<td style="white-space:nowrap">' +
-      '<button class="update-btn" onclick="openPackageEditor(' + esc(p) + ')">✎ Sửa</button> ' +
-      '<button class="detail-btn" onclick="togglePackageActive(\'' + p.package_id + '\',' + (!isActive) + ')">' + (isActive ? 'Ẩn' : 'Bật lại') + '</button> ' +
-      '<button class="detail-btn" onclick="deletePackageConfirm(' + esc(p) + ')">Xoá</button>' +
-      '</td>';
-    html += '</tr>';
-  });
-  html += '</tbody></table></div>';
+  html += '</div>';
   return html;
 }
 
