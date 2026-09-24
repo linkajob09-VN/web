@@ -158,6 +158,29 @@
   .tab-btn.active { background: var(--orange); border-color: var(--orange); color: #fff; }
   .tab-panel { display: none; }
   .tab-panel.active { display: block; }
+
+  .tier-outcomes { margin-top: 28px; padding-top: 24px; border-top: 1px solid var(--line); }
+  .tier-outcomes-label { font-size: 0.82rem; font-weight: 700; color: var(--orange-deep); margin: 0 0 14px; }
+  .tier-outcomes-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+  .tier-outcomes-list li {
+    font-size: 0.92rem; color: var(--text-soft); padding-left: 22px; position: relative;
+  }
+  .tier-outcomes-list li::before { content: "✓"; position: absolute; left: 0; color: var(--orange); font-weight: 700; }
+  .tier-outcomes-list li strong { color: var(--text); }
+
+  .tier-summary {
+    margin-top: 40px; background: var(--text); border-radius: 16px; padding: 32px;
+    display: grid; grid-template-columns: 1fr 1fr; gap: 24px;
+  }
+  @media (max-width: 720px) { .tier-summary { grid-template-columns: 1fr; } }
+  .tier-summary-tag { font-size: 0.8rem; font-weight: 700; color: var(--orange); margin: 0 0 6px; }
+  .tier-summary-title { font-family: var(--display); font-size: 1.15rem; font-weight: 800; color: #fff; margin: 0 0 6px; }
+  .tier-summary-flow { font-size: 0.86rem; color: rgba(255,255,255,0.7); margin: 0; }
+  .tier-summary-close {
+    grid-column: 1 / -1; margin: 10px 0 0; padding-top: 20px; border-top: 1px solid rgba(255,255,255,0.15);
+    font-size: 1rem; color: #fff; text-align: center;
+  }
+  .tier-summary-close em { color: var(--orange); font-style: normal; font-weight: 700; }
   .accordion-item { border: 1px solid var(--line); border-radius: var(--radius); margin-bottom: 12px; background: var(--card); overflow: hidden; }
   .accordion-head { display: flex; align-items: center; gap: 18px; padding: 18px 20px; cursor: pointer; }
   .accordion-head .num { font-family: var(--display); font-weight: 800; color: var(--orange); font-size: 1.15rem; min-width: 28px; }
@@ -422,10 +445,47 @@
     <div class="tab-panel active" id="tab-co-ban">
       <p class="lede" style="margin-top:0;">Học cách viết Copy không chỉ để người ta đọc — mà để người ta hành động. Đi từ nền tảng: hiểu khách hàng, tìm Trigger, xây Message, tạo Offer.</p>
       <div class="accordion" data-group="a"></div>
+      <div class="tier-outcomes">
+        <p class="tier-outcomes-label">Sau Chặng 1, bạn có</p>
+        <ul class="tier-outcomes-list">
+          <li><strong>Tư duy Copywriting</strong> — hiểu Copywriter đang giải quyết bài toán gì</li>
+          <li><strong>Customer Research</strong> — biết tìm Pain, Desire, Objection và Insight</li>
+          <li><strong>Trigger</strong> — biết tạo Hook/Headline có lý do để Customer đọc tiếp</li>
+          <li><strong>Offer</strong> — biết chuyển Feature thành Benefit và Value</li>
+          <li><strong>Commercial Copy</strong> — biết xây một bài Copy có mục tiêu hành động</li>
+          <li><strong>AI × Copywriting</strong> — biết dùng AI để tăng tốc nhưng vẫn giữ tư duy và chất lượng Copy</li>
+          <li><strong>Portfolio</strong> — có những sản phẩm Copywriting đầu tiên để phát triển ở Chặng 2</li>
+        </ul>
+      </div>
     </div>
     <div class="tab-panel" id="tab-nang-cao">
       <p class="lede" style="margin-top:0;">Biến kỹ năng Copywriting thành Portfolio và năng lực nhận Brief. Làm việc như một Copywriter thật: nhận Brief → Research → Angle → Copy → Feedback → Portfolio → Pitch.</p>
       <div class="accordion" data-group="b"></div>
+      <div class="tier-outcomes">
+        <p class="tier-outcomes-label">Sau Chặng 2, bạn có</p>
+        <ul class="tier-outcomes-list">
+          <li><strong>Briefing Skill</strong> — biết đọc và bóc tách một Brief trước khi viết</li>
+          <li><strong>Customer Research</strong> — biết tìm Insight và biến Research thành Copy Direction</li>
+          <li><strong>Commercial Copywriting</strong> — biết viết dựa trên Customer, Objective, Trigger và Offer</li>
+          <li><strong>Feedback & Revision</strong> — biết nhận Feedback và sửa Copy có lý do thay vì sửa theo cảm giác</li>
+          <li><strong>Copywriting Portfolio</strong> — có 2–3 Case Study thể hiện cách bạn tư duy và giải quyết bài toán Copy</li>
+          <li><strong>Pitching Skill</strong> — biết đưa Portfolio và năng lực của mình đến Client, Job hoặc CTV phù hợp</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="tier-summary">
+      <div class="tier-summary-col">
+        <p class="tier-summary-tag">Chặng 1</p>
+        <p class="tier-summary-title">Learn to Write Copy</p>
+        <p class="tier-summary-flow">Customer → Trigger → Offer → Copy</p>
+      </div>
+      <div class="tier-summary-col">
+        <p class="tier-summary-tag">Chặng 2</p>
+        <p class="tier-summary-title">Learn to Work as a Copywriter</p>
+        <p class="tier-summary-flow">Brief → Research → Angle → Copy → Feedback → Revision → Portfolio → Pitch</p>
+      </div>
+      <p class="tier-summary-close">Từ <em>"Em biết viết"</em> → <em>"Em biết làm Copywriting."</em></p>
     </div>
   </div>
 </section>
