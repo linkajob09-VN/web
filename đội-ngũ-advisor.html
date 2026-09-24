@@ -632,30 +632,23 @@ function ljFetchServerVersions(){
 
 function fetchAdvisorsFromSheet() {
   var local = ljGetLocalCache('Advisors');
-  if (local) {
-    buildAdvisorsFromRaw(local.data); // hiển thị ngay, không chờ mạng
-    ljFetchServerVersions().then(function(versions){
-      if (versions && versions.Advisors !== local.version) {
-        return fetch(WEBAPP_URL + '?action=getAdvisors&only_active=1')
-          .then(function(r){ return r.json(); })
-          .then(function(res){
-            var data = (res && res.data) ? res.data : [];
-            ljSetLocalCache('Advisors', versions.Advisors, data);
-            buildAdvisorsFromRaw(data); // cập nhật lại UI nếu có thay đổi
-          });
-      }
-    }).catch(function(){});
-    return Promise.resolve();
-  }
-  // Chưa từng có cache (lần đầu vào máy/trình duyệt này) — tải đầy đủ 1 lần
-  return Promise.all([
-    fetch(WEBAPP_URL + '?action=getAdvisors&only_active=1').then(function(r){ return r.json(); }),
-    ljFetchServerVersions()
-  ]).then(function(results){
-    var data = (results[0] && results[0].data) ? results[0].data : [];
-    ljSetLocalCache('Advisors', results[1] ? results[1].Advisors : Date.now(), data);
-    buildAdvisorsFromRaw(data);
-  }).catch(function(){ ADVISORS = []; });
+  if (local) buildAdvisorsFromRaw(local.data); // hiển thị ngay bản cũ, không chờ mạng
+
+  // Luôn hỏi máy chủ bản mới nhất ở nền (không chỉ khi getDataVersion đổi số —
+  // trước đây nếu bỏ lỡ 1 lần đổi version, trang sẽ kẹt mãi ở dữ liệu cũ).
+  var refresh = fetch(WEBAPP_URL + '?action=getAdvisors&only_active=1&_=' + Date.now())
+    .then(function(r){ return r.json(); })
+    .then(function(res){
+      var data = (res && res.data) ? res.data : null;
+      if (!data) { if (!local) ADVISORS = []; return; } // không ghi đè cache cũ bằng kết quả rỗng
+      ljFetchServerVersions().then(function(versions){
+        ljSetLocalCache('Advisors', versions ? versions.Advisors : Date.now(), data);
+      }).catch(function(){ ljSetLocalCache('Advisors', Date.now(), data); });
+      buildAdvisorsFromRaw(data); // vẽ lại nếu có gì đổi
+    })
+    .catch(function(){ if (!local) ADVISORS = []; });
+
+  return local ? Promise.resolve() : refresh; // có cache thì không bắt trang chờ mạng
 }
 
 function buildAdvisorsFromRaw(data){
@@ -769,8 +762,7 @@ function pkgSlugify(name){
 
 function fmtPkgPrice(n){
   n = Number(n) || 0;
-  var k = Math.round(n / 1000);
-  return k >= 1000 ? (k/1000).toFixed(3).replace('.', '.') : String(k);
+  return n.toLocaleString('vi-VN') + 'đ';   // giống dashboard: 419.000đ
 }
 
 function renderPackagesUI(pkgs){
@@ -787,8 +779,8 @@ function renderPackagesUI(pkgs){
       : (p.sessions || 0) + ' buổi';
     var sess = sessTxt + ' · ' + mins + ' phút';
     var isContact = String(p.price_mode||'').toLowerCase() === 'contact';
-    var priceLabel = isContact ? 'Liên hệ' : fmtPkgPrice(p.price);
-    var priceHtml = isContact ? 'Liên hệ' : priceLabel + 'k';
+    var priceLabel = isContact ? (p.price_label || 'Liên hệ') : fmtPkgPrice(p.price);
+    var priceHtml = priceLabel;
     var badge = p.badge_label ? ' <span class="pkg-pb">' + p.badge_label + '</span>' : '';
 
     PKG_DATA[slug] = { name: p.name, sess: sess, priceLabel: priceLabel, priceNum: isContact ? 0 : (Number(p.price)||0) };
@@ -810,32 +802,33 @@ function renderPackagesUI(pkgs){
 
 function loadPackagesForBooking(){
   var local = ljGetLocalCache('Packages');
-  if (local) {
-    renderPackagesUI(local.data); // hiển thị ngay, không chờ mạng
-    ljFetchServerVersions().then(function(versions){
-      if (versions && versions.Packages !== local.version) {
-        return fetch(WEBAPP_URL + '?action=getPackages&only_active=1')
-          .then(function(r){ return r.json(); })
-          .then(function(res){
-            var pkgs = (res && res.data) ? res.data : [];
-            ljSetLocalCache('Packages', versions.Packages, pkgs);
-            renderPackagesUI(pkgs);
-          });
+  if (local) renderPackagesUI(local.data); // hiển thị ngay bản cũ, không chờ mạng
+
+  // Luôn hỏi máy chủ bản mới nhất ở nền, không chỉ khi số phiên bản đổi.
+  var refresh = fetch(WEBAPP_URL + '?action=getPackages&only_active=1&_=' + Date.now())
+    .then(function(r){ return r.json(); })
+    .then(function(res){
+      var pkgs = (res && res.data) ? res.data : null;
+      if (!pkgs) {
+        if (!local) {
+          var wrap = document.getElementById('pkgList');
+          if (wrap) wrap.innerHTML = '<div style="padding:20px;text-align:center;color:rgba(240,240,240,.4);font-size:13px">Không tải được danh sách gói. Vui lòng thử lại.</div>';
+        }
+        return;
       }
-    }).catch(function(){});
-    return Promise.resolve();
-  }
-  return Promise.all([
-    fetch(WEBAPP_URL + '?action=getPackages&only_active=1').then(function(r){ return r.json(); }),
-    ljFetchServerVersions()
-  ]).then(function(results){
-    var pkgs = (results[0] && results[0].data) ? results[0].data : [];
-    ljSetLocalCache('Packages', results[1] ? results[1].Packages : Date.now(), pkgs);
-    renderPackagesUI(pkgs);
-  }).catch(function(){
-    var wrap = document.getElementById('pkgList');
-    if (wrap) wrap.innerHTML = '<div style="padding:20px;text-align:center;color:rgba(240,240,240,.4);font-size:13px">Không tải được danh sách gói. Vui lòng thử lại.</div>';
-  });
+      ljFetchServerVersions().then(function(versions){
+        ljSetLocalCache('Packages', versions ? versions.Packages : Date.now(), pkgs);
+      }).catch(function(){ ljSetLocalCache('Packages', Date.now(), pkgs); });
+      renderPackagesUI(pkgs); // vẽ lại nếu có gì đổi (giá, gói mới, gói bị ẩn...)
+    })
+    .catch(function(){
+      if (!local) {
+        var wrap2 = document.getElementById('pkgList');
+        if (wrap2) wrap2.innerHTML = '<div style="padding:20px;text-align:center;color:rgba(240,240,240,.4);font-size:13px">Không tải được danh sách gói. Vui lòng thử lại.</div>';
+      }
+    });
+
+  return local ? Promise.resolve() : refresh;
 }
 var urlParams = new URLSearchParams(window.location.search);
 var presetPackage = urlParams.get('package');
