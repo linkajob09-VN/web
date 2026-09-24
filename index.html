@@ -724,22 +724,26 @@ function hpAdvCoInitials(co){
   return parts.map(function(p){ return p[0]; }).join('').slice(0,3).toUpperCase() || '—';
 }
 
-/* Cache dùng chung key với đội-ngũ-advisor.html — nếu người dùng vừa ghé
-   trang advisor (hoặc trang chủ) trong vòng 10 phút, dùng lại dữ liệu cũ
-   thay vì gọi lại Apps Script. */
-var HP_CACHE_KEY = 'lj_advisors_cache_v1';
-var HP_CACHE_TTL_MS = 10 * 60 * 1000;
-function hpGetCachedAdvisorsRaw(){
+/* MỚI: cache theo "version" trong localStorage (bền vững, không mất khi
+   đóng tab). Hiển thị NGAY dữ liệu cũ, rồi mới âm thầm hỏi Apps Script xem
+   Advisors có đổi không (action=getDataVersion — rất nhẹ, không đọc Sheet).
+   Chỉ tải lại khi thực sự có thay đổi từ Dashboard/Sheet. Cùng cơ chế và
+   cùng key với đội-ngũ-advisor.html để 2 trang chia sẻ chung 1 bản cache. */
+var LJ_CACHE_PREFIX = 'lj_cache_';
+function ljGetLocalCache(name){
   try {
-    var raw = sessionStorage.getItem(HP_CACHE_KEY);
-    if (!raw) return null;
-    var parsed = JSON.parse(raw);
-    if (!parsed || (Date.now() - parsed.ts) > HP_CACHE_TTL_MS) return null;
-    return parsed.data;
+    var raw = localStorage.getItem(LJ_CACHE_PREFIX + name);
+    return raw ? JSON.parse(raw) : null; // { version, data }
   } catch(e){ return null; }
 }
-function hpSetCachedAdvisorsRaw(data){
-  try { sessionStorage.setItem(HP_CACHE_KEY, JSON.stringify({ ts: Date.now(), data: data })); } catch(e){}
+function ljSetLocalCache(name, version, data){
+  try { localStorage.setItem(LJ_CACHE_PREFIX + name, JSON.stringify({ version: version, data: data })); } catch(e){}
+}
+function ljFetchServerVersions(){
+  return fetch(HP_ADV_WEBAPP_URL + '?action=getDataVersion')
+    .then(function(r){ return r.json(); })
+    .then(function(res){ return (res && res.success) ? res.data : null; })
+    .catch(function(){ return null; });
 }
 
 function renderHomepageAdvisors(){
@@ -776,19 +780,33 @@ function renderHomepageAdvisors(){
     grid.innerHTML = data.map(cardHtml).join('') + data.map(cardHtml).join('');
   }
 
-  var cached = hpGetCachedAdvisorsRaw();
-  if (cached) { build(cached); return; }
+  var local = ljGetLocalCache('Advisors');
+  if (local) {
+    build(local.data); // hiển thị ngay, không chờ mạng
+    ljFetchServerVersions().then(function(versions){
+      if (versions && versions.Advisors !== local.version) {
+        return fetch(HP_ADV_WEBAPP_URL + '?action=getAdvisors&only_active=1')
+          .then(function(r){ return r.json(); })
+          .then(function(res){
+            var data = (res && res.data) ? res.data : [];
+            ljSetLocalCache('Advisors', versions.Advisors, data);
+            build(data); // cập nhật UI nếu dữ liệu vừa đổi
+          });
+      }
+    }).catch(function(){});
+    return;
+  }
 
-  fetch(HP_ADV_WEBAPP_URL + '?action=getAdvisors&only_active=1')
-    .then(function(r){ return r.json(); })
-    .then(function(res){
-      var data = (res && res.data) ? res.data : [];
-      hpSetCachedAdvisorsRaw(data);
-      build(data);
-    })
-    .catch(function(){
-      grid.innerHTML = '';
-    });
+  Promise.all([
+    fetch(HP_ADV_WEBAPP_URL + '?action=getAdvisors&only_active=1').then(function(r){ return r.json(); }),
+    ljFetchServerVersions()
+  ]).then(function(results){
+    var data = (results[0] && results[0].data) ? results[0].data : [];
+    ljSetLocalCache('Advisors', results[1] ? results[1].Advisors : Date.now(), data);
+    build(data);
+  }).catch(function(){
+    grid.innerHTML = '';
+  });
 }
 renderHomepageAdvisors();
 
