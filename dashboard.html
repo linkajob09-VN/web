@@ -4615,7 +4615,7 @@ function renderProductsPage() {
       if (hasBadge) html += '<div class="pkg-card-badge">' + p.badge_label + '</div>';
       html += '<div class="pkg-card-status">' + (isActive ? '<span class="badge badge-confirmed">Đang bán</span>' : '<span class="badge badge-cancelled">Đã ẩn</span>') + '</div>';
       html += '<div class="pkg-card-name">' + p.name + '</div>';
-      html += '<div class="pkg-card-price' + (isContactPrice ? ' contact' : '') + '">' + (isContactPrice ? 'Liên hệ' : fmtPkgPrice(p.price)) + '</div>';
+      html += '<div class="pkg-card-price' + (isContactPrice ? ' contact' : '') + '">' + (pkgSplitFeatures(PACKAGE_FEATURES_ALL, p.package_id).meta.price_label ? pkgEsc(pkgSplitFeatures(PACKAGE_FEATURES_ALL, p.package_id).meta.price_label) : (isContactPrice ? 'Liên hệ' : fmtPkgPrice(p.price))) + '</div>';
       var pm = pkgSplitFeatures(PACKAGE_FEATURES_ALL, p.package_id).meta;
       html += '<div class="pkg-card-meta">' +
         '<b>' + pkgEsc(pm.sessions_label || (isSessionsUnlimited ? 'Không giới hạn buổi' : (p.sessions + ' buổi'))) + '</b>' + (isAdvisorUnlimited ? ' · Advisor tự do' : '') + '<br>' +
@@ -4665,7 +4665,7 @@ function pkgNormTopic(group, label) {
 
 // Tách các dòng PackageFeatures của 1 gói thành {meta, items}.
 function pkgSplitFeatures(all, packageId) {
-  var meta = {}, items = [];
+  var meta = {}, items = [], seenItems = {};
   (all || []).filter(function(f){ return String(f.package_id).trim() === String(packageId); })
     .sort(function(a, b){ return (Number(a.sort_order) || 0) - (Number(b.sort_order) || 0); })
     .forEach(function(f){
@@ -4673,7 +4673,12 @@ function pkgSplitFeatures(all, packageId) {
       var val = f.value == null ? '' : String(f.value).trim();
       if (String(f.group_label || '').trim() === PKG_META_GROUP) { meta[label] = val; return; }
       if (!label || val === 'dash' || val === '') return;
-      items.push({ topic: pkgNormTopic(f.group_label, label), text: label + (val !== 'check' ? ' — ' + val : '') });
+      var topic = pkgNormTopic(f.group_label, label);
+      var text = label + (val !== 'check' ? ' — ' + val : '');
+      var dupKey = topic + '|||' + text.toLowerCase();
+      if (seenItems[dupKey]) return;          // dữ liệu cũ hay bị lặp cùng 1 dòng → gộp lại
+      seenItems[dupKey] = true;
+      items.push({ topic: topic, text: text });
     });
   return { meta: meta, items: items };
 }
@@ -4700,6 +4705,38 @@ function pkgParseMinutes(t) {
   return m ? parseInt(m[1], 10) : 0;
 }
 
+// Giá: backend chỉ lưu SỐ. Số thuần (419000, 419.000) → lưu số, web hiện 419k.
+// "419k", "8 triệu" → lưu số, web hiện đúng chữ đã gõ. Chữ khác ("8-10 triệu") → lưu chế độ
+// "Liên hệ" (price=0) và giữ chữ gốc để web hiện nguyên văn.
+function pkgParsePrice(t) {
+  t = String(t || '').trim();
+  if (!t) return { kind: 'empty', price: 0, label: '' };
+  var s = t.toLowerCase().replace(/\s+/g, ''), m;
+  if ((m = s.match(/^(\d[\d.,]*)(đ|d|vnđ|vnd)?$/))) return { kind: 'number', price: parseInt(m[1].replace(/[.,]/g, ''), 10) || 0, label: '' };
+  if ((m = s.match(/^(\d+(?:[.,]\d+)?)(k|nghìn|nghin|ngàn|ngan)$/))) return { kind: 'unit', price: Math.round(parseFloat(m[1].replace(',', '.')) * 1000), label: t };
+  if ((m = s.match(/^(\d+(?:[.,]\d+)?)(tr|triệu|trieu|m)$/))) return { kind: 'unit', price: Math.round(parseFloat(m[1].replace(',', '.')) * 1000000), label: t };
+  return { kind: 'text', price: 0, label: t };
+}
+
+// Gọi API có giới hạn thời gian và báo lỗi rõ ràng (kể cả khi máy chủ trả về không phải JSON).
+var _pendingPackageId = null;
+function pkgPost(payload, ms) {
+  return new Promise(function(resolve, reject){
+    var done = false;
+    var timer = setTimeout(function(){ if (!done) { done = true; reject(new Error('Quá ' + Math.round(ms / 1000) + ' giây chưa có phản hồi từ máy chủ — có thể đã lưu xong, hãy tải lại trang Sản phẩm để kiểm tra')); } }, ms);
+    fetch(API, { method: 'POST', body: JSON.stringify(payload) }).then(function(r){ return r.text(); }).then(function(txt){
+      if (done) return; done = true; clearTimeout(timer);
+      var j; try { j = JSON.parse(txt); } catch (e) { reject(new Error('Máy chủ trả về dữ liệu không đọc được: ' + String(txt).slice(0, 140))); return; }
+      resolve(j);
+    }).catch(function(e){ if (done) return; done = true; clearTimeout(timer); reject(e); });
+  });
+}
+function pkgShowError(msg) {
+  toast(msg, 'error');
+  var el = document.getElementById('pkg-save-error');
+  if (el) { el.textContent = msg; el.style.display = 'block'; el.scrollIntoView({ behavior: 'smooth', block: 'center' }); }
+}
+
 function pkgBuildDraft(p, meta) {
   var isEdit = !!(p && p.package_id);
   var unl = isEdit && pkgBool(p.sessions_unlimited);
@@ -4712,8 +4749,8 @@ function pkgBuildDraft(p, meta) {
     sessions: meta.sessions_label || (isEdit ? (unl ? 'Không giới hạn buổi' : (Number(p.sessions) ? Number(p.sessions) + ' buổi' : '')) : ''),
     duration: meta.duration_label || (isEdit ? fmtPkgDuration(p.days) : ''),
     sessionLen: meta.session_length_label || (isEdit ? (Number(p.duration_minutes) || 60) + ' phút' : '60 phút'),
-    price: (isEdit && !isContact) ? String(p.price == null ? '' : p.price) : '',
-    contact: isContact,
+    price: meta.price_label ? meta.price_label : ((isEdit && !isContact) ? String(p.price == null ? '' : p.price) : ''),
+    contact: isContact && !meta.price_label,
     advisorUnl: isEdit && pkgBool(p.advisor_unlimited),
   };
 }
@@ -4736,6 +4773,7 @@ function pkgRerender() {
 
 function openPackageEditor(p) {
   _editingPackage = p || null;
+  _pendingPackageId = null;
   var c = document.getElementById('main-content');
   c.className = 'content';
 
@@ -4793,10 +4831,10 @@ function renderPackageEditor() {
 
   html += '<div><div class="form-label">Thời lượng mỗi buổi</div><input ' + inp + ' id="pkg-session-len" oninput="pkgUpdateHints()" value="' + pkgEsc(d.sessionLen) + '" placeholder="VD: 60 phút / 1 giờ">' +
     '<div ' + hint + ' id="pkg-hint-len"></div></div>';
-  html += '<div><div class="form-label">Giá</div><input ' + inp + ' id="pkg-price" value="' + pkgEsc(d.price) + '" placeholder="VD: 419000 hoặc 8-10 triệu" ' + (d.contact ? 'disabled' : '') + '>' +
+  html += '<div><div class="form-label">Giá</div><input ' + inp + ' id="pkg-price" oninput="pkgUpdateHints()" value="' + pkgEsc(d.price) + '" placeholder="VD: 419000 hoặc 8-10 triệu" ' + (d.contact ? 'disabled' : '') + '>' +
     '<label style="display:flex;align-items:center;gap:6px;margin-top:6px;font-size:12px;color:var(--muted);cursor:pointer">' +
     '<input type="checkbox" id="pkg-contact-price" ' + (d.contact ? 'checked' : '') + ' onchange="onPkgContactPriceToggle(this.checked)"> Hiện "Liên hệ" thay vì giá' +
-    '</label><div ' + hint + '>Nhập số thuần (419000) → web hiện 419k. Nhập chữ → web hiện nguyên văn.</div></div>';
+    '</label><div ' + hint + ' id="pkg-hint-price"></div></div>';
 
   html += '<div style="grid-column:1 / -1"><label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer">' +
     '<input type="checkbox" id="pkg-advisor-unlimited" ' + (d.advisorUnl ? 'checked' : '') + '> Không giới hạn Advisor (khách được đổi Advisor tự do trong gói này)</label></div>';
@@ -4824,6 +4862,7 @@ function renderPackageEditor() {
   html += '<div style="padding:14px 24px;font-size:11.5px;color:var(--muted);border-top:1px solid var(--border)">💡 Mỗi dòng gồm <b>chủ đề</b> (Định hướng · Sửa CV · Luyện phỏng vấn · Khác) và <b>mô tả chi tiết</b>. Trên web, các dòng được gom theo chủ đề để người đọc dễ hiểu quyền lợi; thứ tự ↑↓ chỉ áp dụng trong cùng một chủ đề.</div>';
   html += '</div>';
 
+  html += '<div id="pkg-save-error" style="display:none;margin:0 0 12px;padding:10px 14px;border-radius:8px;background:#FEF2F2;border:1px solid #FCA5A5;color:#991B1B;font-size:13px;line-height:1.5"></div>';
   html += '<div style="padding:0 0 20px"><button class="login-btn" style="width:auto;padding:10px 24px" onclick="savePackageEditor(' + (isEdit ? "'" + p.package_id + "'" : 'null') + ')">' + (isEdit ? 'Lưu tất cả thay đổi' : 'Thêm gói') + '</button></div>';
   setTimeout(pkgUpdateHints, 0);
   return html;
@@ -4837,6 +4876,13 @@ function pkgUpdateHints() {
   set('pkg-hint-sessions', s.unlimited ? 'Hệ thống hiểu: không giới hạn buổi' : (s.n ? 'Hệ thống hiểu: ' + s.n + ' buổi' : 'Cần có số buổi (VD: 4 buổi)'), s.unlimited || s.n);
   var days = pkgParseDays(g('pkg-duration-label'));
   set('pkg-hint-duration', days ? 'Hệ thống hiểu: ' + days + ' ngày (dùng để tính hạn khách)' : 'Cần có số + đơn vị (VD: 3 ngày, 1 tháng, 4–6 tháng)', days);
+  var contactOn = document.getElementById('pkg-contact-price') && document.getElementById('pkg-contact-price').checked;
+  var pp = pkgParsePrice(g('pkg-price'));
+  if (contactOn) set('pkg-hint-price', 'Web hiện "Liên hệ"', true);
+  else if (pp.kind === 'empty') set('pkg-hint-price', 'Cần nhập giá', false);
+  else if (pp.kind === 'text') set('pkg-hint-price', 'Không phải số → web hiện nguyên chữ này; gói lưu ở dạng "Liên hệ" (khách chưa thể thanh toán tự động)', true);
+  else if (!pp.price) set('pkg-hint-price', 'Giá phải lớn hơn 0', false);
+  else set('pkg-hint-price', 'Hệ thống hiểu: ' + pp.price.toLocaleString('vi-VN') + 'đ · web hiện ' + (pp.label || (Math.round(pp.price / 1000).toLocaleString('vi-VN') + 'k')), true);
   var mins = pkgParseMinutes(g('pkg-session-len'));
   set('pkg-hint-len', mins ? 'Hệ thống hiểu: ' + mins + ' phút/buổi' : 'Cần có số (VD: 60 phút)', mins);
 }
@@ -4862,40 +4908,46 @@ function onPkgContactPriceToggle(checked) {
   var priceInput = document.getElementById('pkg-price');
   priceInput.disabled = checked;
   if (checked) priceInput.value = '';
+  pkgUpdateHints();
 }
 
-// Lưu CẢ 2 phần: thông tin cơ bản (savePackage) rồi tới chữ hiển thị + nội dung hỗ trợ
-// (savePackageFeaturesForPackage) — nối tiếp vì gói mới chỉ có package_id sau khi savePackage trả về.
+// Lưu CẢ 2 phần: bước 1 thông tin cơ bản (savePackage), bước 2 chữ hiển thị + nội dung hỗ trợ
+// (savePackageFeaturesForPackage). Nếu bước 2 lỗi, form được GIỮ NGUYÊN kèm thông báo lỗi để bấm lưu lại
+// (bước 1 chạy lại an toàn vì gói đã có package_id).
 function savePackageEditor(packageId) {
+  packageId = packageId || _pendingPackageId || null;
   pkgCaptureBasics();
+  var errEl = document.getElementById('pkg-save-error'); if (errEl) errEl.style.display = 'none';
   var d = _editingDraft;
-  var name = d.name;
+  var idleLabel = (_editingPackage && _editingPackage.package_id) ? 'Lưu tất cả thay đổi' : 'Thêm gói';
+  var btn = document.querySelector('.login-btn');
+  var idle = function(){ if (btn) { btn.innerHTML = idleLabel; btn.disabled = false; } };
+
   var sess = pkgParseSessions(d.sessions);
   var days = pkgParseDays(d.duration);
   var mins = d.sessionLen ? pkgParseMinutes(d.sessionLen) : 60;
-  var price = d.contact ? 0 : d.price;
+  var pp = d.contact ? { kind: 'contact', price: 0, label: '' } : pkgParsePrice(d.price);
 
-  if (!name) { toast('Vui lòng nhập tên gói', 'error'); return; }
-  if (!d.contact && !price) { toast('Vui lòng nhập giá (hoặc tick "Hiện Liên hệ")', 'error'); return; }
-  if (!sess.unlimited && !sess.n) { toast('Số buổi cần có số (VD: "4 buổi") hoặc ghi "Không giới hạn buổi"', 'error'); return; }
-  if (!days) { toast('Hạn dùng cần có số + đơn vị (VD: "3 ngày", "1 tháng")', 'error'); return; }
-  if (!mins) { toast('Thời lượng mỗi buổi cần có số (VD: "60 phút")', 'error'); return; }
-  if (_editingItems.some(function(it){ return !String(it.text).trim(); })) { toast('Mỗi dòng nội dung hỗ trợ cần có mô tả — điền hoặc xoá dòng trống', 'error'); return; }
+  if (!d.name) return pkgShowError('Vui lòng nhập tên gói');
+  if (pp.kind === 'empty') return pkgShowError('Vui lòng nhập giá (hoặc tick "Hiện Liên hệ")');
+  if ((pp.kind === 'number' || pp.kind === 'unit') && pp.price <= 0) return pkgShowError('Giá phải lớn hơn 0');
+  if (!sess.unlimited && !sess.n) return pkgShowError('Số buổi cần có số (VD: "4 buổi") hoặc ghi "Không giới hạn buổi"');
+  if (!days) return pkgShowError('Hạn dùng cần có số + đơn vị (VD: "3 ngày", "1 tháng")');
+  if (!mins) return pkgShowError('Thời lượng mỗi buổi cần có số (VD: "60 phút")');
+  if (_editingItems.some(function(it){ return !String(it.text).trim(); })) return pkgShowError('Mỗi dòng nội dung hỗ trợ cần có mô tả — điền hoặc xoá dòng trống');
 
+  var priceMode = (pp.kind === 'contact' || pp.kind === 'text') ? 'contact' : 'fixed';
   var existing = packageId ? PACKAGES_RAW.find(function(x){ return x.package_id === packageId; }) : null;
   var payload = {
-    action: 'savePackage', name: name, price: price, sessions: sess.unlimited ? 0 : sess.n, days: days,
-    duration_minutes: mins, badge_label: d.badge,
-    price_mode: d.contact ? 'contact' : 'fixed',
-    sessions_unlimited: sess.unlimited,
-    advisor_unlimited: d.advisorUnl,
+    action: 'savePackage', name: d.name, price: priceMode === 'contact' ? 0 : pp.price, sessions: sess.unlimited ? 0 : sess.n, days: days,
+    duration_minutes: mins, badge_label: d.badge, price_mode: priceMode,
+    sessions_unlimited: sess.unlimited, advisor_unlimited: d.advisorUnl,
     active: existing ? pkgBool(existing.active) : true,
   };
   if (packageId) payload.package_id = packageId;
 
-  // Chữ hiển thị (meta) + các dòng nội dung hỗ trợ → 1 danh sách features.
   var features = [];
-  var metaMap = [['tag', d.tag], ['description', d.description], ['sessions_label', d.sessions], ['duration_label', d.duration], ['session_length_label', d.sessionLen]];
+  var metaMap = [['tag', d.tag], ['description', d.description], ['sessions_label', d.sessions], ['duration_label', d.duration], ['session_length_label', d.sessionLen], ['price_label', pp.label]];
   metaMap.forEach(function(m, i){
     if (m[1]) features.push({ group_label: PKG_META_GROUP, feature_label: m[0], value: m[1], sort_order: i + 1 });
   });
@@ -4903,28 +4955,23 @@ function savePackageEditor(packageId) {
     features.push({ group_label: it.topic, feature_label: String(it.text).trim(), value: 'check', sort_order: 100 + i * 10 });
   });
 
-  var btn = document.querySelector('.login-btn');
-  var idleLabel = packageId ? 'Lưu tất cả thay đổi' : 'Thêm gói';
-  if (btn) { btn.innerHTML = '<span class="spinner"></span> Đang lưu...'; btn.disabled = true; }
+  if (btn) { btn.innerHTML = '<span class="spinner"></span> Đang lưu thông tin gói...'; btn.disabled = true; }
 
-  apiPost(payload).then(function(res){
-    if (!res || !res.success) {
-      toast('Lỗi: ' + (res && res.error), 'error');
-      if (btn) { btn.innerHTML = idleLabel; btn.disabled = false; }
-      return;
-    }
-    var savedPackageId = res.package_id || packageId;
-    apiPost({ action: 'savePackageFeaturesForPackage', package_id: savedPackageId, features: features }).then(function(res2){
-      toast(packageId ? 'Đã cập nhật gói "' + name + '" ✅' : 'Đã thêm gói "' + name + '" ✅', 'success');
-      loadProductsPageAsync();
-      if (!res2 || !res2.success) toast('Lưu gói thành công, nhưng lỗi lưu nội dung hỗ trợ: ' + (res2 && res2.error || ''), 'error');
-    }).catch(function(e){
-      toast('Lưu gói thành công, nhưng lỗi kết nối lúc lưu nội dung hỗ trợ: ' + e.message, 'error');
+  pkgPost(payload, 60000).then(function(res){
+    if (!res || !res.success) { pkgShowError('Bước 1/2 — Lưu thông tin gói bị từ chối: ' + ((res && res.error) || 'không rõ lý do')); idle(); return; }
+    var savedId = res.package_id || packageId;
+    if (!savedId) { pkgShowError('Bước 1/2 — Máy chủ không trả về mã gói (package_id)'); idle(); return; }
+    _pendingPackageId = savedId;
+    if (btn) btn.innerHTML = '<span class="spinner"></span> Đang lưu nội dung hỗ trợ...';
+    return pkgPost({ action: 'savePackageFeaturesForPackage', package_id: savedId, features: features }, 120000).then(function(res2){
+      if (!res2 || !res2.success) { pkgShowError('Bước 2/2 — Thông tin gói ĐÃ lưu, nhưng nội dung hỗ trợ bị từ chối: ' + ((res2 && res2.error) || 'không rõ lý do') + '. Bấm lưu lại để thử tiếp.'); idle(); return; }
+      _pendingPackageId = null;
+      toast('Đã lưu gói "' + d.name + '" ✅', 'success');
       loadProductsPageAsync();
     });
   }).catch(function(e){
-    toast('Lỗi: ' + e.message, 'error');
-    if (btn) { btn.innerHTML = idleLabel; btn.disabled = false; }
+    pkgShowError('Lỗi khi lưu: ' + (e && e.message ? e.message : e) + '. Nếu bước 1 đã xong, gói đã được lưu — bấm lưu lại để hoàn tất nội dung hỗ trợ.');
+    idle();
   });
 }
 
