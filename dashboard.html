@@ -534,12 +534,15 @@ const PACKAGES_FALLBACK = {
   'Cơ Bản':     { price: 799000,  sessions: 2, days: 14 },
   'Đặc Biệt':   { price: 1499000, sessions: 4, days: 28 },
   'Chuyên Sâu': { price: 2199000, sessions: 6, days: 56 },
-  // VVIP: coaching chuyên sâu, đồng hành đến khi có Offer — "sessions" dùng
-  // 999 để xấp xỉ "không giới hạn" vì object fallback này không có cờ
-  // sessions_unlimited như PACKAGES_RAW tải từ Sheet. 2 mốc giá theo đúng
-  // 2 lựa chọn thời hạn (4 tháng / 6 tháng), mỗi mốc là 1 gói riêng.
-  'VVIP (4 tháng)': { price: 8000000, sessions: 999, days: 120 },
-  'VVIP (6 tháng)': { price: 10000000, sessions: 999, days: 180 },
+  // Đồng Hành / VVIP: coaching chuyên sâu, đồng hành đến khi có Offer.
+  // "price" để dạng CHỮ "8-10 triệu" — fmtPkgPrice() hiện y nguyên chuỗi
+  // này nếu không phải số thuần, nên hiện đúng khoảng giá công khai thay
+  // vì phải tách 2 gói riêng theo mốc 4 tháng/6 tháng. "sessions" dùng 999
+  // để xấp xỉ "không giới hạn" (object fallback này không có cờ
+  // sessions_unlimited như PACKAGES_RAW tải từ Sheet). "days" lấy 150 —
+  // điểm giữa của khoảng 4–6 tháng — chỉ dùng cho tính hạn dùng nội bộ,
+  // không hiển thị ra ngoài vì price_mode không phải 'fixed'.
+  'Đồng Hành':  { price: '8-10 triệu', sessions: 999, days: 150 },
 };
 
 // force=true buộc tải lại từ Sheet (dùng cho nút "Làm mới"); mặc định bỏ qua
@@ -2469,6 +2472,26 @@ function fmtPkgPrice(v) {
   var s = String(v).trim();
   if (/^\d+$/.test(s)) return fmtMoney(Number(s));
   return s;
+}
+// Nội bộ vẫn lưu "days" (đúng contract của backend/Sheet hiện có) — chỉ đổi
+// đơn vị NHẬP LIỆU trên form Admin sang tháng cho dễ nhập, quy đổi 1 tháng
+// = 30 ngày. daysToMonthsInputValue dùng khi mở form Sửa (hiện lại đúng số
+// tháng, cho phép số lẻ như 0.1 = gói 3 ngày); fmtPkgDuration dùng khi HIỆN
+// (card trong trang Sản phẩm) — làm tròn ra tháng nguyên cho gọn, trừ gói
+// quá ngắn (<14 ngày) vẫn hiện "ngày" vì quy thành tháng sẽ ra 0.
+function daysToMonthsInputValue(days) {
+  days = Number(days) || 0;
+  if (days <= 0) return '';
+  var months = days / 30;
+  return (Math.round(months * 10) / 10).toString();
+}
+function fmtPkgDuration(days) {
+  days = Number(days) || 0;
+  if (days <= 0) return '';
+  if (days < 14) return days + ' ngày';
+  var halfMonths = Math.round(days / 30 * 2);
+  var months = halfMonths / 2;
+  return (months % 1 === 0 ? String(months) : months.toFixed(1)) + ' tháng';
 }
 
 // ════════════════════════════════════════════════════════════
@@ -4595,7 +4618,7 @@ function renderProductsPage() {
       html += '<div class="pkg-card-price' + (isContactPrice ? ' contact' : '') + '">' + (isContactPrice ? 'Liên hệ' : fmtPkgPrice(p.price)) + '</div>';
       html += '<div class="pkg-card-meta">' +
         '<b>' + (isSessionsUnlimited ? 'Không giới hạn buổi' : (p.sessions + ' buổi')) + '</b>' + (isAdvisorUnlimited ? ' · Advisor tự do' : '') + '<br>' +
-        p.days + ' ngày sử dụng · ' + (Number(p.duration_minutes) || 60) + ' phút/buổi' +
+        fmtPkgDuration(p.days) + ' sử dụng · ' + (Number(p.duration_minutes) || 60) + ' phút/buổi' +
         '</div>';
       html += '<div class="pkg-card-actions">' +
         '<button class="update-btn" onclick="openPackageEditor(' + esc(p) + ')">✎ Sửa</button>' +
@@ -4709,7 +4732,7 @@ function renderPackageEditor() {
     '<input type="checkbox" id="pkg-sessions-unlimited" ' + (isSessionsUnlimited ? 'checked' : '') + ' onchange="onPkgSessionsUnlimitedToggle(this.checked)"> Không giới hạn số buổi' +
     '</label></div>';
 
-  html += '<div><div class="form-label">Hạn dùng (số ngày kể từ lúc mua)</div><input class="form-input" type="number" id="pkg-days" value="' + (isEdit ? Number(p.days) : '') + '" placeholder="VD: 14" style="margin-top:6px"></div>';
+  html += '<div><div class="form-label">Hạn dùng (tháng, tính từ lúc mua)</div><input class="form-input" type="number" step="0.1" min="0" id="pkg-months" value="' + (isEdit ? daysToMonthsInputValue(p.days) : '') + '" placeholder="VD: 1 (gói ngắn có thể nhập 0.1 = 3 ngày)" style="margin-top:6px"></div>';
   html += '</div>';
 
   if (!isEdit) {
@@ -4801,13 +4824,14 @@ function savePackageEditor(packageId) {
   var isAdvisorUnlimited = document.getElementById('pkg-advisor-unlimited').checked;
   var price = isContactPrice ? 0 : v('pkg-price').trim();
   var sessions = isSessionsUnlimited ? 0 : Number(document.getElementById('pkg-sessions').value);
-  var days = Number(document.getElementById('pkg-days').value);
+  var days = Math.round((parseFloat(document.getElementById('pkg-months').value) || 0) * 30);
   var duration = Number(document.getElementById('pkg-duration').value) || 60;
   var badgeLabel = v('pkg-badge');
   if (!name) { toast('Vui lòng nhập tên gói', 'error'); return; }
   if (!isContactPrice && !price) { toast('Giá không hợp lệ (hoặc tick "Hiện Liên hệ")', 'error'); return; }
   if (!isSessionsUnlimited && (!sessions || sessions <= 0)) { toast('Số buổi không hợp lệ (hoặc tick "Không giới hạn")', 'error'); return; }
   if (!days || days <= 0) { toast('Hạn dùng không hợp lệ', 'error'); return; }
+  // (Hạn dùng vẫn lưu là "days" đúng contract backend — chỉ đơn vị nhập trên form là tháng.)
 
   var invalidFeature = _editingFeatures.some(function(f){ return !f.feature_label.trim(); });
   if (invalidFeature) { toast('Mỗi dòng nội dung hỗ trợ cần có "Tên mục" — điền hoặc xoá dòng trống', 'error'); return; }
