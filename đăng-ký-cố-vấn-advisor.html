@@ -372,7 +372,7 @@
     </div>
     <div class="faq-item">
       <button class="faq-q" onclick="toggleFaq(this)"><span>Hết hạn mà chưa dùng hết buổi thì sao?</span><i class="ti ti-plus"></i></button>
-      <div class="faq-a">Trial: 3 ngày · Cơ Bản: 2 tuần · Đặc Biệt: 4 tuần · Chuyên Sâu: 8 tuần · VVIP: đồng hành đến khi có Offer (4–6 tháng) — tính từ ngày xác nhận thanh toán. Thời hạn hiển thị rõ trước khi bạn chuyển khoản.</div>
+      <div class="faq-a">Trial: 3 ngày · Cơ Bản: 0,5 tháng · Đặc Biệt: 1 tháng · Chuyên Sâu: 2 tháng · VVIP: đồng hành đến khi có Offer (4–6 tháng) — tính từ ngày xác nhận thanh toán. Thời hạn hiển thị rõ trước khi bạn chuyển khoản.</div>
     </div>
   </div>
 </section>
@@ -428,8 +428,11 @@ function pricingFmtSessions(p) {
 }
 function pricingFmtDuration(days) {
   days = Number(days) || 0;
-  if (days % 7 === 0) return String(days / 7).padStart(2, '0') + ' tuần';
-  return String(days).padStart(2, '0') + ' ngày';
+  if (days <= 0) return '';
+  if (days < 14) return String(days).padStart(2, '0') + ' ngày';
+  var halfMonths = Math.round(days / 30 * 2);
+  var months = halfMonths / 2;
+  return (months % 1 === 0 ? String(months) : months.toFixed(1)) + ' tháng';
 }
 function pricingEscHtml(s) {
   return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
