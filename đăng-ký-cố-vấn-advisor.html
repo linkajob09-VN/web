@@ -68,7 +68,7 @@
 .pj-badge{position:absolute;top:-11px;left:50%;transform:translateX(-50%);background:#fc5229;color:#fff;font-family:'Space Grotesk',sans-serif;font-size:10px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;padding:4px 12px;border-radius:100px;white-space:nowrap;box-shadow:0 4px 12px rgba(252,82,41,.35);}
 .pj-tag{font-family:'Space Grotesk',sans-serif;font-size:11px;font-weight:700;letter-spacing:.04em;color:#fc5229;margin-bottom:8px;}
 .pj-name{font-family:'Space Grotesk',sans-serif;font-size:16px;font-weight:700;color:#F0F0F0;margin-bottom:6px;}
-.pj-price{font-family:'Space Grotesk',sans-serif;font-size:24px;font-weight:700;color:#F0F0F0;letter-spacing:-.3px;margin-bottom:2px;}
+.pj-price{font-family:'Space Grotesk',sans-serif;font-size:24px;font-weight:700;color:#F0F0F0;letter-spacing:-.3px;margin-bottom:16px;}
 .pj-card.hi .pj-price{color:#fc5229;}
 .pj-meta{font-size:12.5px;color:rgba(240,240,240,.4);margin-bottom:16px;line-height:1.6;}
 .pj-benefits{list-style:none;flex:1;margin-bottom:16px;display:flex;flex-direction:column;gap:8px;}
@@ -79,6 +79,14 @@
 .pj-btn-ghost:hover{background:rgba(255,255,255,.06);color:#F0F0F0;border-color:rgba(255,255,255,.3);}
 .pj-btn-main{background:#fc5229;color:#fff;box-shadow:0 8px 20px rgba(252,82,41,.3);}
 .pj-btn-main:hover{background:#e84820;}
+.pj-desc{font-size:13px;color:rgba(240,240,240,.55);line-height:1.6;margin-bottom:14px;}
+.pj-topic{display:flex;align-items:center;gap:6px;font-family:'Space Grotesk',sans-serif;font-size:10.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:rgba(240,240,240,.4);margin:2px 0 -2px;}
+.pj-topic i{font-size:13px;color:#fc5229;}
+.pj-benefits{gap:6px;}
+.pj-benefits li.pj-topic-wrap{display:block;}
+.pj-benefits ul{list-style:none;display:flex;flex-direction:column;gap:8px;margin:8px 0 10px;padding:0;}
+.pj-sub{font-family:'Space Grotesk',sans-serif;font-size:12.5px;font-weight:700;color:#F0F0F0;line-height:1.5;margin-bottom:10px;}
+
 
 /* ── ADVISOR NOTE ── */
 .adv-note{margin:28px 32px 0;background:#1A1A1A;border:.5px solid rgba(255,255,255,.07);border-radius:14px;padding:18px 22px;display:flex;align-items:flex-start;gap:12px;}
@@ -482,21 +490,25 @@ function renderPricingJourney(packages, featuresByPkg) {
     return 'HỒ SƠ ỨNG TUYỂN';
   }
 
-  // ── Gom tất cả "nhóm + tên mục" xuất hiện ở bất kỳ gói nào, giữ đúng thứ
-  //    tự sort_order — dùng để duyệt benefit của từng gói theo 1 thứ tự
-  //    nhất quán (giống logic gộp rowKeys của bảng so sánh cũ). ──
-  var rowKeys = [];
-  var seen = {};
-  packages.forEach(function(p){
-    (featuresByPkg[p.package_id] || []).forEach(function(f){
-      var key = String(f.group_label || '').trim() + '|||' + String(f.feature_label || '').trim();
-      if (!seen[key]) {
-        seen[key] = true;
-        rowKeys.push({ group_label: String(f.group_label || '').trim(), feature_label: String(f.feature_label || '').trim(), sort_order: Number(f.sort_order) || 0 });
-      }
-    });
-  });
-  rowKeys.sort(function(a, b){ return a.sort_order - b.sort_order; });
+  // ── Nội dung hỗ trợ: mỗi gói có danh sách RIÊNG, mỗi dòng gồm 1 trong 4 chủ đề + mô tả.
+  //    Gom theo chủ đề (thứ tự cố định) để người đọc thấy rõ quyền lợi. Các dòng nhóm
+  //    "_meta" là chữ hiển thị (nhãn giai đoạn, mô tả ngắn, số buổi, hạn dùng) — không
+  //    phải quyền lợi. Dòng cũ (chưa theo 4 chủ đề) tự được xếp vào chủ đề gần nhất. ──
+  var TOPICS = [
+    { name: 'Định hướng',      icon: 'ti-compass' },
+    { name: 'Sửa CV',          icon: 'ti-file-text' },
+    { name: 'Luyện phỏng vấn', icon: 'ti-microphone' },
+    { name: 'Khác',            icon: 'ti-sparkles' }
+  ];
+  function normTopic(group, label) {
+    var g = String(group || '').trim().toLowerCase();
+    for (var i = 0; i < TOPICS.length; i++) if (TOPICS[i].name.toLowerCase() === g) return TOPICS[i].name;
+    var t = String(label || '').toLowerCase();
+    if (/phỏng vấn|interview|case study|aptitude/.test(t)) return 'Luyện phỏng vấn';
+    if (/\bcv\b|hồ sơ|cover letter|linkedin|portfolio/.test(t)) return 'Sửa CV';
+    if (/định hướng|hướng nghề|career/.test(t)) return 'Định hướng';
+    return 'Khác';
+  }
 
   var halfColPct = 50 / n;
   var journeyHtml = '<div class="pj-journey" style="grid-template-columns:repeat(' + n + ',1fr)">' +
@@ -506,32 +518,45 @@ function renderPricingJourney(packages, featuresByPkg) {
     var isHi = i === highlightIdx;
     var slug = pricingSlugify(p.name);
 
-    // Danh sách benefit của gói này — list PHẲNG, chỉ những dòng KHÔNG phải
-    // "dash", theo đúng thứ tự rowKeys. Không chèn tiêu đề nhóm bên trong —
-    // 1 card chỉ có 1 tag chủ đề duy nhất ở trên (journeyTagFor), giữ card
-    // gọn và dễ đọc thay vì bị chẻ nhỏ theo từng "Chủ đề" như bảng so sánh.
-    var benefitsHtml = '';
-    rowKeys.forEach(function(rk){
-      var feat = (featuresByPkg[p.package_id] || []).find(function(f){
-        return String(f.group_label || '').trim() === rk.group_label && String(f.feature_label || '').trim() === rk.feature_label;
+    var meta = {}, byTopic = {};
+    (featuresByPkg[p.package_id] || []).slice()
+      .sort(function(a, b){ return (Number(a.sort_order) || 0) - (Number(b.sort_order) || 0); })
+      .forEach(function(f){
+        var label = String(f.feature_label || '').trim();
+        var val = f.value == null ? '' : String(f.value).trim();
+        if (String(f.group_label || '').trim() === '_meta') { meta[label] = val; return; }
+        if (!label || !val || val === 'dash') return;
+        var text = label + (val !== 'check' ? ' — ' + val : '');
+        var tp = normTopic(f.group_label, label);
+        (byTopic[tp] = byTopic[tp] || []).push(text);
       });
-      var val = feat ? feat.value : 'dash';
-      if (!val || val === 'dash') return;
-      var label = pricingEscHtml(rk.feature_label);
-      if (val !== 'check') label += ' — ' + pricingEscHtml(val);
-      benefitsHtml += '<li><i class="ti ti-check"></i>' + label + '</li>';
+
+    var benefitsHtml = '';
+    TOPICS.forEach(function(tp){
+      var rows = byTopic[tp.name];
+      if (!rows || !rows.length) return;
+      benefitsHtml += '<li class="pj-topic-wrap"><div class="pj-topic"><i class="ti ' + tp.icon + '"></i>' + pricingEscHtml(tp.name) + '</div><ul>';
+      rows.forEach(function(t){ benefitsHtml += '<li><i class="ti ti-check"></i>' + pricingEscHtml(t) + '</li>'; });
+      benefitsHtml += '</ul></li>';
     });
     if (!benefitsHtml) benefitsHtml = '<li style="color:rgba(240,240,240,.35)">Chưa có nội dung hỗ trợ được thêm.</li>';
+
+    // Dòng "Số buổi · Hạn dùng" — chữ admin tự nhập; chưa có thì dựng từ số liệu cũ.
+    var subParts = [
+      meta.sessions_label || pricingFmtSessions(p),
+      meta.duration_label || (pricingFmtDuration(p.days) ? pricingFmtDuration(p.days) + ' sử dụng' : '')
+    ].filter(Boolean);
 
     journeyHtml += '<div class="pj-stage' + (isHi ? ' hi' : '') + '">';
     journeyHtml += '<div class="pj-dot">' + (i + 1) + '</div>';
     journeyHtml += '<div class="pj-card' + (isHi ? ' hi' : '') + '">';
     if (isHi) journeyHtml += '<div class="pj-badge">' + pricingEscHtml(p.badge_label) + '</div>';
-    journeyHtml += '<div class="pj-tag">' + journeyTagFor(p, i) + '</div>';
+    journeyHtml += '<div class="pj-tag">' + pricingEscHtml(meta.tag || journeyTagFor(p, i)) + '</div>';
     journeyHtml += '<div class="pj-name">' + pricingEscHtml(p.name) + '</div>';
-    journeyHtml += '<div class="pj-price">' + pricingFmtPriceK(p) + '</div>';
-    journeyHtml += '<div class="pj-meta">' + pricingFmtSessions(p) + ' · ' + pricingFmtDuration(p.days) + ' sử dụng · ' + (Number(p.duration_minutes) || 60) + ' phút/buổi</div>';
+    if (meta.description) journeyHtml += '<div class="pj-desc">' + pricingEscHtml(meta.description) + '</div>';
     journeyHtml += '<ul class="pj-benefits">' + benefitsHtml + '</ul>';
+    journeyHtml += '<div class="pj-sub">' + pricingEscHtml(subParts.join(' · ')) + '</div>';
+    journeyHtml += '<div class="pj-price">' + pricingFmtPriceK(p) + '</div>';
     journeyHtml += '<button class="pj-btn ' + (isHi ? 'pj-btn-main' : 'pj-btn-ghost') + '" onclick="location.href=\'đội-ngũ-advisor.html?package=' + slug + '\'">Chọn ' + pricingEscHtml(p.name) + '</button>';
     journeyHtml += '</div></div>';
   });
