@@ -448,7 +448,7 @@ function pricingFmtPriceK(p) {
   var mode = p.price_mode;
   if (mode === 'contact' || price === '' || price === null || price === undefined || price === 0 || price === '0') return 'Liên hệ';
   var s = String(price).trim();
-  if (/^\d+$/.test(s)) return Math.round(Number(s) / 1000).toLocaleString('vi-VN') + 'k';
+  if (/^\d+$/.test(s)) return Number(s).toLocaleString('vi-VN') + 'đ';   // giống dashboard: 419.000đ
   return s; // giá dạng chữ tự do (VD: "Theo thoả thuận") — hiện nguyên văn
 }
 function pricingFmtSessions(p) {
