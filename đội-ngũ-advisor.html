@@ -522,7 +522,7 @@ body{font-family:'Montserrat',sans-serif;background:#F5F4F1;color:#1C1C1C;overfl
         <div class="crow"><span class="cl">Gói</span><div><div class="cv o" id="cvPkg">—</div><div class="ce" onclick="goStep(1)">Đổi gói</div></div></div>
         <div class="crow"><span class="cl">Buổi</span><div class="cv" id="cvSess">—</div></div>
         <div class="crow"><span class="cl">Advisor</span><div class="cv" id="cvAdv">—</div></div>
-        <div class="crow"><span class="cl">Vị trí</span><div class="cv" id="cvRole" style="font-weight:400;font-size:11px;color:rgba(240,240,240,.4);">—</div></div>
+        <div class="crow"><span class="cl">Vị trí</span><div class="cv" id="cvRole" style="font-weight:400;font-size:11px;color:var(--muted);">—</div></div>
         <div class="crow"><span class="cl">Họ tên</span><div><div class="cv" id="cvName">—</div><div class="ce" onclick="goStep(2)">Sửa</div></div></div>
         <div class="crow"><span class="cl">Email</span><div class="cv" id="cvEmail" style="font-weight:400;font-size:11px;">—</div></div>
         <div class="crow"><span class="cl">SĐT</span><div class="cv" id="cvPhone" style="font-weight:400;font-size:11px;">—</div></div>
@@ -765,6 +765,13 @@ function fmtPkgPrice(n){
   return n.toLocaleString('vi-VN') + 'đ';   // giống dashboard: 419.000đ
 }
 
+function fmtPkgDays(d){
+  d = Number(d) || 0;
+  if (!d) return '';
+  if (d >= 30 && d % 30 === 0) return (d / 30) + ' tháng sử dụng';
+  return d + ' ngày sử dụng';
+}
+
 function renderPackagesUI(pkgs){
   pkgs = pkgs.filter(function(p){ return p.active === true || p.active === 'TRUE' || p.active === 'true'; });
   pkgs.sort(function(a,b){ return (Number(a.sort_order)||0) - (Number(b.sort_order)||0); });
@@ -773,11 +780,13 @@ function renderPackagesUI(pkgs){
   var html = '';
   pkgs.forEach(function(p){
     var slug = pkgSlugify(p.name);
-    var mins = p.duration_minutes || 60;
-    var sessTxt = (p.sessions_unlimited === true || p.sessions_unlimited === 'TRUE')
-      ? 'Không giới hạn buổi'
-      : (p.sessions || 0) + ' buổi';
-    var sess = sessTxt + ' · ' + mins + ' phút';
+    // Dòng phụ dưới tên gói: tổng số buổi · thời gian sử dụng.
+    // Ưu tiên chữ admin nhập (cột sessions_label / duration_label), không có thì tính từ số liệu.
+    var sessTxt = p.sessions_label ? String(p.sessions_label)
+      : ((p.sessions_unlimited === true || p.sessions_unlimited === 'TRUE')
+        ? 'Không giới hạn buổi'
+        : (p.sessions || 0) + ' buổi');
+    var sess = [sessTxt, p.duration_label ? String(p.duration_label) : fmtPkgDays(p.days)].filter(Boolean).join(' · ');
     var isContact = String(p.price_mode||'').toLowerCase() === 'contact';
     var priceLabel = isContact ? (p.price_label || 'Liên hệ') : fmtPkgPrice(p.price);
     var priceHtml = priceLabel;
@@ -1072,8 +1081,9 @@ function goStep(step){
     document.getElementById('cvName').textContent = n;
     document.getElementById('cvEmail').textContent = document.getElementById('mEmail').value;
     document.getElementById('cvPhone').textContent = document.getElementById('mPhone').value;
-    document.getElementById('cvTotal').textContent = S.priceLabel+'.000 đ';
-    setCtx('Gói '+S.pkg+' · '+(S.adv||'LinkaJob'), 'Tổng: '+S.priceLabel+'.000 đ');
+    // priceLabel đã là chuỗi đầy đủ (VD "419.000đ" hoặc "Liên hệ") — không nối thêm đuôi nữa
+    document.getElementById('cvTotal').textContent = S.priceLabel;
+    setCtx('Gói '+S.pkg+' · '+(S.adv||'LinkaJob'), 'Tổng: '+S.priceLabel);
   } else if(step===2){
     setCtx((S.adv||'LinkaJob')+' · Gói '+S.pkg, S.sess);
   }
