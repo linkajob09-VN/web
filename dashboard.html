@@ -4615,8 +4615,8 @@ function renderProductsPage() {
       if (hasBadge) html += '<div class="pkg-card-badge">' + p.badge_label + '</div>';
       html += '<div class="pkg-card-status">' + (isActive ? '<span class="badge badge-confirmed">Đang bán</span>' : '<span class="badge badge-cancelled">Đã ẩn</span>') + '</div>';
       html += '<div class="pkg-card-name">' + p.name + '</div>';
-      html += '<div class="pkg-card-price' + (isContactPrice ? ' contact' : '') + '">' + (pkgSplitFeatures(PACKAGE_FEATURES_ALL, p.package_id).meta.price_label ? pkgEsc(pkgSplitFeatures(PACKAGE_FEATURES_ALL, p.package_id).meta.price_label) : (isContactPrice ? 'Liên hệ' : fmtPkgPrice(p.price))) + '</div>';
-      var pm = pkgSplitFeatures(PACKAGE_FEATURES_ALL, p.package_id).meta;
+      html += '<div class="pkg-card-price' + (isContactPrice ? ' contact' : '') + '">' + (pkgMetaOf(p).price_label ? pkgEsc(pkgMetaOf(p).price_label) : (isContactPrice ? 'Liên hệ' : fmtPkgPrice(p.price))) + '</div>';
+      var pm = pkgMetaOf(p);
       html += '<div class="pkg-card-meta">' +
         '<b>' + pkgEsc(pm.sessions_label || (isSessionsUnlimited ? 'Không giới hạn buổi' : (p.sessions + ' buổi'))) + '</b>' + (isAdvisorUnlimited ? ' · Advisor tự do' : '') + '<br>' +
         'Hạn dùng: ' + pkgEsc(pm.duration_label || fmtPkgDuration(p.days)) + ' · ' + pkgEsc(pm.session_length_label || ((Number(p.duration_minutes) || 60) + ' phút')) + '/buổi' +
@@ -4682,6 +4682,19 @@ function pkgSplitFeatures(all, packageId) {
     });
   return { meta: meta, items: items };
 }
+
+// Chữ hiển thị của 1 gói: ưu tiên CỘT trong tab Packages (tag_label, description, sessions_label,
+// duration_label, session_length_label, price_label); chưa có thì lấy từ dòng "_meta" cũ.
+function pkgMetaOf(p) {
+  var m = pkgSplitFeatures(PACKAGE_FEATURES_ALL, p.package_id).meta;
+  return {
+    tag: p.tag_label || m.tag || '', description: p.description || m.description || '',
+    sessions_label: p.sessions_label || m.sessions_label || '', duration_label: p.duration_label || m.duration_label || '',
+    session_length_label: p.session_length_label || m.session_length_label || '', price_label: p.price_label || m.price_label || ''
+  };
+}
+// Backend đã có các cột mới chưa? (getPackages trả về mọi cột của tab Packages)
+function pkgColumnsSupported() { return PACKAGES_RAW && PACKAGES_RAW.length > 0 && ('description' in PACKAGES_RAW[0]); }
 
 // ── Đọc số từ chữ tự do ──
 function pkgParseDays(t) {
@@ -4789,12 +4802,12 @@ function openPackageEditor(p) {
     PACKAGE_FEATURES_ALL = (res && res.data) ? res.data : [];
     var sp = pkgSplitFeatures(PACKAGE_FEATURES_ALL, p.package_id);
     _editingItems = sp.items;
-    _editingDraft = pkgBuildDraft(p, sp.meta);
+    _editingDraft = pkgBuildDraft(p, pkgMetaOf(p));
     c.innerHTML = renderPackageEditor();
   }).catch(function(err){
     toast('Không tải được nội dung hỗ trợ: ' + err.message, 'error');
     _editingItems = [];
-    _editingDraft = pkgBuildDraft(p, {});
+    _editingDraft = pkgBuildDraft(p, pkgMetaOf(p));
     c.innerHTML = renderPackageEditor();
   });
 }
@@ -4943,12 +4956,15 @@ function savePackageEditor(packageId) {
     duration_minutes: mins, badge_label: d.badge, price_mode: priceMode,
     sessions_unlimited: sess.unlimited, advisor_unlimited: d.advisorUnl,
     active: existing ? pkgBool(existing.active) : true,
+    tag_label: d.tag, description: d.description, sessions_label: d.sessions, duration_label: d.duration,
+    session_length_label: d.sessionLen, price_label: pp.label,
   };
   if (packageId) payload.package_id = packageId;
+  var colMode = pkgColumnsSupported();   // true = các cột đã có trong tab Packages → không cần lưu dòng "_meta" nữa
 
   var features = [];
   var metaMap = [['tag', d.tag], ['description', d.description], ['sessions_label', d.sessions], ['duration_label', d.duration], ['session_length_label', d.sessionLen], ['price_label', pp.label]];
-  metaMap.forEach(function(m, i){
+  if (!colMode) metaMap.forEach(function(m, i){
     if (m[1]) features.push({ group_label: PKG_META_GROUP, feature_label: m[0], value: m[1], sort_order: i + 1 });
   });
   _editingItems.forEach(function(it, i){
