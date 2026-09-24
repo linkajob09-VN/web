@@ -4592,9 +4592,9 @@ function renderMarketingReportPage() {
 function loadProductsPageAsync() {
   var c = document.getElementById('main-content');
   c.innerHTML = pageHeader('Sản phẩm', 'Thêm / sửa / ẩn các gói meeting — thay đổi được lưu thẳng vào Sheet và áp dụng ngay cho form đặt lịch') + skeletonRows(3);
-  loadPackagesFromSheet(function(){
-    c.innerHTML = renderProductsPage();
-  }, true);
+  var featP = apiGet('getPackageFeatures', {}).then(function(r){ PACKAGE_FEATURES_ALL = (r && r.data) ? r.data : []; }).catch(function(){ PACKAGE_FEATURES_ALL = []; });
+  var pkgP = new Promise(function(resolve){ loadPackagesFromSheet(resolve, true); });
+  Promise.all([pkgP, featP]).then(function(){ c.innerHTML = renderProductsPage(); });
 }
 
 function renderProductsPage() {
@@ -4616,9 +4616,10 @@ function renderProductsPage() {
       html += '<div class="pkg-card-status">' + (isActive ? '<span class="badge badge-confirmed">Đang bán</span>' : '<span class="badge badge-cancelled">Đã ẩn</span>') + '</div>';
       html += '<div class="pkg-card-name">' + p.name + '</div>';
       html += '<div class="pkg-card-price' + (isContactPrice ? ' contact' : '') + '">' + (isContactPrice ? 'Liên hệ' : fmtPkgPrice(p.price)) + '</div>';
+      var pm = pkgSplitFeatures(PACKAGE_FEATURES_ALL, p.package_id).meta;
       html += '<div class="pkg-card-meta">' +
-        '<b>' + (isSessionsUnlimited ? 'Không giới hạn buổi' : (p.sessions + ' buổi')) + '</b>' + (isAdvisorUnlimited ? ' · Advisor tự do' : '') + '<br>' +
-        fmtPkgDuration(p.days) + ' sử dụng · ' + (Number(p.duration_minutes) || 60) + ' phút/buổi' +
+        '<b>' + pkgEsc(pm.sessions_label || (isSessionsUnlimited ? 'Không giới hạn buổi' : (p.sessions + ' buổi'))) + '</b>' + (isAdvisorUnlimited ? ' · Advisor tự do' : '') + '<br>' +
+        'Hạn dùng: ' + pkgEsc(pm.duration_label || fmtPkgDuration(p.days)) + ' · ' + pkgEsc(pm.session_length_label || ((Number(p.duration_minutes) || 60) + ' phút')) + '/buổi' +
         '</div>';
       html += '<div class="pkg-card-actions">' +
         '<button class="update-btn" onclick="openPackageEditor(' + esc(p) + ')">✎ Sửa</button>' +
@@ -4633,62 +4634,129 @@ function renderProductsPage() {
   return html;
 }
 
-// ── Widget chỉnh sửa gói — GỘP thông tin cơ bản (giá/số buổi/hạn dùng/thời
-//    lượng buổi) VÀ nội dung hỗ trợ (bảng so sánh feature) vào 1 trang duy
-//    nhất, lưu 1 lần cho cả 2 phần. Không truyền p (hoặc p=null) → form
-//    Thêm mới (chưa có nội dung hỗ trợ để tải). ──
+// ── Widget chỉnh sửa gói — khớp với card gói trên web (landing page):
+//    Nhãn giai đoạn → Tên gói → Mô tả ngắn → Nội dung hỗ trợ (chia theo 4 chủ đề)
+//    → Số buổi · Hạn dùng → Giá.
+//    Các ô "Số buổi / Hạn dùng / Thời lượng mỗi buổi / Giá" là CHỮ TỰ DO, không gán
+//    đơn vị — admin tự ghi kèm đơn vị (VD "3 ngày", "1 tháng", "45 phút"). Hệ thống
+//    tự đọc số từ chữ đó để tính hạn dùng / số buổi cho backend (xem pkgParse*).
+//    Chữ hiển thị + nhãn giai đoạn + mô tả ngắn được lưu trong PackageFeatures dưới
+//    nhóm dành riêng "_meta" (không cần thêm cột mới trong Sheet). ──
+var PKG_TOPICS = ['Định hướng', 'Sửa CV', 'Luyện phỏng vấn', 'Khác'];
+var PKG_META_GROUP = '_meta';
+var PACKAGE_FEATURES_ALL = [];
 var _editingPackage = null;
-var _editingFeatures = [];
+var _editingItems = [];   // [{topic, text}]
+var _editingDraft = {};
+
+function pkgEsc(s) { return String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function pkgBool(x) { return x === true || x === 'TRUE' || x === 'true'; }
+
+// Dòng cũ (trước khi có 4 chủ đề) → đoán chủ đề theo nội dung dòng, không khớp thì vào "Khác".
+function pkgNormTopic(group, label) {
+  var g = String(group || '').trim().toLowerCase();
+  for (var i = 0; i < PKG_TOPICS.length; i++) if (PKG_TOPICS[i].toLowerCase() === g) return PKG_TOPICS[i];
+  var s = String(label || '').toLowerCase();
+  if (/phỏng vấn|interview|case study|aptitude/.test(s)) return 'Luyện phỏng vấn';
+  if (/\bcv\b|hồ sơ|cover letter|linkedin|portfolio/.test(s)) return 'Sửa CV';
+  if (/định hướng|hướng nghề|career/.test(s)) return 'Định hướng';
+  return 'Khác';
+}
+
+// Tách các dòng PackageFeatures của 1 gói thành {meta, items}.
+function pkgSplitFeatures(all, packageId) {
+  var meta = {}, items = [];
+  (all || []).filter(function(f){ return String(f.package_id).trim() === String(packageId); })
+    .sort(function(a, b){ return (Number(a.sort_order) || 0) - (Number(b.sort_order) || 0); })
+    .forEach(function(f){
+      var label = String(f.feature_label || '').trim();
+      var val = f.value == null ? '' : String(f.value).trim();
+      if (String(f.group_label || '').trim() === PKG_META_GROUP) { meta[label] = val; return; }
+      if (!label || val === 'dash' || val === '') return;
+      items.push({ topic: pkgNormTopic(f.group_label, label), text: label + (val !== 'check' ? ' — ' + val : '') });
+    });
+  return { meta: meta, items: items };
+}
+
+// ── Đọc số từ chữ tự do ──
+function pkgParseDays(t) {
+  var m = String(t || '').toLowerCase().match(/(\d+(?:[.,]\d+)?)(?:\s*[-–—~]\s*(\d+(?:[.,]\d+)?))?\s*(ngày|ngay|tuần|tuan|tháng|thang|năm|nam|day|week|month|year)/);
+  if (!m) return 0;
+  var n = parseFloat((m[2] || m[1]).replace(',', '.'));   // khoảng "4–6 tháng" → lấy mốc cao
+  var u = m[3], mult = /^(ngày|ngay|day)/.test(u) ? 1 : /^(tuần|tuan|week)/.test(u) ? 7 : /^(tháng|thang|month)/.test(u) ? 30 : 365;
+  return Math.round(n * mult);
+}
+function pkgParseSessions(t) {
+  t = String(t || '');
+  if (/không giới hạn|khong gioi han|unlimited/i.test(t)) return { unlimited: true, n: 0 };
+  var m = t.match(/(\d+)/);
+  return { unlimited: false, n: m ? parseInt(m[1], 10) : 0 };
+}
+function pkgParseMinutes(t) {
+  t = String(t || '').toLowerCase();
+  var h = t.match(/(\d+(?:[.,]\d+)?)\s*(giờ|gio|h\b|hour)/);
+  if (h) return Math.round(parseFloat(h[1].replace(',', '.')) * 60);
+  var m = t.match(/(\d+)/);
+  return m ? parseInt(m[1], 10) : 0;
+}
+
+function pkgBuildDraft(p, meta) {
+  var isEdit = !!(p && p.package_id);
+  var unl = isEdit && pkgBool(p.sessions_unlimited);
+  var isContact = isEdit && p.price_mode === 'contact';
+  return {
+    name: isEdit ? p.name : '',
+    tag: meta.tag || '',
+    description: meta.description || '',
+    badge: isEdit ? (p.badge_label || '') : '',
+    sessions: meta.sessions_label || (isEdit ? (unl ? 'Không giới hạn buổi' : (Number(p.sessions) ? Number(p.sessions) + ' buổi' : '')) : ''),
+    duration: meta.duration_label || (isEdit ? fmtPkgDuration(p.days) : ''),
+    sessionLen: meta.session_length_label || (isEdit ? (Number(p.duration_minutes) || 60) + ' phút' : '60 phút'),
+    price: (isEdit && !isContact) ? String(p.price == null ? '' : p.price) : '',
+    contact: isContact,
+    advisorUnl: isEdit && pkgBool(p.advisor_unlimited),
+  };
+}
+
+// Giữ lại những gì admin đã gõ ở phần Thông tin cơ bản trước mỗi lần vẽ lại form.
+function pkgCaptureBasics() {
+  if (!document.getElementById('pkg-name')) return;
+  var g = function(id){ var el = document.getElementById(id); return el ? el.value.trim() : ''; };
+  var d = _editingDraft;
+  d.name = g('pkg-name'); d.tag = g('pkg-tag'); d.description = g('pkg-desc'); d.badge = g('pkg-badge');
+  d.sessions = g('pkg-sessions'); d.duration = g('pkg-duration-label'); d.sessionLen = g('pkg-session-len');
+  d.price = g('pkg-price');
+  d.contact = document.getElementById('pkg-contact-price').checked;
+  d.advisorUnl = document.getElementById('pkg-advisor-unlimited').checked;
+}
+function pkgRerender() {
+  pkgCaptureBasics();
+  document.getElementById('main-content').innerHTML = renderPackageEditor();
+}
 
 function openPackageEditor(p) {
   _editingPackage = p || null;
   var c = document.getElementById('main-content');
   c.className = 'content';
 
-  if (!p) { // Thêm gói mới — chưa có package_id nên chưa có feature để tải
-    _editingFeatures = [];
+  if (!p) {
+    _editingItems = [];
+    _editingDraft = pkgBuildDraft(null, {});
     c.innerHTML = renderPackageEditor();
     return;
   }
 
   c.innerHTML = skeletonRows(3);
-
   apiGet('getPackageFeatures', {}).then(function(res){
-    var allFeatures = (res && res.data) ? res.data : [];
-
-    var masterRows = [];
-    var seen = {};
-    allFeatures.slice()
-      .sort(function(a, b){ return (Number(a.sort_order) || 0) - (Number(b.sort_order) || 0); })
-      .forEach(function(f){
-        var key = String(f.group_label || '').trim() + '|||' + String(f.feature_label || '').trim();
-        if (!seen[key]) {
-          seen[key] = true;
-          masterRows.push({ group_label: String(f.group_label || '').trim(), feature_label: String(f.feature_label || '').trim(), sort_order: Number(f.sort_order) || 0 });
-        }
-      });
-
-    var ownByKey = {};
-    allFeatures.forEach(function(f){
-      if (String(f.package_id).trim() === p.package_id) {
-        ownByKey[String(f.group_label || '').trim() + '|||' + String(f.feature_label || '').trim()] = f;
-      }
-    });
-
-    _editingFeatures = masterRows.map(function(mr){
-      var own = ownByKey[mr.group_label + '|||' + mr.feature_label];
-      return {
-        group_label: mr.group_label,
-        feature_label: mr.feature_label,
-        value: own ? (own.value || 'dash') : 'dash',
-        sort_order: mr.sort_order,
-      };
-    });
-
+    PACKAGE_FEATURES_ALL = (res && res.data) ? res.data : [];
+    var sp = pkgSplitFeatures(PACKAGE_FEATURES_ALL, p.package_id);
+    _editingItems = sp.items;
+    _editingDraft = pkgBuildDraft(p, sp.meta);
     c.innerHTML = renderPackageEditor();
   }).catch(function(err){
     toast('Không tải được nội dung hỗ trợ: ' + err.message, 'error');
-    _editingFeatures = [];
+    _editingItems = [];
+    _editingDraft = pkgBuildDraft(p, {});
     c.innerHTML = renderPackageEditor();
   });
 }
@@ -4696,172 +4764,157 @@ function openPackageEditor(p) {
 function renderPackageEditor() {
   var p = _editingPackage;
   var isEdit = !!(p && p.package_id);
-  var isContactPrice = isEdit && p.price_mode === 'contact';
-  var isSessionsUnlimited = isEdit && (p.sessions_unlimited === true || p.sessions_unlimited === 'TRUE' || p.sessions_unlimited === 'true');
-  var isAdvisorUnlimited = isEdit && (p.advisor_unlimited === true || p.advisor_unlimited === 'TRUE' || p.advisor_unlimited === 'true');
+  var d = _editingDraft;
+  var inp = 'class="form-input" style="margin-top:6px"';
+  var hint = 'style="font-size:11.5px;color:var(--muted);margin-top:5px;line-height:1.5"';
 
   var html = '<div style="margin-bottom:14px"><button class="detail-btn" onclick="loadProductsPageAsync()">← Quay lại Sản phẩm</button></div>';
-  html += pageHeader(isEdit ? ('Sửa gói — ' + p.name) : 'Thêm gói meeting mới', 'Giá, số buổi, hạn dùng, thời lượng mỗi buổi, và nội dung hỗ trợ hiển thị trên landing page');
+  html += pageHeader(isEdit ? ('Sửa gói — ' + p.name) : 'Thêm gói meeting mới', 'Nội dung nhập ở đây hiển thị trên card gói ở landing page');
 
   // ── Thông tin cơ bản ──
   html += '<div class="card"><div class="card-header"><div class="card-header-left">Thông tin cơ bản</div></div>';
-  html += '<div style="padding:16px 24px;display:grid;grid-template-columns:1fr 1fr;gap:14px">';
-  html += '<div><div class="form-label">Tên gói</div><input class="form-input" id="pkg-name" value="' + (isEdit ? p.name : '') + '" placeholder="VD: Trial" style="margin-top:6px"></div>';
-  html += '<div><div class="form-label">Nhãn nổi bật (để trống nếu không có)</div><input class="form-input" id="pkg-badge" value="' + (isEdit ? (p.badge_label || '') : '') + '" placeholder="VD: PHỔ BIẾN NHẤT" style="margin-top:6px"></div>';
-  html += '<div><div class="form-label">Thời lượng mỗi buổi (phút)</div><input class="form-input" type="number" id="pkg-duration" value="' + (isEdit ? (Number(p.duration_minutes) || 60) : 60) + '" placeholder="VD: 45" style="margin-top:6px"></div>';
+  html += '<div style="padding:16px 24px;display:grid;grid-template-columns:1fr 1fr;gap:16px">';
+
+  html += '<div><div class="form-label">Nhãn giai đoạn</div><input ' + inp + ' id="pkg-tag" value="' + pkgEsc(d.tag) + '" placeholder="VD: TRẢI NGHIỆM, HỒ SƠ ỨNG TUYỂN">' +
+    '<div ' + hint + '>Dòng chữ nhỏ màu cam phía trên tên gói. Để trống = dùng nhãn mặc định.</div></div>';
+  html += '<div><div class="form-label">Nhãn nổi bật</div><input ' + inp + ' id="pkg-badge" value="' + pkgEsc(d.badge) + '" placeholder="VD: PHỔ BIẾN NHẤT">' +
+    '<div ' + hint + '>Huy hiệu trên đầu card. Để trống nếu không có.</div></div>';
+
+  html += '<div><div class="form-label">Tên gói</div><input ' + inp + ' id="pkg-name" value="' + pkgEsc(d.name) + '" placeholder="VD: Gói Dùng Thử"></div>';
+  html += '<div></div>';
+
+  html += '<div style="grid-column:1 / -1"><div class="form-label">Mô tả ngắn</div>' +
+    '<textarea ' + inp + ' id="pkg-desc" rows="2" style="margin-top:6px;resize:vertical;font-family:inherit" placeholder="VD: Buổi tư vấn nhanh để định hướng ngành, phòng ban và vị trí phù hợp.">' + pkgEsc(d.description) + '</textarea></div>';
+
+  html += '<div><div class="form-label">Số buổi</div><input ' + inp + ' id="pkg-sessions" oninput="pkgUpdateHints()" value="' + pkgEsc(d.sessions) + '" placeholder="VD: 1 buổi / Không giới hạn buổi">' +
+    '<div ' + hint + ' id="pkg-hint-sessions"></div></div>';
+  html += '<div><div class="form-label">Hạn dùng</div><input ' + inp + ' id="pkg-duration-label" oninput="pkgUpdateHints()" value="' + pkgEsc(d.duration) + '" placeholder="VD: 3 ngày / 1 tháng / 4–6 tháng, đến khi có Offer">' +
+    '<div ' + hint + ' id="pkg-hint-duration"></div></div>';
+
+  html += '<div><div class="form-label">Thời lượng mỗi buổi</div><input ' + inp + ' id="pkg-session-len" oninput="pkgUpdateHints()" value="' + pkgEsc(d.sessionLen) + '" placeholder="VD: 60 phút / 1 giờ">' +
+    '<div ' + hint + ' id="pkg-hint-len"></div></div>';
+  html += '<div><div class="form-label">Giá</div><input ' + inp + ' id="pkg-price" value="' + pkgEsc(d.price) + '" placeholder="VD: 419000 hoặc 8-10 triệu" ' + (d.contact ? 'disabled' : '') + '>' +
+    '<label style="display:flex;align-items:center;gap:6px;margin-top:6px;font-size:12px;color:var(--muted);cursor:pointer">' +
+    '<input type="checkbox" id="pkg-contact-price" ' + (d.contact ? 'checked' : '') + ' onchange="onPkgContactPriceToggle(this.checked)"> Hiện "Liên hệ" thay vì giá' +
+    '</label><div ' + hint + '>Nhập số thuần (419000) → web hiện 419k. Nhập chữ → web hiện nguyên văn.</div></div>';
 
   html += '<div style="grid-column:1 / -1"><label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer">' +
-    '<input type="checkbox" id="pkg-advisor-unlimited" ' + (isAdvisorUnlimited ? 'checked' : '') + '> Không giới hạn Advisor (khách được đổi Advisor tự do trong gói này)' +
-    '</label></div>';
+    '<input type="checkbox" id="pkg-advisor-unlimited" ' + (d.advisorUnl ? 'checked' : '') + '> Không giới hạn Advisor (khách được đổi Advisor tự do trong gói này)</label></div>';
   html += '</div></div>';
 
   // ── Nội dung hỗ trợ ──
-  html += '<div class="card"><div class="card-header"><div class="card-header-left">Nội dung hỗ trợ (' + _editingFeatures.length + ')</div>' +
+  html += '<div class="card"><div class="card-header"><div class="card-header-left">Nội dung hỗ trợ (' + _editingItems.length + ')</div>' +
     '<button class="update-btn" onclick="addFeatureRow()">+ Thêm dòng</button></div>';
 
-  html += '<div style="padding:16px 24px;display:grid;grid-template-columns:1fr 1fr;gap:14px;border-bottom:1px solid var(--border)">';
-  html += '<div><div class="form-label">Giá (VNĐ)</div>' +
-    '<input class="form-input" type="text" id="pkg-price" value="' + (isEdit ? (isContactPrice ? '' : (p.price || '')) : '') + '" placeholder="VD: 799000 (hoặc nhập chữ, VD: Theo thoả thuận)" style="margin-top:6px" ' + (isContactPrice ? 'disabled' : '') + '>' +
-    '<label style="display:flex;align-items:center;gap:6px;margin-top:6px;font-size:12px;color:var(--muted);cursor:pointer">' +
-    '<input type="checkbox" id="pkg-contact-price" ' + (isContactPrice ? 'checked' : '') + ' onchange="onPkgContactPriceToggle(this.checked)"> Hiện "Liên hệ" thay vì giá cụ thể' +
-    '</label></div>';
-
-  html += '<div><div class="form-label">Số buổi</div>' +
-    '<input class="form-input" type="number" id="pkg-sessions" value="' + (isEdit ? Number(p.sessions) || '' : '') + '" placeholder="VD: 2" style="margin-top:6px" ' + (isSessionsUnlimited ? 'disabled' : '') + '>' +
-    '<label style="display:flex;align-items:center;gap:6px;margin-top:6px;font-size:12px;color:var(--muted);cursor:pointer">' +
-    '<input type="checkbox" id="pkg-sessions-unlimited" ' + (isSessionsUnlimited ? 'checked' : '') + ' onchange="onPkgSessionsUnlimitedToggle(this.checked)"> Không giới hạn số buổi' +
-    '</label></div>';
-
-  html += '<div><div class="form-label">Hạn dùng (tháng, tính từ lúc mua)</div><input class="form-input" type="number" step="0.1" min="0" id="pkg-months" value="' + (isEdit ? daysToMonthsInputValue(p.days) : '') + '" placeholder="VD: 1 (gói ngắn có thể nhập 0.1 = 3 ngày)" style="margin-top:6px"></div>';
-  html += '</div>';
-
-  if (!isEdit) {
-    html += '<div style="padding:12px 24px;font-size:12px;color:var(--muted)">Lưu gói trước, sau đó mở lại để thêm nội dung hỗ trợ.</div>';
-  } else {
-    html += '<table class="bookings-table"><thead><tr><th style="width:22%">NHÓM</th><th style="width:30%">TÊN MỤC</th><th style="width:16%">ÁP DỤNG</th><th style="width:22%">NỘI DUNG TUỲ CHỈNH</th><th></th></tr></thead><tbody>';
-    if (_editingFeatures.length === 0) {
-      html += '<tr><td colspan="5" style="text-align:center;color:var(--muted);padding:24px 0">Chưa có dòng nào — bấm "+ Thêm dòng" để bắt đầu.</td></tr>';
-    }
-    _editingFeatures.forEach(function(f, idx){
-      var isCustomText = f.value !== 'check' && f.value !== 'dash';
-      var isChecked = f.value === 'check';
-      html += '<tr>';
-      html += '<td><input class="form-input" style="padding:6px 8px;font-size:12.5px" value="' + (f.group_label||'').replace(/"/g,'&quot;') + '" placeholder="VD: THỜI HẠN & HỒ SƠ" onchange="updateFeatureField(' + idx + ',\'group_label\',this.value)"></td>';
-      html += '<td><input class="form-input" style="padding:6px 8px;font-size:12.5px" value="' + (f.feature_label||'').replace(/"/g,'&quot;') + '" placeholder="VD: Sửa CV" onchange="updateFeatureField(' + idx + ',\'feature_label\',this.value)"></td>';
-      html += '<td style="text-align:center"><input type="checkbox" style="width:18px;height:18px;cursor:pointer" ' + (isChecked ? 'checked' : '') + (isCustomText ? ' disabled title="Đang dùng nội dung tuỳ chỉnh — xoá ô bên phải để dùng tick"' : '') + ' onchange="toggleFeatureCheck(' + idx + ',this.checked)"></td>';
-      html += '<td><input class="form-input" style="padding:6px 8px;font-size:12.5px" value="' + (isCustomText ? f.value.replace(/"/g,'&quot;') : '') + '" placeholder="VD: 1 công ty (để trống = dùng tick)" onchange="updateFeatureField(' + idx + ',\'value\',this.value || \'dash\')"></td>';
-      var isFirst = idx === 0;
-      var isLast = idx === _editingFeatures.length - 1;
-      html += '<td style="white-space:nowrap">' +
-        '<button class="detail-btn" style="padding:4px 8px" ' + (isFirst ? 'disabled' : '') + ' title="Chuyển lên" onclick="moveFeatureRow(' + idx + ',-1)">↑</button> ' +
-        '<button class="detail-btn" style="padding:4px 8px" ' + (isLast ? 'disabled' : '') + ' title="Chuyển xuống" onclick="moveFeatureRow(' + idx + ',1)">↓</button> ' +
-        '<button class="detail-btn" onclick="removeFeatureRow(' + idx + ')">Xoá</button>' +
-        '</td>';
-      html += '</tr>';
-    });
-    html += '</tbody></table>';
-    html += '<div style="padding:14px 24px;font-size:11.5px;color:var(--muted)">💡 Tick "Áp dụng" để hiện dấu ✓, bỏ tick để hiện dấu — . Muốn hiện chữ tuỳ chỉnh (VD: "1 công ty") thì gõ vào ô "Nội dung tuỳ chỉnh", ô tick sẽ tự khoá lại.</div>';
+  if (_editingItems.length === 0) {
+    html += '<div style="text-align:center;color:var(--muted);padding:28px 24px;font-size:13px">Chưa có dòng nào — bấm "+ Thêm dòng", chọn chủ đề và mô tả quyền lợi.</div>';
   }
+  _editingItems.forEach(function(it, idx){
+    var isFirst = idx === 0, isLast = idx === _editingItems.length - 1;
+    html += '<div style="display:grid;grid-template-columns:180px 1fr auto;gap:12px;align-items:start;padding:12px 24px;border-top:1px solid var(--border)">';
+    html += '<select class="form-input" style="padding:8px 10px;font-size:13px" onchange="updateFeatureItem(' + idx + ',\'topic\',this.value)">' +
+      PKG_TOPICS.map(function(t){ return '<option value="' + t + '"' + (t === it.topic ? ' selected' : '') + '>' + t + '</option>'; }).join('') + '</select>';
+    html += '<textarea class="form-input" rows="2" style="padding:8px 10px;font-size:13px;resize:vertical;font-family:inherit" placeholder="Mô tả chi tiết, VD: Đánh giá & chỉnh sửa CV theo JD của 3 công ty MNC" oninput="updateFeatureItem(' + idx + ',\'text\',this.value)">' + pkgEsc(it.text) + '</textarea>';
+    html += '<div style="white-space:nowrap">' +
+      '<button class="detail-btn" style="padding:4px 8px" ' + (isFirst ? 'disabled' : '') + ' title="Chuyển lên" onclick="moveFeatureRow(' + idx + ',-1)">↑</button> ' +
+      '<button class="detail-btn" style="padding:4px 8px" ' + (isLast ? 'disabled' : '') + ' title="Chuyển xuống" onclick="moveFeatureRow(' + idx + ',1)">↓</button> ' +
+      '<button class="detail-btn" onclick="removeFeatureRow(' + idx + ')">Xoá</button></div>';
+    html += '</div>';
+  });
+  html += '<div style="padding:14px 24px;font-size:11.5px;color:var(--muted);border-top:1px solid var(--border)">💡 Mỗi dòng gồm <b>chủ đề</b> (Định hướng · Sửa CV · Luyện phỏng vấn · Khác) và <b>mô tả chi tiết</b>. Trên web, các dòng được gom theo chủ đề để người đọc dễ hiểu quyền lợi; thứ tự ↑↓ chỉ áp dụng trong cùng một chủ đề.</div>';
   html += '</div>';
 
   html += '<div style="padding:0 0 20px"><button class="login-btn" style="width:auto;padding:10px 24px" onclick="savePackageEditor(' + (isEdit ? "'" + p.package_id + "'" : 'null') + ')">' + (isEdit ? 'Lưu tất cả thay đổi' : 'Thêm gói') + '</button></div>';
+  setTimeout(pkgUpdateHints, 0);
   return html;
 }
 
-function updateFeatureField(idx, field, value) {
-  if (!_editingFeatures[idx]) return;
-  _editingFeatures[idx][field] = value;
-  document.getElementById('main-content').innerHTML = renderPackageEditor();
+// Gợi ý "hệ thống hiểu" để admin biết chữ mình gõ có đọc ra số được không.
+function pkgUpdateHints() {
+  var g = function(id){ var el = document.getElementById(id); return el ? el.value : ''; };
+  var set = function(id, txt, ok){ var el = document.getElementById(id); if (el) { el.textContent = txt; el.style.color = ok ? 'var(--muted)' : '#C2410C'; } };
+  var s = pkgParseSessions(g('pkg-sessions'));
+  set('pkg-hint-sessions', s.unlimited ? 'Hệ thống hiểu: không giới hạn buổi' : (s.n ? 'Hệ thống hiểu: ' + s.n + ' buổi' : 'Cần có số buổi (VD: 4 buổi)'), s.unlimited || s.n);
+  var days = pkgParseDays(g('pkg-duration-label'));
+  set('pkg-hint-duration', days ? 'Hệ thống hiểu: ' + days + ' ngày (dùng để tính hạn khách)' : 'Cần có số + đơn vị (VD: 3 ngày, 1 tháng, 4–6 tháng)', days);
+  var mins = pkgParseMinutes(g('pkg-session-len'));
+  set('pkg-hint-len', mins ? 'Hệ thống hiểu: ' + mins + ' phút/buổi' : 'Cần có số (VD: 60 phút)', mins);
 }
 
-function toggleFeatureCheck(idx, checked) {
-  if (!_editingFeatures[idx]) return;
-  _editingFeatures[idx].value = checked ? 'check' : 'dash';
-  document.getElementById('main-content').innerHTML = renderPackageEditor();
+function updateFeatureItem(idx, field, value) {   // không vẽ lại form → không mất con trỏ khi đang gõ
+  if (_editingItems[idx]) _editingItems[idx][field] = value;
 }
-
 function moveFeatureRow(idx, dir) {
-  var newIdx = idx + dir;
-  if (newIdx < 0 || newIdx >= _editingFeatures.length) return;
-  var tmp = _editingFeatures[idx];
-  _editingFeatures[idx] = _editingFeatures[newIdx];
-  _editingFeatures[newIdx] = tmp;
-  _editingFeatures.forEach(function(f, i){ f.sort_order = (i + 1) * 10; });
-  document.getElementById('main-content').innerHTML = renderPackageEditor();
+  var n = idx + dir;
+  if (n < 0 || n >= _editingItems.length) return;
+  var tmp = _editingItems[idx]; _editingItems[idx] = _editingItems[n]; _editingItems[n] = tmp;
+  pkgRerender();
 }
-  
-
 function addFeatureRow() {
-  var maxSort = _editingFeatures.reduce(function(m,f){ return Math.max(m, Number(f.sort_order)||0); }, 0);
-  _editingFeatures.push({ group_label: '', feature_label: '', value: 'dash', sort_order: maxSort + 10 });
-  document.getElementById('main-content').innerHTML = renderPackageEditor();
+  _editingItems.push({ topic: 'Định hướng', text: '' });
+  pkgRerender();
 }
-
 function removeFeatureRow(idx) {
-  _editingFeatures.splice(idx, 1);
-  document.getElementById('main-content').innerHTML = renderPackageEditor();
+  _editingItems.splice(idx, 1);
+  pkgRerender();
 }
-
 function onPkgContactPriceToggle(checked) {
   var priceInput = document.getElementById('pkg-price');
   priceInput.disabled = checked;
   if (checked) priceInput.value = '';
 }
 
-function onPkgSessionsUnlimitedToggle(checked) {
-  var sessionsInput = document.getElementById('pkg-sessions');
-  sessionsInput.disabled = checked;
-  if (checked) sessionsInput.value = '';
-}
-
-// Lưu CẢ 2 phần: thông tin cơ bản (savePackage) rồi tới nội dung hỗ trợ
-// (savePackageFeaturesForPackage) — nối tiếp nhau vì features cần đúng
-// package_id (gói mới tạo chỉ có ID sau khi savePackage trả về).
+// Lưu CẢ 2 phần: thông tin cơ bản (savePackage) rồi tới chữ hiển thị + nội dung hỗ trợ
+// (savePackageFeaturesForPackage) — nối tiếp vì gói mới chỉ có package_id sau khi savePackage trả về.
 function savePackageEditor(packageId) {
-  var name = v('pkg-name');
-  var isContactPrice = document.getElementById('pkg-contact-price').checked;
-  var isSessionsUnlimited = document.getElementById('pkg-sessions-unlimited').checked;
-  var isAdvisorUnlimited = document.getElementById('pkg-advisor-unlimited').checked;
-  var price = isContactPrice ? 0 : v('pkg-price').trim();
-  var sessions = isSessionsUnlimited ? 0 : Number(document.getElementById('pkg-sessions').value);
-  var days = Math.round((parseFloat(document.getElementById('pkg-months').value) || 0) * 30);
-  var duration = Number(document.getElementById('pkg-duration').value) || 60;
-  var badgeLabel = v('pkg-badge');
-  if (!name) { toast('Vui lòng nhập tên gói', 'error'); return; }
-  if (!isContactPrice && !price) { toast('Giá không hợp lệ (hoặc tick "Hiện Liên hệ")', 'error'); return; }
-  if (!isSessionsUnlimited && (!sessions || sessions <= 0)) { toast('Số buổi không hợp lệ (hoặc tick "Không giới hạn")', 'error'); return; }
-  if (!days || days <= 0) { toast('Hạn dùng không hợp lệ', 'error'); return; }
-  // (Hạn dùng vẫn lưu là "days" đúng contract backend — chỉ đơn vị nhập trên form là tháng.)
+  pkgCaptureBasics();
+  var d = _editingDraft;
+  var name = d.name;
+  var sess = pkgParseSessions(d.sessions);
+  var days = pkgParseDays(d.duration);
+  var mins = d.sessionLen ? pkgParseMinutes(d.sessionLen) : 60;
+  var price = d.contact ? 0 : d.price;
 
-  var invalidFeature = _editingFeatures.some(function(f){ return !f.feature_label.trim(); });
-  if (invalidFeature) { toast('Mỗi dòng nội dung hỗ trợ cần có "Tên mục" — điền hoặc xoá dòng trống', 'error'); return; }
+  if (!name) { toast('Vui lòng nhập tên gói', 'error'); return; }
+  if (!d.contact && !price) { toast('Vui lòng nhập giá (hoặc tick "Hiện Liên hệ")', 'error'); return; }
+  if (!sess.unlimited && !sess.n) { toast('Số buổi cần có số (VD: "4 buổi") hoặc ghi "Không giới hạn buổi"', 'error'); return; }
+  if (!days) { toast('Hạn dùng cần có số + đơn vị (VD: "3 ngày", "1 tháng")', 'error'); return; }
+  if (!mins) { toast('Thời lượng mỗi buổi cần có số (VD: "60 phút")', 'error'); return; }
+  if (_editingItems.some(function(it){ return !String(it.text).trim(); })) { toast('Mỗi dòng nội dung hỗ trợ cần có mô tả — điền hoặc xoá dòng trống', 'error'); return; }
 
   var existing = packageId ? PACKAGES_RAW.find(function(x){ return x.package_id === packageId; }) : null;
   var payload = {
-    action: 'savePackage', name: name, price: price, sessions: sessions, days: days,
-    duration_minutes: duration, badge_label: badgeLabel,
-    price_mode: isContactPrice ? 'contact' : 'fixed',
-    sessions_unlimited: isSessionsUnlimited,
-    advisor_unlimited: isAdvisorUnlimited,
-    active: existing ? (existing.active === true || existing.active === 'TRUE' || existing.active === 'true') : true,
+    action: 'savePackage', name: name, price: price, sessions: sess.unlimited ? 0 : sess.n, days: days,
+    duration_minutes: mins, badge_label: d.badge,
+    price_mode: d.contact ? 'contact' : 'fixed',
+    sessions_unlimited: sess.unlimited,
+    advisor_unlimited: d.advisorUnl,
+    active: existing ? pkgBool(existing.active) : true,
   };
   if (packageId) payload.package_id = packageId;
 
+  // Chữ hiển thị (meta) + các dòng nội dung hỗ trợ → 1 danh sách features.
+  var features = [];
+  var metaMap = [['tag', d.tag], ['description', d.description], ['sessions_label', d.sessions], ['duration_label', d.duration], ['session_length_label', d.sessionLen]];
+  metaMap.forEach(function(m, i){
+    if (m[1]) features.push({ group_label: PKG_META_GROUP, feature_label: m[0], value: m[1], sort_order: i + 1 });
+  });
+  _editingItems.forEach(function(it, i){
+    features.push({ group_label: it.topic, feature_label: String(it.text).trim(), value: 'check', sort_order: 100 + i * 10 });
+  });
+
   var btn = document.querySelector('.login-btn');
+  var idleLabel = packageId ? 'Lưu tất cả thay đổi' : 'Thêm gói';
   if (btn) { btn.innerHTML = '<span class="spinner"></span> Đang lưu...'; btn.disabled = true; }
 
   apiPost(payload).then(function(res){
     if (!res || !res.success) {
       toast('Lỗi: ' + (res && res.error), 'error');
-      if (btn) { btn.innerHTML = packageId ? 'Lưu tất cả thay đổi' : 'Thêm gói'; btn.disabled = false; }
+      if (btn) { btn.innerHTML = idleLabel; btn.disabled = false; }
       return;
     }
     var savedPackageId = res.package_id || packageId;
-    apiPost({
-      action: 'savePackageFeaturesForPackage',
-      package_id: savedPackageId,
-      features: _editingFeatures,
-    }).then(function(res2){
+    apiPost({ action: 'savePackageFeaturesForPackage', package_id: savedPackageId, features: features }).then(function(res2){
       toast(packageId ? 'Đã cập nhật gói "' + name + '" ✅' : 'Đã thêm gói "' + name + '" ✅', 'success');
       loadProductsPageAsync();
       if (!res2 || !res2.success) toast('Lưu gói thành công, nhưng lỗi lưu nội dung hỗ trợ: ' + (res2 && res2.error || ''), 'error');
@@ -4871,7 +4924,7 @@ function savePackageEditor(packageId) {
     });
   }).catch(function(e){
     toast('Lỗi: ' + e.message, 'error');
-    if (btn) { btn.innerHTML = packageId ? 'Lưu tất cả thay đổi' : 'Thêm gói'; btn.disabled = false; }
+    if (btn) { btn.innerHTML = idleLabel; btn.disabled = false; }
   });
 }
 
