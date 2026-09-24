@@ -408,6 +408,28 @@ function toggleFaq(btn){
    năng). Nếu gọi Sheet lỗi, bảng sẽ hiện thông báo thay vì bảng rỗng. ─── */
 var PRICING_WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbx7Bd9VvoyzfiiezQV9huoY2BKHH_Br1RAFIz00mjdyKeis-Zv-38a0gf_b-fMlul2C/exec';
 
+/* MỚI: cache theo "version" trong localStorage — hiển thị NGAY bảng giá đã
+   lưu trước đó (không chờ mạng), rồi âm thầm hỏi Apps Script xem Packages/
+   PackageFeatures có đổi không (action=getDataVersion, rất nhẹ). Chỉ tải lại
+   khi có thay đổi thật từ Dashboard/Sheet. Cùng cơ chế với đội-ngũ-advisor.html
+   và index.html. */
+var LJ_CACHE_PREFIX = 'lj_cache_';
+function ljGetLocalCache(name){
+  try {
+    var raw = localStorage.getItem(LJ_CACHE_PREFIX + name);
+    return raw ? JSON.parse(raw) : null; // { version, data }
+  } catch(e){ return null; }
+}
+function ljSetLocalCache(name, version, data){
+  try { localStorage.setItem(LJ_CACHE_PREFIX + name, JSON.stringify({ version: version, data: data })); } catch(e){}
+}
+function ljFetchServerVersions(){
+  return fetch(PRICING_WEBAPP_URL + '?action=getDataVersion')
+    .then(function(r){ return r.json(); })
+    .then(function(res){ return (res && res.success) ? res.data : null; })
+    .catch(function(){ return null; });
+}
+
 function pricingSlugify(name) {
   var s = String(name || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '');
   s = s.replace(/đ/g, 'd').replace(/Đ/g, 'D');
@@ -521,8 +543,8 @@ function renderPricingJourney(packages, featuresByPkg) {
   if (hintEl) hintEl.style.display = n > 2 ? 'block' : 'none';
 }
 
-function loadPricingTable() {
-  Promise.all([
+function fetchAndRenderPricing(versions) {
+  return Promise.all([
     fetch(PRICING_WEBAPP_URL + '?action=getPackages&only_active=1').then(function(r){ return r.json(); }),
     fetch(PRICING_WEBAPP_URL + '?action=getPackageFeatures').then(function(r){ return r.json(); }),
   ]).then(function(results){
@@ -541,10 +563,30 @@ function loadPricingTable() {
         featuresByPkg[pid].push(f);
       });
     }
+    ljSetLocalCache('PricingBundle', {
+      Packages: versions ? versions.Packages : Date.now(),
+      PackageFeatures: versions ? versions.PackageFeatures : Date.now()
+    }, { packages: packages, featuresByPkg: featuresByPkg });
     renderPricingJourney(packages, featuresByPkg);
   }).catch(function(){
     var wrapEl = document.getElementById('pj-wrap');
     if (wrapEl) wrapEl.innerHTML = '<div style="padding:24px;color:rgba(240,240,240,.4);text-align:center">Không tải được bảng giá — vui lòng thử lại sau.</div>';
+  });
+}
+
+function loadPricingTable() {
+  var local = ljGetLocalCache('PricingBundle');
+  if (local) {
+    renderPricingJourney(local.data.packages, local.data.featuresByPkg); // hiển thị ngay
+    ljFetchServerVersions().then(function(versions){
+      if (versions && (versions.Packages !== local.version.Packages || versions.PackageFeatures !== local.version.PackageFeatures)) {
+        return fetchAndRenderPricing(versions); // có đổi thật -> tải lại & cập nhật UI
+      }
+    }).catch(function(){});
+    return;
+  }
+  ljFetchServerVersions().then(function(versions){
+    return fetchAndRenderPricing(versions);
   });
 }
 document.addEventListener('DOMContentLoaded', loadPricingTable);
