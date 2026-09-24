@@ -840,40 +840,68 @@ function loadPackagesForBooking(){
 var urlParams = new URLSearchParams(window.location.search);
 var presetPackage = urlParams.get('package');
 
-// FIX: feedback đội-ngũ-advisor.html trước giờ đọc từ cột feedbacks_json tĩnh
-// trên tab Advisors (gần như luôn rỗng vì chẳng ai nhập tay), trong khi feedback
-// thật advisee gửi lại nằm ở tab AdvisorReviews riêng (được ghi qua action
-// submitAdviseeFeedback từ trang advisor_advisee.html). Cần gọi thêm action
-// getAdvisorReviews cho từng advisor để lấy đúng feedback thật.
-function fetchAdvisorReviewsFor(name){
-  return fetch(WEBAPP_URL + '?action=getAdvisorReviews&advisor=' + encodeURIComponent(name))
-    .then(function(r){ return r.json(); })
-    .then(function(res){ return (res && res.data) ? res.data : []; })
-    .catch(function(){ return []; });
-}
-function attachRealFeedbacks(){
-  return Promise.all(ADVISORS.map(function(a){
-    return fetchAdvisorReviewsFor(a.name).then(function(reviews){
-      // Chỉ ghi đè khi có feedback thật, để không mất dữ liệu nếu feedbacks_json
-      // có được nhập tay riêng cho advisor nào đó.
-      if (reviews.length) {
-        a.feedbacks = reviews.map(function(f){
-          return { badge:'✓ Feedback', text: f.text || '', name: f.advisee_name || 'Advisee', school:'', initials: mkInitialsFallback(f.advisee_name||''), rating: Number(f.rating)||0 };
-        });
-      }
+// FIX: trước đây gọi getAdvisorReviews RIÊNG cho từng advisor (23 advisor =
+// 23 request tuần tự tới Apps Script) và BẮT BUỘC đợi xong hết mới vẽ grid
+// — đây chính là nguyên nhân trang "Đang tải danh sách advisor..." rất lâu.
+// Giờ gọi 1 lần duy nhất action getAllAdvisorReviews (có cache theo version,
+// giống Advisors/Packages), và render grid ngay lập tức — feedback thật sẽ
+// cập nhật vào ngay khi có, không chặn người dùng phải chờ.
+function fetchAllReviewsGrouped(){
+  var local = ljGetLocalCache('AdvisorReviews');
+  function group(rows){
+    var byName = {};
+    rows.forEach(function(r){
+      var key = normalizeNameJs(r.advisor_name || '');
+      if (!byName[key]) byName[key] = [];
+      byName[key].push(r);
     });
-  }));
+    return byName;
+  }
+  function fetchFresh(versions){
+    return fetch(WEBAPP_URL + '?action=getAllAdvisorReviews')
+      .then(function(r){ return r.json(); })
+      .then(function(res){
+        var rows = (res && res.data) ? res.data : [];
+        ljSetLocalCache('AdvisorReviews', versions ? versions.AdvisorReviews : Date.now(), rows);
+        return group(rows);
+      })
+      .catch(function(){ return {}; });
+  }
+  if (local) {
+    // Trả ngay bản cache (không chờ mạng); âm thầm refresh phía sau nếu đổi version
+    ljFetchServerVersions().then(function(versions){
+      if (versions && versions.AdvisorReviews !== local.version) {
+        fetchFresh(versions).then(applyGroupedReviewsToAdvisors);
+      }
+    }).catch(function(){});
+    return Promise.resolve(group(local.data));
+  }
+  return ljFetchServerVersions().then(fetchFresh);
+}
+function normalizeNameJs(s){
+  return String(s||'').trim().toLowerCase();
+}
+function applyGroupedReviewsToAdvisors(byName){
+  ADVISORS.forEach(function(a){
+    var reviews = byName[normalizeNameJs(a.name)] || [];
+    if (reviews.length) {
+      a.feedbacks = reviews.map(function(f){
+        return { badge:'✓ Feedback', text: f.text || '', name: f.advisee_name || 'Advisee', school:'', initials: mkInitialsFallback(f.advisee_name||''), rating: Number(f.rating)||0 };
+      });
+    }
+  });
+  renderAdvisorGrid(); // vẽ lại nếu feedback vừa cập nhật (không ảnh hưởng gì nếu grid đã vẽ rồi)
 }
 
 document.addEventListener('DOMContentLoaded', function(){
   fetchAdvisorsFromSheet().then(function(){
-    return attachRealFeedbacks();
-  }).then(function(){
-    renderAdvisorGrid();
+    renderAdvisorGrid(); // vẽ ngay — không chờ reviews nữa
     // Mở sẵn đúng advisor nếu link có kèm mã, ví dụ:
     // đội-ngũ-advisor.html?advisor=ADV003
     var presetAdvisorId = urlParams.get('advisor');
     if (presetAdvisorId && findAdvisorById(presetAdvisorId)) openDrawer(presetAdvisorId);
+    // Feedback thật tải song song, không chặn UI — tự vẽ lại khi có
+    fetchAllReviewsGrouped().then(applyGroupedReviewsToAdvisors);
   });
   // Gói tải bất đồng bộ; banner "đã chọn sẵn gói" chỉ hiện sau khi biết gói có thật
   loadPackagesForBooking().then(function(){
