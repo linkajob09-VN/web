@@ -66,13 +66,12 @@
 .pj-card{background:#141414;border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:22px;display:flex;flex-direction:column;flex:1;position:relative;}
 .pj-card.hi{background:linear-gradient(165deg, rgba(252,82,41,.14), #141414 70%);border-color:rgba(252,82,41,.35);}
 .pj-badge{position:absolute;top:-11px;left:50%;transform:translateX(-50%);background:#fc5229;color:#fff;font-family:'Space Grotesk',sans-serif;font-size:10px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;padding:4px 12px;border-radius:100px;white-space:nowrap;box-shadow:0 4px 12px rgba(252,82,41,.35);}
+.pj-tag{font-family:'Space Grotesk',sans-serif;font-size:11px;font-weight:700;letter-spacing:.04em;color:#fc5229;margin-bottom:8px;}
 .pj-name{font-family:'Space Grotesk',sans-serif;font-size:16px;font-weight:700;color:#F0F0F0;margin-bottom:6px;}
 .pj-price{font-family:'Space Grotesk',sans-serif;font-size:24px;font-weight:700;color:#F0F0F0;letter-spacing:-.3px;margin-bottom:2px;}
 .pj-card.hi .pj-price{color:#fc5229;}
 .pj-meta{font-size:12.5px;color:rgba(240,240,240,.4);margin-bottom:16px;line-height:1.6;}
 .pj-benefits{list-style:none;flex:1;margin-bottom:16px;display:flex;flex-direction:column;gap:8px;}
-.pj-benefit-group{font-family:'Space Grotesk',sans-serif;font-size:10.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#fc5229;margin-top:10px;}
-.pj-benefit-group:first-child{margin-top:0;}
 .pj-benefits li{display:flex;align-items:flex-start;gap:8px;font-size:13px;color:rgba(240,240,240,.65);line-height:1.5;}
 .pj-benefits li i{color:#fc5229;font-size:13px;margin-top:2px;flex-shrink:0;}
 .pj-btn{margin-top:auto;width:100%;padding:12px;border-radius:100px;font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:13.5px;cursor:pointer;border:none;transition:all .2s;white-space:nowrap;text-align:center;text-decoration:none;display:block;}
@@ -183,7 +182,6 @@
 .lj-light-zone .pj-price{color:var(--lj-light-text);}
 .lj-light-zone .pj-card.hi .pj-price{color:var(--lj-accent-dark);}
 .lj-light-zone .pj-meta{color:var(--lj-light-text-faint);}
-.lj-light-zone .pj-benefit-group{color:var(--lj-accent-dark);}
 .lj-light-zone .pj-benefits li{color:var(--lj-light-text-dim);}
 .lj-light-zone .pj-btn-ghost{background:var(--lj-light-surface); color:var(--lj-light-text-dim); border-color:var(--lj-light-border);}
 .lj-light-zone .pj-btn-ghost:hover{background:#F5EFE4; color:var(--lj-light-text); border-color:#DCD2C2;}
@@ -221,7 +219,6 @@
 .lj-light-zone .lj-dark-zone .pj-price{color:#F0F0F0;}
 .lj-light-zone .lj-dark-zone .pj-card.hi .pj-price{color:#fc5229;}
 .lj-light-zone .lj-dark-zone .pj-meta{color:rgba(240,240,240,.4);}
-.lj-light-zone .lj-dark-zone .pj-benefit-group{color:#fc5229;}
 .lj-light-zone .lj-dark-zone .pj-benefits li{color:rgba(240,240,240,.65);}
 .lj-light-zone .lj-dark-zone .pj-btn-ghost{background:transparent; color:rgba(240,240,240,.6); border-color:rgba(255,255,255,.16);}
 .lj-light-zone .lj-dark-zone .pj-btn-ghost:hover{background:rgba(255,255,255,.06); color:#F0F0F0; border-color:rgba(255,255,255,.3);}
@@ -442,6 +439,24 @@ function renderPricingJourney(packages, featuresByPkg) {
   var highlightIdx = packages.findIndex(function(p){ return p.badge_label && String(p.badge_label).trim(); });
   var n = packages.length || 1;
 
+  // ── Tag "chủ đề" hiện 1 lần/thẻ (TRẢI NGHIỆM, HỒ SƠ ỨNG TUYỂN...) — map
+  //    theo tên gói thật, có fallback theo vị trí nếu tên không khớp bảng
+  //    (vd Sheet đổi tên gói) để không bao giờ thiếu tag. ──
+  var JOURNEY_TAGS = {
+    'trial': 'TRẢI NGHIỆM', 'dùng thử': 'TRẢI NGHIỆM',
+    'cơ bản': 'HỒ SƠ CƠ BẢN',
+    'đặc biệt': 'HỒ SƠ ỨNG TUYỂN', 'chuyên sửa cv': 'HỒ SƠ ỨNG TUYỂN',
+    'chuyên sâu': 'HỒ SƠ + PHỎNG VẤN',
+  };
+  function journeyTagFor(p, i) {
+    var key = String(p.name || '').trim().toLowerCase();
+    if (JOURNEY_TAGS[key]) return JOURNEY_TAGS[key];
+    if (key.indexOf('đồng hành') !== -1 || key.indexOf('vvip') !== -1) return 'CAM KẾT CÓ OFFER';
+    if (i === 0) return 'TRẢI NGHIỆM';
+    if (i === n - 1) return 'CAM KẾT CÓ OFFER';
+    return 'HỒ SƠ ỨNG TUYỂN';
+  }
+
   // ── Gom tất cả "nhóm + tên mục" xuất hiện ở bất kỳ gói nào, giữ đúng thứ
   //    tự sort_order — dùng để duyệt benefit của từng gói theo 1 thứ tự
   //    nhất quán (giống logic gộp rowKeys của bảng so sánh cũ). ──
@@ -466,20 +481,17 @@ function renderPricingJourney(packages, featuresByPkg) {
     var isHi = i === highlightIdx;
     var slug = pricingSlugify(p.name);
 
-    // Danh sách benefit của gói này — chỉ những dòng KHÔNG phải "dash",
-    // theo đúng thứ tự rowKeys; chèn tiêu đề nhóm khi đổi nhóm.
+    // Danh sách benefit của gói này — list PHẲNG, chỉ những dòng KHÔNG phải
+    // "dash", theo đúng thứ tự rowKeys. Không chèn tiêu đề nhóm bên trong —
+    // 1 card chỉ có 1 tag chủ đề duy nhất ở trên (journeyTagFor), giữ card
+    // gọn và dễ đọc thay vì bị chẻ nhỏ theo từng "Chủ đề" như bảng so sánh.
     var benefitsHtml = '';
-    var lastGroup = null;
     rowKeys.forEach(function(rk){
       var feat = (featuresByPkg[p.package_id] || []).find(function(f){
         return String(f.group_label || '').trim() === rk.group_label && String(f.feature_label || '').trim() === rk.feature_label;
       });
       var val = feat ? feat.value : 'dash';
       if (!val || val === 'dash') return;
-      if (rk.group_label && rk.group_label !== lastGroup) {
-        benefitsHtml += '<div class="pj-benefit-group">' + pricingEscHtml(rk.group_label) + '</div>';
-        lastGroup = rk.group_label;
-      }
       var label = pricingEscHtml(rk.feature_label);
       if (val !== 'check') label += ' — ' + pricingEscHtml(val);
       benefitsHtml += '<li><i class="ti ti-check"></i>' + label + '</li>';
@@ -490,6 +502,7 @@ function renderPricingJourney(packages, featuresByPkg) {
     journeyHtml += '<div class="pj-dot">' + (i + 1) + '</div>';
     journeyHtml += '<div class="pj-card' + (isHi ? ' hi' : '') + '">';
     if (isHi) journeyHtml += '<div class="pj-badge">' + pricingEscHtml(p.badge_label) + '</div>';
+    journeyHtml += '<div class="pj-tag">' + journeyTagFor(p, i) + '</div>';
     journeyHtml += '<div class="pj-name">' + pricingEscHtml(p.name) + '</div>';
     journeyHtml += '<div class="pj-price">' + pricingFmtPriceK(p) + '</div>';
     journeyHtml += '<div class="pj-meta">' + pricingFmtSessions(p) + ' · ' + pricingFmtDuration(p.days) + ' sử dụng · ' + (Number(p.duration_minutes) || 60) + ' phút/buổi</div>';
