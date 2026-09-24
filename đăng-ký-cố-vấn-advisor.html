@@ -532,6 +532,12 @@ function renderPricingJourney(packages, featuresByPkg) {
         if (byTopic[tp].indexOf(text) === -1) byTopic[tp].push(text);   // bỏ dòng lặp của dữ liệu cũ
       });
 
+    // Cột trong tab Packages (do dashboard/Sheet điền) ưu tiên hơn dòng "_meta" cũ
+    ['tag', 'description', 'sessions_label', 'duration_label', 'session_length_label', 'price_label'].forEach(function(k){
+      var col = k === 'tag' ? p.tag_label : p[k];
+      if (col) meta[k] = String(col);
+    });
+
     var benefitsHtml = '';
     TOPICS.forEach(function(tp){
       var rows = byTopic[tp.name];
