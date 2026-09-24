@@ -528,7 +528,8 @@ function renderPricingJourney(packages, featuresByPkg) {
         if (!label || !val || val === 'dash') return;
         var text = label + (val !== 'check' ? ' — ' + val : '');
         var tp = normTopic(f.group_label, label);
-        (byTopic[tp] = byTopic[tp] || []).push(text);
+        byTopic[tp] = byTopic[tp] || [];
+        if (byTopic[tp].indexOf(text) === -1) byTopic[tp].push(text);   // bỏ dòng lặp của dữ liệu cũ
       });
 
     var benefitsHtml = '';
@@ -556,7 +557,7 @@ function renderPricingJourney(packages, featuresByPkg) {
     if (meta.description) journeyHtml += '<div class="pj-desc">' + pricingEscHtml(meta.description) + '</div>';
     journeyHtml += '<ul class="pj-benefits">' + benefitsHtml + '</ul>';
     journeyHtml += '<div class="pj-sub">' + pricingEscHtml(subParts.join(' · ')) + '</div>';
-    journeyHtml += '<div class="pj-price">' + pricingFmtPriceK(p) + '</div>';
+    journeyHtml += '<div class="pj-price">' + (meta.price_label ? pricingEscHtml(meta.price_label) : pricingFmtPriceK(p)) + '</div>';
     journeyHtml += '<button class="pj-btn ' + (isHi ? 'pj-btn-main' : 'pj-btn-ghost') + '" onclick="location.href=\'đội-ngũ-advisor.html?package=' + slug + '\'">Chọn ' + pricingEscHtml(p.name) + '</button>';
     journeyHtml += '</div></div>';
   });
@@ -568,13 +569,14 @@ function renderPricingJourney(packages, featuresByPkg) {
   if (hintEl) hintEl.style.display = n > 2 ? 'block' : 'none';
 }
 
-function fetchAndRenderPricing(versions) {
+function fetchAndRenderPricing(versions, hasCache) {
   return Promise.all([
-    fetch(PRICING_WEBAPP_URL + '?action=getPackages&only_active=1').then(function(r){ return r.json(); }),
-    fetch(PRICING_WEBAPP_URL + '?action=getPackageFeatures').then(function(r){ return r.json(); }),
+    fetch(PRICING_WEBAPP_URL + '?action=getPackages&only_active=1&_=' + Date.now()).then(function(r){ return r.json(); }),
+    fetch(PRICING_WEBAPP_URL + '?action=getPackageFeatures&_=' + Date.now()).then(function(r){ return r.json(); }),
   ]).then(function(results){
     var pkgRes = results[0], featRes = results[1];
     if (!pkgRes || !pkgRes.success || !Array.isArray(pkgRes.data) || !pkgRes.data.length) {
+      if (hasCache) return;
       var wrapEl = document.getElementById('pj-wrap');
       if (wrapEl) wrapEl.innerHTML = '<div style="padding:24px;color:rgba(240,240,240,.4);text-align:center">Không tải được bảng giá — vui lòng thử lại sau.</div>';
       return;
@@ -594,6 +596,7 @@ function fetchAndRenderPricing(versions) {
     }, { packages: packages, featuresByPkg: featuresByPkg });
     renderPricingJourney(packages, featuresByPkg);
   }).catch(function(){
+    if (hasCache) return;
     var wrapEl = document.getElementById('pj-wrap');
     if (wrapEl) wrapEl.innerHTML = '<div style="padding:24px;color:rgba(240,240,240,.4);text-align:center">Không tải được bảng giá — vui lòng thử lại sau.</div>';
   });
@@ -603,10 +606,9 @@ function loadPricingTable() {
   var local = ljGetLocalCache('PricingBundle');
   if (local) {
     renderPricingJourney(local.data.packages, local.data.featuresByPkg); // hiển thị ngay
-    ljFetchServerVersions().then(function(versions){
-      if (versions && (versions.Packages !== local.version.Packages || versions.PackageFeatures !== local.version.PackageFeatures)) {
-        return fetchAndRenderPricing(versions); // có đổi thật -> tải lại & cập nhật UI
-      }
+    // Luôn tải lại bản mới ở nền (không chỉ khi số phiên bản đổi) — bảng giá cache chỉ để hiện tức thì.
+    ljFetchServerVersions().catch(function(){ return null; }).then(function(versions){
+      return fetchAndRenderPricing(versions, true);
     }).catch(function(){});
     return;
   }
