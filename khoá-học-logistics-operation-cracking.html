@@ -127,8 +127,7 @@ section{ padding:80px 0;}
 .module.open .module-plus{ transform:rotate(45deg);}
 .module-a{ max-height:0; overflow:hidden; transition:max-height .25s ease;}
 .module-a ul{ list-style:none; display:flex; flex-direction:column; gap:7px; padding:0 0 22px 54px;}
-.module-a li{ font-size:13.5px; color:var(--muted); padding-left:16px; position:relative;}
-.module-a li::before{ content:"—"; position:absolute; left:0; color:var(--orange);}
+.module-a li{ font-size:13.5px; color:var(--muted);}
 
 /* audience */
 .audience-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:16px;}
@@ -152,8 +151,7 @@ section{ padding:80px 0;}
 .instructor-card h3{ font-size:17px; color:var(--text-dark); margin-bottom:4px; letter-spacing:-0.3px;}
 .instructor-card .role{ font-size:12.5px; color:var(--orange); font-weight:600; margin-bottom:12px; font-family:'Montserrat',sans-serif;}
 .instructor-card ul{ list-style:none; display:flex; flex-direction:column; gap:6px;}
-.instructor-card li{ font-size:13px; color:var(--muted-dark); padding-left:14px; position:relative;}
-.instructor-card li::before{ content:"—"; position:absolute; left:0; color:var(--orange);}
+.instructor-card li{ font-size:13px; color:var(--muted-dark);}
 
 /* gift / benefit cards */
 .gift-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:16px;}
@@ -203,8 +201,7 @@ section{ padding:80px 0;}
 .faq-a{ max-height:0; overflow:hidden; transition:max-height .25s ease;}
 .faq-a p, .faq-a ul{ font-size:13.5px; color:var(--muted); padding-top:14px; line-height:1.65;}
 .faq-a ul{ list-style:none; display:flex; flex-direction:column; gap:6px;}
-.faq-a li{ padding-left:16px; position:relative;}
-.faq-a li::before{ content:"—"; position:absolute; left:0; color:var(--orange);}
+.faq-a li{}
 
 /* final CTA */
 .final{ background:var(--dark); text-align:center;}
@@ -307,6 +304,20 @@ button:focus-visible, a:focus-visible, .lj-nav-btn-plain:focus-visible, .fbtn:fo
   .hero-split .hero-cta, .hero-split .hero-stats{ justify-content:center;}
   .hero-photo-col{ max-width:340px; width:100%; margin:0 auto;}
 }
+/* ── Quy trình tuyển sinh — timeline ngang 3 bước, giống mockup ── */
+.process-section .section-head{ text-align:center; max-width:680px; margin:0 auto 48px; }
+.process-track{ position:relative; display:flex; align-items:center; justify-content:space-between; margin:0 0 36px; padding-right:26px; }
+.process-track::before{ content:""; position:absolute; left:0; right:20px; top:50%; height:2px; background:var(--orange); transform:translateY(-50%);}
+.process-track .process-arrow{ position:absolute; right:-2px; top:50%; transform:translateY(-50%); width:0; height:0; border-top:7px solid transparent; border-bottom:7px solid transparent; border-left:11px solid var(--orange);}
+.process-dot{ width:24px; height:24px; border-radius:50%; background:var(--orange); position:relative; z-index:1; flex:none;}
+.process-cols{ display:grid; grid-template-columns:repeat(3,1fr); gap:32px;}
+.process-col h3{ font-size:17px; margin-bottom:14px; font-family:'Montserrat',sans-serif; font-weight:700; letter-spacing:-0.2px;}
+.process-col ul{ list-style:none; padding:0; margin:0; display:flex; flex-direction:column; gap:10px;}
+.process-col li{ position:relative; padding-left:16px; font-size:14.5px; color:var(--muted); line-height:1.6;}
+.process-col li::before{ content:"•"; position:absolute; left:0; color:var(--text); font-weight:700;}
+@media(max-width:780px){
+  .process-cols{ grid-template-columns:1fr; gap:26px;}
+}
 </style>
 <link rel="stylesheet" href="nav.css">
 <link rel="stylesheet" href="đăng-ký-tư-vấn.css">
@@ -321,7 +332,7 @@ button:focus-visible, a:focus-visible, .lj-nav-btn-plain:focus-visible, .fbtn:fo
       <h1 style="font-size:clamp(26px,4.6vw,40px);">Logistics Operations <em>Cracking</em></h1>
       <p class="sub">Từ vận hành thực tế đến Assessment Centre của công ty đa quốc gia. Chương trình 5 buổi giả lập 100% vòng Assessment của Unilever, P&G, Shopee, DHL — dành cho sinh viên năm 3, năm 4 và người mới tốt nghiệp.</p>
       <div class="hero-cta">
-        <button class="btn btn-orange" onclick="openConsultWidget()">Đăng ký tư vấn ngay</button>
+        <button class="btn btn-orange" onclick="openConsultWidget()">Ứng tuyển ngay</button>
         <a href="#noidung" class="btn btn-ghost-dark">Xem nội dung khoá ↓</a>
       </div>
       <div class="hero-stats">
@@ -338,7 +349,8 @@ button:focus-visible, a:focus-visible, .lj-nav-btn-plain:focus-visible, .fbtn:fo
         <div class="hero-exp-badge"><b>9+</b><span>năm<br>kinh nghiệm</span></div>
         <div class="hero-advisor-card">
           <div class="avatar">
-            <img id="heroPhotoMini" src="assets/advisors/ngo-minh-tri.jpg" alt="" onerror="this.style.display='none'; this.parentElement.insertAdjacentText('afterbegin','MT');">
+            <img id="heroPhotoMini" src="assets/advisors/ngo-minh-tri.jpg" alt="" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+            <span id="heroPhotoMiniFallback" style="display:none;">MT</span>
           </div>
           <div><strong>Ngô Minh Trí</strong><span>Shopee · Strategic Network Lead</span></div>
         </div>
@@ -559,8 +571,8 @@ button:focus-visible, a:focus-visible, .lj-nav-btn-plain:focus-visible, .fbtn:fo
     <div class="instructor-grid" style="grid-template-columns:1fr;">
       <div class="instructor-card">
         <div class="instructor-photo">
-          <img src="assets/advisors/ngo-minh-tri.jpg" alt="Ngô Minh Trí" loading="lazy" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-          <div class="avatar-fallback" style="display:none;">MT</div>
+          <img id="instructorPhoto" src="assets/advisors/ngo-minh-tri.jpg" alt="Ngô Minh Trí" loading="lazy" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+          <div id="instructorPhotoFallback" class="avatar-fallback" style="display:none;">MT</div>
           <span class="photo-verified"><i class="ti ti-check"></i></span>
         </div>
         <div>
@@ -640,6 +652,53 @@ button:focus-visible, a:focus-visible, .lj-nav-btn-plain:focus-visible, .fbtn:fo
   </div>
 </section>
 
+
+<section class="process-section">
+  <div class="wrap">
+    <div class="section-head">
+      <span class="eyebrow"><span class="eyebrow-dot"></span>Tuyển sinh</span>
+      <h2>Quy trình tuyển sinh cho khoá học</h2>
+      <p>Khoá học chọn lọc đầu vào để đảm bảo trải nghiệm học tập chất lượng cho từng nhóm nhỏ.</p>
+    </div>
+
+    <div class="process-track">
+      <div class="process-dot"></div>
+      <div class="process-dot"></div>
+      <div class="process-dot"></div>
+      <div class="process-arrow"></div>
+    </div>
+
+    <div class="process-cols">
+      <div class="process-col">
+        <h3>Meeting tư vấn</h3>
+        <ul>
+          <li>Được tư vấn lộ trình học phù hợp với background & mục tiêu cá nhân.</li>
+          <li>Hiểu rõ nội dung khoá học và quyền lợi đi kèm.</li>
+        </ul>
+      </div>
+      <div class="process-col">
+        <h3>CV Scanning</h3>
+        <ul>
+          <li>Giảng viên sẽ xem và đánh giá CV hiện tại của bạn sau buổi tư vấn.</li>
+          <li>Đảm bảo học viên tham gia có mục tiêu rõ ràng và sẵn sàng cho hành trình Land Your Dream Job.</li>
+        </ul>
+      </div>
+      <div class="process-col">
+        <h3>Xác nhận tham gia</h3>
+        <ul>
+          <li>Nhận kết quả tham gia khoá học từ LinkaJob.</li>
+          <li>Thanh toán học phí.</li>
+          <li>Bắt đầu hành trình Land Your Dream Job.</li>
+        </ul>
+      </div>
+    </div>
+
+    <div style="text-align:center;margin-top:40px;">
+      <button class="btn btn-orange" onclick="openConsultWidget()">Ứng tuyển ngay</button>
+    </div>
+  </div>
+</section>
+
 <section class="pricing">
   <div class="wrap">
     <span class="eyebrow on-dark"><span class="eyebrow-dot"></span>Học phí</span>
@@ -659,7 +718,7 @@ button:focus-visible, a:focus-visible, .lj-nav-btn-plain:focus-visible, .fbtn:fo
           <li>3 tháng đồng hành cùng cộng đồng LinkaJob</li>
           <li>Lớp tối đa 5 học viên</li>
         </ul>
-        <button class="btn btn-orange" style="width:100%" onclick="openConsultWidget()">Đăng ký tư vấn & giữ chỗ ngay</button>
+        <button class="btn btn-orange" style="width:100%" onclick="openConsultWidget()">Ứng tuyển ngay</button>
       </div>
       <div class="price-box advisee">
         <span class="eyebrow" style="display:inline-flex;">Advisee cũ · Giảm 10%</span>
@@ -672,7 +731,7 @@ button:focus-visible, a:focus-visible, .lj-nav-btn-plain:focus-visible, .fbtn:fo
           <li>Giảm thẳng 500.000đ trên học phí</li>
           <li>Ưu tiên xác nhận suất học do chỉ nhận 5 học viên/khoá</li>
         </ul>
-        <button class="btn btn-orange" style="width:100%" onclick="openConsultWidget()">Đăng ký với ưu đãi Advisee</button>
+        <button class="btn btn-orange" style="width:100%" onclick="openConsultWidget()">Ứng tuyển ngay</button>
       </div>
     </div>
     <div class="scarcity">⚠ Lớp chỉ nhận tối đa 5 học viên / khoá</div>
@@ -712,7 +771,7 @@ button:focus-visible, a:focus-visible, .lj-nav-btn-plain:focus-visible, .fbtn:fo
       </div>
       <div class="faq-item">
         <div class="faq-q"><h4>Mình muốn đăng ký thì làm thế nào?</h4><span class="plus">+</span></div>
-        <div class="faq-a"><p>Bấm "Đăng ký tư vấn" để chọn khung giờ phù hợp — Team LinkaJob sẽ tư vấn lộ trình và xác nhận lịch học trong 24h. Vì lớp chỉ nhận tối đa 5 học viên/khoá nên nên đăng ký sớm để giữ chỗ.</p></div>
+        <div class="faq-a"><p>Bấm "Ứng tuyển ngay" để đặt lịch Meeting tư vấn — Team LinkaJob sẽ tư vấn lộ trình, xem CV và xác nhận kết quả tham gia trong 24h. Vì lớp chỉ nhận tối đa 5 học viên/khoá nên nên ứng tuyển sớm để giữ chỗ.</p></div>
       </div>
     </div>
   </div>
@@ -729,7 +788,7 @@ button:focus-visible, a:focus-visible, .lj-nav-btn-plain:focus-visible, .fbtn:fo
         <li>Tối đa 5 học viên / lớp — chỗ có hạn, đăng ký sớm để giữ chỗ</li>
         <li>Tặng bộ tài liệu độc quyền cho học viên đăng ký sớm</li>
       </ul>
-      <button class="btn btn-orange" style="width:100%" onclick="openConsultWidget()">Đăng ký tư vấn ngay</button>
+      <button class="btn btn-orange" style="width:100%" onclick="openConsultWidget()">Ứng tuyển ngay</button>
     </div>
   </div>
 </section>
@@ -853,8 +912,25 @@ button:focus-visible, a:focus-visible, .lj-nav-btn-plain:focus-visible, .fbtn:fo
       if(!photo) return;
       var main = document.getElementById('heroPhotoMain');
       var mini = document.getElementById('heroPhotoMini');
-      if(main){ main.src = photo; main.style.display = ''; }
-      if(mini){ mini.src = photo; mini.style.display = ''; }
+      var instructor = document.getElementById('instructorPhoto');
+      if(main){
+        var mainFb = main.nextElementSibling; // .avatar-fallback
+        if(mainFb) mainFb.style.display = 'none';
+        main.style.display = '';
+        main.src = photo;
+      }
+      if(mini){
+        var miniFb = mini.nextElementSibling; // #heroPhotoMiniFallback
+        if(miniFb) miniFb.style.display = 'none';
+        mini.style.display = '';
+        mini.src = photo;
+      }
+      if(instructor){
+        var instructorFb = instructor.nextElementSibling; // #instructorPhotoFallback
+        if(instructorFb) instructorFb.style.display = 'none';
+        instructor.style.display = '';
+        instructor.src = photo;
+      }
     })
     .catch(function(){ /* giữ nguyên ảnh mặc định nếu fetch lỗi */ });
 })();
