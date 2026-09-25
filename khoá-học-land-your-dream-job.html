@@ -312,6 +312,19 @@ button:focus-visible, a:focus-visible, .lj-nav-btn-plain:focus-visible, .fbtn:fo
   .hero-split .hero-text{ text-align:center;}
   .hero-split .hero-cta, .hero-split .hero-stats{ justify-content:center;}
   .hero-photo-col{ max-width:340px; width:100%; margin:0 auto;}
+}/* ── Quy trình tuyển sinh — timeline ngang 3 bước ── */
+.process-section .section-head{ text-align:center; max-width:680px; margin:0 auto 48px;}
+.process-track{ position:relative; display:flex; align-items:center; justify-content:space-between; margin:0 0 36px; padding-right:26px;}
+.process-track::before{ content:""; position:absolute; left:0; right:20px; top:50%; height:2px; background:var(--orange); transform:translateY(-50%);}
+.process-track .process-arrow{ position:absolute; right:-2px; top:50%; transform:translateY(-50%); width:0; height:0; border-top:7px solid transparent; border-bottom:7px solid transparent; border-left:11px solid var(--orange);}
+.process-dot{ width:24px; height:24px; border-radius:50%; background:var(--orange); position:relative; z-index:1; flex:none;}
+.process-cols{ display:grid; grid-template-columns:repeat(3,1fr); gap:32px;}
+.process-col h3{ font-size:17px; margin-bottom:14px; font-family:'Montserrat',sans-serif; font-weight:700; letter-spacing:-0.2px;}
+.process-col ul{ list-style:none; padding:0; margin:0; display:flex; flex-direction:column; gap:10px;}
+.process-col li{ position:relative; padding-left:16px; font-size:14.5px; color:var(--muted); line-height:1.6;}
+.process-col li::before{ content:"•"; position:absolute; left:0; color:var(--text); font-weight:700;}
+@media(max-width:780px){
+  .process-cols{ grid-template-columns:1fr; gap:26px;}
 }
 </style>
 <link rel="stylesheet" href="nav.css">
@@ -502,7 +515,7 @@ button:focus-visible, a:focus-visible, .lj-nav-btn-plain:focus-visible, .fbtn:fo
         </div>
         <div class="module-a">
           <ul>
-            <li>Trải nghiệm thực chiến tại kênh Modern Trade cùng Advisor từ Unilever</li>
+            <li>Trải nghiệm thực chiến tại kênh Modern Trade cùng Advisor Quốc Cường (Fine Today Vietnam)</li>
             <li>Quan sát cách trưng bày, chạy khuyến mãi tại điểm bán</li>
             <li>Hiểu mối liên kết giữa Sales – Trade – Brand</li>
             <li>Hỏi đáp trực tiếp cùng Advisor về chiến lược trưng bày</li>
@@ -578,7 +591,7 @@ button:focus-visible, a:focus-visible, .lj-nav-btn-plain:focus-visible, .fbtn:fo
   <div class="wrap">
     <div class="section-head">
       <span class="eyebrow on-dark"><span class="eyebrow-dot"></span>Giảng viên</span>
-      <h2>2 Advisor trực tiếp đứng lớp, đến từ Unilever và Lactalis</h2>
+      <h2>2 Advisor trực tiếp đứng lớp, đến từ Lactalis và Fine Today Vietnam</h2>
       <p>Lớp học chỉ 5 học viên, giảng dạy trực tiếp bởi 2 Advisor dưới đây. Riêng buổi meeting 1:1, bạn có thể chọn bất kỳ Advisor nào trong mạng lưới LinkaJob — không giới hạn ở 2 giảng viên đứng lớp.</p>
     </div>
     <div class="instructor-grid">
@@ -600,17 +613,17 @@ button:focus-visible, a:focus-visible, .lj-nav-btn-plain:focus-visible, .fbtn:fo
       </div>
       <div class="instructor-card">
         <div class="instructor-photo">
-          <img src="https://linkajob.vn/wp-content/uploads/2025/04/vu-hai-phong.png" alt="Advisor Hải Phong" loading="lazy" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-          <div class="avatar-fallback" style="display:none;">HP</div>
+          <img src="https://lh3.googleusercontent.com/d/1uab9uM24UTSrGURiwL-OIWMTtf8qAy8b" alt="Advisor Quốc Cường" loading="lazy" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+          <div class="avatar-fallback" style="display:none;">QC</div>
           <span class="photo-verified"><i class="ti ti-check"></i></span>
         </div>
         <div>
-          <h3>Advisor Hải Phong</h3>
-          <div class="role">Key Account Assistant Manager @ Unilever</div>
+          <h3>Advisor Quốc Cường</h3>
+          <div class="role">Channel Manager @ Fine Today Vietnam</div>
           <ul>
-            <li>4+ năm kinh nghiệm Trade Marketing và Sales</li>
-            <li>Từng là Sales Management Trainee tại Nestlé</li>
-            <li>Chuyên môn: Trade Marketing, Sales Planning, Retail Operation, MT Program</li>
+            <li>9+ năm kinh nghiệm Channel Manager trong FMCG</li>
+            <li>Từng là Key Account Manager tại Shiseido, Masan Consumer, Beiersdorf</li>
+            <li>Chuyên môn advise: Modern Trade Channel Management, Key Account Negotiation, Trade Promotion, Category Planning</li>
           </ul>
         </div>
       </div>
@@ -644,6 +657,52 @@ button:focus-visible, a:focus-visible, .lj-nav-btn-plain:focus-visible, .fbtn:fo
   </div>
 </section>
 
+<section class="process-section">
+  <div class="wrap">
+    <div class="section-head">
+      <span class="eyebrow"><span class="eyebrow-dot"></span>Tuyển sinh</span>
+      <h2>Quy trình tuyển sinh cho khoá học</h2>
+      <p>Khoá học chọn lọc đầu vào để đảm bảo trải nghiệm học tập chất lượng cho từng nhóm nhỏ.</p>
+    </div>
+
+    <div class="process-track">
+      <div class="process-dot"></div>
+      <div class="process-dot"></div>
+      <div class="process-dot"></div>
+      <div class="process-arrow"></div>
+    </div>
+
+    <div class="process-cols">
+      <div class="process-col">
+        <h3>Meeting tư vấn</h3>
+        <ul>
+          <li>Được tư vấn lộ trình học phù hợp với background & mục tiêu cá nhân.</li>
+          <li>Hiểu rõ nội dung khoá học và quyền lợi đi kèm.</li>
+        </ul>
+      </div>
+      <div class="process-col">
+        <h3>CV Scanning</h3>
+        <ul>
+          <li>Giảng viên sẽ xem và đánh giá CV hiện tại của bạn sau buổi tư vấn.</li>
+          <li>Đảm bảo học viên tham gia có mục tiêu rõ ràng và sẵn sàng cho hành trình Land Your Dream Job.</li>
+        </ul>
+      </div>
+      <div class="process-col">
+        <h3>Xác nhận tham gia</h3>
+        <ul>
+          <li>Nhận kết quả tham gia khoá học từ LinkaJob.</li>
+          <li>Thanh toán học phí.</li>
+          <li>Bắt đầu hành trình Land Your Dream Job.</li>
+        </ul>
+      </div>
+    </div>
+
+    <div style="text-align:center;margin-top:40px;">
+      <button class="btn btn-orange" onclick="openConsultWidget()">Ứng tuyển ngay</button>
+    </div>
+  </div>
+</section>
+
 <section class="pricing">
   <div class="wrap">
     <span class="eyebrow on-dark"><span class="eyebrow-dot"></span>Học phí</span>
@@ -657,7 +716,7 @@ button:focus-visible, a:focus-visible, .lj-nav-btn-plain:focus-visible, .fbtn:fo
         <div class="perf on-dark"></div>
         <ul class="price-list">
           <li>5 học phần chuyên môn + 3 business case thực chiến</li>
-          <li>1 buổi đi field kênh siêu thị cùng Advisor Unilever</li>
+          <li>1 buổi đi field kênh siêu thị cùng Advisor Fine Today Vietnam</li>
           <li>1 buổi meeting 1:1 với Advisor bất kỳ: sửa CV hoặc phỏng vấn thử</li>
           <li>Trọn bộ tài liệu ứng tuyển FMCG — miễn phí</li>
           <li>3 tháng truy cập cộng đồng LinkaJob + record đầy đủ buổi học</li>
