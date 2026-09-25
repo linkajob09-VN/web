@@ -285,6 +285,39 @@ footer span{ color:var(--orange);}
 .hp-adv-tag-dot{width:6px;height:6px;border-radius:50%;background:var(--orange);flex-shrink:0;}
 @media(max-width:560px){ .hp-adv-card{width:170px;} .hp-adv-body{padding:14px 10px 8px;} .hp-adv-name{font-size:11px;} .hp-adv-role{font-size:10px;} }
 
+/* ── REVIEW CARDS — đánh giá advisee dạng lưới tĩnh, sao + quote + avatar verified ── */
+.review-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;}
+.review-card{background:var(--paper-2);border:.5px solid var(--line);border-radius:14px;padding:22px;display:flex;flex-direction:column;gap:14px;}
+.review-stars{color:var(--orange);font-size:14px;letter-spacing:3px;}
+.review-quote{font-size:13.5px;color:var(--text);line-height:1.65;flex:1;}
+.review-who{display:flex;align-items:center;gap:12px;border-top:.5px solid var(--line);padding-top:14px;}
+.review-avatar{position:relative;width:40px;height:40px;border-radius:50%;flex:none;background:var(--orange-tint);}
+.review-avatar-inner{width:100%;height:100%;border-radius:50%;overflow:hidden;display:flex;align-items:center;justify-content:center;font-family:'Montserrat',sans-serif;font-size:13px;font-weight:800;color:var(--orange);}
+.review-avatar-inner img{width:100%;height:100%;object-fit:cover;display:block;}
+.review-verified{position:absolute;right:-2px;bottom:-2px;width:14px;height:14px;border-radius:50%;background:var(--orange);border:2px solid var(--paper-2);display:flex;align-items:center;justify-content:center;}
+.review-verified i{font-size:8px;color:#fff;}
+.review-who strong{display:block;font-family:'Montserrat',sans-serif;font-size:13.5px;color:var(--text);}
+.review-who span{display:block;font-size:11.5px;color:var(--muted);margin-top:1px;}
+@media(max-width:900px){ .review-grid{grid-template-columns:repeat(2,1fr);} }
+@media(max-width:560px){ .review-grid{grid-template-columns:1fr;} }
+
+/* ── HOMEPAGE OFFER RESULTS — marquee ảnh offer letter, cùng kiểu thẻ với hàng advisor, chạy ngược hướng ── */
+.result-viewport{overflow:hidden;}
+.result-track{display:flex;gap:16px;width:max-content;animation:resultScroll 110s linear infinite;}
+.result-track:hover{animation-play-state:paused;}
+@keyframes resultScroll{ from{transform:translateX(-50%);} to{transform:translateX(0);} }
+.result-card{width:200px;flex:none;background:var(--paper-2);border:.5px solid var(--line);border-radius:16px;overflow:hidden;transition:border-color .2s,transform .2s,box-shadow .2s;}
+.result-card:hover{border-color:rgba(252,82,41,.35);transform:translateY(-3px);box-shadow:0 10px 26px rgba(0,0,0,.08);}
+.result-photo{position:relative;width:100%;aspect-ratio:3/4;background:linear-gradient(135deg,#f3f1ec,#e9e6df);overflow:hidden;}
+.result-photo img{width:100%;height:100%;object-fit:cover;display:block;}
+.result-photo-fallback{width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;text-align:center;padding:14px;}
+.result-photo-fallback i{font-size:26px;color:var(--orange);opacity:.8;}
+.result-photo-fallback span{font-size:11px;color:var(--muted-2);}
+.result-cap{padding:12px 14px 14px;}
+.result-cap strong{display:block;font-family:'Montserrat',sans-serif;font-size:12.5px;color:var(--text);}
+.result-cap span{display:block;font-size:10.8px;color:var(--muted);margin-top:2px;}
+@media(max-width:560px){ .result-card{width:150px;} .result-cap{padding:10px 10px 12px;} }
+
 /* ── MENTOR IMPACT CHART ── */
 .chart-card{background:var(--paper-2);border:.5px solid var(--line);border-radius:20px;padding:32px 28px;max-width:760px;margin:0 auto;}
 .on-dark .chart-card{background:var(--dark-card);border-color:var(--line-dark);}
@@ -515,9 +548,8 @@ button:focus-visible, a:focus-visible, .lj-nav-btn-plain:focus-visible, .fbtn:fo
 
 <section class="on-dark" style="padding:44px 0;">
   <div class="wrap">
-    <div class="section-head" style="margin-bottom:24px;display:flex;align-items:center;justify-content:space-between;text-align:left;max-width:none;">
-      <span class="eyebrow on-dark" style="margin-bottom:0;"><span class="eyebrow-dot"></span>Đội ngũ Advisor</span>
-      <a href="đội-ngũ-advisor.html" class="btn btn-orange" style="padding:9px 20px;font-size:12.5px;">Xem tất cả →</a>
+    <div class="section-head" style="margin-bottom:24px;">
+      <span class="eyebrow on-dark"><span class="eyebrow-dot"></span>Đội ngũ Advisor</span>
     </div>
   </div>
   <div class="hp-adv-viewport">
@@ -642,36 +674,54 @@ button:focus-visible, a:focus-visible, .lj-nav-btn-plain:focus-visible, .fbtn:fo
       <h2>Họ đã làm được.<br>Bạn cũng vậy.</h2>
       <p>Những câu chuyện thật từ advisee đã hoàn thành hành trình cùng LinkaJob.</p>
     </div>
-    <div class="testi-grid">
-      <div class="testi-card">
-        <div class="testi-badge">✓ Offer — MNC</div>
-        <p class="testi-quote">"Sau buổi meeting em đã <strong>mạnh dạn nộp vào MNC và nhận được offer</strong>. Cảm ơn chị vì đã truyền động lực."</p>
-        <div class="testi-author"><div class="testi-ava">GH</div><div><div class="testi-name">Gia Hân</div><div class="testi-school">International University – VNU HCMC</div></div></div>
+    <div class="review-grid">
+      <div class="review-card">
+        <div class="review-stars">★★★★★</div>
+        <p class="review-quote">"Nội dung tinh gọn, không bị ngợp. Buổi đi field giúp mình hiểu kiến thức áp dụng thực tế thế nào, mình đã đậu Online Marketing Intern tại LOTTE."</p>
+        <div class="review-who">
+          <div class="review-avatar"><div class="review-avatar-inner">NH</div><span class="review-verified"><i class="ti ti-check"></i></span></div>
+          <div><strong>Ngọc Hà</strong><span>Online Marketing Intern, Lotte</span></div>
+        </div>
       </div>
-      <div class="testi-card">
-        <div class="testi-badge">✓ Intern — PwC</div>
-        <p class="testi-quote">"Em có được offer nhờ chị giúp <strong>sửa CV trong round đầu tiên</strong>. Cảm ơn chị nhiều ạ."</p>
-        <div class="testi-author"><div class="testi-ava">BT</div><div><div class="testi-name">Bùi Tuấn Anh</div><div class="testi-school">Incoming Intern tại PwC</div></div></div>
+      <div class="review-card">
+        <div class="review-stars">★★★★★</div>
+        <p class="review-quote">"Những insight về vận hành thực tế, nhà tuyển dụng thật sự tìm kiếm gì trong CV, điều không lớp học lý thuyết nào nói rõ. Mình đã nhận offer thật sự thích."</p>
+        <div class="review-who">
+          <div class="review-avatar"><div class="review-avatar-inner">PV</div><span class="review-verified"><i class="ti ti-check"></i></span></div>
+          <div><strong>Phương Vy</strong><span>Junior KAM, Intrepid</span></div>
+        </div>
       </div>
-      <div class="testi-card">
-        <div class="testi-badge">✓ Intern — Mondelez</div>
-        <p class="testi-quote">"Các anh chị <strong>không nói lý thuyết suông</strong> mà là những trải nghiệm thật, góc nhìn thật trong công việc."</p>
-        <div class="testi-author"><div class="testi-ava">KL</div><div><div class="testi-name">Phạm Khánh Linh</div><div class="testi-school">PE Sales Intern · Mondelez Vietnam</div></div></div>
+      <div class="review-card">
+        <div class="review-stars">★★★★★</div>
+        <p class="review-quote">"Buổi đi field ấn tượng nhất, vừa xem vừa hiểu thuật ngữ ngành. Buổi phỏng vấn thử tiếng Anh 1:1 giúp mình onboard thành công tại Mondelez."</p>
+        <div class="review-who">
+          <div class="review-avatar"><div class="review-avatar-inner">KL</div><span class="review-verified"><i class="ti ti-check"></i></span></div>
+          <div><strong>Khánh Linh</strong><span>PE Sales Intern, Mondelez</span></div>
+        </div>
       </div>
-      <div class="testi-card">
-        <div class="testi-badge">✓ Intern — Fonterra</div>
-        <p class="testi-quote">"Nhờ chị Linh sửa CV và hướng dẫn phỏng vấn rất có tâm nên em <strong>cải thiện được mindset và những điểm chưa tốt</strong>."</p>
-        <div class="testi-author"><div class="testi-ava">PA</div><div><div class="testi-name">Nguyễn Thị Phúc Anh</div><div class="testi-school">Marketing Intern · Fonterra Vietnam</div></div></div>
+      <div class="review-card">
+        <div class="review-stars">★★★★★</div>
+        <p class="review-quote">"Các Advisor không chỉ dạy chuyên môn mà còn đào sâu về con người, giúp mình kể đúng câu chuyện của chính mình. Xứng đáng đến từng xu."</p>
+        <div class="review-who">
+          <div class="review-avatar"><div class="review-avatar-inner">HT</div><span class="review-verified"><i class="ti ti-check"></i></span></div>
+          <div><strong>Đức Thịnh</strong><span>Sales Trainee, Mondelez</span></div>
+        </div>
       </div>
-      <div class="testi-card">
-        <div class="testi-badge">✓ Nhận offer</div>
-        <p class="testi-quote">"Không lâu sau em đã tìm được <strong>bến đỗ đáp ứng hơn 90% nguyện vọng</strong> — nhờ câu chị nói: không được hạ thấp tiêu chuẩn."</p>
-        <div class="testi-author"><div class="testi-ava">TN</div><div><div class="testi-name">Thanh Nhi</div><div class="testi-school">University of Finance and Marketing</div></div></div>
+      <div class="review-card">
+        <div class="review-stars">★★★★★</div>
+        <p class="review-quote">"Feedback rất chi tiết, tranh luận đến cùng trong các buổi Group Case đã tạo nên một bộ khung tư duy vững chắc cho mình."</p>
+        <div class="review-who">
+          <div class="review-avatar"><div class="review-avatar-inner">HT</div><span class="review-verified"><i class="ti ti-check"></i></span></div>
+          <div><strong>Huyền Trang</strong><span>Marketing Intern, ACFC</span></div>
+        </div>
       </div>
-      <div class="testi-card">
-        <div class="testi-badge">✓ Intern — Central Retail</div>
-        <p class="testi-quote">"Chỉ 1 tiếng meeting, chị không chỉ sửa CV mà còn <strong>giúp em nhìn lại mình thực sự muốn gì</strong>."</p>
-        <div class="testi-author"><div class="testi-ava">TT</div><div><div class="testi-name">Thanh Trúc</div><div class="testi-school">Incoming Intern · Central Retail</div></div></div>
+      <div class="review-card">
+        <div class="review-stars">★★★★★</div>
+        <p class="review-quote">"Không còn 'đánh cược' nữa, mình ra quyết định có cơ sở cho tương lai. Đã tìm được con đường tới ACCESSTRADE Vietnam."</p>
+        <div class="review-who">
+          <div class="review-avatar"><div class="review-avatar-inner">DM</div><span class="review-verified"><i class="ti ti-check"></i></span></div>
+          <div><strong>Đức Minh</strong><span>Business Planner, ACCESSTRADE</span></div>
+        </div>
       </div>
     </div>
     <div class="load-more-wrap">
@@ -679,6 +729,56 @@ button:focus-visible, a:focus-visible, .lj-nav-btn-plain:focus-visible, .fbtn:fo
     </div>
   </div>
 </section>
+
+<section style="padding-top:0;">
+  <div class="wrap">
+    <div class="section-head" style="margin-bottom:24px;">
+      <span class="eyebrow"><span class="eyebrow-dot"></span>Kết quả</span>
+      <h2>Không chỉ lời nói — đây là offer letter thật.</h2>
+      <p>Từng dòng chữ trong các offer letter dưới đây là hành trình thật của advisee LinkaJob.</p>
+    </div>
+  </div>
+  <div class="result-viewport">
+    <div class="result-track" id="resultTrack"></div>
+  </div>
+</section>
+
+<script>
+(function(){
+  // MỚI: marquee ảnh offer letter — đặt ảnh thật tại assets/offers/<slug>.jpg.
+  // Chưa có ảnh thì tự hiện fallback (icon + "Offer letter") thay vì vỡ ảnh.
+  var results = [
+    { slug:'gia-han', name:'Gia Hân', company:'MNC' },
+    { slug:'tuan-anh', name:'Bùi Tuấn Anh', company:'PwC' },
+    { slug:'khanh-linh', name:'Phạm Khánh Linh', company:'Mondelez' },
+    { slug:'phuc-anh', name:'Nguyễn Thị Phúc Anh', company:'Fonterra' },
+    { slug:'thanh-nhi', name:'Thanh Nhi', company:'—' },
+    { slug:'thanh-truc', name:'Thanh Trúc', company:'Central Retail' },
+    { slug:'ngoc-ha', name:'Ngọc Hà', company:'Lotte' },
+    { slug:'phuong-vy', name:'Phương Vy', company:'Intrepid' },
+    { slug:'khanh-linh-2', name:'Khánh Linh', company:'Mondelez' },
+    { slug:'duc-thinh', name:'Đức Thịnh', company:'Mondelez' },
+    { slug:'huyen-trang', name:'Huyền Trang', company:'ACFC' },
+    { slug:'duc-minh', name:'Đức Minh', company:'ACCESSTRADE' }
+  ];
+
+  function cardHtml(r){
+    return '<div class="result-card">'
+      + '<div class="result-photo">'
+      +   '<img src="assets/offers/'+r.slug+'.jpg" alt="Offer letter '+r.name+'" loading="lazy" onerror="this.style.display=\'none\'; this.nextElementSibling.style.display=\'flex\';">'
+      +   '<div class="result-photo-fallback" style="display:none;"><i class="ti ti-file-text"></i><span>Offer letter</span></div>'
+      + '</div>'
+      + '<div class="result-cap"><strong>'+r.name+'</strong><span>'+r.company+'</span></div>'
+      + '</div>';
+  }
+
+  var track = document.getElementById('resultTrack');
+  if (track) {
+    // nhân đôi danh sách để marquee chạy vô hạn liền mạch (translateX -50% ↔ 0)
+    track.innerHTML = results.map(cardHtml).join('') + results.map(cardHtml).join('');
+  }
+})();
+</script>
 
 <div class="cta-wrap">
   <div class="cta-box">
@@ -721,25 +821,8 @@ function hpAdvInitials(name){
   return (parts[0][0]+(parts[parts.length-1][0]||'')).toUpperCase();
 }
 function hpAdvCoInitials(co){
-  var parts = String(co||'').split(/[\s.]+/).filter(function(p){ return /[a-zA-ZÀ-ỹ0-9]/.test(p); });
-  return parts.slice(0,2).map(function(p){ return p[0]; }).join('').toUpperCase() || '—';
-}
-
-// Thử đoán domain công ty để lấy logo thật qua Clearbit (miễn phí, không cần key) —
-// chỉ áp dụng khi Sheet chưa có company_logo. Nếu đoán sai/không có logo, ảnh sẽ lỗi
-// và tự rơi về chữ viết tắt như cũ (đã xử lý sẵn ở onerror), không hiển thị vỡ hình.
-function guessCompanyLogoUrl(co){
-  if (!co) return '';
-  var name = String(co).toLowerCase()
-    .replace(/\b(việt nam|vietnam|vn|international|group|corporation|corp|jsc|co\.,?\s*ltd\.?|company|inc\.?)\b/g, '')
-    .trim();
-  // Với tên dạng "A – B" hoặc "A, B" (vd "A.P. Moller – Maersk") lấy phần cuối,
-  // vì đó thường là tên thương hiệu chính dùng làm domain (vd "maersk.com").
-  var parts = name.split(/[–\-,]/).map(function(s){ return s.trim(); }).filter(Boolean);
-  name = parts.length ? parts[parts.length-1] : name;
-  var domain = name.replace(/[^a-z0-9]+/g, '');
-  if (!domain) return '';
-  return 'https://logo.clearbit.com/' + domain + '.com?size=80';
+  var parts = String(co||'').split(' ').filter(Boolean);
+  return parts.map(function(p){ return p[0]; }).join('').slice(0,3).toUpperCase() || '—';
 }
 
 /* MỚI: cache theo "version" trong localStorage (bền vững, không mất khi
@@ -777,7 +860,7 @@ function renderHomepageAdvisors(){
       var co = a.company || '';
       var role = a.role || '';
       var ind = a.industry ? a.industry.split(',')[0].trim() : '';
-      var companyLogo = hpAdvToDirectImageUrl(a.company_logo || a.company_logo_url || a.logo_url || '') || guessCompanyLogoUrl(co);
+      var companyLogo = hpAdvToDirectImageUrl(a.company_logo || a.company_logo_url || a.logo_url || '');
       var photoHtml = photo
         ? '<img src="'+photo+'" alt="" loading="lazy" onerror="this.replaceWith(Object.assign(document.createElement(\'div\'),{className:\'hp-ph-fallback\',textContent:\''+initials+'\'}));">'
         : '<div class="hp-ph-fallback">'+initials+'</div>';
