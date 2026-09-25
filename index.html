@@ -515,8 +515,9 @@ button:focus-visible, a:focus-visible, .lj-nav-btn-plain:focus-visible, .fbtn:fo
 
 <section class="on-dark" style="padding:44px 0;">
   <div class="wrap">
-    <div class="section-head" style="margin-bottom:24px;">
-      <span class="eyebrow on-dark"><span class="eyebrow-dot"></span>Đội ngũ Advisor</span>
+    <div class="section-head" style="margin-bottom:24px;display:flex;align-items:center;justify-content:space-between;text-align:left;max-width:none;">
+      <span class="eyebrow on-dark" style="margin-bottom:0;"><span class="eyebrow-dot"></span>Đội ngũ Advisor</span>
+      <a href="đội-ngũ-advisor.html" class="btn btn-orange" style="padding:9px 20px;font-size:12.5px;">Xem tất cả →</a>
     </div>
   </div>
   <div class="hp-adv-viewport">
@@ -720,8 +721,25 @@ function hpAdvInitials(name){
   return (parts[0][0]+(parts[parts.length-1][0]||'')).toUpperCase();
 }
 function hpAdvCoInitials(co){
-  var parts = String(co||'').split(' ').filter(Boolean);
-  return parts.map(function(p){ return p[0]; }).join('').slice(0,3).toUpperCase() || '—';
+  var parts = String(co||'').split(/[\s.]+/).filter(function(p){ return /[a-zA-ZÀ-ỹ0-9]/.test(p); });
+  return parts.slice(0,2).map(function(p){ return p[0]; }).join('').toUpperCase() || '—';
+}
+
+// Thử đoán domain công ty để lấy logo thật qua Clearbit (miễn phí, không cần key) —
+// chỉ áp dụng khi Sheet chưa có company_logo. Nếu đoán sai/không có logo, ảnh sẽ lỗi
+// và tự rơi về chữ viết tắt như cũ (đã xử lý sẵn ở onerror), không hiển thị vỡ hình.
+function guessCompanyLogoUrl(co){
+  if (!co) return '';
+  var name = String(co).toLowerCase()
+    .replace(/\b(việt nam|vietnam|vn|international|group|corporation|corp|jsc|co\.,?\s*ltd\.?|company|inc\.?)\b/g, '')
+    .trim();
+  // Với tên dạng "A – B" hoặc "A, B" (vd "A.P. Moller – Maersk") lấy phần cuối,
+  // vì đó thường là tên thương hiệu chính dùng làm domain (vd "maersk.com").
+  var parts = name.split(/[–\-,]/).map(function(s){ return s.trim(); }).filter(Boolean);
+  name = parts.length ? parts[parts.length-1] : name;
+  var domain = name.replace(/[^a-z0-9]+/g, '');
+  if (!domain) return '';
+  return 'https://logo.clearbit.com/' + domain + '.com?size=80';
 }
 
 /* MỚI: cache theo "version" trong localStorage (bền vững, không mất khi
@@ -759,7 +777,7 @@ function renderHomepageAdvisors(){
       var co = a.company || '';
       var role = a.role || '';
       var ind = a.industry ? a.industry.split(',')[0].trim() : '';
-      var companyLogo = hpAdvToDirectImageUrl(a.company_logo || a.company_logo_url || a.logo_url || '');
+      var companyLogo = hpAdvToDirectImageUrl(a.company_logo || a.company_logo_url || a.logo_url || '') || guessCompanyLogoUrl(co);
       var photoHtml = photo
         ? '<img src="'+photo+'" alt="" loading="lazy" onerror="this.replaceWith(Object.assign(document.createElement(\'div\'),{className:\'hp-ph-fallback\',textContent:\''+initials+'\'}));">'
         : '<div class="hp-ph-fallback">'+initials+'</div>';
