@@ -272,6 +272,23 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
 .pkg-card-actions { display: flex; gap: 6px; flex-wrap: wrap; padding-top: 12px; border-top: 1px solid var(--border); }
 .pkg-card-actions .update-btn, .pkg-card-actions .detail-btn { flex: 1; text-align: center; padding: 7px 8px; font-size: 12px; }
 
+/* ── Khoá học / Courses (mùa, học viên, bài tập, thanh toán) ── */
+.cm-course-card { border: 1.5px solid var(--border); border-radius: var(--radius-md); margin-bottom: 16px; overflow: hidden; }
+.cm-course-head { display: flex; align-items: center; justify-content: space-between; padding: 16px 20px; background: var(--bg); }
+.cm-course-name { font-size: 15px; font-weight: 700; }
+.cm-course-sub { font-size: 12px; color: var(--muted); margin-top: 2px; }
+.cm-season-row { display: flex; align-items: center; gap: 14px; padding: 14px 20px; border-top: 1px solid var(--border); }
+.cm-season-no { width: 40px; height: 40px; border-radius: 10px; background: var(--brand-light); color: var(--brand); font-weight: 800; font-size: 12.5px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.cm-season-info { flex: 1; min-width: 0; }
+.cm-season-title { font-size: 13.5px; font-weight: 700; }
+.cm-season-meta { font-size: 12px; color: var(--muted); margin-top: 2px; }
+.cm-tabs { display: flex; gap: 0; border-bottom: 1px solid var(--border); padding: 0 24px; }
+.cm-tab { padding: 14px 4px; font-size: 13px; font-weight: 600; color: var(--muted); cursor: pointer; border-bottom: 2px solid transparent; margin-right: 22px; user-select: none; }
+.cm-tab.active { color: var(--brand); border-bottom-color: var(--brand); }
+.cm-pay-badge-paid { background: var(--green-bg); color: var(--green); }
+.cm-pay-badge-partial { background: #FEF3C7; color: #92400E; }
+.cm-pay-badge-none { background: #FEE2E2; color: #B91C1C; }
+
 .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.4); display: flex; align-items: center; justify-content: center; z-index: 100; opacity: 0; pointer-events: none; transition: opacity .2s; }
 .modal-overlay.open { opacity: 1; pointer-events: all; }
 .modal { background: var(--white); border-radius: var(--radius-lg); width: 100%; max-width: 480px; margin: 16px; box-shadow: 0 20px 60px rgba(0,0,0,.2); transform: translateY(16px); transition: transform .2s; }
@@ -1045,6 +1062,7 @@ const SIDEBAR_DEF = {
       { id: 'lj-sales-perf', label: '📈 Báo cáo hiệu suất Sale' },
       { id: 'lj-meetings', label: 'Lịch meeting' },
       { id: 'lj-products', label: 'Sản phẩm' },
+      { id: 'lj-courses', label: '🎓 Khoá học' },
     ]},
     { id: 'stf', icon: '👔', label: 'Staff', children: [
       { id: 'stf-list',     label: 'Danh sách nhân viên' },
@@ -1084,6 +1102,7 @@ const ROUTE_MAP = {
   'lj-sales-perf': { fn: function(){ loadSalesPerformancePageAsync(); } },
   'lj-meetings':   { fn: function(){ loadMeetingCalendarAsync(); } },
   'lj-products':   { fn: function(){ loadProductsPageAsync(); } },
+  'lj-courses':    { fn: function(){ loadCoursesPageAsync(); } },
   'stf-list':      { fn: function(){ loadStaffListFromSheet(function(){ renderStaff('stf-list'); }); } },
   'stf-kpi':       { fn: function(){ loadStaffKpiComparePageAsync(); } },
   'stf-schedule':  { fn: function(){ loadStaffSchedulePageAsync(); } },
@@ -2473,17 +2492,20 @@ function fmtPkgPrice(v) {
   if (/^\d+$/.test(s)) return fmtMoney(Number(s));
   return s;
 }
-// Nội bộ vẫn lưu "days" (đúng contract của backend/Sheet hiện có) — chỉ đổi
-// đơn vị NHẬP LIỆU trên form Admin sang tháng cho dễ nhập, quy đổi 1 tháng
-// = 30 ngày. daysToMonthsInputValue dùng khi mở form Sửa (hiện lại đúng số
-// tháng, cho phép số lẻ như 0.1 = gói 3 ngày); fmtPkgDuration dùng khi HIỆN
-// (card trong trang Sản phẩm) — làm tròn ra tháng nguyên cho gọn, trừ gói
-// quá ngắn (<14 ngày) vẫn hiện "ngày" vì quy thành tháng sẽ ra 0.
-function daysToMonthsInputValue(days) {
-  days = Number(days) || 0;
-  if (days <= 0) return '';
-  var months = days / 30;
-  return (Math.round(months * 10) / 10).toString();
+// Nội bộ vẫn lưu "days" (đúng contract của backend/Sheet hiện có) để tính
+// hạn hết gói cho khách — nhưng admin chỉ thấy/gõ 1 ô CHỮ TỰ DO duy nhất
+// (VD "3 ngày", "1 tháng", "Đến khi có Offer"), không ép đơn vị. parseDays
+// FromLabel bóc số + từ khoá đơn vị ra để tính ngày; không đoán được thì
+// dùng mốc rất dài (fallback) vì hạn hiển thị thật đã nằm ở duration_label.
+function parseDaysFromLabel(text) {
+  var s = String(text || '').trim().toLowerCase();
+  var m = s.match(/(\d+(\.\d+)?)/);
+  var num = m ? parseFloat(m[1]) : null;
+  if (num === null) return 3650; // VD "Đến khi có Offer" — không có số, coi như không giới hạn thực tế
+  if (s.indexOf('năm') !== -1) return Math.round(num * 365);
+  if (s.indexOf('tháng') !== -1) return Math.round(num * 30);
+  if (s.indexOf('tuần') !== -1) return Math.round(num * 7);
+  return Math.round(num); // mặc định: ngày
 }
 function fmtPkgDuration(days) {
   days = Number(days) || 0;
@@ -2492,6 +2514,18 @@ function fmtPkgDuration(days) {
   var halfMonths = Math.round(days / 30 * 2);
   var months = halfMonths / 2;
   return (months % 1 === 0 ? String(months) : months.toFixed(1)) + ' tháng';
+}
+// ── 4 chủ đề hỗ trợ cố định — mỗi dòng nội dung hỗ trợ chọn đúng 1 trong
+//    số này, để người đọc dễ nhận diện benefit theo nhóm, và admin không
+//    cần tự nghĩ tên nhóm mỗi lần thêm gói mới. ──
+var FEATURE_THEMES = ['Định hướng', 'Sửa CV', 'Luyện phỏng vấn', 'Khác'];
+function normalizeFeatureTheme(label) {
+  var s = String(label || '').toLowerCase();
+  if (FEATURE_THEMES.indexOf(String(label || '').trim()) !== -1) return String(label).trim();
+  if (s.indexOf('định hướng') !== -1) return 'Định hướng';
+  if (s.indexOf('cv') !== -1) return 'Sửa CV';
+  if (s.indexOf('phỏng vấn') !== -1) return 'Luyện phỏng vấn';
+  return 'Khác';
 }
 
 // ════════════════════════════════════════════════════════════
@@ -4592,9 +4626,9 @@ function renderMarketingReportPage() {
 function loadProductsPageAsync() {
   var c = document.getElementById('main-content');
   c.innerHTML = pageHeader('Sản phẩm', 'Thêm / sửa / ẩn các gói meeting — thay đổi được lưu thẳng vào Sheet và áp dụng ngay cho form đặt lịch') + skeletonRows(3);
-  var featP = apiGet('getPackageFeatures', {}).then(function(r){ PACKAGE_FEATURES_ALL = (r && r.data) ? r.data : []; }).catch(function(){ PACKAGE_FEATURES_ALL = []; });
-  var pkgP = new Promise(function(resolve){ loadPackagesFromSheet(resolve, true); });
-  Promise.all([pkgP, featP]).then(function(){ c.innerHTML = renderProductsPage(); });
+  loadPackagesFromSheet(function(){
+    c.innerHTML = renderProductsPage();
+  }, true);
 }
 
 function renderProductsPage() {
@@ -4615,11 +4649,10 @@ function renderProductsPage() {
       if (hasBadge) html += '<div class="pkg-card-badge">' + p.badge_label + '</div>';
       html += '<div class="pkg-card-status">' + (isActive ? '<span class="badge badge-confirmed">Đang bán</span>' : '<span class="badge badge-cancelled">Đã ẩn</span>') + '</div>';
       html += '<div class="pkg-card-name">' + p.name + '</div>';
-      html += '<div class="pkg-card-price' + (isContactPrice ? ' contact' : '') + '">' + (pkgMetaOf(p).price_label ? pkgEsc(pkgMetaOf(p).price_label) : (isContactPrice ? 'Liên hệ' : fmtPkgPrice(p.price))) + '</div>';
-      var pm = pkgMetaOf(p);
+      html += '<div class="pkg-card-price' + (isContactPrice ? ' contact' : '') + '">' + (isContactPrice ? 'Liên hệ' : fmtPkgPrice(p.price)) + '</div>';
       html += '<div class="pkg-card-meta">' +
-        '<b>' + pkgEsc(pm.sessions_label || (isSessionsUnlimited ? 'Không giới hạn buổi' : (p.sessions + ' buổi'))) + '</b>' + (isAdvisorUnlimited ? ' · Advisor tự do' : '') + '<br>' +
-        'Hạn dùng: ' + pkgEsc(pm.duration_label || fmtPkgDuration(p.days)) + ' · ' + pkgEsc(pm.session_length_label || ((Number(p.duration_minutes) || 60) + ' phút')) + '/buổi' +
+        '<b>' + (isSessionsUnlimited ? 'Không giới hạn buổi' : (p.sessions + ' buổi')) + '</b>' + (isAdvisorUnlimited ? ' · Advisor tự do' : '') + '<br>' +
+        (p.duration_label || fmtPkgDuration(p.days)) + ' sử dụng · ' + (Number(p.duration_minutes) || 60) + ' phút/buổi' +
         '</div>';
       html += '<div class="pkg-card-actions">' +
         '<button class="update-btn" onclick="openPackageEditor(' + esc(p) + ')">✎ Sửa</button>' +
@@ -4634,180 +4667,48 @@ function renderProductsPage() {
   return html;
 }
 
-// ── Widget chỉnh sửa gói — khớp với card gói trên web (landing page):
-//    Nhãn giai đoạn → Tên gói → Mô tả ngắn → Nội dung hỗ trợ (chia theo 4 chủ đề)
-//    → Số buổi · Hạn dùng → Giá.
-//    Các ô "Số buổi / Hạn dùng / Thời lượng mỗi buổi / Giá" là CHỮ TỰ DO, không gán
-//    đơn vị — admin tự ghi kèm đơn vị (VD "3 ngày", "1 tháng", "45 phút"). Hệ thống
-//    tự đọc số từ chữ đó để tính hạn dùng / số buổi cho backend (xem pkgParse*).
-//    Chữ hiển thị + nhãn giai đoạn + mô tả ngắn được lưu trong PackageFeatures dưới
-//    nhóm dành riêng "_meta" (không cần thêm cột mới trong Sheet). ──
-var PKG_TOPICS = ['Định hướng', 'Sửa CV', 'Luyện phỏng vấn', 'Khác'];
-var PKG_META_GROUP = '_meta';
-var PACKAGE_FEATURES_ALL = [];
+// ── Widget chỉnh sửa gói — GỘP thông tin cơ bản (giá/số buổi/hạn dùng/thời
+//    lượng buổi) VÀ nội dung hỗ trợ (bảng so sánh feature) vào 1 trang duy
+//    nhất, lưu 1 lần cho cả 2 phần. Không truyền p (hoặc p=null) → form
+//    Thêm mới (chưa có nội dung hỗ trợ để tải). ──
 var _editingPackage = null;
-var _editingItems = [];   // [{topic, text}]
-var _editingDraft = {};
-
-function pkgEsc(s) { return String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
-function pkgBool(x) { return x === true || x === 'TRUE' || x === 'true'; }
-
-// Dòng cũ (trước khi có 4 chủ đề) → đoán chủ đề theo nội dung dòng, không khớp thì vào "Khác".
-function pkgNormTopic(group, label) {
-  var g = String(group || '').trim().toLowerCase();
-  for (var i = 0; i < PKG_TOPICS.length; i++) if (PKG_TOPICS[i].toLowerCase() === g) return PKG_TOPICS[i];
-  var s = String(label || '').toLowerCase();
-  if (/phỏng vấn|interview|case study|aptitude/.test(s)) return 'Luyện phỏng vấn';
-  if (/\bcv\b|hồ sơ|cover letter|linkedin|portfolio/.test(s)) return 'Sửa CV';
-  if (/định hướng|hướng nghề|career/.test(s)) return 'Định hướng';
-  return 'Khác';
-}
-
-// Tách các dòng PackageFeatures của 1 gói thành {meta, items}.
-function pkgSplitFeatures(all, packageId) {
-  var meta = {}, items = [], seenItems = {};
-  (all || []).filter(function(f){ return String(f.package_id).trim() === String(packageId); })
-    .sort(function(a, b){ return (Number(a.sort_order) || 0) - (Number(b.sort_order) || 0); })
-    .forEach(function(f){
-      var label = String(f.feature_label || '').trim();
-      var val = f.value == null ? '' : String(f.value).trim();
-      if (String(f.group_label || '').trim() === PKG_META_GROUP) { meta[label] = val; return; }
-      if (!label || val === 'dash' || val === '') return;
-      var topic = pkgNormTopic(f.group_label, label);
-      var text = label + (val !== 'check' ? ' — ' + val : '');
-      var dupKey = topic + '|||' + text.toLowerCase();
-      if (seenItems[dupKey]) return;          // dữ liệu cũ hay bị lặp cùng 1 dòng → gộp lại
-      seenItems[dupKey] = true;
-      items.push({ topic: topic, text: text });
-    });
-  return { meta: meta, items: items };
-}
-
-// Chữ hiển thị của 1 gói: ưu tiên CỘT trong tab Packages (tag_label, description, sessions_label,
-// duration_label, session_length_label, price_label); chưa có thì lấy từ dòng "_meta" cũ.
-function pkgMetaOf(p) {
-  var m = pkgSplitFeatures(PACKAGE_FEATURES_ALL, p.package_id).meta;
-  return {
-    tag: p.tag_label || m.tag || '', description: p.description || m.description || '',
-    sessions_label: p.sessions_label || m.sessions_label || '', duration_label: p.duration_label || m.duration_label || '',
-    session_length_label: p.session_length_label || m.session_length_label || '', price_label: p.price_label || m.price_label || ''
-  };
-}
-// Backend đã có các cột mới chưa? (getPackages trả về mọi cột của tab Packages)
-function pkgColumnsSupported() { return PACKAGES_RAW && PACKAGES_RAW.length > 0 && ('description' in PACKAGES_RAW[0]); }
-
-// ── Đọc số từ chữ tự do ──
-function pkgParseDays(t) {
-  var m = String(t || '').toLowerCase().match(/(\d+(?:[.,]\d+)?)(?:\s*[-–—~]\s*(\d+(?:[.,]\d+)?))?\s*(ngày|ngay|tuần|tuan|tháng|thang|năm|nam|day|week|month|year)/);
-  if (!m) return 0;
-  var n = parseFloat((m[2] || m[1]).replace(',', '.'));   // khoảng "4–6 tháng" → lấy mốc cao
-  var u = m[3], mult = /^(ngày|ngay|day)/.test(u) ? 1 : /^(tuần|tuan|week)/.test(u) ? 7 : /^(tháng|thang|month)/.test(u) ? 30 : 365;
-  return Math.round(n * mult);
-}
-function pkgParseSessions(t) {
-  t = String(t || '');
-  if (/không giới hạn|khong gioi han|unlimited/i.test(t)) return { unlimited: true, n: 0 };
-  var m = t.match(/(\d+)/);
-  return { unlimited: false, n: m ? parseInt(m[1], 10) : 0 };
-}
-function pkgParseMinutes(t) {
-  t = String(t || '').toLowerCase();
-  var h = t.match(/(\d+(?:[.,]\d+)?)\s*(giờ|gio|h\b|hour)/);
-  if (h) return Math.round(parseFloat(h[1].replace(',', '.')) * 60);
-  var m = t.match(/(\d+)/);
-  return m ? parseInt(m[1], 10) : 0;
-}
-
-// Giá: backend chỉ lưu SỐ. Số thuần (419000, 419.000) → lưu số, web hiện 419k.
-// "419k", "8 triệu" → lưu số, web hiện đúng chữ đã gõ. Chữ khác ("8-10 triệu") → lưu chế độ
-// "Liên hệ" (price=0) và giữ chữ gốc để web hiện nguyên văn.
-function pkgParsePrice(t) {
-  t = String(t || '').trim();
-  if (!t) return { kind: 'empty', price: 0, label: '' };
-  var s = t.toLowerCase().replace(/\s+/g, ''), m;
-  if ((m = s.match(/^(\d[\d.,]*)(đ|d|vnđ|vnd)?$/))) return { kind: 'number', price: parseInt(m[1].replace(/[.,]/g, ''), 10) || 0, label: '' };
-  if ((m = s.match(/^(\d+(?:[.,]\d+)?)(k|nghìn|nghin|ngàn|ngan)$/))) return { kind: 'unit', price: Math.round(parseFloat(m[1].replace(',', '.')) * 1000), label: t };
-  if ((m = s.match(/^(\d+(?:[.,]\d+)?)(tr|triệu|trieu|m)$/))) return { kind: 'unit', price: Math.round(parseFloat(m[1].replace(',', '.')) * 1000000), label: t };
-  return { kind: 'text', price: 0, label: t };
-}
-
-// Gọi API có giới hạn thời gian và báo lỗi rõ ràng (kể cả khi máy chủ trả về không phải JSON).
-var _pendingPackageId = null;
-function pkgPost(payload, ms) {
-  return new Promise(function(resolve, reject){
-    var done = false;
-    var timer = setTimeout(function(){ if (!done) { done = true; reject(new Error('Quá ' + Math.round(ms / 1000) + ' giây chưa có phản hồi từ máy chủ — có thể đã lưu xong, hãy tải lại trang Sản phẩm để kiểm tra')); } }, ms);
-    fetch(API, { method: 'POST', body: JSON.stringify(payload) }).then(function(r){ return r.text(); }).then(function(txt){
-      if (done) return; done = true; clearTimeout(timer);
-      var j; try { j = JSON.parse(txt); } catch (e) { reject(new Error('Máy chủ trả về dữ liệu không đọc được: ' + String(txt).slice(0, 140))); return; }
-      resolve(j);
-    }).catch(function(e){ if (done) return; done = true; clearTimeout(timer); reject(e); });
-  });
-}
-function pkgShowError(msg) {
-  toast(msg, 'error');
-  var el = document.getElementById('pkg-save-error');
-  if (el) { el.textContent = msg; el.style.display = 'block'; el.scrollIntoView({ behavior: 'smooth', block: 'center' }); }
-}
-
-function pkgBuildDraft(p, meta) {
-  var isEdit = !!(p && p.package_id);
-  var unl = isEdit && pkgBool(p.sessions_unlimited);
-  var isContact = isEdit && p.price_mode === 'contact';
-  return {
-    name: isEdit ? p.name : '',
-    tag: meta.tag || '',
-    description: meta.description || '',
-    badge: isEdit ? (p.badge_label || '') : '',
-    sessions: meta.sessions_label || (isEdit ? (unl ? 'Không giới hạn buổi' : (Number(p.sessions) ? Number(p.sessions) + ' buổi' : '')) : ''),
-    duration: meta.duration_label || (isEdit ? fmtPkgDuration(p.days) : ''),
-    sessionLen: meta.session_length_label || (isEdit ? (Number(p.duration_minutes) || 60) + ' phút' : '60 phút'),
-    price: meta.price_label ? meta.price_label : ((isEdit && !isContact) ? String(p.price == null ? '' : p.price) : ''),
-    contact: isContact && !meta.price_label,
-    advisorUnl: isEdit && pkgBool(p.advisor_unlimited),
-  };
-}
-
-// Giữ lại những gì admin đã gõ ở phần Thông tin cơ bản trước mỗi lần vẽ lại form.
-function pkgCaptureBasics() {
-  if (!document.getElementById('pkg-name')) return;
-  var g = function(id){ var el = document.getElementById(id); return el ? el.value.trim() : ''; };
-  var d = _editingDraft;
-  d.name = g('pkg-name'); d.tag = g('pkg-tag'); d.description = g('pkg-desc'); d.badge = g('pkg-badge');
-  d.sessions = g('pkg-sessions'); d.duration = g('pkg-duration-label'); d.sessionLen = g('pkg-session-len');
-  d.price = g('pkg-price');
-  d.contact = document.getElementById('pkg-contact-price').checked;
-  d.advisorUnl = document.getElementById('pkg-advisor-unlimited').checked;
-}
-function pkgRerender() {
-  pkgCaptureBasics();
-  document.getElementById('main-content').innerHTML = renderPackageEditor();
-}
+var _editingFeatures = [];
 
 function openPackageEditor(p) {
   _editingPackage = p || null;
-  _pendingPackageId = null;
   var c = document.getElementById('main-content');
   c.className = 'content';
 
-  if (!p) {
-    _editingItems = [];
-    _editingDraft = pkgBuildDraft(null, {});
+  if (!p) { // Thêm gói mới — chưa có package_id nên chưa có feature để tải
+    _editingFeatures = [];
     c.innerHTML = renderPackageEditor();
     return;
   }
 
   c.innerHTML = skeletonRows(3);
+
   apiGet('getPackageFeatures', {}).then(function(res){
-    PACKAGE_FEATURES_ALL = (res && res.data) ? res.data : [];
-    var sp = pkgSplitFeatures(PACKAGE_FEATURES_ALL, p.package_id);
-    _editingItems = sp.items;
-    _editingDraft = pkgBuildDraft(p, pkgMetaOf(p));
+    var allFeatures = (res && res.data) ? res.data : [];
+
+    // ── Mô hình MỚI: mỗi gói có list benefit RIÊNG (không còn ma trận
+    //    check/dash chung giữa các gói). Chỉ lấy đúng dòng của gói này,
+    //    bỏ các dòng "dash" cũ (chỉ là placeholder "không có" ở model cũ,
+    //    không phải benefit thật). Gộp feature_label + value tuỳ chỉnh cũ
+    //    (VD "3 công ty") thành 1 câu mô tả đầy đủ, và quy nhóm tự do cũ
+    //    (CHỦ ĐỀ CV, CHỦ ĐỀ PHỎNG VẤN...) về đúng 1 trong 4 chủ đề cố định. ──
+    _editingFeatures = allFeatures
+      .filter(function(f){ return String(f.package_id).trim() === p.package_id && f.value !== 'dash'; })
+      .sort(function(a, b){ return (Number(a.sort_order) || 0) - (Number(b.sort_order) || 0); })
+      .map(function(f){
+        var desc = String(f.feature_label || '').trim();
+        if (f.value && f.value !== 'check' && f.value !== 'dash') desc += (desc ? ' — ' : '') + String(f.value).trim();
+        return { group_label: normalizeFeatureTheme(f.group_label), feature_label: desc, sort_order: Number(f.sort_order) || 0 };
+      });
+
     c.innerHTML = renderPackageEditor();
   }).catch(function(err){
     toast('Không tải được nội dung hỗ trợ: ' + err.message, 'error');
-    _editingItems = [];
-    _editingDraft = pkgBuildDraft(p, pkgMetaOf(p));
+    _editingFeatures = [];
     c.innerHTML = renderPackageEditor();
   });
 }
@@ -4815,179 +4716,177 @@ function openPackageEditor(p) {
 function renderPackageEditor() {
   var p = _editingPackage;
   var isEdit = !!(p && p.package_id);
-  var d = _editingDraft;
-  var inp = 'class="form-input" style="margin-top:6px"';
-  var hint = 'style="font-size:11.5px;color:var(--muted);margin-top:5px;line-height:1.5"';
+  var isContactPrice = isEdit && p.price_mode === 'contact';
+  var isSessionsUnlimited = isEdit && (p.sessions_unlimited === true || p.sessions_unlimited === 'TRUE' || p.sessions_unlimited === 'true');
+  var isAdvisorUnlimited = isEdit && (p.advisor_unlimited === true || p.advisor_unlimited === 'TRUE' || p.advisor_unlimited === 'true');
 
   var html = '<div style="margin-bottom:14px"><button class="detail-btn" onclick="loadProductsPageAsync()">← Quay lại Sản phẩm</button></div>';
-  html += pageHeader(isEdit ? ('Sửa gói — ' + p.name) : 'Thêm gói meeting mới', 'Nội dung nhập ở đây hiển thị trên card gói ở landing page');
+  html += pageHeader(isEdit ? ('Sửa gói — ' + p.name) : 'Thêm gói meeting mới', 'Giá, số buổi, hạn dùng, thời lượng mỗi buổi, và nội dung hỗ trợ hiển thị trên landing page');
 
   // ── Thông tin cơ bản ──
   html += '<div class="card"><div class="card-header"><div class="card-header-left">Thông tin cơ bản</div></div>';
-  html += '<div style="padding:16px 24px;display:grid;grid-template-columns:1fr 1fr;gap:16px">';
-
-  html += '<div><div class="form-label">Nhãn giai đoạn</div><input ' + inp + ' id="pkg-tag" value="' + pkgEsc(d.tag) + '" placeholder="VD: TRẢI NGHIỆM, HỒ SƠ ỨNG TUYỂN">' +
-    '<div ' + hint + '>Dòng chữ nhỏ màu cam phía trên tên gói. Để trống = dùng nhãn mặc định.</div></div>';
-  html += '<div><div class="form-label">Nhãn nổi bật</div><input ' + inp + ' id="pkg-badge" value="' + pkgEsc(d.badge) + '" placeholder="VD: PHỔ BIẾN NHẤT">' +
-    '<div ' + hint + '>Huy hiệu trên đầu card. Để trống nếu không có.</div></div>';
-
-  html += '<div><div class="form-label">Tên gói</div><input ' + inp + ' id="pkg-name" value="' + pkgEsc(d.name) + '" placeholder="VD: Gói Dùng Thử"></div>';
-  html += '<div></div>';
-
-  html += '<div style="grid-column:1 / -1"><div class="form-label">Mô tả ngắn</div>' +
-    '<textarea ' + inp + ' id="pkg-desc" rows="2" style="margin-top:6px;resize:vertical;font-family:inherit" placeholder="VD: Buổi tư vấn nhanh để định hướng ngành, phòng ban và vị trí phù hợp.">' + pkgEsc(d.description) + '</textarea></div>';
-
-  html += '<div><div class="form-label">Số buổi</div><input ' + inp + ' id="pkg-sessions" oninput="pkgUpdateHints()" value="' + pkgEsc(d.sessions) + '" placeholder="VD: 1 buổi / Không giới hạn buổi">' +
-    '<div ' + hint + ' id="pkg-hint-sessions"></div></div>';
-  html += '<div><div class="form-label">Hạn dùng</div><input ' + inp + ' id="pkg-duration-label" oninput="pkgUpdateHints()" value="' + pkgEsc(d.duration) + '" placeholder="VD: 3 ngày / 1 tháng / 4–6 tháng, đến khi có Offer">' +
-    '<div ' + hint + ' id="pkg-hint-duration"></div></div>';
-
-  html += '<div><div class="form-label">Thời lượng mỗi buổi</div><input ' + inp + ' id="pkg-session-len" oninput="pkgUpdateHints()" value="' + pkgEsc(d.sessionLen) + '" placeholder="VD: 60 phút / 1 giờ">' +
-    '<div ' + hint + ' id="pkg-hint-len"></div></div>';
-  html += '<div><div class="form-label">Giá</div><input ' + inp + ' id="pkg-price" oninput="pkgUpdateHints()" value="' + pkgEsc(d.price) + '" placeholder="VD: 419000 hoặc 8-10 triệu" ' + (d.contact ? 'disabled' : '') + '>' +
-    '<label style="display:flex;align-items:center;gap:6px;margin-top:6px;font-size:12px;color:var(--muted);cursor:pointer">' +
-    '<input type="checkbox" id="pkg-contact-price" ' + (d.contact ? 'checked' : '') + ' onchange="onPkgContactPriceToggle(this.checked)"> Hiện "Liên hệ" thay vì giá' +
-    '</label><div ' + hint + ' id="pkg-hint-price"></div></div>';
+  html += '<div style="padding:16px 24px;display:grid;grid-template-columns:1fr 1fr;gap:14px">';
+  html += '<div><div class="form-label">Tên gói</div><input class="form-input" id="pkg-name" value="' + (isEdit ? p.name : '') + '" placeholder="VD: Trial" style="margin-top:6px"></div>';
+  html += '<div><div class="form-label">Nhãn nổi bật (để trống nếu không có)</div><input class="form-input" id="pkg-badge" value="' + (isEdit ? (p.badge_label || '') : '') + '" placeholder="VD: PHỔ BIẾN NHẤT" style="margin-top:6px"></div>';
+  html += '<div><div class="form-label">Thời lượng mỗi buổi (phút)</div><input class="form-input" type="number" id="pkg-duration" value="' + (isEdit ? (Number(p.duration_minutes) || 60) : 60) + '" placeholder="VD: 45" style="margin-top:6px"></div>';
 
   html += '<div style="grid-column:1 / -1"><label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer">' +
-    '<input type="checkbox" id="pkg-advisor-unlimited" ' + (d.advisorUnl ? 'checked' : '') + '> Không giới hạn Advisor (khách được đổi Advisor tự do trong gói này)</label></div>';
+    '<input type="checkbox" id="pkg-advisor-unlimited" ' + (isAdvisorUnlimited ? 'checked' : '') + '> Không giới hạn Advisor (khách được đổi Advisor tự do trong gói này)' +
+    '</label></div>';
   html += '</div></div>';
 
   // ── Nội dung hỗ trợ ──
-  html += '<div class="card"><div class="card-header"><div class="card-header-left">Nội dung hỗ trợ (' + _editingItems.length + ')</div>' +
+  html += '<div class="card"><div class="card-header"><div class="card-header-left">Nội dung hỗ trợ (' + _editingFeatures.length + ')</div>' +
     '<button class="update-btn" onclick="addFeatureRow()">+ Thêm dòng</button></div>';
 
-  if (_editingItems.length === 0) {
-    html += '<div style="text-align:center;color:var(--muted);padding:28px 24px;font-size:13px">Chưa có dòng nào — bấm "+ Thêm dòng", chọn chủ đề và mô tả quyền lợi.</div>';
-  }
-  _editingItems.forEach(function(it, idx){
-    var isFirst = idx === 0, isLast = idx === _editingItems.length - 1;
-    html += '<div style="display:grid;grid-template-columns:180px 1fr auto;gap:12px;align-items:start;padding:12px 24px;border-top:1px solid var(--border)">';
-    html += '<select class="form-input" style="padding:8px 10px;font-size:13px" onchange="updateFeatureItem(' + idx + ',\'topic\',this.value)">' +
-      PKG_TOPICS.map(function(t){ return '<option value="' + t + '"' + (t === it.topic ? ' selected' : '') + '>' + t + '</option>'; }).join('') + '</select>';
-    html += '<textarea class="form-input" rows="2" style="padding:8px 10px;font-size:13px;resize:vertical;font-family:inherit" placeholder="Mô tả chi tiết, VD: Đánh giá & chỉnh sửa CV theo JD của 3 công ty MNC" oninput="updateFeatureItem(' + idx + ',\'text\',this.value)">' + pkgEsc(it.text) + '</textarea>';
-    html += '<div style="white-space:nowrap">' +
-      '<button class="detail-btn" style="padding:4px 8px" ' + (isFirst ? 'disabled' : '') + ' title="Chuyển lên" onclick="moveFeatureRow(' + idx + ',-1)">↑</button> ' +
-      '<button class="detail-btn" style="padding:4px 8px" ' + (isLast ? 'disabled' : '') + ' title="Chuyển xuống" onclick="moveFeatureRow(' + idx + ',1)">↓</button> ' +
-      '<button class="detail-btn" onclick="removeFeatureRow(' + idx + ')">Xoá</button></div>';
-    html += '</div>';
-  });
-  html += '<div style="padding:14px 24px;font-size:11.5px;color:var(--muted);border-top:1px solid var(--border)">💡 Mỗi dòng gồm <b>chủ đề</b> (Định hướng · Sửa CV · Luyện phỏng vấn · Khác) và <b>mô tả chi tiết</b>. Trên web, các dòng được gom theo chủ đề để người đọc dễ hiểu quyền lợi; thứ tự ↑↓ chỉ áp dụng trong cùng một chủ đề.</div>';
+  html += '<div style="padding:16px 24px;display:grid;grid-template-columns:1fr 1fr;gap:14px;border-bottom:1px solid var(--border)">';
+  html += '<div><div class="form-label">Giá (VNĐ)</div>' +
+    '<input class="form-input" type="text" id="pkg-price" value="' + (isEdit ? (isContactPrice ? '' : (p.price || '')) : '') + '" placeholder="VD: 799000 (hoặc nhập chữ, VD: Theo thoả thuận)" style="margin-top:6px" ' + (isContactPrice ? 'disabled' : '') + '>' +
+    '<label style="display:flex;align-items:center;gap:6px;margin-top:6px;font-size:12px;color:var(--muted);cursor:pointer">' +
+    '<input type="checkbox" id="pkg-contact-price" ' + (isContactPrice ? 'checked' : '') + ' onchange="onPkgContactPriceToggle(this.checked)"> Hiện "Liên hệ" thay vì giá cụ thể' +
+    '</label></div>';
+
+  html += '<div><div class="form-label">Số buổi</div>' +
+    '<input class="form-input" type="number" id="pkg-sessions" value="' + (isEdit ? Number(p.sessions) || '' : '') + '" placeholder="VD: 2" style="margin-top:6px" ' + (isSessionsUnlimited ? 'disabled' : '') + '>' +
+    '<label style="display:flex;align-items:center;gap:6px;margin-top:6px;font-size:12px;color:var(--muted);cursor:pointer">' +
+    '<input type="checkbox" id="pkg-sessions-unlimited" ' + (isSessionsUnlimited ? 'checked' : '') + ' onchange="onPkgSessionsUnlimitedToggle(this.checked)"> Không giới hạn số buổi' +
+    '</label></div>';
+
+  html += '<div><div class="form-label">Hạn dùng</div><input class="form-input" type="text" id="pkg-duration-label" value="' + (isEdit ? (p.duration_label || '') : '') + '" placeholder="VD: 3 ngày, 1 tháng, Đến khi có Offer" style="margin-top:6px"></div>';
   html += '</div>';
 
-  html += '<div id="pkg-save-error" style="display:none;margin:0 0 12px;padding:10px 14px;border-radius:8px;background:#FEF2F2;border:1px solid #FCA5A5;color:#991B1B;font-size:13px;line-height:1.5"></div>';
+  if (!isEdit) {
+    html += '<div style="padding:12px 24px;font-size:12px;color:var(--muted)">Lưu gói trước, sau đó mở lại để thêm nội dung hỗ trợ.</div>';
+  } else {
+    html += '<table class="bookings-table"><thead><tr><th style="width:22%">CHỦ ĐỀ</th><th style="width:58%">NỘI DUNG CHI TIẾT</th><th></th></tr></thead><tbody>';
+    if (_editingFeatures.length === 0) {
+      html += '<tr><td colspan="3" style="text-align:center;color:var(--muted);padding:24px 0">Chưa có dòng nào — bấm "+ Thêm dòng" để bắt đầu.</td></tr>';
+    }
+    _editingFeatures.forEach(function(f, idx){
+      html += '<tr>';
+      html += '<td><select class="form-input" style="padding:6px 8px;font-size:12.5px" onchange="updateFeatureField(' + idx + ',\'group_label\',this.value)">' +
+        FEATURE_THEMES.map(function(t){ return '<option value="' + t + '"' + (f.group_label === t ? ' selected' : '') + '>' + t + '</option>'; }).join('') +
+        '</select></td>';
+      html += '<td><input class="form-input" style="padding:6px 8px;font-size:12.5px" value="' + (f.feature_label||'').replace(/"/g,'&quot;') + '" placeholder="VD: Đánh giá và chỉnh sửa CV theo từng vị trí ứng tuyển" onchange="updateFeatureField(' + idx + ',\'feature_label\',this.value)"></td>';
+      var isFirst = idx === 0;
+      var isLast = idx === _editingFeatures.length - 1;
+      html += '<td style="white-space:nowrap">' +
+        '<button class="detail-btn" style="padding:4px 8px" ' + (isFirst ? 'disabled' : '') + ' title="Chuyển lên" onclick="moveFeatureRow(' + idx + ',-1)">↑</button> ' +
+        '<button class="detail-btn" style="padding:4px 8px" ' + (isLast ? 'disabled' : '') + ' title="Chuyển xuống" onclick="moveFeatureRow(' + idx + ',1)">↓</button> ' +
+        '<button class="detail-btn" onclick="removeFeatureRow(' + idx + ')">Xoá</button>' +
+        '</td>';
+      html += '</tr>';
+    });
+    html += '</tbody></table>';
+    html += '<div style="padding:14px 24px;font-size:11.5px;color:var(--muted)">💡 Mỗi dòng = 1 benefit gói này CÓ. Chọn đúng 1 trong 4 chủ đề, viết nội dung chi tiết đầy đủ ở ô bên cạnh (không cần tick hay ghi tách rời như trước) — hiện lên landing page theo đúng thứ tự trên xuống dưới.</div>';
+  }
+  html += '</div>';
+
   html += '<div style="padding:0 0 20px"><button class="login-btn" style="width:auto;padding:10px 24px" onclick="savePackageEditor(' + (isEdit ? "'" + p.package_id + "'" : 'null') + ')">' + (isEdit ? 'Lưu tất cả thay đổi' : 'Thêm gói') + '</button></div>';
-  setTimeout(pkgUpdateHints, 0);
   return html;
 }
 
-// Gợi ý "hệ thống hiểu" để admin biết chữ mình gõ có đọc ra số được không.
-function pkgUpdateHints() {
-  var g = function(id){ var el = document.getElementById(id); return el ? el.value : ''; };
-  var set = function(id, txt, ok){ var el = document.getElementById(id); if (el) { el.textContent = txt; el.style.color = ok ? 'var(--muted)' : '#C2410C'; } };
-  var s = pkgParseSessions(g('pkg-sessions'));
-  set('pkg-hint-sessions', s.unlimited ? 'Hệ thống hiểu: không giới hạn buổi' : (s.n ? 'Hệ thống hiểu: ' + s.n + ' buổi' : 'Cần có số buổi (VD: 4 buổi)'), s.unlimited || s.n);
-  var days = pkgParseDays(g('pkg-duration-label'));
-  set('pkg-hint-duration', days ? 'Hệ thống hiểu: ' + days + ' ngày (dùng để tính hạn khách)' : 'Cần có số + đơn vị (VD: 3 ngày, 1 tháng, 4–6 tháng)', days);
-  var contactOn = document.getElementById('pkg-contact-price') && document.getElementById('pkg-contact-price').checked;
-  var pp = pkgParsePrice(g('pkg-price'));
-  if (contactOn) set('pkg-hint-price', 'Web hiện "Liên hệ"', true);
-  else if (pp.kind === 'empty') set('pkg-hint-price', 'Cần nhập giá', false);
-  else if (pp.kind === 'text') set('pkg-hint-price', 'Không phải số → web hiện nguyên chữ này; gói lưu ở dạng "Liên hệ" (khách chưa thể thanh toán tự động)', true);
-  else if (!pp.price) set('pkg-hint-price', 'Giá phải lớn hơn 0', false);
-  else set('pkg-hint-price', 'Hệ thống hiểu: ' + pp.price.toLocaleString('vi-VN') + 'đ · web hiện ' + (pp.label || (Math.round(pp.price / 1000).toLocaleString('vi-VN') + 'k')), true);
-  var mins = pkgParseMinutes(g('pkg-session-len'));
-  set('pkg-hint-len', mins ? 'Hệ thống hiểu: ' + mins + ' phút/buổi' : 'Cần có số (VD: 60 phút)', mins);
+function updateFeatureField(idx, field, value) {
+  if (!_editingFeatures[idx]) return;
+  _editingFeatures[idx][field] = value;
+  document.getElementById('main-content').innerHTML = renderPackageEditor();
 }
 
-function updateFeatureItem(idx, field, value) {   // không vẽ lại form → không mất con trỏ khi đang gõ
-  if (_editingItems[idx]) _editingItems[idx][field] = value;
-}
 function moveFeatureRow(idx, dir) {
-  var n = idx + dir;
-  if (n < 0 || n >= _editingItems.length) return;
-  var tmp = _editingItems[idx]; _editingItems[idx] = _editingItems[n]; _editingItems[n] = tmp;
-  pkgRerender();
+  var newIdx = idx + dir;
+  if (newIdx < 0 || newIdx >= _editingFeatures.length) return;
+  var tmp = _editingFeatures[idx];
+  _editingFeatures[idx] = _editingFeatures[newIdx];
+  _editingFeatures[newIdx] = tmp;
+  _editingFeatures.forEach(function(f, i){ f.sort_order = (i + 1) * 10; });
+  document.getElementById('main-content').innerHTML = renderPackageEditor();
 }
+  
+
 function addFeatureRow() {
-  _editingItems.push({ topic: 'Định hướng', text: '' });
-  pkgRerender();
+  var maxSort = _editingFeatures.reduce(function(m,f){ return Math.max(m, Number(f.sort_order)||0); }, 0);
+  _editingFeatures.push({ group_label: FEATURE_THEMES[0], feature_label: '', sort_order: maxSort + 10 });
+  document.getElementById('main-content').innerHTML = renderPackageEditor();
 }
+
 function removeFeatureRow(idx) {
-  _editingItems.splice(idx, 1);
-  pkgRerender();
+  _editingFeatures.splice(idx, 1);
+  document.getElementById('main-content').innerHTML = renderPackageEditor();
 }
+
 function onPkgContactPriceToggle(checked) {
   var priceInput = document.getElementById('pkg-price');
   priceInput.disabled = checked;
   if (checked) priceInput.value = '';
-  pkgUpdateHints();
 }
 
-// Lưu CẢ 2 phần: bước 1 thông tin cơ bản (savePackage), bước 2 chữ hiển thị + nội dung hỗ trợ
-// (savePackageFeaturesForPackage). Nếu bước 2 lỗi, form được GIỮ NGUYÊN kèm thông báo lỗi để bấm lưu lại
-// (bước 1 chạy lại an toàn vì gói đã có package_id).
+function onPkgSessionsUnlimitedToggle(checked) {
+  var sessionsInput = document.getElementById('pkg-sessions');
+  sessionsInput.disabled = checked;
+  if (checked) sessionsInput.value = '';
+}
+
+// Lưu CẢ 2 phần: thông tin cơ bản (savePackage) rồi tới nội dung hỗ trợ
+// (savePackageFeaturesForPackage) — nối tiếp nhau vì features cần đúng
+// package_id (gói mới tạo chỉ có ID sau khi savePackage trả về).
 function savePackageEditor(packageId) {
-  packageId = packageId || _pendingPackageId || null;
-  pkgCaptureBasics();
-  var errEl = document.getElementById('pkg-save-error'); if (errEl) errEl.style.display = 'none';
-  var d = _editingDraft;
-  var idleLabel = (_editingPackage && _editingPackage.package_id) ? 'Lưu tất cả thay đổi' : 'Thêm gói';
-  var btn = document.querySelector('.login-btn');
-  var idle = function(){ if (btn) { btn.innerHTML = idleLabel; btn.disabled = false; } };
+  var name = v('pkg-name');
+  var isContactPrice = document.getElementById('pkg-contact-price').checked;
+  var isSessionsUnlimited = document.getElementById('pkg-sessions-unlimited').checked;
+  var isAdvisorUnlimited = document.getElementById('pkg-advisor-unlimited').checked;
+  var price = isContactPrice ? 0 : v('pkg-price').trim();
+  var sessions = isSessionsUnlimited ? 0 : Number(document.getElementById('pkg-sessions').value);
+  var durationLabel = v('pkg-duration-label');
+  var days = parseDaysFromLabel(durationLabel);
+  var duration = Number(document.getElementById('pkg-duration').value) || 60;
+  var badgeLabel = v('pkg-badge');
+  if (!name) { toast('Vui lòng nhập tên gói', 'error'); return; }
+  if (!isContactPrice && !price) { toast('Giá không hợp lệ (hoặc tick "Hiện Liên hệ")', 'error'); return; }
+  if (!isSessionsUnlimited && (!sessions || sessions <= 0)) { toast('Số buổi không hợp lệ (hoặc tick "Không giới hạn")', 'error'); return; }
+  if (!durationLabel) { toast('Vui lòng nhập Hạn dùng (VD: 3 ngày, 1 tháng...)', 'error'); return; }
 
-  var sess = pkgParseSessions(d.sessions);
-  var days = pkgParseDays(d.duration);
-  var mins = d.sessionLen ? pkgParseMinutes(d.sessionLen) : 60;
-  var pp = d.contact ? { kind: 'contact', price: 0, label: '' } : pkgParsePrice(d.price);
+  var invalidFeature = _editingFeatures.some(function(f){ return !f.feature_label.trim(); });
+  if (invalidFeature) { toast('Mỗi dòng nội dung hỗ trợ cần có "Nội dung chi tiết" — điền hoặc xoá dòng trống', 'error'); return; }
 
-  if (!d.name) return pkgShowError('Vui lòng nhập tên gói');
-  if (pp.kind === 'empty') return pkgShowError('Vui lòng nhập giá (hoặc tick "Hiện Liên hệ")');
-  if ((pp.kind === 'number' || pp.kind === 'unit') && pp.price <= 0) return pkgShowError('Giá phải lớn hơn 0');
-  if (!sess.unlimited && !sess.n) return pkgShowError('Số buổi cần có số (VD: "4 buổi") hoặc ghi "Không giới hạn buổi"');
-  if (!days) return pkgShowError('Hạn dùng cần có số + đơn vị (VD: "3 ngày", "1 tháng")');
-  if (!mins) return pkgShowError('Thời lượng mỗi buổi cần có số (VD: "60 phút")');
-  if (_editingItems.some(function(it){ return !String(it.text).trim(); })) return pkgShowError('Mỗi dòng nội dung hỗ trợ cần có mô tả — điền hoặc xoá dòng trống');
-
-  var priceMode = (pp.kind === 'contact' || pp.kind === 'text') ? 'contact' : 'fixed';
   var existing = packageId ? PACKAGES_RAW.find(function(x){ return x.package_id === packageId; }) : null;
   var payload = {
-    action: 'savePackage', name: d.name, price: priceMode === 'contact' ? 0 : pp.price, sessions: sess.unlimited ? 0 : sess.n, days: days,
-    duration_minutes: mins, badge_label: d.badge, price_mode: priceMode,
-    sessions_unlimited: sess.unlimited, advisor_unlimited: d.advisorUnl,
-    active: existing ? pkgBool(existing.active) : true,
-    tag_label: d.tag, description: d.description, sessions_label: d.sessions, duration_label: d.duration,
-    session_length_label: d.sessionLen, price_label: pp.label,
+    action: 'savePackage', name: name, price: price, sessions: sessions, days: days,
+    duration_minutes: duration, badge_label: badgeLabel, duration_label: durationLabel,
+    price_mode: isContactPrice ? 'contact' : 'fixed',
+    sessions_unlimited: isSessionsUnlimited,
+    advisor_unlimited: isAdvisorUnlimited,
+    active: existing ? (existing.active === true || existing.active === 'TRUE' || existing.active === 'true') : true,
   };
   if (packageId) payload.package_id = packageId;
-  var colMode = pkgColumnsSupported();   // true = các cột đã có trong tab Packages → không cần lưu dòng "_meta" nữa
 
-  var features = [];
-  var metaMap = [['tag', d.tag], ['description', d.description], ['sessions_label', d.sessions], ['duration_label', d.duration], ['session_length_label', d.sessionLen], ['price_label', pp.label]];
-  if (!colMode) metaMap.forEach(function(m, i){
-    if (m[1]) features.push({ group_label: PKG_META_GROUP, feature_label: m[0], value: m[1], sort_order: i + 1 });
-  });
-  _editingItems.forEach(function(it, i){
-    features.push({ group_label: it.topic, feature_label: String(it.text).trim(), value: 'check', sort_order: 100 + i * 10 });
-  });
+  var btn = document.querySelector('.login-btn');
+  if (btn) { btn.innerHTML = '<span class="spinner"></span> Đang lưu...'; btn.disabled = true; }
 
-  if (btn) { btn.innerHTML = '<span class="spinner"></span> Đang lưu thông tin gói...'; btn.disabled = true; }
-
-  pkgPost(payload, 60000).then(function(res){
-    if (!res || !res.success) { pkgShowError('Bước 1/2 — Lưu thông tin gói bị từ chối: ' + ((res && res.error) || 'không rõ lý do')); idle(); return; }
-    var savedId = res.package_id || packageId;
-    if (!savedId) { pkgShowError('Bước 1/2 — Máy chủ không trả về mã gói (package_id)'); idle(); return; }
-    _pendingPackageId = savedId;
-    if (btn) btn.innerHTML = '<span class="spinner"></span> Đang lưu nội dung hỗ trợ...';
-    return pkgPost({ action: 'savePackageFeaturesForPackage', package_id: savedId, features: features }, 120000).then(function(res2){
-      if (!res2 || !res2.success) { pkgShowError('Bước 2/2 — Thông tin gói ĐÃ lưu, nhưng nội dung hỗ trợ bị từ chối: ' + ((res2 && res2.error) || 'không rõ lý do') + '. Bấm lưu lại để thử tiếp.'); idle(); return; }
-      _pendingPackageId = null;
-      toast('Đã lưu gói "' + d.name + '" ✅', 'success');
+  apiPost(payload).then(function(res){
+    if (!res || !res.success) {
+      toast('Lỗi: ' + (res && res.error), 'error');
+      if (btn) { btn.innerHTML = packageId ? 'Lưu tất cả thay đổi' : 'Thêm gói'; btn.disabled = false; }
+      return;
+    }
+    var savedPackageId = res.package_id || packageId;
+    // value:'check' gửi cố định cho mỗi dòng — chỉ để tương thích cột cũ
+    // trên Sheet (nếu còn), UI admin không còn khái niệm tick/dash nữa vì
+    // mỗi dòng benefit giờ nghĩa là "gói này CÓ", không cần đánh dấu thêm.
+    apiPost({
+      action: 'savePackageFeaturesForPackage',
+      package_id: savedPackageId,
+      features: _editingFeatures.map(function(f){ return { group_label: f.group_label, feature_label: f.feature_label, value: 'check', sort_order: f.sort_order }; }),
+    }).then(function(res2){
+      toast(packageId ? 'Đã cập nhật gói "' + name + '" ✅' : 'Đã thêm gói "' + name + '" ✅', 'success');
+      loadProductsPageAsync();
+      if (!res2 || !res2.success) toast('Lưu gói thành công, nhưng lỗi lưu nội dung hỗ trợ: ' + (res2 && res2.error || ''), 'error');
+    }).catch(function(e){
+      toast('Lưu gói thành công, nhưng lỗi kết nối lúc lưu nội dung hỗ trợ: ' + e.message, 'error');
       loadProductsPageAsync();
     });
   }).catch(function(e){
-    pkgShowError('Lỗi khi lưu: ' + (e && e.message ? e.message : e) + '. Nếu bước 1 đã xong, gói đã được lưu — bấm lưu lại để hoàn tất nội dung hỗ trợ.');
-    idle();
+    toast('Lỗi: ' + e.message, 'error');
+    if (btn) { btn.innerHTML = packageId ? 'Lưu tất cả thay đổi' : 'Thêm gói'; btn.disabled = false; }
   });
 }
 
@@ -5015,6 +4914,402 @@ function deletePackageConfirm(p) {
       toast('Lỗi: ' + (res && res.error), 'error');
     }
   }).catch(function(e){ toast('Lỗi: ' + e.message, 'error'); });
+}
+
+// ════════════════════════════════════════════════════════════
+//  MODULE KHOÁ HỌC — mùa học, học viên, bài tập & chấm bài, thanh toán
+//  ⚠️ DEMO: dữ liệu dưới đây là mock (biến trong bộ nhớ trình duyệt), CHƯA
+//  nối với Google Sheet / Apps Script. Mọi hành động "Lưu" chỉ cập nhật
+//  tạm trong lúc đang mở trang — tải lại trang là mất. Khi có backend
+//  thật, thay các hàm save*/CM_* dưới đây bằng apiPost({action:'saveXxx'})
+//  và apiGet('getXxx') tương tự cách module Sản phẩm đang làm.
+// ════════════════════════════════════════════════════════════
+const CM_COURSES = [
+  { id: 'lydj', name: 'Land Your Dream Job' },
+  { id: 'logi', name: 'Logistics Operation' },
+];
+
+var CM_SEASONS = [
+  { id: 'lydj-9',  course_id: 'lydj', season_no: 9,  status: 'Đang học', start_date: '2026-08-10', class_link: 'https://meet.google.com/lydj-mua9',  slide_link: 'https://drive.google.com/lydj-mua9-slides',  price_full: 3500000, plans: ['full','deposit_500k','deposit_50'], max_seats: 30 },
+  { id: 'lydj-10', course_id: 'lydj', season_no: 10, status: 'Sắp mở',  start_date: '2026-10-05', class_link: '', slide_link: '', price_full: 3500000, plans: ['full','deposit_500k','deposit_50'], max_seats: 30 },
+  { id: 'logi-1',  course_id: 'logi', season_no: 1,  status: 'Sắp mở',  start_date: '2026-11-01', class_link: '', slide_link: '', price_full: 2900000, plans: ['full','deposit_500k'], max_seats: 25 },
+];
+
+var CM_ENROLLMENTS = [
+  { id: 'en1', season_id: 'lydj-9', name: 'Nguyễn Thị Mai',  phone: '0901234567', plan: 'deposit_500k', enrolled_at: '2026-08-01' },
+  { id: 'en2', season_id: 'lydj-9', name: 'Trần Văn Long',   phone: '0912345678', plan: 'full',          enrolled_at: '2026-08-02' },
+  { id: 'en3', season_id: 'lydj-9', name: 'Lê Thị Hạnh',     phone: '0987654321', plan: 'deposit_50',    enrolled_at: '2026-08-03' },
+];
+
+var CM_PAYMENTS = [
+  { id: 'p1', enrollment_id: 'en1', amount: 500000,  method: 'Chuyển khoản', paid_at: '2026-08-01', note: 'Cọc giữ chỗ' },
+  { id: 'p2', enrollment_id: 'en2', amount: 3500000, method: 'Chuyển khoản', paid_at: '2026-08-02', note: 'Đóng full' },
+  { id: 'p3', enrollment_id: 'en3', amount: 1750000, method: 'Momo',         paid_at: '2026-08-03', note: 'Cọc 50%' },
+];
+
+var CM_ASSIGNMENTS = [
+  { id: 'a1', season_id: 'lydj-9', title: 'Bài 1: Viết CV theo JD mẫu',              due_date: '2026-08-17', sort_order: 10 },
+  { id: 'a2', season_id: 'lydj-9', title: 'Bài 2: Mock phỏng vấn 5 câu thường gặp',  due_date: '2026-08-24', sort_order: 20 },
+];
+
+var CM_SUBMISSIONS = [
+  { id: 'sub1', assignment_id: 'a1', enrollment_id: 'en1', file_link: 'https://drive.google.com/file/mai-bai1',  submitted_at: '2026-08-16', grade: '8', feedback: 'CV rõ ràng, nên thêm số liệu định lượng ở phần kinh nghiệm.' },
+  { id: 'sub2', assignment_id: 'a1', enrollment_id: 'en2', file_link: 'https://drive.google.com/file/long-bai1', submitted_at: '2026-08-17', grade: '',  feedback: '' },
+];
+
+var _cmNextId = 100;
+var _cmCurrentSeasonId = null;
+var _cmSeasonTab = 'enroll';
+var _cmEditingCourseId = null;
+var _cmEditingSeason = null;
+
+function cmPlanLabel(plan) {
+  return { full: 'Đóng full', deposit_500k: 'Cọc 500k', deposit_50: 'Cọc 50%' }[plan] || plan;
+}
+// Tổng đã đóng của 1 học viên (cộng dồn mọi lần trong Payments) so với học
+// phí đầy đủ của mùa → suy ra trạng thái, KHÔNG cho admin tick tay để
+// tránh sai khi học viên đóng nhiều lần (cọc trước, đóng nốt sau).
+function cmComputePayment(enrollmentId, priceFull) {
+  var paid = CM_PAYMENTS.filter(function(p){ return p.enrollment_id === enrollmentId; }).reduce(function(sum, p){ return sum + Number(p.amount || 0); }, 0);
+  var due = Math.max(0, priceFull - paid);
+  var status = paid <= 0 ? 'none' : (due <= 0 ? 'paid' : 'partial');
+  return { paid: paid, due: due, status: status };
+}
+function cmPayBadge(status) {
+  var map = { paid: ['cm-pay-badge-paid', 'Đã đóng đủ'], partial: ['cm-pay-badge-partial', 'Đã cọc'], none: ['cm-pay-badge-none', 'Chưa đóng'] };
+  var m = map[status] || map.none;
+  return '<span class="badge ' + m[0] + '">' + m[1] + '</span>';
+}
+
+// ── Trang danh sách Khoá học → Mùa ──
+function loadCoursesPageAsync() {
+  var c = document.getElementById('main-content');
+  c.className = 'content';
+  c.innerHTML = renderCoursesPage();
+}
+
+function renderCoursesPage() {
+  var html = pageHeader('Khoá học', 'Quản lý mùa học, học viên, bài tập & chấm bài, thanh toán — demo giao diện, chưa nối dữ liệu thật');
+  CM_COURSES.forEach(function(course){
+    var seasons = CM_SEASONS.filter(function(s){ return s.course_id === course.id; }).sort(function(a, b){ return b.season_no - a.season_no; });
+    html += '<div class="cm-course-card">';
+    html += '<div class="cm-course-head"><div><div class="cm-course-name">' + course.name + '</div><div class="cm-course-sub">' + seasons.length + ' mùa</div></div>' +
+      '<button class="update-btn" onclick="openSeasonEditor(\'' + course.id + '\')">+ Mở mùa mới</button></div>';
+    if (seasons.length === 0) {
+      html += '<div style="padding:16px 20px;color:var(--muted);font-size:13px">Chưa có mùa nào.</div>';
+    } else {
+      seasons.forEach(function(s){
+        var enrolledCount = CM_ENROLLMENTS.filter(function(e){ return e.season_id === s.id; }).length;
+        var statusBadge = s.status === 'Đang học' ? 'badge-confirmed' : (s.status === 'Sắp mở' ? 'badge-pending' : 'badge-cancelled');
+        html += '<div class="cm-season-row">';
+        html += '<div class="cm-season-no">Mùa ' + s.season_no + '</div>';
+        html += '<div class="cm-season-info"><div class="cm-season-title">' + '<span class="badge ' + statusBadge + '">' + s.status + '</span></div>' +
+          '<div class="cm-season-meta">' + enrolledCount + ' học viên · Khai giảng ' + fmtDateStr(s.start_date) + ' · ' + fmtMoney(s.price_full) + '</div></div>';
+        html += '<button class="update-btn" onclick="openSeasonEditor(\'' + course.id + '\',\'' + s.id + '\')">✎ Sửa</button> ';
+        html += '<button class="detail-btn" onclick="navToSeasonDetail(\'' + s.id + '\')">Chi tiết →</button>';
+        html += '</div>';
+      });
+    }
+    html += '</div>';
+  });
+  return html;
+}
+
+// ── Form Mở mùa mới / Sửa mùa ──
+function openSeasonEditor(courseId, seasonId) {
+  _cmEditingCourseId = courseId;
+  _cmEditingSeason = seasonId ? CM_SEASONS.find(function(x){ return x.id === seasonId; }) : null;
+  var c = document.getElementById('main-content');
+  c.className = 'content';
+  c.innerHTML = renderSeasonEditor();
+}
+
+function renderSeasonEditor() {
+  var s = _cmEditingSeason;
+  var isEdit = !!s;
+  var course = CM_COURSES.find(function(c){ return c.id === _cmEditingCourseId; });
+
+  var html = '<div style="margin-bottom:14px"><button class="detail-btn" onclick="loadCoursesPageAsync()">← Quay lại Khoá học</button></div>';
+  html += pageHeader((isEdit ? ('Sửa Mùa ' + s.season_no) : 'Mở mùa mới') + ' — ' + (course ? course.name : ''), '');
+
+  html += '<div class="card"><div style="padding:16px 24px;display:grid;grid-template-columns:1fr 1fr;gap:14px">';
+  html += '<div><div class="form-label">Mùa số</div><input class="form-input" type="number" id="cm-se-no" value="' + (isEdit ? s.season_no : '') + '" placeholder="VD: 10" style="margin-top:6px"></div>';
+  html += '<div><div class="form-label">Trạng thái</div><select class="form-input" id="cm-se-status" style="margin-top:6px">' +
+    ['Sắp mở', 'Đang học', 'Đã đóng'].map(function(st){ return '<option' + (isEdit && s.status === st ? ' selected' : '') + '>' + st + '</option>'; }).join('') + '</select></div>';
+  html += '<div><div class="form-label">Ngày khai giảng</div><input class="form-input" type="date" id="cm-se-start" value="' + (isEdit ? s.start_date : '') + '" style="margin-top:6px"></div>';
+  html += '<div><div class="form-label">Học phí (VNĐ)</div><input class="form-input" type="number" id="cm-se-price" value="' + (isEdit ? s.price_full : '') + '" placeholder="VD: 3500000" style="margin-top:6px"></div>';
+  html += '<div><div class="form-label">Link lớp học (Zoom/Meet)</div><input class="form-input" id="cm-se-classlink" value="' + (isEdit ? (s.class_link || '') : '') + '" placeholder="https://meet.google.com/..." style="margin-top:6px"></div>';
+  html += '<div><div class="form-label">Link tài liệu slide</div><input class="form-input" id="cm-se-slidelink" value="' + (isEdit ? (s.slide_link || '') : '') + '" placeholder="https://drive.google.com/..." style="margin-top:6px"></div>';
+  html += '<div><div class="form-label">Số chỗ tối đa</div><input class="form-input" type="number" id="cm-se-maxseats" value="' + (isEdit ? s.max_seats : '') + '" placeholder="VD: 30" style="margin-top:6px"></div>';
+  html += '<div style="grid-column:1 / -1"><div class="form-label" style="margin-bottom:8px">Hình thức thanh toán cho phép</div>';
+  [['full', 'Đóng full'], ['deposit_500k', 'Cọc 500k'], ['deposit_50', 'Cọc 50%']].forEach(function(pl){
+    var checked = isEdit ? (s.plans || []).indexOf(pl[0]) !== -1 : true;
+    html += '<label style="display:inline-flex;align-items:center;gap:6px;font-size:13px;margin-right:18px;cursor:pointer">' +
+      '<input type="checkbox" class="cm-se-plan" value="' + pl[0] + '" ' + (checked ? 'checked' : '') + '> ' + pl[1] + '</label>';
+  });
+  html += '</div>';
+  html += '</div></div>';
+
+  html += '<div style="padding:16px 0"><button class="login-btn" style="width:auto;padding:10px 24px" onclick="saveSeasonEditor(' + (isEdit ? "'" + s.id + "'" : 'null') + ')">' + (isEdit ? 'Lưu thay đổi' : 'Mở mùa mới') + '</button></div>';
+  return html;
+}
+
+function saveSeasonEditor(seasonId) {
+  var seasonNo = Number(document.getElementById('cm-se-no').value);
+  var status = document.getElementById('cm-se-status').value;
+  var start = document.getElementById('cm-se-start').value;
+  var price = Number(document.getElementById('cm-se-price').value) || 0;
+  var classLink = v('cm-se-classlink');
+  var slideLink = v('cm-se-slidelink');
+  var maxSeats = Number(document.getElementById('cm-se-maxseats').value) || 0;
+  var plans = Array.prototype.slice.call(document.querySelectorAll('.cm-se-plan:checked')).map(function(el){ return el.value; });
+  if (!seasonNo) { toast('Vui lòng nhập số mùa', 'error'); return; }
+  if (!price) { toast('Vui lòng nhập học phí', 'error'); return; }
+  if (plans.length === 0) { toast('Chọn ít nhất 1 hình thức thanh toán', 'error'); return; }
+
+  if (seasonId) {
+    var s = CM_SEASONS.find(function(x){ return x.id === seasonId; });
+    Object.assign(s, { season_no: seasonNo, status: status, start_date: start, price_full: price, class_link: classLink, slide_link: slideLink, max_seats: maxSeats, plans: plans });
+  } else {
+    CM_SEASONS.push({ id: _cmEditingCourseId + '-s' + (_cmNextId++), course_id: _cmEditingCourseId, season_no: seasonNo, status: status, start_date: start, price_full: price, class_link: classLink, slide_link: slideLink, max_seats: maxSeats, plans: plans });
+  }
+  toast((seasonId ? 'Đã lưu' : 'Đã mở') + ' Mùa ' + seasonNo + ' ✅ (demo — chưa nối backend)', 'success');
+  loadCoursesPageAsync();
+}
+
+// ── Trang chi tiết 1 mùa — 3 tab: Học viên / Bài tập & Chấm bài / Thanh toán ──
+function navToSeasonDetail(seasonId, tab) {
+  _cmCurrentSeasonId = seasonId;
+  _cmSeasonTab = tab || 'enroll';
+  var c = document.getElementById('main-content');
+  c.className = 'content';
+  c.innerHTML = renderSeasonDetail();
+}
+
+function cmSwitchTab(tab) {
+  _cmSeasonTab = tab;
+  document.getElementById('main-content').innerHTML = renderSeasonDetail();
+}
+
+function renderSeasonDetail() {
+  var s = CM_SEASONS.find(function(x){ return x.id === _cmCurrentSeasonId; });
+  if (!s) return '<div class="empty-state">Không tìm thấy mùa học</div>';
+  var course = CM_COURSES.find(function(c){ return c.id === s.course_id; });
+
+  var html = '<div style="margin-bottom:14px"><button class="detail-btn" onclick="loadCoursesPageAsync()">← Quay lại Khoá học</button></div>';
+  html += pageHeader((course ? course.name : '') + ' — Mùa ' + s.season_no, 'Khai giảng ' + fmtDateStr(s.start_date) + ' · ' + fmtMoney(s.price_full) + ' · ' + s.status);
+
+  html += '<div class="card" style="margin-bottom:16px"><div style="padding:16px 24px;display:grid;grid-template-columns:1fr 1fr;gap:14px;font-size:13px">';
+  html += '<div><div class="form-label">Link lớp học</div>' + (s.class_link ? ('<a href="' + s.class_link + '" target="_blank" style="color:var(--brand)">' + s.class_link + '</a>') : '<span style="color:var(--muted)">Chưa có — bấm Sửa để thêm</span>') + '</div>';
+  html += '<div><div class="form-label">Tài liệu slide</div>' + (s.slide_link ? ('<a href="' + s.slide_link + '" target="_blank" style="color:var(--brand)">' + s.slide_link + '</a>') : '<span style="color:var(--muted)">Chưa có — bấm Sửa để thêm</span>') + '</div>';
+  html += '</div></div>';
+
+  html += '<div class="card">';
+  html += '<div class="cm-tabs">';
+  [['enroll', 'Học viên'], ['assign', 'Bài tập & Chấm bài'], ['pay', 'Thanh toán']].forEach(function(t){
+    html += '<div class="cm-tab' + (_cmSeasonTab === t[0] ? ' active' : '') + '" onclick="cmSwitchTab(\'' + t[0] + '\')">' + t[1] + '</div>';
+  });
+  html += '</div>';
+
+  if (_cmSeasonTab === 'assign') html += renderCmAssignTab(s);
+  else if (_cmSeasonTab === 'pay') html += renderCmPayTab(s);
+  else html += renderCmEnrollTab(s);
+
+  html += '</div>';
+  return html;
+}
+
+function renderCmEnrollTab(s) {
+  var list = CM_ENROLLMENTS.filter(function(e){ return e.season_id === s.id; });
+  var html = '<div style="padding:16px 24px;display:flex;justify-content:flex-end"><button class="update-btn" onclick="openEnrollModal(\'' + s.id + '\')">+ Thêm học viên</button></div>';
+  html += '<table class="bookings-table"><thead><tr><th>HỌC VIÊN</th><th>SĐT</th><th>HÌNH THỨC</th><th>THANH TOÁN</th><th>NGÀY ĐĂNG KÝ</th><th></th></tr></thead><tbody>';
+  if (list.length === 0) html += '<tr><td colspan="6" style="text-align:center;color:var(--muted);padding:24px 0">Chưa có học viên nào — bấm "+ Thêm học viên" để bắt đầu.</td></tr>';
+  list.forEach(function(e){
+    var pay = cmComputePayment(e.id, s.price_full);
+    html += '<tr><td><b>' + e.name + '</b></td><td>' + e.phone + '</td><td>' + cmPlanLabel(e.plan) + '</td>' +
+      '<td>' + cmPayBadge(pay.status) + ' <span style="font-size:11.5px;color:var(--muted)">(' + fmtMoney(pay.paid) + ' / ' + fmtMoney(s.price_full) + ')</span></td>' +
+      '<td>' + fmtDateStr(e.enrolled_at) + '</td>' +
+      '<td><button class="detail-btn" onclick="openRecordPaymentModal(\'' + e.id + '\')">+ Ghi thanh toán</button></td></tr>';
+  });
+  html += '</tbody></table>';
+  return html;
+}
+
+function renderCmAssignTab(s) {
+  var list = CM_ASSIGNMENTS.filter(function(a){ return a.season_id === s.id; }).sort(function(a, b){ return (a.sort_order || 0) - (b.sort_order || 0); });
+  var enrolled = CM_ENROLLMENTS.filter(function(e){ return e.season_id === s.id; });
+  var html = '<div style="padding:16px 24px;display:flex;justify-content:flex-end"><button class="update-btn" onclick="openAssignmentModal(\'' + s.id + '\')">+ Thêm bài tập</button></div>';
+  if (list.length === 0) html += '<div style="padding:0 24px 20px;color:var(--muted);font-size:13px">Chưa có bài tập nào.</div>';
+  list.forEach(function(a){
+    var subs = CM_SUBMISSIONS.filter(function(sub){ return sub.assignment_id === a.id; });
+    var gradedCount = subs.filter(function(sub){ return sub.grade !== '' && sub.grade != null; }).length;
+    html += '<div style="border-top:1px solid var(--border);padding:16px 24px">';
+    html += '<div style="margin-bottom:10px"><b>' + a.title + '</b><div style="font-size:12px;color:var(--muted);margin-top:2px">Hạn nộp ' + fmtDateStr(a.due_date) + ' · ' + subs.length + '/' + enrolled.length + ' đã nộp · ' + gradedCount + '/' + subs.length + ' đã chấm</div></div>';
+    html += '<table class="bookings-table"><thead><tr><th>HỌC VIÊN</th><th>BÀI NỘP</th><th>ĐIỂM / NHẬN XÉT</th><th></th></tr></thead><tbody>';
+    enrolled.forEach(function(e){
+      var sub = subs.find(function(x){ return x.enrollment_id === e.id; });
+      html += '<tr><td>' + e.name + '</td>';
+      html += '<td>' + (sub ? ('<a href="' + sub.file_link + '" target="_blank" style="color:var(--brand)">Xem bài</a>') : '<span style="color:var(--muted)">Chưa nộp</span>') + '</td>';
+      html += '<td>' + (sub && sub.grade ? ('<b>' + sub.grade + '</b> — ' + (sub.feedback || '')) : '<span style="color:var(--muted)">—</span>') + '</td>';
+      html += '<td>' + (sub ? ('<button class="detail-btn" onclick="openGradeModal(\'' + a.id + '\',\'' + e.id + '\')">Chấm bài</button>') : ('<button class="detail-btn" onclick="openLogSubmissionModal(\'' + a.id + '\',\'' + e.id + '\')">+ Ghi bài nộp</button>')) + '</td>';
+      html += '</tr>';
+    });
+    html += '</tbody></table></div>';
+  });
+  return html;
+}
+
+function renderCmPayTab(s) {
+  var enrolled = CM_ENROLLMENTS.filter(function(e){ return e.season_id === s.id; });
+  var allPayments = [];
+  enrolled.forEach(function(e){
+    CM_PAYMENTS.filter(function(p){ return p.enrollment_id === e.id; }).forEach(function(p){
+      allPayments.push({ amount: p.amount, method: p.method, paid_at: p.paid_at, note: p.note, studentName: e.name });
+    });
+  });
+  allPayments.sort(function(a, b){ return new Date(b.paid_at) - new Date(a.paid_at); });
+  var totalCollected = allPayments.reduce(function(sum, p){ return sum + Number(p.amount || 0); }, 0);
+  var totalExpected = enrolled.length * s.price_full;
+
+  var html = '<div style="padding:16px 24px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px">';
+  html += '<div style="font-size:13px;color:var(--muted)">Đã thu <b style="color:var(--text)">' + fmtMoney(totalCollected) + '</b> / dự kiến ' + fmtMoney(totalExpected) + '</div>';
+  html += '<button class="update-btn" onclick="openRecordPaymentModal()">+ Ghi nhận thanh toán</button></div>';
+
+  html += '<table class="bookings-table"><thead><tr><th>HỌC VIÊN</th><th>SỐ TIỀN</th><th>HÌNH THỨC</th><th>NGÀY</th><th>GHI CHÚ</th></tr></thead><tbody>';
+  if (allPayments.length === 0) html += '<tr><td colspan="5" style="text-align:center;color:var(--muted);padding:24px 0">Chưa có giao dịch nào.</td></tr>';
+  allPayments.forEach(function(p){
+    html += '<tr><td>' + p.studentName + '</td><td><b>' + fmtMoney(p.amount) + '</b></td><td>' + p.method + '</td><td>' + fmtDateStr(p.paid_at) + '</td><td style="color:var(--muted)">' + (p.note || '') + '</td></tr>';
+  });
+  html += '</tbody></table>';
+  return html;
+}
+
+// ── Modal: Thêm học viên vào mùa ──
+function openEnrollModal(seasonId) {
+  var s = CM_SEASONS.find(function(x){ return x.id === seasonId; });
+  document.getElementById('modal-title').textContent = 'Thêm học viên — Mùa ' + s.season_no;
+  var planOptions = (s.plans || []).map(function(p){ return '<option value="' + p + '">' + cmPlanLabel(p) + '</option>'; }).join('');
+  var html = '<div class="modal-field"><div class="form-label">Họ tên</div><input class="form-input" id="cm-en-name" placeholder="VD: Nguyễn Văn A"></div>';
+  html += '<div class="modal-field"><div class="form-label">Số điện thoại</div><input class="form-input" id="cm-en-phone" placeholder="VD: 0901234567"></div>';
+  html += '<div class="modal-field"><div class="form-label">Hình thức thanh toán</div><select class="form-input" id="cm-en-plan">' + planOptions + '</select></div>';
+  html += '<div class="modal-field"><div class="form-label">Số tiền đóng ngay (nếu có)</div><input class="form-input" type="number" id="cm-en-initial-pay" placeholder="VD: 500000"></div>';
+  document.getElementById('modal-body').innerHTML = html;
+  document.getElementById('modal-actions').innerHTML = '<button class="detail-btn" onclick="closeModal()">Hủy</button> <button class="login-btn" style="width:auto;padding:10px 24px" onclick="saveEnrollModal(\'' + seasonId + '\')">Thêm học viên</button>';
+  document.getElementById('modal-overlay').classList.add('open');
+}
+
+function saveEnrollModal(seasonId) {
+  var name = v('cm-en-name');
+  var phone = v('cm-en-phone');
+  var plan = document.getElementById('cm-en-plan').value;
+  var initialPay = Number(document.getElementById('cm-en-initial-pay').value) || 0;
+  if (!name) { toast('Vui lòng nhập họ tên', 'error'); return; }
+  var id = 'en' + (_cmNextId++);
+  CM_ENROLLMENTS.push({ id: id, season_id: seasonId, name: name, phone: phone, plan: plan, enrolled_at: new Date().toISOString().slice(0, 10) });
+  if (initialPay > 0) {
+    CM_PAYMENTS.push({ id: 'p' + (_cmNextId++), enrollment_id: id, amount: initialPay, method: 'Chuyển khoản', paid_at: new Date().toISOString().slice(0, 10), note: 'Đóng lúc đăng ký' });
+  }
+  closeModal();
+  toast('Đã thêm học viên "' + name + '" ✅ (demo — chưa nối backend)', 'success');
+  document.getElementById('main-content').innerHTML = renderSeasonDetail();
+}
+
+// ── Modal: Thêm bài tập ──
+function openAssignmentModal(seasonId) {
+  document.getElementById('modal-title').textContent = 'Thêm bài tập mới';
+  var html = '<div class="modal-field"><div class="form-label">Tên bài tập</div><input class="form-input" id="cm-as-title" placeholder="VD: Bài 3: Case Study phòng Marketing"></div>';
+  html += '<div class="modal-field"><div class="form-label">Hạn nộp</div><input class="form-input" type="date" id="cm-as-due"></div>';
+  document.getElementById('modal-body').innerHTML = html;
+  document.getElementById('modal-actions').innerHTML = '<button class="detail-btn" onclick="closeModal()">Hủy</button> <button class="login-btn" style="width:auto;padding:10px 24px" onclick="saveAssignmentModal(\'' + seasonId + '\')">Thêm bài tập</button>';
+  document.getElementById('modal-overlay').classList.add('open');
+}
+
+function saveAssignmentModal(seasonId) {
+  var title = v('cm-as-title');
+  var due = document.getElementById('cm-as-due').value;
+  if (!title) { toast('Vui lòng nhập tên bài tập', 'error'); return; }
+  var maxSort = CM_ASSIGNMENTS.filter(function(a){ return a.season_id === seasonId; }).reduce(function(m, a){ return Math.max(m, a.sort_order || 0); }, 0);
+  CM_ASSIGNMENTS.push({ id: 'a' + (_cmNextId++), season_id: seasonId, title: title, due_date: due || new Date().toISOString().slice(0, 10), sort_order: maxSort + 10 });
+  closeModal();
+  toast('Đã thêm bài tập ✅ (demo — chưa nối backend)', 'success');
+  document.getElementById('main-content').innerHTML = renderSeasonDetail();
+}
+
+// ── Modal: Ghi nhận bài nộp (khi học viên gửi bài qua Zalo/mail, admin dán link vào đây) ──
+function openLogSubmissionModal(assignmentId, enrollmentId) {
+  document.getElementById('modal-title').textContent = 'Ghi nhận bài nộp';
+  var html = '<div class="modal-field"><div class="form-label">Link bài làm (Drive/Docs...)</div><input class="form-input" id="cm-sub-link" placeholder="https://drive.google.com/..."></div>';
+  document.getElementById('modal-body').innerHTML = html;
+  document.getElementById('modal-actions').innerHTML = '<button class="detail-btn" onclick="closeModal()">Hủy</button> <button class="login-btn" style="width:auto;padding:10px 24px" onclick="saveLogSubmission(\'' + assignmentId + '\',\'' + enrollmentId + '\')">Lưu</button>';
+  document.getElementById('modal-overlay').classList.add('open');
+}
+
+function saveLogSubmission(assignmentId, enrollmentId) {
+  var link = v('cm-sub-link');
+  if (!link) { toast('Vui lòng nhập link bài làm', 'error'); return; }
+  CM_SUBMISSIONS.push({ id: 'sub' + (_cmNextId++), assignment_id: assignmentId, enrollment_id: enrollmentId, file_link: link, submitted_at: new Date().toISOString().slice(0, 10), grade: '', feedback: '' });
+  closeModal();
+  toast('Đã ghi nhận bài nộp ✅ (demo)', 'success');
+  document.getElementById('main-content').innerHTML = renderSeasonDetail();
+}
+
+// ── Modal: Chấm bài ──
+function openGradeModal(assignmentId, enrollmentId) {
+  var sub = CM_SUBMISSIONS.find(function(x){ return x.assignment_id === assignmentId && x.enrollment_id === enrollmentId; });
+  if (!sub) return;
+  document.getElementById('modal-title').textContent = 'Chấm bài';
+  var html = '<div class="modal-field"><a href="' + sub.file_link + '" target="_blank" style="color:var(--brand)">📄 Xem bài làm</a></div>';
+  html += '<div class="modal-field"><div class="form-label">Điểm</div><input class="form-input" id="cm-grade-score" value="' + (sub.grade || '') + '" placeholder="VD: 8"></div>';
+  html += '<div class="modal-field"><div class="form-label">Nhận xét</div><textarea class="form-input" id="cm-grade-feedback" rows="4" placeholder="Nhận xét cho học viên...">' + (sub.feedback || '') + '</textarea></div>';
+  document.getElementById('modal-body').innerHTML = html;
+  document.getElementById('modal-actions').innerHTML = '<button class="detail-btn" onclick="closeModal()">Hủy</button> <button class="login-btn" style="width:auto;padding:10px 24px" onclick="saveGradeModal(\'' + sub.id + '\')">Lưu điểm</button>';
+  document.getElementById('modal-overlay').classList.add('open');
+}
+
+function saveGradeModal(subId) {
+  var sub = CM_SUBMISSIONS.find(function(x){ return x.id === subId; });
+  if (!sub) return;
+  sub.grade = v('cm-grade-score');
+  sub.feedback = v('cm-grade-feedback');
+  closeModal();
+  toast('Đã lưu điểm ✅ (demo)', 'success');
+  document.getElementById('main-content').innerHTML = renderSeasonDetail();
+}
+
+// ── Modal: Ghi nhận thanh toán (dùng cả từ tab Học viên — đã biết sẵn học
+//    viên nào — và từ tab Thanh toán — cần chọn học viên trong dropdown) ──
+function openRecordPaymentModal(enrollmentId) {
+  var s = CM_SEASONS.find(function(x){ return x.id === _cmCurrentSeasonId; });
+  var enrolled = CM_ENROLLMENTS.filter(function(e){ return e.season_id === s.id; });
+  document.getElementById('modal-title').textContent = 'Ghi nhận thanh toán';
+  var html = '';
+  if (enrollmentId) {
+    var e = enrolled.find(function(x){ return x.id === enrollmentId; });
+    html += '<div class="modal-field"><b>Học viên:</b> ' + (e ? e.name : '') + '</div>';
+    html += '<input type="hidden" id="cm-pay-enrollment" value="' + enrollmentId + '">';
+  } else {
+    html += '<div class="modal-field"><div class="form-label">Học viên</div><select class="form-input" id="cm-pay-enrollment">' +
+      enrolled.map(function(e){ return '<option value="' + e.id + '">' + e.name + '</option>'; }).join('') + '</select></div>';
+  }
+  html += '<div class="modal-field"><div class="form-label">Số tiền</div><input class="form-input" type="number" id="cm-pay-amount" placeholder="VD: 1000000"></div>';
+  html += '<div class="modal-field"><div class="form-label">Hình thức</div><select class="form-input" id="cm-pay-method"><option>Chuyển khoản</option><option>Momo</option><option>Tiền mặt</option></select></div>';
+  html += '<div class="modal-field"><div class="form-label">Ghi chú</div><input class="form-input" id="cm-pay-note" placeholder="VD: Đóng phần còn lại"></div>';
+  document.getElementById('modal-body').innerHTML = html;
+  document.getElementById('modal-actions').innerHTML = '<button class="detail-btn" onclick="closeModal()">Hủy</button> <button class="login-btn" style="width:auto;padding:10px 24px" onclick="saveRecordPaymentModal()">Lưu thanh toán</button>';
+  document.getElementById('modal-overlay').classList.add('open');
+}
+
+function saveRecordPaymentModal() {
+  var enrollmentId = document.getElementById('cm-pay-enrollment').value;
+  var amount = Number(document.getElementById('cm-pay-amount').value) || 0;
+  var method = document.getElementById('cm-pay-method').value;
+  var note = v('cm-pay-note');
+  if (!enrollmentId) { toast('Vui lòng chọn học viên', 'error'); return; }
+  if (!amount || amount <= 0) { toast('Số tiền không hợp lệ', 'error'); return; }
+  CM_PAYMENTS.push({ id: 'p' + (_cmNextId++), enrollment_id: enrollmentId, amount: amount, method: method, paid_at: new Date().toISOString().slice(0, 10), note: note });
+  closeModal();
+  toast('Đã ghi nhận thanh toán ✅ (demo)', 'success');
+  document.getElementById('main-content').innerHTML = renderSeasonDetail();
 }
 
 function renderAdvisorNewForm() {
