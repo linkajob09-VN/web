@@ -4917,47 +4917,20 @@ function deletePackageConfirm(p) {
 }
 
 // ════════════════════════════════════════════════════════════
-//  MODULE KHOÁ HỌC — mùa học, học viên, bài tập & chấm bài, thanh toán
-//  ⚠️ DEMO: dữ liệu dưới đây là mock (biến trong bộ nhớ trình duyệt), CHƯA
-//  nối với Google Sheet / Apps Script. Mọi hành động "Lưu" chỉ cập nhật
-//  tạm trong lúc đang mở trang — tải lại trang là mất. Khi có backend
-//  thật, thay các hàm save*/CM_* dưới đây bằng apiPost({action:'saveXxx'})
-//  và apiGet('getXxx') tương tự cách module Sản phẩm đang làm.
 // ════════════════════════════════════════════════════════════
-const CM_COURSES = [
-  { id: 'lydj', name: 'Land Your Dream Job' },
-  { id: 'logi', name: 'Logistics Operation' },
-];
+//  MODULE KHOÁ HỌC — mùa học, học viên, bài tập & chấm bài, thanh toán
+//  Đã nối Google Sheet / Apps Script thật (action getCourseSeasons,
+//  getSeasonDetail, saveCourseSeason, addCourseEnrollment,
+//  addCourseAssignment, logCourseSubmission, gradeCourseSubmission,
+//  recordCoursePayment).
+// ════════════════════════════════════════════════════════════
+var CM_COURSES = [];
+var CM_SEASONS = [];
+var CM_ENROLLMENTS = [];
+var CM_PAYMENTS = [];
+var CM_ASSIGNMENTS = [];
+var CM_SUBMISSIONS = [];
 
-var CM_SEASONS = [
-  { id: 'lydj-9',  course_id: 'lydj', season_no: 9,  status: 'Đang học', start_date: '2026-08-10', class_link: 'https://meet.google.com/lydj-mua9',  slide_link: 'https://drive.google.com/lydj-mua9-slides',  price_full: 3500000, plans: ['full','deposit_500k','deposit_50'], max_seats: 30 },
-  { id: 'lydj-10', course_id: 'lydj', season_no: 10, status: 'Sắp mở',  start_date: '2026-10-05', class_link: '', slide_link: '', price_full: 3500000, plans: ['full','deposit_500k','deposit_50'], max_seats: 30 },
-  { id: 'logi-1',  course_id: 'logi', season_no: 1,  status: 'Sắp mở',  start_date: '2026-11-01', class_link: '', slide_link: '', price_full: 2900000, plans: ['full','deposit_500k'], max_seats: 25 },
-];
-
-var CM_ENROLLMENTS = [
-  { id: 'en1', season_id: 'lydj-9', name: 'Nguyễn Thị Mai',  phone: '0901234567', plan: 'deposit_500k', enrolled_at: '2026-08-01' },
-  { id: 'en2', season_id: 'lydj-9', name: 'Trần Văn Long',   phone: '0912345678', plan: 'full',          enrolled_at: '2026-08-02' },
-  { id: 'en3', season_id: 'lydj-9', name: 'Lê Thị Hạnh',     phone: '0987654321', plan: 'deposit_50',    enrolled_at: '2026-08-03' },
-];
-
-var CM_PAYMENTS = [
-  { id: 'p1', enrollment_id: 'en1', amount: 500000,  method: 'Chuyển khoản', paid_at: '2026-08-01', note: 'Cọc giữ chỗ' },
-  { id: 'p2', enrollment_id: 'en2', amount: 3500000, method: 'Chuyển khoản', paid_at: '2026-08-02', note: 'Đóng full' },
-  { id: 'p3', enrollment_id: 'en3', amount: 1750000, method: 'Momo',         paid_at: '2026-08-03', note: 'Cọc 50%' },
-];
-
-var CM_ASSIGNMENTS = [
-  { id: 'a1', season_id: 'lydj-9', title: 'Bài 1: Viết CV theo JD mẫu',              due_date: '2026-08-17', sort_order: 10 },
-  { id: 'a2', season_id: 'lydj-9', title: 'Bài 2: Mock phỏng vấn 5 câu thường gặp',  due_date: '2026-08-24', sort_order: 20 },
-];
-
-var CM_SUBMISSIONS = [
-  { id: 'sub1', assignment_id: 'a1', enrollment_id: 'en1', file_link: 'https://drive.google.com/file/mai-bai1',  submitted_at: '2026-08-16', grade: '8', feedback: 'CV rõ ràng, nên thêm số liệu định lượng ở phần kinh nghiệm.' },
-  { id: 'sub2', assignment_id: 'a1', enrollment_id: 'en2', file_link: 'https://drive.google.com/file/long-bai1', submitted_at: '2026-08-17', grade: '',  feedback: '' },
-];
-
-var _cmNextId = 100;
 var _cmCurrentSeasonId = null;
 var _cmSeasonTab = 'enroll';
 var _cmEditingCourseId = null;
@@ -4981,15 +4954,31 @@ function cmPayBadge(status) {
   return '<span class="badge ' + m[0] + '">' + m[1] + '</span>';
 }
 
+function csNormDate(s) { return String(s || '').slice(0, 10); }
+
 // ── Trang danh sách Khoá học → Mùa ──
 function loadCoursesPageAsync() {
   var c = document.getElementById('main-content');
   c.className = 'content';
-  c.innerHTML = renderCoursesPage();
+  c.innerHTML = '<div class="empty-state">Đang tải...</div>';
+  apiGet('getCourseSeasons').then(function(res){
+    if (!res || !res.success) { c.innerHTML = '<div class="empty-state">Lỗi tải dữ liệu khoá học: ' + (res && res.error || '') + '</div>'; return; }
+    CM_COURSES = (res.data.courses || []).map(function(x){ return { id: x.course_id, name: x.name, active: x.active }; });
+    CM_SEASONS = (res.data.seasons || []).map(function(x){
+      return {
+        id: x.season_id, course_id: x.course_id, season_no: Number(x.season_no) || 0,
+        status: x.status, start_date: csNormDate(x.start_date),
+        class_link: x.class_link || '', slide_link: x.slide_link || '',
+        price_full: Number(x.price_full) || 0, plans: x.plans || [],
+        max_seats: Number(x.max_seats) || 0, enrolled_count: Number(x.enrolled_count) || 0,
+      };
+    });
+    c.innerHTML = renderCoursesPage();
+  }).catch(function(e){ c.innerHTML = '<div class="empty-state">Lỗi kết nối: ' + e.message + '</div>'; });
 }
 
 function renderCoursesPage() {
-  var html = pageHeader('Khoá học', 'Quản lý mùa học, học viên, bài tập & chấm bài, thanh toán — demo giao diện, chưa nối dữ liệu thật');
+  var html = pageHeader('Khoá học', 'Quản lý mùa học, học viên, bài tập & chấm bài, thanh toán');
   CM_COURSES.forEach(function(course){
     var seasons = CM_SEASONS.filter(function(s){ return s.course_id === course.id; }).sort(function(a, b){ return b.season_no - a.season_no; });
     html += '<div class="cm-course-card">';
@@ -4999,7 +4988,7 @@ function renderCoursesPage() {
       html += '<div style="padding:16px 20px;color:var(--muted);font-size:13px">Chưa có mùa nào.</div>';
     } else {
       seasons.forEach(function(s){
-        var enrolledCount = CM_ENROLLMENTS.filter(function(e){ return e.season_id === s.id; }).length;
+        var enrolledCount = s.enrolled_count || 0;
         var statusBadge = s.status === 'Đang học' ? 'badge-confirmed' : (s.status === 'Sắp mở' ? 'badge-pending' : 'badge-cancelled');
         html += '<div class="cm-season-row">';
         html += '<div class="cm-season-no">Mùa ' + s.season_no + '</div>';
@@ -5067,28 +5056,64 @@ function saveSeasonEditor(seasonId) {
   if (!price) { toast('Vui lòng nhập học phí', 'error'); return; }
   if (plans.length === 0) { toast('Chọn ít nhất 1 hình thức thanh toán', 'error'); return; }
 
-  if (seasonId) {
-    var s = CM_SEASONS.find(function(x){ return x.id === seasonId; });
-    Object.assign(s, { season_no: seasonNo, status: status, start_date: start, price_full: price, class_link: classLink, slide_link: slideLink, max_seats: maxSeats, plans: plans });
-  } else {
-    CM_SEASONS.push({ id: _cmEditingCourseId + '-s' + (_cmNextId++), course_id: _cmEditingCourseId, season_no: seasonNo, status: status, start_date: start, price_full: price, class_link: classLink, slide_link: slideLink, max_seats: maxSeats, plans: plans });
-  }
-  toast((seasonId ? 'Đã lưu' : 'Đã mở') + ' Mùa ' + seasonNo + ' ✅ (demo — chưa nối backend)', 'success');
-  loadCoursesPageAsync();
+  var payload = {
+    action: 'saveCourseSeason', course_id: _cmEditingCourseId, season_no: seasonNo, status: status,
+    start_date: start, price_full: price, class_link: classLink, slide_link: slideLink,
+    max_seats: maxSeats, plans: plans,
+  };
+  if (seasonId) payload.season_id = seasonId;
+
+  var btn = document.querySelector('.login-btn');
+  if (btn) { btn.innerHTML = '<span class="spinner"></span> Đang lưu...'; btn.disabled = true; }
+
+  apiPost(payload).then(function(res){
+    if (!res || !res.success) {
+      toast('Lỗi: ' + (res && res.error), 'error');
+      if (btn) { btn.innerHTML = seasonId ? 'Lưu thay đổi' : 'Mở mùa mới'; btn.disabled = false; }
+      return;
+    }
+    toast((seasonId ? 'Đã lưu' : 'Đã mở') + ' Mùa ' + seasonNo + ' ✅', 'success');
+    loadCoursesPageAsync();
+  }).catch(function(e){
+    toast('Lỗi kết nối: ' + e.message, 'error');
+    if (btn) { btn.innerHTML = seasonId ? 'Lưu thay đổi' : 'Mở mùa mới'; btn.disabled = false; }
+  });
 }
 
 // ── Trang chi tiết 1 mùa — 3 tab: Học viên / Bài tập & Chấm bài / Thanh toán ──
+// Tải 1 lần duy nhất (enrollments + assignments + submissions + payments),
+// dùng chung cho cả 3 tab — không gọi lại API khi chỉ chuyển tab.
+function csLoadSeasonDetail(seasonId, callback) {
+  apiGet('getSeasonDetail', { season_id: seasonId }).then(function(res){
+    if (!res || !res.success) { toast('Lỗi tải chi tiết mùa: ' + (res && res.error), 'error'); return; }
+    CM_ENROLLMENTS = (res.data.enrollments || []).map(function(x){
+      return { id: x.enrollment_id, season_id: x.season_id, name: x.name, phone: x.phone, plan: x.plan, enrolled_at: csNormDate(x.enrolled_at) };
+    });
+    CM_ASSIGNMENTS = (res.data.assignments || []).map(function(x){
+      return { id: x.assignment_id, season_id: x.season_id, title: x.title, due_date: csNormDate(x.due_date), sort_order: Number(x.sort_order) || 0 };
+    });
+    CM_SUBMISSIONS = (res.data.submissions || []).map(function(x){
+      return { id: x.submission_id, assignment_id: x.assignment_id, enrollment_id: x.enrollment_id, file_link: x.file_link, submitted_at: csNormDate(x.submitted_at), grade: x.grade, feedback: x.feedback };
+    });
+    CM_PAYMENTS = (res.data.payments || []).map(function(x){
+      return { id: x.order_id, enrollment_id: x.ref_id, amount: Number(x.amount) || 0, method: x.method, paid_at: csNormDate(x.paid_at), note: x.note };
+    });
+    if (callback) callback();
+  }).catch(function(e){ toast('Lỗi kết nối: ' + e.message, 'error'); });
+}
+
 function navToSeasonDetail(seasonId, tab) {
   _cmCurrentSeasonId = seasonId;
   _cmSeasonTab = tab || 'enroll';
   var c = document.getElementById('main-content');
   c.className = 'content';
-  c.innerHTML = renderSeasonDetail();
+  c.innerHTML = '<div class="empty-state">Đang tải...</div>';
+  csLoadSeasonDetail(seasonId, function(){ c.innerHTML = renderSeasonDetail(); });
 }
 
 function cmSwitchTab(tab) {
   _cmSeasonTab = tab;
-  document.getElementById('main-content').innerHTML = renderSeasonDetail();
+  document.getElementById('main-content').innerHTML = renderSeasonDetail(); // dữ liệu đã có sẵn, không cần gọi lại API
 }
 
 function renderSeasonDetail() {
@@ -5204,14 +5229,12 @@ function saveEnrollModal(seasonId) {
   var plan = document.getElementById('cm-en-plan').value;
   var initialPay = Number(document.getElementById('cm-en-initial-pay').value) || 0;
   if (!name) { toast('Vui lòng nhập họ tên', 'error'); return; }
-  var id = 'en' + (_cmNextId++);
-  CM_ENROLLMENTS.push({ id: id, season_id: seasonId, name: name, phone: phone, plan: plan, enrolled_at: new Date().toISOString().slice(0, 10) });
-  if (initialPay > 0) {
-    CM_PAYMENTS.push({ id: 'p' + (_cmNextId++), enrollment_id: id, amount: initialPay, method: 'Chuyển khoản', paid_at: new Date().toISOString().slice(0, 10), note: 'Đóng lúc đăng ký' });
-  }
-  closeModal();
-  toast('Đã thêm học viên "' + name + '" ✅ (demo — chưa nối backend)', 'success');
-  document.getElementById('main-content').innerHTML = renderSeasonDetail();
+  apiPost({ action: 'addCourseEnrollment', season_id: seasonId, name: name, phone: phone, plan: plan, initial_pay: initialPay }).then(function(res){
+    if (!res || !res.success) { toast('Lỗi: ' + (res && res.error), 'error'); return; }
+    closeModal();
+    toast('Đã thêm học viên "' + name + '" ✅', 'success');
+    csLoadSeasonDetail(seasonId, function(){ document.getElementById('main-content').innerHTML = renderSeasonDetail(); });
+  }).catch(function(e){ toast('Lỗi kết nối: ' + e.message, 'error'); });
 }
 
 // ── Modal: Thêm bài tập ──
@@ -5228,11 +5251,12 @@ function saveAssignmentModal(seasonId) {
   var title = v('cm-as-title');
   var due = document.getElementById('cm-as-due').value;
   if (!title) { toast('Vui lòng nhập tên bài tập', 'error'); return; }
-  var maxSort = CM_ASSIGNMENTS.filter(function(a){ return a.season_id === seasonId; }).reduce(function(m, a){ return Math.max(m, a.sort_order || 0); }, 0);
-  CM_ASSIGNMENTS.push({ id: 'a' + (_cmNextId++), season_id: seasonId, title: title, due_date: due || new Date().toISOString().slice(0, 10), sort_order: maxSort + 10 });
-  closeModal();
-  toast('Đã thêm bài tập ✅ (demo — chưa nối backend)', 'success');
-  document.getElementById('main-content').innerHTML = renderSeasonDetail();
+  apiPost({ action: 'addCourseAssignment', season_id: seasonId, title: title, due_date: due }).then(function(res){
+    if (!res || !res.success) { toast('Lỗi: ' + (res && res.error), 'error'); return; }
+    closeModal();
+    toast('Đã thêm bài tập ✅', 'success');
+    csLoadSeasonDetail(seasonId, function(){ document.getElementById('main-content').innerHTML = renderSeasonDetail(); });
+  }).catch(function(e){ toast('Lỗi kết nối: ' + e.message, 'error'); });
 }
 
 // ── Modal: Ghi nhận bài nộp (khi học viên gửi bài qua Zalo/mail, admin dán link vào đây) ──
@@ -5247,10 +5271,12 @@ function openLogSubmissionModal(assignmentId, enrollmentId) {
 function saveLogSubmission(assignmentId, enrollmentId) {
   var link = v('cm-sub-link');
   if (!link) { toast('Vui lòng nhập link bài làm', 'error'); return; }
-  CM_SUBMISSIONS.push({ id: 'sub' + (_cmNextId++), assignment_id: assignmentId, enrollment_id: enrollmentId, file_link: link, submitted_at: new Date().toISOString().slice(0, 10), grade: '', feedback: '' });
-  closeModal();
-  toast('Đã ghi nhận bài nộp ✅ (demo)', 'success');
-  document.getElementById('main-content').innerHTML = renderSeasonDetail();
+  apiPost({ action: 'logCourseSubmission', assignment_id: assignmentId, enrollment_id: enrollmentId, file_link: link }).then(function(res){
+    if (!res || !res.success) { toast('Lỗi: ' + (res && res.error), 'error'); return; }
+    closeModal();
+    toast('Đã ghi nhận bài nộp ✅', 'success');
+    csLoadSeasonDetail(_cmCurrentSeasonId, function(){ document.getElementById('main-content').innerHTML = renderSeasonDetail(); });
+  }).catch(function(e){ toast('Lỗi kết nối: ' + e.message, 'error'); });
 }
 
 // ── Modal: Chấm bài ──
@@ -5267,13 +5293,14 @@ function openGradeModal(assignmentId, enrollmentId) {
 }
 
 function saveGradeModal(subId) {
-  var sub = CM_SUBMISSIONS.find(function(x){ return x.id === subId; });
-  if (!sub) return;
-  sub.grade = v('cm-grade-score');
-  sub.feedback = v('cm-grade-feedback');
-  closeModal();
-  toast('Đã lưu điểm ✅ (demo)', 'success');
-  document.getElementById('main-content').innerHTML = renderSeasonDetail();
+  var grade = v('cm-grade-score');
+  var feedback = v('cm-grade-feedback');
+  apiPost({ action: 'gradeCourseSubmission', submission_id: subId, grade: grade, feedback: feedback }).then(function(res){
+    if (!res || !res.success) { toast('Lỗi: ' + (res && res.error), 'error'); return; }
+    closeModal();
+    toast('Đã lưu điểm ✅', 'success');
+    csLoadSeasonDetail(_cmCurrentSeasonId, function(){ document.getElementById('main-content').innerHTML = renderSeasonDetail(); });
+  }).catch(function(e){ toast('Lỗi kết nối: ' + e.message, 'error'); });
 }
 
 // ── Modal: Ghi nhận thanh toán (dùng cả từ tab Học viên — đã biết sẵn học
@@ -5306,10 +5333,12 @@ function saveRecordPaymentModal() {
   var note = v('cm-pay-note');
   if (!enrollmentId) { toast('Vui lòng chọn học viên', 'error'); return; }
   if (!amount || amount <= 0) { toast('Số tiền không hợp lệ', 'error'); return; }
-  CM_PAYMENTS.push({ id: 'p' + (_cmNextId++), enrollment_id: enrollmentId, amount: amount, method: method, paid_at: new Date().toISOString().slice(0, 10), note: note });
-  closeModal();
-  toast('Đã ghi nhận thanh toán ✅ (demo)', 'success');
-  document.getElementById('main-content').innerHTML = renderSeasonDetail();
+  apiPost({ action: 'recordCoursePayment', enrollment_id: enrollmentId, amount: amount, method: method, note: note }).then(function(res){
+    if (!res || !res.success) { toast('Lỗi: ' + (res && res.error), 'error'); return; }
+    closeModal();
+    toast('Đã ghi nhận thanh toán ✅', 'success');
+    csLoadSeasonDetail(_cmCurrentSeasonId, function(){ document.getElementById('main-content').innerHTML = renderSeasonDetail(); });
+  }).catch(function(e){ toast('Lỗi kết nối: ' + e.message, 'error'); });
 }
 
 function renderAdvisorNewForm() {
