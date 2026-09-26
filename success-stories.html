@@ -425,6 +425,23 @@ button, a, .lj-nav-btn-plain, .fbtn, .story-card, .fb-card{ outline:none;}
 button:focus-visible, a:focus-visible, .lj-nav-btn-plain:focus-visible, .fbtn:focus-visible, .story-card:focus-visible, .fb-card:focus-visible{
   outline:2px solid var(--orange); outline-offset:2px; border-radius:6px;
 }
+/* ── OFFER RESULTS MARQUEE — hàng ảnh offer letter chạy ngang, nền đen, sau Hero ── */
+.result-strip{ background:var(--dark); padding:36px 0; }
+.result-strip .section-head{ margin-bottom:24px; }
+.result-strip .section-head h2, .result-strip .section-head p{ color:var(--text-dark); }
+.result-strip .section-head p{ color:var(--muted-dark); }
+.result-viewport{overflow:hidden;}
+.result-track{display:flex;align-items:stretch;gap:16px;width:max-content;animation:resultScroll 110s linear infinite;}
+.result-track:hover{animation-play-state:paused;}
+@keyframes resultScroll{ from{transform:translateX(-50%);} to{transform:translateX(0);} }
+.result-card{height:340px;flex:none;background:rgba(255,255,255,.04);border:.5px solid rgba(255,255,255,.1);border-radius:16px;overflow:hidden;transition:border-color .2s,transform .2s,box-shadow .2s;}
+.result-card:hover{border-color:rgba(252,82,41,.5);transform:translateY(-3px);box-shadow:0 10px 26px rgba(0,0,0,.4);}
+.result-photo{position:relative;height:100%;width:auto;overflow:hidden;}
+.result-photo img{height:100%;width:auto;max-width:none;object-fit:contain;display:block;}
+.result-photo-fallback{width:220px;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;text-align:center;padding:14px;}
+.result-photo-fallback i{font-size:26px;color:var(--orange);opacity:.8;}
+.result-photo-fallback span{font-size:11px;color:var(--muted-dark-2);}
+@media(max-width:560px){ .result-card{height:240px;} }
 </style></head>
 <body>
 
@@ -528,6 +545,19 @@ button:focus-visible, a:focus-visible, .lj-nav-btn-plain:focus-visible, .fbtn:fo
       <div class="hstat"><div class="hstat-num">25+</div><div class="hstat-lbl">Advisor đồng hành</div></div>
       <div class="hstat"><div class="hstat-num">8</div><div class="hstat-lbl">Lĩnh vực</div></div>
     </div>
+  </div>
+</section>
+
+<section class="result-strip">
+  <div class="wrap">
+    <div class="section-head">
+      <span class="eyebrow on-dark"><span class="eyebrow-dot"></span>Kết quả</span>
+      <h2>Không chỉ lời nói — đây là offer letter thật.</h2>
+      <p>Từng dòng chữ trong các offer letter dưới đây là hành trình thật của advisee LinkaJob.</p>
+    </div>
+  </div>
+  <div class="result-viewport">
+    <div class="result-track" id="resultTrack"></div>
   </div>
 </section>
 
@@ -961,127 +991,37 @@ function renderTicker(){
 }
 
 /* ─── DATA: success stories ─── */
-var STORIES = [
-  { photo:'https://linkajob.vn/wp-content/uploads/2025/09/2.webp', name:'Phạm Khánh Linh', url:'https://linkajob.vn/cau-chuyen-hoc-vien/pham-khanh-linh/',
-    blurb:'Từ sinh viên UEH đến PE Sales Intern tại Mondelez.', full:'Mình từng nghĩ ứng tuyển Sales ở một tập đoàn như Mondelez là chuyện xa vời với một sinh viên UEH như mình. Nhờ chị Hoàng Oanh đồng hành trong khoá Land Your Dream Job, mình học được cách kể câu chuyện bản thân đúng trọng tâm thay vì liệt kê lan man. Ngày nhận offer PE Sales Intern, mình vẫn còn không tin đó là sự thật.',
-    co:'https://linkajob.vn/wp-content/uploads/2025/09/Mondelez_international_2012_logo.svg',
-    tag:'Sinh viên', role:'PE Sales Intern',
-    adv:'https://linkajob.vn/wp-content/uploads/2025/04/Duong-Thi-Hoang-Oanh.png',
-    pkg:'Khoá học Land Your Dream Job', advName:'Hoàng Oanh' },
-  { photo:'https://linkajob.vn/wp-content/uploads/2025/09/4.webp', name:'Bùi Thị Thanh Hiền', url:'https://linkajob.vn/cau-chuyen-hoc-vien/bui-thi-thanh-hien/',
-    blurb:'Từ sinh viên năm 3 trường IU đến suất thực tập trong mơ tại Singapore.', full:'Là sinh viên năm 3 trường IU, mình từng chỉ dám mơ về một suất thực tập ở nước ngoài chứ chưa từng nghĩ sẽ chạm tay vào nó. Anh Tiến Trình đã giúp mình nhìn lại hồ sơ dưới góc nhìn của nhà tuyển dụng quốc tế, chỉnh sửa từng chi tiết nhỏ. Kết quả là một suất thực tập trong mơ tại Singapore — điều mà trước đây mình chưa từng dám tin.',
-    co:'https://linkajob.vn/wp-content/uploads/2025/09/Herb-Tea-Futurology-.png',
-    tag:'Sinh viên', role:'Suất Intern ở Singapore',
-    adv:'https://linkajob.vn/wp-content/uploads/2025/04/Screenshot-2025-04-22-at-15.05.13.png',
-    pkg:'Gói Cơ bản', advName:'Tiến Trình' },
-  { photo:'https://linkajob.vn/wp-content/uploads/2025/09/6.webp', name:'Nguyễn Thị Ngọc Hà', url:'https://linkajob.vn/cau-chuyen-hoc-vien/nguyen-thi-ngoc-ha/',
-    blurb:'Từ sinh viên năm 3 trường ĐH Ngân hàng đến Online Marketing Intern tại LOTTE.', full:'Mình là sinh viên năm 3 trường Đại học Ngân hàng, một ngành nghe có vẻ chẳng liên quan gì đến Marketing. Nhưng nhờ chị Hoàng Oanh giúp mình định vị lại thế mạnh và luyện phỏng vấn kỹ lưỡng, mình đã thuyết phục được LOTTE trao cho mình vị trí Online Marketing Intern.',
-    co:'https://linkajob.vn/wp-content/uploads/2025/09/Lotte_Logo_2017.svg.png',
-    tag:'Sinh viên', role:'Online Marketing Intern',
-    adv:'https://linkajob.vn/wp-content/uploads/2025/04/Duong-Thi-Hoang-Oanh.png',
-    pkg:'Khoá học Land Your Dream Job', advName:'Hoàng Oanh' },
-  { photo:'https://linkajob.vn/wp-content/uploads/2025/09/8.webp', name:'Dương Thị Ngọc Lan', url:'https://linkajob.vn/cau-chuyen-hoc-vien/duong-thi-ngoc-lan/',
-    blurb:'Hành trình Onboard vị trí Merchandise and Campaign Intern tại OnPoint trong 4 tuần.', full:'Chỉ 4 tuần — đó là khoảng thời gian mình đi từ một sinh viên chưa định hướng rõ ràng đến ngày chính thức onboard tại OnPoint. Với gói Chuyên Sâu cùng chị Hoàng Oanh, mình được rèn từ tư duy chiến lược đến cách trình bày CV, để rồi giành được vị trí Merchandise and Campaign Intern nhanh hơn mình từng tưởng tượng.',
-    co:'https://linkajob.vn/wp-content/uploads/2025/09/54a982a075291e1998a81c40237ba3aa.png',
-    tag:'Sinh viên', role:'Merchandise and Campaign Intern',
-    adv:'https://linkajob.vn/wp-content/uploads/2025/04/Duong-Thi-Hoang-Oanh.png',
-    pkg:'Gói Chuyên Sâu', advName:'Hoàng Oanh' },
-  { photo:'https://linkajob.vn/wp-content/uploads/2025/09/5.webp', name:'Nguyễn Thị Phúc Anh', url:'https://linkajob.vn/cau-chuyen-hoc-vien/nguyen-thi-phuc-anh/',
-    blurb:'Từ sinh viên năm 3 trường UEH đến suất thực tập tại Fonterra Việt Nam.', full:'Sinh viên năm 3 UEH như mình từng loay hoay không biết mình hợp với mảng nào trong FMCG. Advisor Đinh Hà Linh giúp mình nhìn rõ con đường Marketing và chuẩn bị kỹ từng vòng phỏng vấn, để rồi mình chạm tay vào suất thực tập tại Fonterra Việt Nam.',
-    co:'https://linkajob.vn/wp-content/uploads/2025/09/Fonterra_Logo.svg.png',
-    tag:'Sinh viên', role:'Marketing Intern',
-    adv:'https://linkajob.vn/wp-content/uploads/2025/04/2111227972b7c1e998a6.jpg',
-    pkg:'Gói Đặc biệt · 4 buổi', advName:'Đinh Hà Linh' },
-  { photo:'https://linkajob.vn/wp-content/uploads/2025/09/3.webp', name:'Bùi Trà My', url:'https://linkajob.vn/cau-chuyen-hoc-vien/bui-tra-my/',
-    blurb:'Hành trình đến BIDV sau thời gian lay-off vì tinh giản cơ quan nhà nước.', full:'Mình từng là biên tập viên, rồi bất ngờ mất việc vì đợt tinh giản biên chế ở cơ quan nhà nước. Giữa cú sốc đó, chị Phạm Diễm đã giúp mình nhìn lại năng lực bản thân và định hướng lại hoàn toàn. Chỉ với gói Cơ Bản 2 buổi, mình chuyển mình thành công sang vị trí Chuyên viên Truyền thông nội bộ tại BIDV.',
-    co:'https://linkajob.vn/wp-content/uploads/2025/09/Logo_BIDV.svg.png',
-    tag:'Biên tập viên', role:'Chuyên viên TTNB',
-    adv:'https://linkajob.vn/wp-content/uploads/2025/04/Pham-Diem.jpg',
-    pkg:'Gói Cơ bản · 2 buổi', advName:'Phạm Diễm' },
-  { photo:'https://linkajob.vn/wp-content/uploads/2025/09/10.webp', name:'Nguyễn Thuỳ Phương Vy', url:'https://linkajob.vn/cau-chuyen-hoc-vien/nguyen-phuong-thuy-vy/',
-    blurb:'Từ tốt nghiệp RMIT, đến Onboard vị trí Junior Key Account Manager tại Intrepid.', full:'Tốt nghiệp RMIT nhưng ra trường mình vẫn mông lung không biết bắt đầu ứng tuyển từ đâu. Chị Hoàng Oanh đã giúp mình xây một chiến lược ứng tuyển rõ ràng, và kết quả là vị trí Junior Key Account Manager tại Intrepid đang chờ mình.',
-    co:'https://linkajob.vn/wp-content/uploads/2025/09/logo-01.png',
-    tag:'Sinh viên', role:'Jr. Key Account Manager',
-    adv:'https://linkajob.vn/wp-content/uploads/2025/04/Duong-Thi-Hoang-Oanh.png',
-    pkg:'Khoá học Land Your Dream Job', advName:'Hoàng Oanh' },
-  { photo:'https://linkajob.vn/wp-content/uploads/2025/09/7.webp', name:'Lê Phạm Trúc Quỳnh', url:'https://linkajob.vn/cau-chuyen-hoc-vien/le-pham-truc-quynh/',
-    blurb:'Từ tốt nghiệp RMIT đến suất thực tập tại Shiseido Vietnam.', full:'Cũng là dân RMIT như nhiều bạn khác, nhưng mình từng thấy Shiseido là một cái tên quá tầm với. Nhờ chị Hải Yến đồng hành sát sao trong gói Đặc biệt 4 buổi, từ CV đến phỏng vấn, mình đã tự tin bước vào và trúng tuyển thật.',
-    co:'https://linkajob.vn/wp-content/uploads/2025/09/images.png',
-    tag:'Sinh viên', role:'Supply Chain Intern',
-    adv:'https://linkajob.vn/wp-content/uploads/2025/04/Vu-Hai-Yen.jpg',
-    pkg:'Gói Đặc biệt · 4 buổi', advName:'Hải Yến' },
-  { photo:'https://linkajob.vn/wp-content/uploads/2025/09/9.webp', name:'Nguyễn An Như', url:'https://linkajob.vn/cau-chuyen-hoc-vien/nguyen-an-nhu/',
-    blurb:'2 buổi phỏng vấn thử để tới vị trí GM Personal Assistant cum Admin Executive.', full:'Sau 6 tháng gián đoạn sự nghiệp, mình gần như mất phương hướng. Nhưng chỉ với 2 buổi phỏng vấn thử cùng chị Thanh Trâm, mọi phản xạ và sự tự tin của mình được kéo lại — đủ để mình chốt được vị trí GM Personal Assistant cum Admin Executive.',
-    co:'https://linkajob.vn/wp-content/uploads/2025/09/logo.png',
-    tag:'Gap 6 tháng', role:'GM Personal Assistant cum Admin Executive',
-    adv:'https://linkajob.vn/wp-content/uploads/2025/04/Hoang-Thanh-Tram.png',
-    pkg:'Gói Đặc Biệt', advName:'Thanh Trâm' },
-  { photo:'https://linkajob.vn/wp-content/uploads/2025/09/1.webp', name:'Vũ Anh Duy', url:'https://linkajob.vn/cau-chuyen-hoc-vien/vu-anh-duy/',
-    blurb:'Thành công trúng tuyển sau 3 năm dài đằng đẵng tìm kiếm cơ hội phù hợp.', full:'3 năm — đó là quãng thời gian mình kiên trì tìm kiếm một cơ hội thực sự phù hợp mà không bỏ cuộc. Anh Hải Phong đồng hành cùng mình trong gói Đặc Biệt 4 buổi để định hình lại toàn bộ chiến lược ứng tuyển. Vị trí Supply Chain Analyst hôm nay là phần thưởng cho sự kiên trì đó.',
-    co:'', tag:'Gap 3 năm', role:'Supply Chain Analyst',
-    adv:'https://linkajob.vn/wp-content/uploads/2025/04/vu-hai-phong.png',
-    pkg:'Gói Đặc Biệt · 4 buổi', advName:'Hải Phong' },
-  { photo:'https://linkajob.vn/wp-content/uploads/2025/09/blog-cover-1.webp', name:'Trần Nguyễn Tú Quyên', url:'https://linkajob.vn/cau-chuyen-hoc-vien/tran-nguyen-tu-quyen/',
-    blurb:'Từ sinh viên năm 4 đến Onboard vị trí Marketing Intern tại KUN.', full:'Là sinh viên năm 4, mình vừa lo tốt nghiệp vừa lo chuyện ứng tuyển. Chị Hoàng Oanh giúp mình sắp xếp lại ưu tiên và hồ sơ trong gói Cơ bản, để mình vững vàng bước vào vị trí Marketing Intern tại KUN.',
-    co:'https://linkajob.vn/wp-content/uploads/2025/09/KUN-Logo-New-500x281-1.webp',
-    tag:'Sinh viên', role:'Marketing Intern',
-    adv:'https://linkajob.vn/wp-content/uploads/2025/04/Duong-Thi-Hoang-Oanh.png',
-    pkg:'Gói Cơ bản', advName:'Hoàng Oanh' },
-  { photo:'https://linkajob.vn/wp-content/uploads/2025/09/blog-cover.webp', name:'Lương Quỳnh Anh', url:'https://linkajob.vn/cau-chuyen-hoc-vien/luong-quynh-anh/',
-    blurb:'Hành trình onboard TikTok chỉ sau 2 buổi phỏng vấn thử với Advisor.', full:'Mình từng nghĩ phải mất rất nhiều thời gian mới đủ tự tin ứng tuyển vào một công ty lớn như TikTok. Vậy mà chỉ sau 2 buổi phỏng vấn thử sát thực tế cùng anh Quốc Toản, mình đã sẵn sàng — và onboard thật ở vị trí Logistics Operation Project Intern.',
-    co:'https://linkajob.vn/wp-content/uploads/2025/09/TikTok_logo.svg.webp',
-    tag:'Sinh viên', role:'Logistics Operation Project Intern',
-    adv:'https://linkajob.vn/wp-content/uploads/2025/06/tran-quoc-toan.jpg',
-    pkg:'Gói Cơ bản · 2 buổi', advName:'Quốc Toản' },
-  { photo:'https://linkajob.vn/wp-content/uploads/2025/10/blog-cover-2.webp', name:'Nguyễn Hoàng Mộng Quỳnh', url:'https://linkajob.vn/cau-chuyen-hoc-vien/nguyen-hoang-mong-quynh/',
-    blurb:'Từ sinh viên FTU đến suất HRBP Intern danh giá.', full:'Là sinh viên FTU, mình từng không chắc mình có hợp với mảng Nhân sự hay không. Chị Hoàng Thanh Trâm giúp mình nhìn rõ điểm mạnh của bản thân trong gói Cơ Bản 2 buổi, và mình đã giành được suất HRBP Intern đáng mơ ước tại Savills.',
-    co:'https://linkajob.vn/wp-content/uploads/2025/10/Savills_logo.svg.webp',
-    tag:'Sinh viên', role:'HRBP Intern',
-    adv:'https://linkajob.vn/wp-content/uploads/2025/04/Hoang-Thanh-Tram-1.png',
-    pkg:'Gói Cơ Bản · 2 buổi', advName:'Hoàng Thanh Trâm' },
-  { photo:'https://linkajob.vn/wp-content/uploads/2026/04/1775284758545513406.webp', name:'Phạm Thị Thanh Tú', url:'https://linkajob.vn/cau-chuyen-hoc-vien/pham-thi-thanh-tu/',
-    blurb:'Từ đã tốt nghiệp đến Senior Learning & Development Executive.', full:'Sau khi tốt nghiệp, mình từng không chắc hướng đi tiếp theo là gì. Với gói Đặc biệt 4 buổi cùng chị Hoàng Thanh Trâm, mình định hình lại được giá trị bản thân rõ ràng hơn — và bất ngờ nhận cùng lúc 2 offer từ BOSCH và CBTW APAC, cuối cùng chọn vị trí Senior Learning & Development Executive.',
-    co:'https://linkajob.vn/wp-content/uploads/2026/04/images.webp',
-    tag:'Đã tốt nghiệp', role:'Senior Learning & Development Executive',
-    adv:'https://linkajob.vn/wp-content/uploads/2025/04/Hoang-Thanh-Tram.png',
-    pkg:'Gói Đặc biệt · 4 buổi', advName:'Hoàng Thanh Trâm' },
-  { photo:'https://linkajob.vn/wp-content/uploads/2026/04/bf0bde92a60628587117.webp', name:'Nguyễn Thị Phương Giang', url:'https://linkajob.vn/cau-chuyen-hoc-vien/nguyen-thi-phuong-giang/',
-    blurb:'Từ sinh viên đến Customer Service Intern sau khoá Supply Chain Principles.', full:'Mình tham gia khoá Supply Chain Principles cùng anh Quốc Toản để lấp đầy khoảng trống kiến thức ngành mà trước đó mình chỉ biết mơ hồ. Nền tảng vững chắc đó giúp mình tự tin trả lời phỏng vấn và trúng tuyển vị trí Customer Service Intern tại SKF.',
-    co:'https://linkajob.vn/wp-content/uploads/2026/04/1592049366319.webp',
-    tag:'Sinh viên', role:'Customer Service Intern',
-    adv:'https://linkajob.vn/wp-content/uploads/2025/06/tran-quoc-toan.jpg',
-    pkg:'Khoá Supply Chain Principles', advName:'Trần Quốc Toản' },
-  { photo:'https://linkajob.vn/wp-content/uploads/2026/04/73527ba8d4e255bc0cf3.webp', name:'Zuri Cát Tường', url:'https://linkajob.vn/cau-chuyen-hoc-vien/zuri-cat-tuong/',
-    blurb:'Từ sinh viên năm 3 trường ĐH Kinh tế Đà Nẵng đến suất thực tập đáng giá.', full:'Là sinh viên năm 3 trường Đại học Kinh tế Đà Nẵng, mình từng thấy con đường Content Creator ở một công ty lớn còn rất xa. Chị Hoàng Oanh đồng hành cùng mình trong gói Đặc biệt 4 buổi để mài giũa portfolio và cách kể chuyện bản thân, và mình đã chạm tay vào vị trí đó tại BlueBolt.',
-    co:'https://linkajob.vn/wp-content/uploads/2026/04/H6slsnQoYGxJz35HLro6IABRPkAEb2wB_1637231415____4afca092f17f61a995c2561f37705b8b.webp',
-    tag:'Sinh viên', role:'Content Creator',
-    adv:'https://linkajob.vn/wp-content/uploads/2025/07/d141d4dd94bb1de544aa.jpg',
-    pkg:'Gói Đặc biệt · 4 buổi', advName:'Dương Thị Hoàng Oanh' },
-  { photo:'https://linkajob.vn/wp-content/uploads/2026/04/1873238783986073890.webp', name:'Phạm Huyền Trang', url:'https://linkajob.vn/cau-chuyen-hoc-vien/pham-huyen-trang/',
-    blurb:'Bước ngoặt thay đổi xứng đáng của người âm thầm nỗ lực.', full:'Mình không phải kiểu người nổi bật hay ồn ào, chỉ âm thầm cố gắng từng chút một trong suốt khoá Land Your Dream Job cùng chị Hoàng Oanh. Nhưng chính sự kiên trì âm thầm đó cuối cùng đã được đền đáp bằng offer vị trí Marketing Intern.',
-    co:'https://linkajob.vn/wp-content/uploads/2026/04/1659501856990-163463816890.webp',
-    tag:'Sinh viên', role:'Marketing Intern',
-    adv:'https://linkajob.vn/wp-content/uploads/2025/07/d141d4dd94bb1de544aa.jpg',
-    pkg:'Khoá học Land Your Dream Job', advName:'Hoàng Oanh' },
-  { photo:'https://linkajob.vn/wp-content/uploads/2026/05/thinh-e1777877695979.webp', name:'Hoàng Đức Thịnh', url:'https://linkajob.vn/cau-chuyen-hoc-vien/hoang-duc-thinh/',
-    blurb:'Từ kẻ ngoài lề đến ngoại lệ.', full:'12 tháng ròng rã, mình nếm đủ thất bại ở những chương trình lớn như Vinamilk GTP, Heineken MT, Nestlé MT. Có lần còn bị loại ngay vòng Assessment Center của Mondelez với lý do bị đánh giá quá vượt cấp so với vị trí. Là học viên Land Your Dream Job từ tận Season 2, được chị Hoàng Oanh cùng các anh chị Advisor kiên nhẫn đồng hành suốt nhiều mùa, cuối cùng đến Season 5 mình mới hái được quả ngọt: offer Sales Trainee tại Mondelez Kinh Đô.',
-    co:'https://linkajob.vn/wp-content/uploads/2025/09/Mondelez_international_2012_logo-1.svg',
-    tag:'Sinh viên', role:'Sales Trainee',
-    adv:'https://linkajob.vn/wp-content/uploads/2025/04/Duong-Thi-Hoang-Oanh.png',
-    pkg:'Khoá học Land Your Dream Job', advName:'Hoàng Oanh' },
-  { photo:'https://linkajob.vn/wp-content/uploads/2026/05/1ac6cf9d6439d65018e80b5d7ff090a8.webp', name:'Ngô Hà Phương', url:'https://linkajob.vn/cau-chuyen-hoc-vien/ngo-ha-phuong/',
-    blurb:'Đừng đi xem Tarot, hãy xin mentoring nếu bạn cảm thấy mông lung.', full:'Sinh viên năm 4 NEU như mình từng rất mông lung, có mục tiêu trong đầu nhưng chẳng biết bắt đầu từ đâu. Sau khi đăng ký mentoring cùng chị Kiều Tiên, chị giúp mình nhìn lại toàn bộ hành trình và luyện phản xạ phỏng vấn thật sát. Chỉ sau 3 buổi coaching, mình nhận được offer thực tập tại chính công ty mơ ước — TikTok, điều mà trước đó mình còn chẳng dám tin là thật.',
-    co:'https://linkajob.vn/wp-content/uploads/2025/09/TikTok_logo.svg.webp',
-    tag:'Sinh viên', role:'Marketing Intern',
-    adv:'https://linkajob.vn/wp-content/uploads/2025/04/Nguyen-Ngoc-Kieu-Tien.jpg',
-    pkg:'Gói Đặc biệt · 4 buổi', advName:'Kiều Tiên' },
-  { photo:'https://linkajob.vn/wp-content/uploads/2026/06/c0e2cf0a6fceee90b7df.webp', name:'Nguyễn Đức Minh', url:'https://linkajob.vn/cau-chuyen-hoc-vien/nguyen-duc-minh/',
-    blurb:'Cú rẽ bất ngờ trong hành trình sự nghiệp của sinh viên FPT.', full:'Là sinh viên FPT, mình từng loay hoay với hàng loạt câu hỏi: CV mình đã đủ tốt chưa, làm sao để nổi bật giữa hàng trăm ứng viên. Trong suốt khoá Land Your Dream Job cùng chị Hoàng Oanh, mình không chỉ sửa CV mà học cách hiểu rõ giá trị bản thân và xây chiến lược ứng tuyển bài bản. Sự chủ động đó đã mang về cho mình offer Business Planner tại Accesstrade Vietnam.',
-    co:'https://linkajob.vn/wp-content/uploads/2026/06/logo-doc.webp',
-    tag:'Sinh viên FPT', role:'Business Planner',
-    adv:'https://linkajob.vn/wp-content/uploads/2025/04/Duong-Thi-Hoang-Oanh.png',
-    pkg:'Khoá học Land Your Dream Job', advName:'Hoàng Oanh' }
-];
+/* MỚI: STORIES giờ lấy từ Google Sheet (tab OfferResults) qua action
+   getOfferResults — không còn hardcode. Thêm/sửa/xoá 1 advisee, hoặc ẩn tạm
+   (cột active=FALSE), chỉ cần sửa trên Sheet, không cần đụng code này.
+   Cột blurb/full_story/tag/role/company_logo_url/advisor_name/
+   advisor_photo_url/package trong Sheet map tương ứng với các field
+   blurb/full/tag/role/co/advName/adv/pkg bên dưới. */
+var STORIES = [];
+
+function offerResultToStory(r){
+  return {
+    photo: STORIES_toDirectImageUrl(r.photo_url),
+    name: r.name || '',
+    blurb: r.blurb || '',
+    full: r.full_story || r.blurb || '',
+    co: STORIES_toDirectImageUrl(r.company_logo_url),
+    tag: r.tag || '',
+    role: r.role || '',
+    adv: STORIES_toDirectImageUrl(r.advisor_photo_url),
+    pkg: r.package || '',
+    advName: r.advisor_name || ''
+  };
+}
+
+function STORIES_toDirectImageUrl(url){
+  if(!url) return '';
+  url = String(url).trim();
+  var m = url.match(/drive\.google\.com\/file\/d\/([^/]+)/);
+  if(!m) m = url.match(/[?&]id=([^&]+)/);
+  if(m && m[1]) return 'https://lh3.googleusercontent.com/d/' + m[1];
+  return url;
+}
 
 function initials(name){
   var parts = String(name||'').trim().split(' ').filter(Boolean);
@@ -1094,7 +1034,7 @@ function renderStories(){
   var html = '';
   STORIES.forEach(function(s, i){
     html += '<div class="story-card" onclick="openStoryDrawer('+i+')">'
-      + '<div class="story-photo-wrap"><img src="'+s.photo+'" alt="'+s.name+'" loading="lazy"></div>'
+      + '<div class="story-photo-wrap"><img src="'+s.photo+'" alt="'+s.name+'" loading="lazy" onerror="this.style.display=\'none\';"></div>'
       + '<div class="story-body">'
       +   '<div class="story-name">'+s.name+'</div>'
       +   '<div class="story-blurb">'+s.blurb+'</div>'
@@ -1139,7 +1079,39 @@ document.addEventListener('keydown', function(e){
 });
 
 renderTicker();
-renderStories();
+
+// MỚI: 1 lần fetch getOfferResults, dùng chung cho cả grid story đầy đủ VÀ
+// marquee ảnh offer letter (nền đen) ngay sau Hero.
+var SS_WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbx7Bd9VvoyzfiiezQV9huoY2BKHH_Br1RAFIz00mjdyKeis-Zv-38a0gf_b-fMlul2C/exec';
+
+function renderResultMarquee(rows){
+  var track = document.getElementById('resultTrack');
+  if (!track) return;
+  var photos = rows.map(function(r){ return STORIES_toDirectImageUrl(r.photo_url); }).filter(Boolean);
+  if (!photos.length) { track.parentElement.parentElement.style.display = 'none'; return; }
+  function cardHtml(src){
+    return '<div class="result-card"><div class="result-photo">'
+      + '<img src="'+src+'" alt="Offer letter" loading="lazy" onerror="this.style.display=\'none\'; this.nextElementSibling.style.display=\'flex\';">'
+      + '<div class="result-photo-fallback" style="display:none;"><i class="ti ti-file-text"></i><span>Offer letter</span></div>'
+      + '</div></div>';
+  }
+  track.innerHTML = photos.map(cardHtml).join('') + photos.map(cardHtml).join('');
+}
+
+fetch(SS_WEBAPP_URL + '?action=getOfferResults')
+  .then(function(r){ return r.json(); })
+  .then(function(res){
+    var rows = (res && res.success && res.data) ? res.data : [];
+    STORIES = rows.map(offerResultToStory);
+    renderStories();
+    renderResultMarquee(rows);
+  })
+  .catch(function(){
+    var grid = document.getElementById('storyGrid');
+    if (grid) grid.innerHTML = '<div style="text-align:center;padding:40px;color:var(--muted);font-family:\'Montserrat\',sans-serif;font-size:13px;">Không tải được câu chuyện, vui lòng thử lại sau.</div>';
+    var stripEl = document.getElementById('resultTrack');
+    if (stripEl) stripEl.parentElement.parentElement.style.display = 'none';
+  });
 
 function toggleMobileNav(){
   var links = document.querySelector('.lj-nav-links');
