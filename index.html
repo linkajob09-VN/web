@@ -745,29 +745,12 @@ button:focus-visible, a:focus-visible, .lj-nav-btn-plain:focus-visible, .fbtn:fo
 
 <script>
 (function(){
-  // MỚI: marquee ảnh offer letter — dán link chia sẻ Google Drive của từng
-  // ảnh vào field "photo" bên dưới (dạng .../file/d/XXXX/view?usp=sharing).
-  // Code tự convert sang ảnh xem trực tiếp bằng hpAdvToDirectImageUrl (hàm
-  // đã dùng cho ảnh advisor). File Drive PHẢI để chế độ chia sẻ "Anyone with
-  // the link" thì ảnh mới hiện được. Chưa dán link thì tự hiện fallback đẹp
-  // (icon + "Offer letter") thay vì vỡ ảnh.
-  var results = [
-    { slug:'customer-service-assistant-intern', name:'Customer Service Assistant Intern', company:'SKF', photo:'https://drive.google.com/file/d/105b1KIrOhohKSHYEgwaUmhWUp_tdqBlh/view?usp=sharing' },
-    { slug:'business-planner', name:'Business Planner', company:'Interspace Việt Nam', photo:'https://drive.google.com/file/d/1YiUNV3D56o4eVeHPsLlqVTbMTt4XmUcx/view?usp=sharing' },
-    { slug:'junior-key-account-manger-1', name:'Junior Key Account Manager', company:'Intrepid', photo:'https://drive.google.com/file/d/1sUDnGtJeahpodFyCAI-CuoVWqZm6asub/view?usp=sharing' },
-    { slug:'junior-key-account-manger-2', name:'Junior Key Account Manager', company:'Intrepid', photo:'https://drive.google.com/file/d/132oKmP_KDeJ11PGStoeWYQ_1HNEpuQuu/view?usp=sharing' },
-    { slug:'intern', name:'intern', company:'Mondeleze', photo:'https://drive.google.com/file/d/12wWstXRqhdlswLhncBEJD7O_vSZQaBw6/view?usp=sharing' },
-    { slug:'online-marketing-intern', name:'Online Marketing Intern', company:'Lotte Mart', photo:'https://drive.google.com/file/d/1CIQGmsvaXt_F6Tcsbb_pEBMYK3BD7Gk4/view?usp=sharing' },
-    { slug:'sales-trainee', name:'Sales Trainee 2026', company:'Mondelez', photo:'https://drive.google.com/file/d/1ePHHcMzmZdFEIiprGDkxqI3BC0JQCizQ/view?usp=sharing' },
-    { slug:'production-management', name:'Production Management', company:'Fast Retailing Vietnam', photo:'https://drive.google.com/file/d/1WqmxvoC3uI4TI6oYT-oPoqD0Rkep_hUy/view?usp=sharing' },
-    { slug:'vinamilk-graduate-talent-program-2026', name:'Vinamilk Graduate Talent Program 2026', company:'Vinamilk', photo:'https://drive.google.com/file/d/1m2bVL2FmRfpNiJH5cjLI2zeyM0K7tChn/view?usp=sharing' },
-    { slug:'pr-intern', name:'PR Intern', company:'NetworldAsia - RedComms', photo:'https://drive.google.com/file/d/1Ze62io68DOH8sfOhv1Sb9XtwoyBIONNN/view?usp=sharing' },
-    { slug:'marketing-intern', name:'Marketing Intern', company:'ACFC', photo:'https://drive.google.com/file/d/1DIZ7NoEe0Azgpmb6X0-Y12panNKMfDM5/view?usp=sharing' },
-    { slug:'senior-trade-marketing-executive', name:'Senior Trade Marketing Executive', company:'FrieslandCampina Vietnam', photo:'https://drive.google.com/file/d/1F0DCTau9y3KKDbVeeWOOSc0RO3gavbfy/view?usp=sharing' }
-    { slug:'giám-sát-tài-năng-2026', name:'Giám Sát Tài Năng 2026', company:'Suntory Pepsico Vietnam', photo:'https://drive.google.com/file/d/1Gltl6wSzDpS_uEDiCr_sEEUbjRCfo_PY/view?usp=sharing' }
-    { slug:'commerce-trainee', name:'Traineeship Program 2026', company:'WPP Media', photo:'https://drive.google.com/file/d/1xrEZH2aMxMAczGacc1kXjGMwM1l4sD-U/view?usp=sharing' }
-
-  ];
+  // MỚI: ảnh offer letter cho section "Kết quả" giờ lấy từ Google Sheet (tab
+  // "OfferResults") qua action getOfferResults — KHÔNG còn hardcode trong code
+  // nữa. Muốn thêm/sửa/xoá/ẩn 1 người, chỉ cần mở Sheet, không cần sửa gì ở đây.
+  // Cột trong Sheet: name | company | photo_url (dán link Drive dạng .../file/d/XXXX/view)
+  // | sort_order (số nhỏ hiện trước, để trống cũng được) | active (để trống hoặc
+  // TRUE = hiện, gõ FALSE = ẩn tạm mà không cần xoá dòng).
 
   function toDirectImageUrl(url){
     if(!url) return '';
@@ -779,21 +762,32 @@ button:focus-visible, a:focus-visible, .lj-nav-btn-plain:focus-visible, .fbtn:fo
   }
 
   function cardHtml(r){
-    var src = toDirectImageUrl(r.photo) || ('assets/offers/'+r.slug+'.jpg');
+    var src = toDirectImageUrl(r.photo_url);
     return '<div class="result-card">'
       + '<div class="result-photo">'
-      +   '<img src="'+src+'" alt="Offer letter '+r.name+'" loading="lazy" onerror="this.style.display=\'none\'; this.nextElementSibling.style.display=\'flex\';">'
-      +   '<div class="result-photo-fallback" style="display:none;"><i class="ti ti-file-text"></i><span>Offer letter</span></div>'
+      +   (src
+            ? '<img src="'+src+'" alt="Offer letter '+r.name+'" loading="lazy" onerror="this.style.display=\'none\'; this.nextElementSibling.style.display=\'flex\';">'
+            : '')
+      +   '<div class="result-photo-fallback" style="display:'+(src?'none':'flex')+';"><i class="ti ti-file-text"></i><span>Offer letter</span></div>'
       + '</div>'
-      + '<div class="result-cap"><strong>'+r.name+'</strong><span>'+r.company+'</span></div>'
+      + '<div class="result-cap"><strong>'+(r.name||'')+'</strong><span>'+(r.company||'')+'</span></div>'
       + '</div>';
   }
 
+  var OFFER_RESULTS_WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbx7Bd9VvoyzfiiezQV9huoY2BKHH_Br1RAFIz00mjdyKeis-Zv-38a0gf_b-fMlul2C/exec';
+
   var track = document.getElementById('resultTrack');
-  if (track) {
-    // nhân đôi danh sách để marquee chạy vô hạn liền mạch (translateX -50% ↔ 0)
-    track.innerHTML = results.map(cardHtml).join('') + results.map(cardHtml).join('');
-  }
+  if (!track) return;
+
+  fetch(OFFER_RESULTS_WEBAPP_URL + '?action=getOfferResults')
+    .then(function(r){ return r.json(); })
+    .then(function(res){
+      var results = (res && res.success && res.data && res.data.length) ? res.data : [];
+      if (!results.length) { track.parentElement.style.display = 'none'; return; }
+      // nhân đôi danh sách để marquee chạy vô hạn liền mạch (translateX -50% ↔ 0)
+      track.innerHTML = results.map(cardHtml).join('') + results.map(cardHtml).join('');
+    })
+    .catch(function(){ track.parentElement.style.display = 'none'; });
 })();
 </script>
 
