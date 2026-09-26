@@ -817,30 +817,10 @@ function cwConfirm(){
 
 </script>
 <script>
-/* ─── DATA: feedback entries ───
-   Nguồn thật từ trang chủ LinkaJob (mục Advisee thành công).
-   Trong bản production, đoạn này sẽ được thay bằng fetch(WEBAPP_URL + '?action=getFeedbacks')
-   để đọc trực tiếp từ Google Sheet — cùng nguồn dữ liệu hiển thị trên trang Advisor. */
-var FEEDBACKS = [
-  { name:'Gia Hân', role:'International University – VNU HCMC',
-    quote:'Sau buổi meeting em đã mạnh dạn nộp vào MNC và nhận được offer. Cảm ơn chị vì đã truyền động lực.',
-    badge:'Offer — MNC', service:'Cố vấn 1-1', advisor:'', rating:5 },
-  { name:'Bùi Tuấn Anh', role:'Incoming Intern tại PwC',
-    quote:'Em có được offer nhờ chị giúp sửa CV trong round đầu tiên. Cảm ơn chị nhiều ạ.',
-    badge:'Intern — PwC', service:'Cố vấn 1-1', advisor:'', rating:5 },
-  { name:'Phạm Khánh Linh', role:'PE Sales Intern · Mondelez Vietnam',
-    quote:'Các anh chị không nói lý thuyết suông mà là những trải nghiệm thật, góc nhìn thật trong công việc.',
-    badge:'Intern — Mondelez', service:'Khoá học', advisor:'Hoàng Oanh', rating:5 },
-  { name:'Nguyễn Thị Phúc Anh', role:'Marketing Intern · Fonterra Vietnam',
-    quote:'Nhờ chị Linh sửa CV và hướng dẫn phỏng vấn rất có tâm nên em cải thiện được mindset và những điểm chưa tốt.',
-    badge:'Intern — Fonterra', service:'Cố vấn 1-1', advisor:'Đinh Hà Linh', rating:5 },
-  { name:'Thanh Nhi', role:'University of Finance and Marketing',
-    quote:'Không lâu sau em đã tìm được bến đỗ đáp ứng hơn 90% nguyện vọng — nhờ câu chị nói: không được hạ thấp tiêu chuẩn.',
-    badge:'Nhận offer', service:'Cố vấn 1-1', advisor:'', rating:5 },
-  { name:'Thanh Trúc', role:'Incoming Intern · Central Retail',
-    quote:'Chỉ 1 tiếng meeting, chị không chỉ sửa CV mà còn giúp em nhìn lại mình thực sự muốn gì.',
-    badge:'Intern — Central Retail', service:'Cố vấn 1-1', advisor:'', rating:5 }
-];
+/* MỚI: FEEDBACKS giờ lấy trực tiếp từ Google Sheet (tab AdvisorReviews) qua
+   action getFeedbacks — không còn hardcode. Thêm/sửa/xoá đánh giá chỉ cần
+   sửa trên Sheet, không cần đụng code này nữa. */
+var FEEDBACKS = [];
 
 function fbInitials(name){
   var parts = String(name||'').trim().split(' ').filter(Boolean);
@@ -899,8 +879,19 @@ document.addEventListener('DOMContentLoaded', function(){
   });
 });
 
-renderRatingSummary();
-renderFeedbacks();
+// MỚI: lấy dữ liệu thật từ Sheet AdvisorReviews rồi mới render — thay vì
+// render ngay từ mảng cứng như trước.
+fetch(CW_WEBAPP_URL + '?action=getFeedbacks')
+  .then(function(r){ return r.json(); })
+  .then(function(res){
+    FEEDBACKS = (res && res.success && res.data) ? res.data : [];
+    renderRatingSummary();
+    renderFeedbacks();
+  })
+  .catch(function(){
+    var grid = document.getElementById('fbGrid');
+    if (grid) grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:40px; color:var(--muted); font-family:\'Montserrat\',sans-serif; font-size:13px;">Không tải được đánh giá, vui lòng thử lại sau.</div>';
+  });
 
 
 /* ── animation: scroll reveal, stat count-up, nav shadow ── */
