@@ -1087,7 +1087,7 @@ var SS_WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbx7Bd9VvoyzfiiezQV9
 function renderResultMarquee(rows){
   var track = document.getElementById('resultTrack');
   if (!track) return;
-  var photos = rows.map(function(r){ return STORIES_toDirectImageUrl(r.photo_url); }).filter(Boolean);
+  var photos = rows.map(function(r){ return STORIES_toDirectImageUrl(r.photo1_url); }).filter(Boolean);
   if (!photos.length) { track.parentElement.parentElement.style.display = 'none'; return; }
   function cardHtml(src){
     return '<div class="result-card"><div class="result-photo">'
