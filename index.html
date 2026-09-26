@@ -303,20 +303,17 @@ footer span{ color:var(--orange);}
 
 /* ── HOMEPAGE OFFER RESULTS — marquee ảnh offer letter, cùng kiểu thẻ với hàng advisor, chạy ngược hướng ── */
 .result-viewport{overflow:hidden;}
-.result-track{display:flex;gap:16px;width:max-content;animation:resultScroll 110s linear infinite;}
+.result-track{display:flex;align-items:stretch;gap:16px;width:max-content;animation:resultScroll 110s linear infinite;}
 .result-track:hover{animation-play-state:paused;}
 @keyframes resultScroll{ from{transform:translateX(-50%);} to{transform:translateX(0);} }
-.result-card{width:200px;flex:none;background:var(--paper-2);border:.5px solid var(--line);border-radius:16px;overflow:hidden;transition:border-color .2s,transform .2s,box-shadow .2s;}
+.result-card{height:340px;flex:none;background:var(--paper-2);border:.5px solid var(--line);border-radius:16px;overflow:hidden;transition:border-color .2s,transform .2s,box-shadow .2s;}
 .result-card:hover{border-color:rgba(252,82,41,.35);transform:translateY(-3px);box-shadow:0 10px 26px rgba(0,0,0,.08);}
-.result-photo{position:relative;width:100%;aspect-ratio:3/4;background:linear-gradient(135deg,#f3f1ec,#e9e6df);overflow:hidden;}
-.result-photo img{width:100%;height:100%;object-fit:cover;display:block;}
-.result-photo-fallback{width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;text-align:center;padding:14px;}
+.result-photo{position:relative;height:100%;width:auto;background:linear-gradient(135deg,#f3f1ec,#e9e6df);overflow:hidden;}
+.result-photo img{height:100%;width:auto;max-width:none;object-fit:contain;display:block;}
+.result-photo-fallback{width:220px;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;text-align:center;padding:14px;}
 .result-photo-fallback i{font-size:26px;color:var(--orange);opacity:.8;}
 .result-photo-fallback span{font-size:11px;color:var(--muted-2);}
-.result-cap{padding:12px 14px 14px;}
-.result-cap strong{display:block;font-family:'Montserrat',sans-serif;font-size:12.5px;color:var(--text);}
-.result-cap span{display:block;font-size:10.8px;color:var(--muted);margin-top:2px;}
-@media(max-width:560px){ .result-card{width:150px;} .result-cap{padding:10px 10px 12px;} }
+@media(max-width:560px){ .result-card{height:240px;} }
 
 /* ── MENTOR IMPACT CHART ── */
 .chart-card{background:var(--paper-2);border:.5px solid var(--line);border-radius:20px;padding:32px 28px;max-width:760px;margin:0 auto;}
@@ -557,6 +554,11 @@ button:focus-visible, a:focus-visible, .lj-nav-btn-plain:focus-visible, .fbtn:fo
       <div style="padding:20px;color:var(--muted-dark-2);font-size:12.5px;">Đang tải đội ngũ advisor…</div>
     </div>
   </div>
+  <div class="wrap">
+    <div style="text-align:center;margin-top:28px;">
+      <a href="đội-ngũ-advisor.html" class="btn btn-orange">Xem toàn bộ đội ngũ Advisor →</a>
+    </div>
+  </div>
 </section>
 
 <section>
@@ -748,8 +750,10 @@ button:focus-visible, a:focus-visible, .lj-nav-btn-plain:focus-visible, .fbtn:fo
   // MỚI: ảnh offer letter cho section "Kết quả" giờ lấy từ Google Sheet (tab
   // "OfferResults") qua action getOfferResults — KHÔNG còn hardcode trong code
   // nữa. Muốn thêm/sửa/xoá/ẩn 1 người, chỉ cần mở Sheet, không cần sửa gì ở đây.
-  // Cột trong Sheet: name | company | photo_url (dán link Drive dạng .../file/d/XXXX/view)
-  // | sort_order (số nhỏ hiện trước, để trống cũng được) | active (để trống hoặc
+  // Cột cần điền trong Sheet: result_id (số bất kỳ, không để trống) + photo_url
+  // (dán link Drive dạng .../file/d/XXXX/view). Cột name/company không bắt
+  // buộc — ảnh đã tự có sẵn thông tin thiết kế trong đó rồi.
+  // sort_order (số nhỏ hiện trước, để trống cũng được) | active (để trống hoặc
   // TRUE = hiện, gõ FALSE = ẩn tạm mà không cần xoá dòng).
 
   function toDirectImageUrl(url){
@@ -766,11 +770,10 @@ button:focus-visible, a:focus-visible, .lj-nav-btn-plain:focus-visible, .fbtn:fo
     return '<div class="result-card">'
       + '<div class="result-photo">'
       +   (src
-            ? '<img src="'+src+'" alt="Offer letter '+r.name+'" loading="lazy" onerror="this.style.display=\'none\'; this.nextElementSibling.style.display=\'flex\';">'
+            ? '<img src="'+src+'" alt="Offer letter" loading="lazy" onerror="this.style.display=\'none\'; this.nextElementSibling.style.display=\'flex\';">'
             : '')
       +   '<div class="result-photo-fallback" style="display:'+(src?'none':'flex')+';"><i class="ti ti-file-text"></i><span>Offer letter</span></div>'
       + '</div>'
-      + '<div class="result-cap"><strong>'+(r.name||'')+'</strong><span>'+(r.company||'')+'</span></div>'
       + '</div>';
   }
 
