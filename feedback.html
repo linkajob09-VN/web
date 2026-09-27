@@ -190,6 +190,9 @@ section{ padding:80px 0;}
 .avatar .verified{ position:absolute; bottom:-1px; right:-1px; width:18px; height:18px; background:var(--orange); border-radius:50%; display:flex; align-items:center; justify-content:center; border:2px solid var(--dark-card); font-size:9px; color:#fff;}
 .avatar.on-light{ background:linear-gradient(135deg,#fdf1ee,#fce8e2); border-color:rgba(252,82,41,.15);}
 .avatar.on-light .verified{ border-color:#fff;}
+.avatar.avatar-photo{ overflow:hidden; padding:0;}
+.avatar.avatar-photo img{ width:100%; height:100%; object-fit:cover; display:block; border-radius:50%;}
+.avatar-fallback-inner{ width:100%; height:100%; display:flex; align-items:center; justify-content:center;}
 .instructor-card h3{ font-size:17px; color:var(--text-dark); margin-bottom:4px; letter-spacing:-0.3px;}
 .instructor-card .role{ font-size:12.5px; color:var(--orange); font-weight:600; margin-bottom:12px; font-family:'Montserrat',sans-serif;}
 .instructor-card ul{ list-style:none; display:flex; flex-direction:column; gap:6px;}
@@ -827,6 +830,31 @@ function fbInitials(name){
   return parts.slice(-2).map(function(p){ return p[0]; }).join('').toUpperCase();
 }
 
+function fbToDirectImageUrl(url){
+  if(!url) return '';
+  url = String(url).trim();
+  var m = url.match(/drive\.google\.com\/file\/d\/([^/]+)/);
+  if(!m) m = url.match(/[?&]id=([^&]+)/);
+  if(m && m[1]) return 'https://lh3.googleusercontent.com/d/' + m[1];
+  return url;
+}
+
+// MỚI: avatar hiện ảnh thật của advisee nếu có photo_url trong Sheet, nếu
+// không có (hoặc ảnh lỗi) thì tự rơi về chữ tắt như cũ — không vỡ giao diện.
+function fbAvatarHtml(name, photoUrl, verified){
+  var src = fbToDirectImageUrl(photoUrl);
+  var initialsHtml = '<div class="avatar-fallback-inner">'+fbInitials(name)+'</div>';
+  var verifiedHtml = verified ? '<span class="verified"><i class="ti ti-check"></i></span>' : '';
+  if (!src) {
+    return '<div class="avatar on-light">'+fbInitials(name)+verifiedHtml+'</div>';
+  }
+  return '<div class="avatar on-light avatar-photo">'
+    + '<img src="'+src+'" alt="" loading="lazy" onerror="this.style.display=\'none\'; this.nextElementSibling.style.display=\'flex\';">'
+    + '<div class="avatar-fallback-inner" style="display:none;">'+fbInitials(name)+'</div>'
+    + verifiedHtml
+    + '</div>';
+}
+
 function renderRatingSummary(){
   if(FEEDBACKS.length === 0) return;
   var sum = 0;
@@ -860,8 +888,8 @@ function renderFeedbacks(){
       + '<div class="fb-quote">"'+f.quote+'"</div>'
       + '<span class="fb-service">'+f.service+(f.badge ? ' · '+f.badge : '')+'</span>'
       + '<div class="fb-people">'
-      +   '<div class="fb-person"><div class="avatar on-light">'+fbInitials(f.name)+'<span class="verified"><i class="ti ti-check"></i></span></div><div class="fb-person-text"><strong>'+f.name+'</strong><span>'+f.role+'</span></div></div>'
-      +   (f.advisor ? '<div class="fb-person"><div class="avatar on-light">'+fbInitials(f.advisor)+'</div><div class="fb-person-text"><strong>Advisor '+f.advisor+'</strong><span>Đồng hành buổi tư vấn</span></div></div>' : '')
+      +   '<div class="fb-person">'+fbAvatarHtml(f.name, f.photo_url, true)+'<div class="fb-person-text"><strong>'+f.name+'</strong><span>'+f.role+'</span></div></div>'
+      +   (f.advisor ? '<div class="fb-person">'+fbAvatarHtml(f.advisor, '', false)+'<div class="fb-person-text"><strong>Advisor '+f.advisor+'</strong><span>Đồng hành buổi tư vấn</span></div></div>' : '')
       + '</div>'
       + '</div>';
   });
