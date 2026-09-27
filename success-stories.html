@@ -1163,6 +1163,7 @@ function renderResultMarquee(rows){
   if (!track) return;
   var photos = rows.map(function(r){ return STORIES_toDirectImageUrl(r.photo_url); }).filter(Boolean);
   if (!photos.length) { track.parentElement.parentElement.style.display = 'none'; return; }
+  track.parentElement.parentElement.style.display = '';
   function cardHtml(src){
     return '<div class="result-card"><div class="result-photo">'
       + '<img src="'+src+'" alt="Offer letter" loading="lazy" onerror="this.style.display=\'none\'; this.nextElementSibling.style.display=\'flex\';">'
@@ -1172,19 +1173,50 @@ function renderResultMarquee(rows){
   track.innerHTML = photos.map(cardHtml).join('') + photos.map(cardHtml).join('');
 }
 
-fetch(SS_WEBAPP_URL + '?action=getOfferResults')
+function renderAll(rows){
+  // MỚI: chỉ những dòng có show_story=TRUE mới lên lưới card đầy đủ — các
+  // ảnh offer letter còn lại (chưa có story) vẫn chạy trong marquee bình
+  // thường, không bắt buộc phải viết đủ nội dung mới hiện được ảnh.
+  STORIES = rows.filter(function(r){ return r.show_story; }).map(offerResultToStory);
+  renderStories();
+  renderResultMarquee(rows);
+}
+
+// MỚI: cache vào localStorage để hiện ảnh + card NGAY LẬP TỨC cho khách quay
+// lại (không phải đợi gọi Sheet mỗi lần vào trang) — giống cách hàng advisor
+// trên index.html đang làm. Lần đầu chưa có cache thì vẫn phải đợi 1 lần.
+function getLocalCache(){ try { return JSON.parse(localStorage.getItem('lj_offer_results_cache')); } catch(e){ return null; } }
+function setLocalCache(version, data){ try { localStorage.setItem('lj_offer_results_cache', JSON.stringify({ version: version, data: data })); } catch(e){} }
+
+var localSS = getLocalCache();
+if (localSS && localSS.data) {
+  renderAll(localSS.data); // hiện ngay, không chờ mạng
+}
+
+fetch(SS_WEBAPP_URL + '?action=getOfferResultsVersion')
   .then(function(r){ return r.json(); })
-  .then(function(res){
-    var rows = (res && res.success && res.data) ? res.data : [];
-    STORIES = rows.map(offerResultToStory);
-    renderStories();
-    renderResultMarquee(rows);
+  .then(function(vres){
+    var version = (vres && vres.success) ? vres.data.version : null;
+    if (localSS && version && localSS.version === version) return; // không đổi gì, khỏi tải lại
+    fetch(SS_WEBAPP_URL + '?action=getOfferResults')
+      .then(function(r){ return r.json(); })
+      .then(function(res){
+        var rows = (res && res.success && res.data) ? res.data : [];
+        setLocalCache(version, rows);
+        renderAll(rows);
+      });
   })
   .catch(function(){
-    var grid = document.getElementById('storyGrid');
-    if (grid) grid.innerHTML = '<div style="text-align:center;padding:40px;color:var(--muted);font-family:\'Montserrat\',sans-serif;font-size:13px;">Không tải được câu chuyện, vui lòng thử lại sau.</div>';
-    var stripEl = document.getElementById('resultTrack');
-    if (stripEl) stripEl.parentElement.parentElement.style.display = 'none';
+    if (localSS) return; // đã hiện từ cache rồi, khỏi báo lỗi
+    fetch(SS_WEBAPP_URL + '?action=getOfferResults')
+      .then(function(r){ return r.json(); })
+      .then(function(res){ renderAll((res && res.success && res.data) ? res.data : []); })
+      .catch(function(){
+        var grid = document.getElementById('storyGrid');
+        if (grid) grid.innerHTML = '<div style="text-align:center;padding:40px;color:var(--muted);font-family:\'Montserrat\',sans-serif;font-size:13px;">Không tải được câu chuyện, vui lòng thử lại sau.</div>';
+        var stripEl = document.getElementById('resultTrack');
+        if (stripEl) stripEl.parentElement.parentElement.style.display = 'none';
+      });
   });
 
 function toggleMobileNav(){
