@@ -782,15 +782,48 @@ button:focus-visible, a:focus-visible, .lj-nav-btn-plain:focus-visible, .fbtn:fo
   var track = document.getElementById('resultTrack');
   if (!track) return;
 
-  fetch(OFFER_RESULTS_WEBAPP_URL + '?action=getOfferResults')
+  // MỚI: cache vào localStorage để hiện ảnh NGAY LẬP TỨC cho khách quay lại
+  // (không phải đợi gọi Sheet mỗi lần vào trang) — giống cách hàng advisor
+  // đang làm. Lần đầu chưa có cache thì vẫn phải đợi gọi Sheet 1 lần.
+  function getLocalCache(){ try { return JSON.parse(localStorage.getItem('lj_offer_results_cache')); } catch(e){ return null; } }
+  function setLocalCache(version, data){ try { localStorage.setItem('lj_offer_results_cache', JSON.stringify({ version: version, data: data })); } catch(e){} }
+
+  function render(results){
+    if (!results || !results.length) { track.parentElement.style.display = 'none'; return; }
+    track.parentElement.style.display = '';
+    // nhân đôi danh sách để marquee chạy vô hạn liền mạch (translateX -50% ↔ 0)
+    track.innerHTML = results.map(cardHtml).join('') + results.map(cardHtml).join('');
+  }
+
+  function fetchFresh(){
+    fetch(OFFER_RESULTS_WEBAPP_URL + '?action=getOfferResults')
+      .then(function(r){ return r.json(); })
+      .then(function(res){
+        var results = (res && res.success && res.data) ? res.data : [];
+        render(results);
+      })
+      .catch(function(){ if (!getLocalCache()) track.parentElement.style.display = 'none'; });
+  }
+
+  var local = getLocalCache();
+  if (local && local.data) {
+    render(local.data); // hiện ngay, không chờ mạng
+  }
+
+  fetch(OFFER_RESULTS_WEBAPP_URL + '?action=getOfferResultsVersion')
     .then(function(r){ return r.json(); })
-    .then(function(res){
-      var results = (res && res.success && res.data && res.data.length) ? res.data : [];
-      if (!results.length) { track.parentElement.style.display = 'none'; return; }
-      // nhân đôi danh sách để marquee chạy vô hạn liền mạch (translateX -50% ↔ 0)
-      track.innerHTML = results.map(cardHtml).join('') + results.map(cardHtml).join('');
+    .then(function(vres){
+      var version = (vres && vres.success) ? vres.data.version : null;
+      if (local && version && local.version === version) return; // không đổi gì, khỏi tải lại
+      fetch(OFFER_RESULTS_WEBAPP_URL + '?action=getOfferResults')
+        .then(function(r){ return r.json(); })
+        .then(function(res){
+          var results = (res && res.success && res.data) ? res.data : [];
+          setLocalCache(version, results);
+          render(results);
+        });
     })
-    .catch(function(){ track.parentElement.style.display = 'none'; });
+    .catch(function(){ if (!local) fetchFresh(); });
 })();
 </script>
 
