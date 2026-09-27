@@ -1023,9 +1023,11 @@ var STORIES = [];
 function offerResultToStory(r){
   return {
     photo: STORIES_toDirectImageUrl(r.photo1_url),
+    offerPhoto: STORIES_toDirectImageUrl(r.photo_url),
     name: r.name || '',
+    company: r.company || '',
     blurb: r.blurb || '',
-    full: r.full_story || r.blurb || '',
+    full: r.full_story || '',
     co: STORIES_toDirectImageUrl(r.company_logo_url),
     tag: r.tag || '',
     role: r.role || '',
@@ -1075,18 +1077,69 @@ function renderStories(){
   grid.innerHTML = html;
 }
 
+// MỚI: parse nội dung cột full_story (Sheet) thành outline có cấu trúc,
+// giống bài viết mẫu trên linkajob.vn — Staff chỉ cần gõ theo quy ước đơn
+// giản sau trong ô full_story, mỗi dòng 1 ý, dòng trống để ngăn đoạn:
+//   ## Tiêu đề nhỏ         → in đậm như heading phụ
+//   - Nội dung gạch đầu dòng → xuống bullet list
+//   ✅ Đã làm được điều gì  → xuống checklist có dấu tích
+//   > Trích lời advisee     → khối trích dẫn có viền cam
+//   ---                     → đường kẻ ngăn cách giữa các phần
+//   (dòng thường)           → đoạn văn bình thường
+function parseStoryOutline(text){
+  if(!text) return '';
+  var lines = String(text).split('\n');
+  var html = '';
+  var listBuffer = [];
+  var listType = null; // 'ul' | 'check'
+  function flushList(){
+    if(!listBuffer.length) return;
+    var cls = listType === 'check' ? ' class="d-check"' : '';
+    html += '<ul'+cls+'>' + listBuffer.map(function(t){ return '<li>'+t+'</li>'; }).join('') + '</ul>';
+    listBuffer = []; listType = null;
+  }
+  lines.forEach(function(raw){
+    var line = raw.trim();
+    if(!line){ flushList(); return; }
+    if(line === '---'){ flushList(); html += '<hr>'; return; }
+    if(line.indexOf('## ') === 0){ flushList(); html += '<h4>'+line.slice(3)+'</h4>'; return; }
+    if(line.indexOf('> ') === 0){ flushList(); html += '<blockquote>'+line.slice(2)+'</blockquote>'; return; }
+    if(line.indexOf('- ') === 0 || line.indexOf('* ') === 0){
+      if(listType && listType !== 'ul') flushList();
+      listType = 'ul'; listBuffer.push(line.slice(2)); return;
+    }
+    if(line.indexOf('✅') === 0){
+      if(listType && listType !== 'check') flushList();
+      listType = 'check'; listBuffer.push(line); return;
+    }
+    flushList();
+    html += '<p>'+line+'</p>';
+  });
+  flushList();
+  return html;
+}
+
 function openStoryDrawer(i){
   var s = STORIES[i];
   if(!s) return;
   document.getElementById('dPhoto').src = s.photo;
   document.getElementById('dPhoto').alt = s.name;
   document.getElementById('dName').textContent = s.name;
-  document.getElementById('dBlurb').textContent = s.full || s.blurb;
+  document.getElementById('dBlurb').textContent = s.blurb;
   var coLogo = document.getElementById('dCoLogo');
   if(s.co){ coLogo.src = s.co; coLogo.style.display = ''; } else { coLogo.style.display = 'none'; }
   document.getElementById('dPath').textContent = s.tag + ' → ' + s.role;
   document.getElementById('dAdvPhoto').src = s.adv;
   document.getElementById('dAdvInfo').textContent = s.pkg + ' · Advisor: ' + s.advName;
+  document.getElementById('dStory').innerHTML = parseStoryOutline(s.full);
+  var offerWrap = document.getElementById('dOfferWrap');
+  if(s.offerPhoto){
+    document.getElementById('dOfferPhoto').src = s.offerPhoto;
+    document.getElementById('dOfferCaption').textContent = 'Offer letter của '+s.name+' — '+s.role+' tại '+s.company;
+    offerWrap.style.display = '';
+  } else {
+    offerWrap.style.display = 'none';
+  }
   document.getElementById('storyDrawerOv').classList.add('open');
   document.body.style.overflow = 'hidden';
 }
