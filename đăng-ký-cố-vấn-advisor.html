@@ -80,12 +80,13 @@
 .pj-btn-main{background:#fc5229;color:#fff;box-shadow:0 8px 20px rgba(252,82,41,.3);}
 .pj-btn-main:hover{background:#e84820;}
 .pj-desc{font-size:13px;color:rgba(240,240,240,.55);line-height:1.6;margin-bottom:14px;}
-.pj-topic{display:flex;align-items:center;gap:6px;font-family:'Space Grotesk',sans-serif;font-size:10.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:rgba(240,240,240,.4);margin:2px 0 -2px;}
+.pj-topic{display:flex;align-items:center;gap:6px;font-family:'Space Grotesk',sans-serif;font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#fc5229;margin:2px 0 -2px;}
 .pj-topic i{font-size:13px;color:#fc5229;}
 .pj-benefits{gap:6px;}
 .pj-benefits li.pj-topic-wrap{display:block;}
 .pj-benefits ul{list-style:none;display:flex;flex-direction:column;gap:8px;margin:8px 0 10px;padding:0;}
 .pj-sub{font-family:'Space Grotesk',sans-serif;font-size:12.5px;font-weight:700;color:#F0F0F0;line-height:1.5;margin-bottom:10px;}
+.lj-light-zone .lj-dark-zone .pj-sub{color:#F0F0F0;}
 
 
 /* ── ADVISOR NOTE ── */
@@ -560,9 +561,9 @@ function renderPricingJourney(packages, featuresByPkg) {
     if (isHi) journeyHtml += '<div class="pj-badge">' + pricingEscHtml(p.badge_label) + '</div>';
     journeyHtml += '<div class="pj-tag">' + pricingEscHtml(meta.tag || journeyTagFor(p, i)) + '</div>';
     journeyHtml += '<div class="pj-name">' + pricingEscHtml(p.name) + '</div>';
+    if (subParts.length) journeyHtml += '<div class="pj-sub">' + pricingEscHtml(subParts.join(' · ')) + '</div>';
     if (meta.description) journeyHtml += '<div class="pj-desc">' + pricingEscHtml(meta.description) + '</div>';
     journeyHtml += '<ul class="pj-benefits">' + benefitsHtml + '</ul>';
-    journeyHtml += '<div class="pj-sub">' + pricingEscHtml(subParts.join(' · ')) + '</div>';
     journeyHtml += '<div class="pj-price">' + (meta.price_label ? pricingEscHtml(meta.price_label) : pricingFmtPriceK(p)) + '</div>';
     journeyHtml += '<button class="pj-btn ' + (isHi ? 'pj-btn-main' : 'pj-btn-ghost') + '" onclick="location.href=\'đội-ngũ-advisor.html?package=' + slug + '\'">Chọn ' + pricingEscHtml(p.name) + '</button>';
     journeyHtml += '</div></div>';
