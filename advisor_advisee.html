@@ -1178,7 +1178,7 @@ function buildAdviseeFromBooking(b, allSessions) {
     progress: sessionsDone + '/' + sessionsTotal,
     paid: Number(b.package_price) || 0,
     registeredAt: b.created_at ? String(b.created_at).slice(0,10) : '',
-    expiry: b.expiry_date ? String(b.expiry_date).slice(0,10) : '',
+    expiry: (b.expiry_date || b.expiry) ? String(b.expiry_date || b.expiry).slice(0,10) : '',
     advisor: b.advisor_name, sessions: sessions,
   };
 }
@@ -1207,9 +1207,36 @@ function renderAdvisee(tab) {
   c.className = 'content narrow';
   c.innerHTML = skeletonRows(3);
   loadAdviseeRealDataAsync().then(function(){
+    var myAe = MOCK.advisees.filter(function(ae){ return ae.email === currentUser.email; });
+    var activeAe = myAe.find(function(ae){ return !isAdviseeExpired(ae); });
+    if (myAe.length && !activeAe) {
+      // Gói đã hết hạn — KHÔNG mở trang advisee (my-bookings/new-booking),
+      // chỉ hiện thông báo + lối gia hạn/nâng cấp ngay khi vừa đăng nhập.
+      c.innerHTML = renderAdviseeExpiredNotice(myAe[myAe.length - 1]);
+      return;
+    }
     if (tab === 'my-bookings') c.innerHTML = renderMyBookings();
     else c.innerHTML = renderNewBookingForm();
   });
+}
+
+function renderAdviseeExpiredNotice(ae) {
+  return '<div class="card" style="max-width:520px;margin:60px auto;text-align:center;padding:40px 32px">' +
+    '<div style="font-size:48px;margin-bottom:16px">⏰</div>' +
+    '<div style="font-size:18px;font-weight:800;margin-bottom:8px">Gói cố vấn của bạn đã hết hạn</div>' +
+    '<div style="font-size:13.5px;color:var(--muted);line-height:1.7;margin-bottom:20px">' +
+      'Gói <strong>' + (ae.pkg || '') + '</strong> hết hạn ngày <strong>' + fmtDateVN(ae.expiry) + '</strong> (đã dùng ' + ae.sessionsDone + '/' + ae.sessionsTotal + ' buổi). ' +
+      'Gia hạn hoặc nâng cấp để tiếp tục sử dụng.' +
+    '</div>' +
+    '<div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">' +
+      '<button class="login-btn" style="width:auto;padding:12px 24px" onclick="openExtendModal(\'' + ae.id + '\')">📅 Gia hạn ngay</button>' +
+      '<button class="btn-secondary" style="width:auto;padding:12px 24px" onclick="openUpgradePackageModal(\'' + ae.id + '\')">⬆ Nâng cấp gói</button>' +
+    '</div></div>';
+}
+function fmtDateVN(ymd) {
+  if (!ymd) return '';
+  var p = ymd.split('-');
+  return p.length === 3 ? (p[2] + '/' + p[1] + '/' + p[0]) : ymd;
 }
   
 function renderAdvisorOverview() {
@@ -2064,25 +2091,42 @@ function renderStaffListPage() {
 }
 
 function openExtendModal(aeId) {
+  var ae = MOCK.advisees.find(function(x){ return x.id === aeId; });
   document.getElementById('modal-title').textContent = '📅 Gia hạn thời gian sử dụng';
   document.getElementById('modal-body').innerHTML =
     '<div style="text-align:center;padding:8px 0 16px">' +
     '<div style="font-size:40px;margin-bottom:12px">⏱</div>' +
-    '<div style="font-size:15px;font-weight:700;color:var(--text);margin-bottom:6px">Cộng thêm 1 tháng sử dụng</div>' +
-    '<div style="font-size:13px;color:var(--muted);line-height:1.7;margin-bottom:16px">Gói của bạn sẽ được gia hạn thêm <strong>30 ngày</strong> kể từ ngày hết hạn hiện tại.</div>' +
+    '<div style="font-size:13px;color:var(--muted);line-height:1.7;margin-bottom:16px">Giá <strong>100.000đ / tuần</strong>, cộng thêm kể từ ngày hết hạn hiện tại (' + fmtDateVN(ae ? ae.expiry : '') + ').</div>' +
+    '<div style="display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:16px">' +
+      '<span style="font-size:13px">Số tuần:</span>' +
+      '<input type="number" id="extend-weeks" value="1" min="1" style="width:70px;text-align:center;padding:8px;border:1.5px solid var(--border);border-radius:8px;font-size:14px" oninput="updateExtendPrice()">' +
+    '</div>' +
     '<div style="background:var(--brand-light);border:1.5px solid #FECACA;border-radius:12px;padding:14px 20px;display:inline-block">' +
-    '<div style="font-size:24px;font-weight:800;color:var(--brand)">100.000đ</div>' +
-    '<div style="font-size:12px;color:var(--muted);margin-top:2px">Thanh toán 1 lần</div>' +
+    '<div style="font-size:24px;font-weight:800;color:var(--brand)" id="extend-price">100.000đ</div>' +
+    '<div style="font-size:12px;color:var(--muted);margin-top:2px">Thanh toán 1 lần — tự động xác nhận qua QR</div>' +
     '</div>' +
-    '</div>' +
-    '<div style="background:#F9FAFB;border-radius:10px;padding:12px 16px;font-size:13px;color:var(--muted);line-height:1.65">' +
-    'Sau khi chuyển khoản <strong style="color:var(--text)">100.000đ</strong> với nội dung <strong style="color:var(--brand)">GIA HAN ' + (currentUser.name||'').split(' ').pop().toUpperCase() + '</strong>, ' +
-    'gửi bill về <strong>contact@linkajob.vn</strong> hoặc inbox Facebook. Đội LinkaJob xác nhận trong <strong>2h</strong>.' +
     '</div>';
   document.getElementById('modal-actions').innerHTML =
     '<button class="btn-secondary" onclick="closeModal()" style="width:auto;padding:10px 20px">Đóng</button>' +
-    '<button class="login-btn" onclick="toast(\'Đã ghi nhận! Vui lòng chuyển khoản và gửi bill xác nhận.\',\'success\');closeModal()" style="width:auto;padding:10px 24px">Xác nhận gia hạn</button>';
+    '<button class="login-btn" id="extend-submit-btn" onclick="confirmExtend(\'' + aeId + '\')" style="width:auto;padding:10px 24px">Tạo mã thanh toán</button>';
   document.getElementById('modal-overlay').classList.add('open');
+}
+function updateExtendPrice() {
+  var weeks = Math.max(1, Number(document.getElementById('extend-weeks').value) || 1);
+  document.getElementById('extend-price').textContent = (weeks * 100000).toLocaleString('vi-VN') + 'đ';
+}
+function confirmExtend(aeId) {
+  var ae = MOCK.advisees.find(function(x){ return x.id === aeId; });
+  var weeks = Math.max(1, Number(document.getElementById('extend-weeks').value) || 1);
+  var btn = document.getElementById('extend-submit-btn');
+  btn.innerHTML = '<span class="spinner"></span>'; btn.disabled = true;
+  apiPost({
+    action: 'renewBooking', booking_id: aeId, weeks: weeks,
+    advisee_name: ae ? ae.name : currentUser.name, advisee_email: ae ? ae.email : currentUser.email, advisee_phone: ae ? ae.phone : '',
+  }).then(function(res){
+    if (!res || !res.success) { toast('Lỗi: ' + (res && res.error), 'error'); btn.innerHTML = 'Tạo mã thanh toán'; btn.disabled = false; return; }
+    window.location.href = res.payment_url;
+  }).catch(function(e){ toast('Lỗi kết nối: ' + e.message, 'error'); btn.innerHTML = 'Tạo mã thanh toán'; btn.disabled = false; });
 }
 
 function openSwitchAdvisorModal(aeId) {
@@ -2115,20 +2159,30 @@ function openSwitchAdvisorModal(aeId) {
 function confirmSwitchAdvisor(aeId, newAdvisorName) {
   closeModal();
   setTimeout(function() {
+    var ae = MOCK.advisees.find(function(x){ return x.id === aeId; });
     document.getElementById('modal-title').textContent = 'Xác nhận đổi Advisor';
     document.getElementById('modal-body').innerHTML =
       '<div style="text-align:center;padding:8px 0 16px">' +
       '<div style="font-size:36px;margin-bottom:10px">🔄</div>' +
       '<div style="font-size:15px;font-weight:700;margin-bottom:6px">Đổi sang <span style="color:var(--brand)">' + newAdvisorName + '</span>?</div>' +
-      '<div style="font-size:13px;color:var(--muted);line-height:1.7">' +
-      'Phí: <strong style="color:var(--brand)">100.000đ</strong>. Chuyển khoản với nội dung ' +
-      '<strong style="color:var(--brand)">DOI ADVISOR ' + newAdvisorName.split(' ').pop().toUpperCase() + '</strong> và gửi bill về contact@linkajob.vn.' +
-      '</div></div>';
+      '<div style="font-size:13px;color:var(--muted);line-height:1.7">Phí: <strong style="color:var(--brand)">100.000đ</strong> — tự động xác nhận qua QR, chỉ được đổi <strong>1 lần</strong> trong suốt gói.</div></div>';
     document.getElementById('modal-actions').innerHTML =
       '<button class="btn-secondary" onclick="closeModal()" style="width:auto;padding:10px 20px">Huỷ</button>' +
-      '<button class="login-btn" onclick="toast(\'Đã ghi nhận! Vui lòng chuyển khoản và gửi bill.\',\'success\');closeModal()" style="width:auto;padding:10px 24px">Xác nhận</button>';
+      '<button class="login-btn" id="switchadv-submit-btn" onclick="submitSwitchAdvisor(\'' + aeId + '\',\'' + newAdvisorName + '\')" style="width:auto;padding:10px 24px">Tạo mã thanh toán</button>';
     document.getElementById('modal-overlay').classList.add('open');
   }, 150);
+}
+function submitSwitchAdvisor(aeId, newAdvisorName) {
+  var ae = MOCK.advisees.find(function(x){ return x.id === aeId; });
+  var btn = document.getElementById('switchadv-submit-btn');
+  btn.innerHTML = '<span class="spinner"></span>'; btn.disabled = true;
+  apiPost({
+    action: 'requestChangeAdvisor', booking_id: aeId, new_advisor_id: newAdvisorName,
+    advisee_name: ae ? ae.name : currentUser.name, advisee_email: ae ? ae.email : currentUser.email, advisee_phone: ae ? ae.phone : '',
+  }).then(function(res){
+    if (!res || !res.success) { toast('Lỗi: ' + (res && res.error), 'error'); btn.innerHTML = 'Tạo mã thanh toán'; btn.disabled = false; return; }
+    window.location.href = res.payment_url;
+  }).catch(function(e){ toast('Lỗi kết nối: ' + e.message, 'error'); btn.innerHTML = 'Tạo mã thanh toán'; btn.disabled = false; });
 }
 
 // ════════════════════════════════════════════════════════════
