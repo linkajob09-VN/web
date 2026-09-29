@@ -6104,6 +6104,20 @@ function saveAdvisorEdit(advisorId) {
     if (res && res.success) toast('Đã lưu & đồng bộ lên Sheet ✅', 'success');
     else toast('Lỗi khi lưu lên Sheet: ' + (res && res.error), 'error');
   }).catch(function(err){ toast('Lỗi kết nối: ' + err.message, 'error'); });
+
+  // MỚI: đồng bộ feedback nhập tay sang tab AdvisorReviews (ngoài feedbacks_json
+  // ở trên, dùng cho ô "highlight" trên profile) — để feedback nhập tay từ web cũ
+  // có rating (sao) thật sự và hiện được trên trang Feedback công khai, thay vì
+  // chỉ nằm im trong feedbacks_json như trước đây.
+  apiPost({
+    action: 'syncManualAdvisorFeedback',
+    advisor_id: advisorId,
+    advisor_name: a.name,
+    feedbacks: a.feedbacks,
+  }).then(function(res){
+    if (!res || !res.success) toast('Đồng bộ AdvisorReviews lỗi: ' + (res && res.error || ''), 'error');
+  }).catch(function(err){ toast('Đồng bộ AdvisorReviews lỗi kết nối: ' + err.message, 'error'); });
+
   closeModal();
 
   if (currentUser && currentUser.role === 'Advisor' && currentUser.name === a.name) {
