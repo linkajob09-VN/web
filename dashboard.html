@@ -5855,10 +5855,20 @@ function addExperienceRow(containerId) {
 var _eaFbIdx = 0;
 function eaFbRowHtml(idx, fb) {
   fb = fb || {};
+  var esc = function(v){ return String(v == null ? '' : v).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;'); };
+  var rating = Number(fb.rating) || 5;
+  var service = fb.service || 'Cố vấn 1-1';
+  var starOpts = [5,4,3,2,1].map(function(n){ return '<option value="' + n + '"' + (n === rating ? ' selected' : '') + '>' + '★'.repeat(n) + ' (' + n + ')</option>'; }).join('');
+  var svcOpts = ['Cố vấn 1-1','Khoá học','Cộng đồng'].concat(['Cố vấn 1-1','Khoá học','Cộng đồng'].indexOf(service) === -1 ? [service] : []).map(function(v){ return '<option value="' + esc(v) + '"' + (v === service ? ' selected' : '') + '>' + esc(v) + '</option>'; }).join('');
   return '<div class="ea-fb-row" data-idx="' + idx + '" style="background:var(--white);border:1.5px solid var(--border);border-radius:10px;padding:12px;margin-bottom:10px;position:relative">' +
     '<button type="button" onclick="this.closest(\'.ea-fb-row\').remove()" style="position:absolute;top:8px;right:8px;background:none;border:none;color:var(--muted);cursor:pointer;font-size:16px;line-height:1">×</button>' +
-    '<input class="form-input ea-fb-from" placeholder="Tên người feedback (VD: Trần Gia Hân)" value="' + (fb.from || fb.name || '') + '" style="margin-bottom:8px">' +
-    '<textarea class="form-textarea ea-fb-text" rows="2" placeholder="Nội dung feedback">' + (fb.text || '') + '</textarea>' +
+    '<input class="form-input ea-fb-from" placeholder="Tên người feedback (VD: Trần Gia Hân)" value="' + esc(fb.from || fb.name || '') + '" style="margin-bottom:8px">' +
+    '<textarea class="form-textarea ea-fb-text" rows="2" placeholder="Nội dung feedback">' + esc(fb.text || '') + '</textarea>' +
+    '<div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap">' +
+      '<select class="form-input ea-fb-rating" style="flex:1;min-width:110px" title="Số sao">' + starOpts + '</select>' +
+      '<select class="form-input ea-fb-service" style="flex:1;min-width:130px" title="Dịch vụ (tab lọc trên trang Feedback)">' + svcOpts + '</select>' +
+      '<input type="date" class="form-input ea-fb-date" style="flex:1;min-width:130px" title="Ngày feedback (để trống = hôm nay)" value="' + esc(fb.date || '') + '">' +
+    '</div>' +
     '</div>';
 }
 function addFeedbackRow(containerId) {
@@ -6037,7 +6047,12 @@ function saveAdvisorEdit(advisorId) {
     var from = row.querySelector('.ea-fb-from').value.trim();
     var text = row.querySelector('.ea-fb-text').value.trim();
     if (!from || !text) return; // bỏ dòng trống (vd người dùng bấm "+ Thêm" nhưng không điền)
-    a.feedbacks.push({ from: from, text: text });
+    a.feedbacks.push({
+      from: from, text: text,
+      rating: Number(row.querySelector('.ea-fb-rating').value) || 5,
+      service: row.querySelector('.ea-fb-service').value || 'Cố vấn 1-1',
+      date: row.querySelector('.ea-fb-date').value || ''
+    });
   });
 
   apiPost({
@@ -6050,8 +6065,15 @@ function saveAdvisorEdit(advisorId) {
     experience: a.experience, products: a.products, feedbacks: a.feedbacks,
     support_items: a.supportItems,
   }).then(function(res){
-    if (res && res.success) toast('Đã lưu & đồng bộ lên Sheet ✅', 'success');
-    else toast('Lỗi khi lưu lên Sheet: ' + (res && res.error), 'error');
+    if (!(res && res.success)) { toast('Lỗi khi lưu lên Sheet: ' + (res && res.error), 'error'); return; }
+    // Đẩy feedback nhập tay sang tab AdvisorReviews để hiện trên feedback.html / index.html / đội-ngũ-advisor.html
+    return apiPost({
+      action: 'syncManualAdvisorFeedback',
+      advisor_id: advisorId, advisor_name: a.name, feedbacks: a.feedbacks,
+    }).then(function(r2){
+      if (r2 && r2.success) toast('Đã lưu & đồng bộ lên Sheet ✅ (' + r2.count + ' feedback hiển thị trên web)', 'success');
+      else toast('Đã lưu hồ sơ, nhưng đồng bộ feedback lỗi: ' + (r2 && r2.error), 'error');
+    });
   }).catch(function(err){ toast('Lỗi kết nối: ' + err.message, 'error'); });
   closeModal();
 
