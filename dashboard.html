@@ -5857,9 +5857,11 @@ function eaFbRowHtml(idx, fb) {
   fb = fb || {};
   var esc = function(v){ return String(v == null ? '' : v).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;'); };
   var rating = Number(fb.rating) || 5;
-  var service = fb.service || 'Cố vấn 1-1';
+  var service = fb.service || '';
+  var svcList = ['Cố vấn 1-1','Khoá học','Cộng đồng'];
+  var svcOpts = '<option value=""' + (service === '' ? ' selected' : '') + '>Dịch vụ: giữ theo Sheet / mặc định</option>'
+    + svcList.concat(service && svcList.indexOf(service) === -1 ? [service] : []).map(function(v){ return '<option value="' + esc(v) + '"' + (v === service ? ' selected' : '') + '>' + esc(v) + '</option>'; }).join('');
   var starOpts = [5,4,3,2,1].map(function(n){ return '<option value="' + n + '"' + (n === rating ? ' selected' : '') + '>' + '★'.repeat(n) + ' (' + n + ')</option>'; }).join('');
-  var svcOpts = ['Cố vấn 1-1','Khoá học','Cộng đồng'].concat(['Cố vấn 1-1','Khoá học','Cộng đồng'].indexOf(service) === -1 ? [service] : []).map(function(v){ return '<option value="' + esc(v) + '"' + (v === service ? ' selected' : '') + '>' + esc(v) + '</option>'; }).join('');
   return '<div class="ea-fb-row" data-idx="' + idx + '" style="background:var(--white);border:1.5px solid var(--border);border-radius:10px;padding:12px;margin-bottom:10px;position:relative">' +
     '<button type="button" onclick="this.closest(\'.ea-fb-row\').remove()" style="position:absolute;top:8px;right:8px;background:none;border:none;color:var(--muted);cursor:pointer;font-size:16px;line-height:1">×</button>' +
     '<input class="form-input ea-fb-from" placeholder="Tên người feedback (VD: Trần Gia Hân)" value="' + esc(fb.from || fb.name || '') + '" style="margin-bottom:8px">' +
@@ -6050,7 +6052,7 @@ function saveAdvisorEdit(advisorId) {
     a.feedbacks.push({
       from: from, text: text,
       rating: Number(row.querySelector('.ea-fb-rating').value) || 5,
-      service: row.querySelector('.ea-fb-service').value || 'Cố vấn 1-1',
+      service: row.querySelector('.ea-fb-service').value || '',
       date: row.querySelector('.ea-fb-date').value || ''
     });
   });
