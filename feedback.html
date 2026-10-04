@@ -542,17 +542,30 @@ document.addEventListener('DOMContentLoaded', function(){
 
 // MỚI: lấy dữ liệu thật từ Sheet AdvisorReviews rồi mới render — thay vì
 // render ngay từ mảng cứng như trước.
-fetch(CW_WEBAPP_URL + '?action=getFeedbacks')
-  .then(function(r){ return r.json(); })
-  .then(function(res){
-    FEEDBACKS = (res && res.success && res.data) ? res.data : [];
-    renderRatingSummary();
-    renderFeedbacks();
-  })
-  .catch(function(){
-    var grid = document.getElementById('fbGrid');
-    if (grid) grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:40px; color:var(--muted); font-family:\'Montserrat\',sans-serif; font-size:13px;">Không tải được đánh giá, vui lòng thử lại sau.</div>';
-  });
+// FIX: CW_WEBAPP_URL được khai báo trong đăng-ký-tư-vấn.js, file này nạp SAU đoạn
+// script inline này nên gọi trực tiếp lúc đó sẽ lỗi "CW_WEBAPP_URL is not defined"
+// (trang trống, không báo gì). Giờ đợi trang nạp xong mới lấy URL, và có URL dự phòng.
+var FB_FALLBACK_URL = 'https://script.google.com/macros/s/AKfycbx7Bd9VvoyzfiiezQV9huoY2BKHH_Br1RAFIz00mjdyKeis-Zv-38a0gf_b-fMlul2C/exec';
+
+function fbShowError(){
+  var grid = document.getElementById('fbGrid');
+  if (grid) grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:40px; color:var(--muted); font-family:\'Montserrat\',sans-serif; font-size:13px;">Không tải được đánh giá, vui lòng thử lại sau.</div>';
+}
+
+function loadFeedbacks(){
+  var base = (typeof CW_WEBAPP_URL !== 'undefined' && CW_WEBAPP_URL) ? CW_WEBAPP_URL : FB_FALLBACK_URL;
+  fetch(base + '?action=getFeedbacks')
+    .then(function(r){ return r.json(); })
+    .then(function(res){
+      FEEDBACKS = (res && res.success && res.data) ? res.data : [];
+      // Bỏ dòng rỗng (không có nội dung) để không hiện thẻ trắng
+      FEEDBACKS = FEEDBACKS.filter(function(f){ return f && String(f.quote || '').trim(); });
+      renderRatingSummary();
+      renderFeedbacks();
+    })
+    .catch(fbShowError);
+}
+window.addEventListener('load', loadFeedbacks);
 
 
 /* ── animation: scroll reveal, stat count-up, nav shadow ── */
