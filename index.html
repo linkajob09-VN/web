@@ -286,20 +286,6 @@ footer span{ color:var(--orange);}
 @media(max-width:560px){ .hp-adv-card{width:170px;} .hp-adv-body{padding:14px 10px 8px;} .hp-adv-name{font-size:11px;} .hp-adv-role{font-size:10px;} }
 
 /* ── REVIEW CARDS — đánh giá advisee dạng lưới tĩnh, sao + quote + avatar verified ── */
-.review-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;}
-.review-card{background:var(--paper-2);border:.5px solid var(--line);border-radius:14px;padding:22px;display:flex;flex-direction:column;gap:14px;}
-.review-stars{color:var(--orange);font-size:14px;letter-spacing:3px;}
-.review-quote{font-size:13.5px;color:var(--text);line-height:1.65;flex:1;}
-.review-who{display:flex;align-items:center;gap:12px;border-top:.5px solid var(--line);padding-top:14px;}
-.review-avatar{position:relative;width:40px;height:40px;border-radius:50%;flex:none;background:var(--orange-tint);}
-.review-avatar-inner{width:100%;height:100%;border-radius:50%;overflow:hidden;display:flex;align-items:center;justify-content:center;font-family:'Montserrat',sans-serif;font-size:13px;font-weight:800;color:var(--orange);}
-.review-avatar-inner img{width:100%;height:100%;object-fit:cover;display:block;}
-.review-verified{position:absolute;right:-2px;bottom:-2px;width:14px;height:14px;border-radius:50%;background:var(--orange);border:2px solid var(--paper-2);display:flex;align-items:center;justify-content:center;}
-.review-verified i{font-size:8px;color:#fff;}
-.review-who strong{display:block;font-family:'Montserrat',sans-serif;font-size:13.5px;color:var(--text);}
-.review-who span{display:block;font-size:11.5px;color:var(--muted);margin-top:1px;}
-@media(max-width:900px){ .review-grid{grid-template-columns:repeat(2,1fr);} }
-@media(max-width:560px){ .review-grid{grid-template-columns:1fr;} }
 
 /* ── HOMEPAGE OFFER RESULTS — marquee ảnh offer letter, cùng kiểu thẻ với hàng advisor, chạy ngược hướng ── */
 .result-viewport{overflow:hidden;}
@@ -400,28 +386,36 @@ footer span{ color:var(--orange);}
 .fbtn.on{ background:var(--orange-tint); border-color:var(--orange); color:var(--orange);}
 
 /* feedback cards */
-.fb-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:16px;}
-.fb-card{ background:var(--paper-2); border:.5px solid var(--line); border-radius:16px; padding:22px; display:flex; flex-direction:column; gap:14px; transition:border-color .2s, transform .2s;}
-.fb-card:hover{ border-color:rgba(252,82,41,.3); transform:translateY(-3px);}
-.fb-stars{ color:var(--orange); font-size:13px; letter-spacing:2px;}
-.fb-quote{ font-size:13.5px; color:var(--text); line-height:1.65; flex:1;}
-.fb-service{ display:inline-flex; align-self:flex-start; font-family:'Montserrat',sans-serif; font-size:10.5px; font-weight:600; background:var(--orange-tint); color:var(--orange); padding:3px 10px; border-radius:100px;}
-.fb-people{ display:flex; flex-direction:column; gap:10px; border-top:.5px solid var(--line); padding-top:12px;}
-.fb-person{ display:flex; align-items:center; gap:9px;}
-.fb-person .avatar{ width:30px; height:30px; font-size:11px; flex:none;}
+.fb-grid{ column-width:330px; column-gap:14px;}
+.fb-card{ break-inside:avoid; margin:0 0 14px; background:var(--paper-2); border:.5px solid var(--line); border-radius:14px; padding:18px 18px 16px; display:flex; flex-direction:column; gap:12px; transition:border-color .2s;}
+.fb-card:hover{ border-color:rgba(252,82,41,.35);}
+.fb-top{ display:flex; align-items:center; justify-content:space-between; gap:8px;}
+.fb-stars{ color:var(--orange); font-size:12px; letter-spacing:2px;}
+.fb-service{ font-family:'Montserrat',sans-serif; font-size:10.5px; font-weight:600; background:var(--orange-tint); color:var(--orange); padding:3px 10px; border-radius:100px; white-space:nowrap;}
+.fb-quote{ position:relative; font-size:13.5px; color:var(--text); line-height:1.65; padding-left:20px;}
+.fb-quote::before{ content:"\201C"; position:absolute; left:0; top:-4px; font-family:Georgia,'Times New Roman',serif; font-size:34px; line-height:1; color:var(--orange); opacity:.55;}
+.fb-foot{ display:flex; flex-direction:column; gap:8px; border-top:.5px solid var(--line); padding-top:12px;}
+.fb-person{ display:flex; align-items:center; gap:10px; min-width:0;}
+.fb-person .avatar{ width:34px; height:34px; font-size:12px; flex:none;}
 .fb-person .avatar .verified{ width:12px; height:12px;}
-.fb-person-text strong{ display:block; font-size:12.5px; font-family:'Montserrat',sans-serif;}
-.fb-person-text span{ display:block; font-size:10.5px; color:var(--muted);}
+.fb-person-text{ min-width:0;}
+.fb-person-text strong{ display:block; font-size:13px; font-family:'Montserrat',sans-serif;}
+.fb-person-text span{ display:block; font-size:11px; color:var(--muted); line-height:1.4;}
+.fb-adv{ display:inline-flex; align-items:center; gap:7px; align-self:flex-start; max-width:100%; font-size:11.5px; color:var(--muted); text-decoration:none; background:var(--paper); border-radius:100px; padding:3px 11px 3px 4px;}
+.fb-adv .avatar{ width:20px; height:20px; font-size:8px; flex:none;}
+.fb-adv .avatar .verified{ display:none;}
+.fb-adv b{ color:var(--text); font-weight:600; font-family:'Montserrat',sans-serif;}
+a.fb-adv:hover{ color:var(--orange); background:var(--orange-tint-2);}
+a.fb-adv:hover b{ color:var(--orange);}
+.avatar.avatar-photo{ overflow:hidden; padding:0;}
+.avatar.avatar-photo img{ width:100%; height:100%; object-fit:cover; display:block; border-radius:50%;}
+.avatar-fallback-inner{ width:100%; height:100%; display:flex; align-items:center; justify-content:center;}
 
 .load-more-wrap{ text-align:center; margin-top:32px;}
 
 @media(max-width:900px){
-  .fb-grid{ grid-template-columns:repeat(2,1fr);}
   .rating-summary{ flex-direction:column; gap:18px;}
   .rating-divider{ width:100%; height:.5px;}
-}
-@media(max-width:560px){
-  .fb-grid{ grid-template-columns:1fr;}
 }
 
 /* about grid (light cards, matches subpage problem-grid ratio) */
@@ -676,55 +670,49 @@ button:focus-visible, a:focus-visible, .lj-nav-btn-plain:focus-visible, .fbtn:fo
       <h2>Họ đã làm được.<br>Bạn cũng vậy.</h2>
       <p>Những câu chuyện thật từ advisee đã hoàn thành hành trình cùng LinkaJob.</p>
     </div>
-    <div class="review-grid" id="hpReviewGrid">
-      <div class="review-card">
-        <div class="review-stars">★★★★★</div>
-        <p class="review-quote">"Nội dung tinh gọn, không bị ngợp. Buổi đi field giúp mình hiểu kiến thức áp dụng thực tế thế nào, mình đã đậu Online Marketing Intern tại LOTTE."</p>
-        <div class="review-who">
-          <div class="review-avatar"><div class="review-avatar-inner">NH</div><span class="review-verified"><i class="ti ti-check"></i></span></div>
-          <div><strong>Ngọc Hà</strong><span>Online Marketing Intern, Lotte</span></div>
+    <div class="fb-grid" id="hpReviewGrid">
+      <article class="fb-card">
+        <div class="fb-top"><div class="fb-stars">★★★★★</div></div>
+        <div class="fb-quote">Nội dung tinh gọn, không bị ngợp. Buổi đi field giúp mình hiểu kiến thức áp dụng thực tế thế nào, mình đã đậu Online Marketing Intern tại LOTTE.</div>
+        <div class="fb-foot">
+          <div class="fb-person"><div class="avatar on-light">NH<span class="verified"><i class="ti ti-check"></i></span></div><div class="fb-person-text"><strong>Ngọc Hà</strong><span>Online Marketing Intern, Lotte</span></div></div>
         </div>
-      </div>
-      <div class="review-card">
-        <div class="review-stars">★★★★★</div>
-        <p class="review-quote">"Những insight về vận hành thực tế, nhà tuyển dụng thật sự tìm kiếm gì trong CV, điều không lớp học lý thuyết nào nói rõ. Mình đã nhận offer thật sự thích."</p>
-        <div class="review-who">
-          <div class="review-avatar"><div class="review-avatar-inner">PV</div><span class="review-verified"><i class="ti ti-check"></i></span></div>
-          <div><strong>Phương Vy</strong><span>Junior KAM, Intrepid</span></div>
+      </article>
+      <article class="fb-card">
+        <div class="fb-top"><div class="fb-stars">★★★★★</div></div>
+        <div class="fb-quote">Những insight về vận hành thực tế, nhà tuyển dụng thật sự tìm kiếm gì trong CV, điều không lớp học lý thuyết nào nói rõ. Mình đã nhận offer thật sự thích.</div>
+        <div class="fb-foot">
+          <div class="fb-person"><div class="avatar on-light">PV<span class="verified"><i class="ti ti-check"></i></span></div><div class="fb-person-text"><strong>Phương Vy</strong><span>Junior KAM, Intrepid</span></div></div>
         </div>
-      </div>
-      <div class="review-card">
-        <div class="review-stars">★★★★★</div>
-        <p class="review-quote">"Buổi đi field ấn tượng nhất, vừa xem vừa hiểu thuật ngữ ngành. Buổi phỏng vấn thử tiếng Anh 1:1 giúp mình onboard thành công tại Mondelez."</p>
-        <div class="review-who">
-          <div class="review-avatar"><div class="review-avatar-inner">KL</div><span class="review-verified"><i class="ti ti-check"></i></span></div>
-          <div><strong>Khánh Linh</strong><span>PE Sales Intern, Mondelez</span></div>
+      </article>
+      <article class="fb-card">
+        <div class="fb-top"><div class="fb-stars">★★★★★</div></div>
+        <div class="fb-quote">Buổi đi field ấn tượng nhất, vừa xem vừa hiểu thuật ngữ ngành. Buổi phỏng vấn thử tiếng Anh 1:1 giúp mình onboard thành công tại Mondelez.</div>
+        <div class="fb-foot">
+          <div class="fb-person"><div class="avatar on-light">KL<span class="verified"><i class="ti ti-check"></i></span></div><div class="fb-person-text"><strong>Khánh Linh</strong><span>PE Sales Intern, Mondelez</span></div></div>
         </div>
-      </div>
-      <div class="review-card">
-        <div class="review-stars">★★★★★</div>
-        <p class="review-quote">"Các Advisor không chỉ dạy chuyên môn mà còn đào sâu về con người, giúp mình kể đúng câu chuyện của chính mình. Xứng đáng đến từng xu."</p>
-        <div class="review-who">
-          <div class="review-avatar"><div class="review-avatar-inner">HT</div><span class="review-verified"><i class="ti ti-check"></i></span></div>
-          <div><strong>Đức Thịnh</strong><span>Sales Trainee, Mondelez</span></div>
+      </article>
+      <article class="fb-card">
+        <div class="fb-top"><div class="fb-stars">★★★★★</div></div>
+        <div class="fb-quote">Các Advisor không chỉ dạy chuyên môn mà còn đào sâu về con người, giúp mình kể đúng câu chuyện của chính mình. Xứng đáng đến từng xu.</div>
+        <div class="fb-foot">
+          <div class="fb-person"><div class="avatar on-light">HT<span class="verified"><i class="ti ti-check"></i></span></div><div class="fb-person-text"><strong>Đức Thịnh</strong><span>Sales Trainee, Mondelez</span></div></div>
         </div>
-      </div>
-      <div class="review-card">
-        <div class="review-stars">★★★★★</div>
-        <p class="review-quote">"Feedback rất chi tiết, tranh luận đến cùng trong các buổi Group Case đã tạo nên một bộ khung tư duy vững chắc cho mình."</p>
-        <div class="review-who">
-          <div class="review-avatar"><div class="review-avatar-inner">HT</div><span class="review-verified"><i class="ti ti-check"></i></span></div>
-          <div><strong>Huyền Trang</strong><span>Marketing Intern, ACFC</span></div>
+      </article>
+      <article class="fb-card">
+        <div class="fb-top"><div class="fb-stars">★★★★★</div></div>
+        <div class="fb-quote">Feedback rất chi tiết, tranh luận đến cùng trong các buổi Group Case đã tạo nên một bộ khung tư duy vững chắc cho mình.</div>
+        <div class="fb-foot">
+          <div class="fb-person"><div class="avatar on-light">HT<span class="verified"><i class="ti ti-check"></i></span></div><div class="fb-person-text"><strong>Huyền Trang</strong><span>Marketing Intern, ACFC</span></div></div>
         </div>
-      </div>
-      <div class="review-card">
-        <div class="review-stars">★★★★★</div>
-        <p class="review-quote">"Không còn 'đánh cược' nữa, mình ra quyết định có cơ sở cho tương lai. Đã tìm được con đường tới ACCESSTRADE Vietnam."</p>
-        <div class="review-who">
-          <div class="review-avatar"><div class="review-avatar-inner">DM</div><span class="review-verified"><i class="ti ti-check"></i></span></div>
-          <div><strong>Đức Minh</strong><span>Business Planner, ACCESSTRADE</span></div>
+      </article>
+      <article class="fb-card">
+        <div class="fb-top"><div class="fb-stars">★★★★★</div></div>
+        <div class="fb-quote">Không còn 'đánh cược' nữa, mình ra quyết định có cơ sở cho tương lai. Đã tìm được con đường tới ACCESSTRADE Vietnam.</div>
+        <div class="fb-foot">
+          <div class="fb-person"><div class="avatar on-light">DM<span class="verified"><i class="ti ti-check"></i></span></div><div class="fb-person-text"><strong>Đức Minh</strong><span>Business Planner, ACCESSTRADE</span></div></div>
         </div>
-      </div>
+      </article>
     </div>
     <div class="load-more-wrap">
       <a href="feedback.html" class="btn btn-ghost-light">Xem tất cả đánh giá →</a>
@@ -1096,18 +1084,32 @@ renderMentorChart();
   }
   function ljFbUrl(){ return (typeof CW_WEBAPP_URL !== 'undefined' && CW_WEBAPP_URL) ? CW_WEBAPP_URL : LJ_FB_FALLBACK_URL; }
 
+  function ljAvatar(name, photoUrl, verified){
+    var src = ljDirectImg(photoUrl), ini = ljEsc(ljInitials(name));
+    var ver = verified ? '<span class="verified"><i class="ti ti-check"></i></span>' : '';
+    if (!src) return '<div class="avatar on-light">'+ini+ver+'</div>';
+    return '<div class="avatar on-light avatar-photo">'
+      + '<img src="'+ljEsc(src)+'" alt="" loading="lazy" onerror="this.style.display=\'none\'; this.nextElementSibling.style.display=\'flex\';">'
+      + '<div class="avatar-fallback-inner" style="display:none;">'+ini+'</div>'
+      + ver + '</div>';
+  }
+  function ljAdvisorChip(f){
+    var isCourse = f.service === 'Khoá học';
+    var label = (isCourse ? 'Khoá học ' : 'Advisor ') + '<b>'+ljEsc(f.advisor)+'</b>';
+    var av = ljAvatar(f.advisor, f.advisor_photo_url, false);
+    if (!f.advisor_id) return '<div class="fb-adv">'+av+'<span>'+label+'</span></div>';
+    return '<a class="fb-adv" href="đội-ngũ-advisor.html?advisor='+encodeURIComponent(f.advisor_id)+'" title="Xem hồ sơ Advisor">'+av+'<span>'+label+' ›</span></a>';
+  }
   function reviewCard(f){
-    var photo = ljDirectImg(f.photo_url), ini = ljInitials(f.name);
-    var inner = photo
-      ? '<img src="'+ljEsc(photo)+'" alt="" loading="lazy" onerror="this.replaceWith(document.createTextNode(\''+ljEsc(ini)+'\'))">'
-      : ljEsc(ini);
-    return '<div class="review-card">'
-      + '<div class="review-stars">'+'★★★★★'.slice(0, Math.max(1, Math.min(5, Number(f.rating)||5)))+'</div>'
-      + '<p class="review-quote">"'+ljEsc(f.quote)+'"</p>'
-      + '<div class="review-who">'
-      +   '<div class="review-avatar"><div class="review-avatar-inner">'+inner+'</div><span class="review-verified"><i class="ti ti-check"></i></span></div>'
-      +   '<div><strong>'+ljEsc(f.name)+'</strong><span>'+ljEsc(f.role)+'</span></div>'
-      + '</div></div>';
+    var rating = Math.max(1, Math.min(5, Number(f.rating)||5));
+    var svc = f.service ? '<span class="fb-service">'+ljEsc(f.service)+(f.badge ? ' · '+ljEsc(f.badge) : '')+'</span>' : '';
+    return '<article class="fb-card">'
+      + '<div class="fb-top"><div class="fb-stars">'+'★★★★★'.slice(0, rating)+'</div>'+svc+'</div>'
+      + '<div class="fb-quote">'+ljEsc(f.quote)+'</div>'
+      + '<div class="fb-foot">'
+      +   '<div class="fb-person">'+ljAvatar(f.name, f.photo_url, true)+'<div class="fb-person-text"><strong>'+ljEsc(f.name)+'</strong><span>'+ljEsc(f.role)+'</span></div></div>'
+      +   (f.advisor ? ljAdvisorChip(f) : '')
+      + '</div></article>';
   }
   function load(){
     var grid = document.getElementById('hpReviewGrid');
