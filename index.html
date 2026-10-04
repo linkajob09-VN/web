@@ -676,7 +676,7 @@ button:focus-visible, a:focus-visible, .lj-nav-btn-plain:focus-visible, .fbtn:fo
       <h2>Họ đã làm được.<br>Bạn cũng vậy.</h2>
       <p>Những câu chuyện thật từ advisee đã hoàn thành hành trình cùng LinkaJob.</p>
     </div>
-    <div class="review-grid">
+    <div class="review-grid" id="hpReviewGrid">
       <div class="review-card">
         <div class="review-stars">★★★★★</div>
         <p class="review-quote">"Nội dung tinh gọn, không bị ngợp. Buổi đi field giúp mình hiểu kiến thức áp dụng thực tế thế nào, mình đã đậu Online Marketing Intern tại LOTTE."</p>
@@ -1078,6 +1078,52 @@ renderMentorChart();
 })();
 </script>
 
+<script>
+/* Đánh giá trên trang chủ: lấy từ tab AdvisorReviews, chỉ những dòng được tick cột "featured"
+   (tối đa 6, xếp theo sort_order). Nếu chưa có dòng nào được tick hoặc tải lỗi thì GIỮ NGUYÊN
+   nội dung viết sẵn trong HTML ở trên. */
+(function(){
+
+  var LJ_FB_FALLBACK_URL = 'https://script.google.com/macros/s/AKfycbx7Bd9VvoyzfiiezQV9huoY2BKHH_Br1RAFIz00mjdyKeis-Zv-38a0gf_b-fMlul2C/exec';
+  function ljEsc(v){ return String(v == null ? '' : v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+  function ljInitials(name){ var p = String(name||'').trim().split(' ').filter(Boolean); return p.slice(-2).map(function(x){ return x[0]; }).join('').toUpperCase(); }
+  function ljDirectImg(url){
+    if(!url) return '';
+    url = String(url).trim();
+    var m = url.match(/drive\.google\.com\/file\/d\/([^/]+)/);
+    if(!m) m = url.match(/[?&]id=([^&]+)/);
+    return (m && m[1]) ? 'https://lh3.googleusercontent.com/d/' + m[1] : url;
+  }
+  function ljFbUrl(){ return (typeof CW_WEBAPP_URL !== 'undefined' && CW_WEBAPP_URL) ? CW_WEBAPP_URL : LJ_FB_FALLBACK_URL; }
+
+  function reviewCard(f){
+    var photo = ljDirectImg(f.photo_url), ini = ljInitials(f.name);
+    var inner = photo
+      ? '<img src="'+ljEsc(photo)+'" alt="" loading="lazy" onerror="this.replaceWith(document.createTextNode(\''+ljEsc(ini)+'\'))">'
+      : ljEsc(ini);
+    return '<div class="review-card">'
+      + '<div class="review-stars">'+'★★★★★'.slice(0, Math.max(1, Math.min(5, Number(f.rating)||5)))+'</div>'
+      + '<p class="review-quote">"'+ljEsc(f.quote)+'"</p>'
+      + '<div class="review-who">'
+      +   '<div class="review-avatar"><div class="review-avatar-inner">'+inner+'</div><span class="review-verified"><i class="ti ti-check"></i></span></div>'
+      +   '<div><strong>'+ljEsc(f.name)+'</strong><span>'+ljEsc(f.role)+'</span></div>'
+      + '</div></div>';
+  }
+  function load(){
+    var grid = document.getElementById('hpReviewGrid');
+    if (!grid) return;
+    fetch(ljFbUrl() + '?action=getFeedbacks&featured_only=1&limit=6')
+      .then(function(r){ return r.json(); })
+      .then(function(res){
+        var list = (res && res.success && res.data) ? res.data : [];
+        if (!list.length) return; // chưa tick featured → giữ nội dung cũ
+        grid.innerHTML = list.map(reviewCard).join('');
+      })
+      .catch(function(){ /* giữ nội dung cũ */ });
+  }
+  window.addEventListener('load', load);
+})();
+</script>
 <script src="nav.js"></script>
 <script>initSharedNav();</script>
 <script src="đăng-ký-tư-vấn.js"></script>
