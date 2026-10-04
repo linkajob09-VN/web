@@ -488,6 +488,18 @@ function fbAvatarHtml(name, photoUrl, verified){
     + '</div>';
 }
 
+// Dòng Advisor: tự lấy ảnh từ hồ sơ Advisor; nếu là Advisor thật (có advisor_id) thì bấm vào sẽ
+// chuyển tới card của Advisor đó trên đội-ngũ-advisor.html. Tên khoá học (không khớp Advisor) → không có link.
+function fbAdvisorHtml(f){
+  var isCourse = f.service === 'Khoá học';
+  var title = isCourse ? 'Khoá học '+f.advisor : 'Advisor '+f.advisor;
+  var sub = isCourse ? 'Khoá học đã tham gia' : 'Đồng hành buổi tư vấn';
+  var inner = fbAvatarHtml(f.advisor, f.advisor_photo_url, false)
+    + '<div class="fb-person-text"><strong>'+title+'</strong><span>'+sub+(f.advisor_id ? ' · Xem hồ sơ →' : '')+'</span></div>';
+  if (!f.advisor_id) return '<div class="fb-person">'+inner+'</div>';
+  return '<a class="fb-person" style="text-decoration:none;color:inherit;cursor:pointer" href="đội-ngũ-advisor.html?advisor='+encodeURIComponent(f.advisor_id)+'">'+inner+'</a>';
+}
+
 function renderRatingSummary(){
   if(FEEDBACKS.length === 0) return;
   var sum = 0;
@@ -522,7 +534,7 @@ function renderFeedbacks(){
       + '<span class="fb-service">'+f.service+(f.badge ? ' · '+f.badge : '')+'</span>'
       + '<div class="fb-people">'
       +   '<div class="fb-person">'+fbAvatarHtml(f.name, f.photo_url, true)+'<div class="fb-person-text"><strong>'+f.name+'</strong><span>'+f.role+'</span></div></div>'
-      +   (f.advisor ? '<div class="fb-person">'+fbAvatarHtml(f.advisor, '', false)+'<div class="fb-person-text"><strong>'+(f.service === 'Khoá học' ? 'Khoá học '+f.advisor : 'Advisor '+f.advisor)+'</strong><span>'+(f.service === 'Khoá học' ? 'Khoá học đã tham gia' : 'Đồng hành buổi tư vấn')+'</span></div></div>' : '')
+      +   (f.advisor ? fbAdvisorHtml(f) : '')
       + '</div>'
       + '</div>';
   });
