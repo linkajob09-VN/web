@@ -182,16 +182,35 @@ section{ padding:80px 0;}
 .price-list li::before{ content:"✓"; position:absolute; left:0; color:var(--orange); font-weight:700;}
 .scarcity{ margin-top:24px; font-size:12px; color:var(--orange); font-family:'Montserrat',sans-serif; font-weight:600; text-align:center;}
 
-/* testimonials - matching brand feedback card style */
-.testi-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:14px;}
-.testi-card{ background:var(--paper-2); border:.5px solid var(--line); border-radius:14px; padding:22px; display:flex; flex-direction:column; gap:12px;}
-.stars{ color:var(--orange); font-size:12px; letter-spacing:2px;}
-.testi-card p{ font-size:13.3px; color:var(--text); line-height:1.6; flex:1;}
-.testi-who{ display:flex; align-items:center; gap:10px; border-top:.5px solid var(--line); padding-top:12px;}
-.testi-who .avatar{ width:34px; height:34px; font-size:12px;}
-.testi-who .avatar .verified{ width:13px; height:13px;}
-.testi-who strong{ display:block; font-size:13px; font-family:'Montserrat',sans-serif;}
-.testi-who span{ display:block; font-size:11.5px; color:var(--muted);}
+/* feedback cards - cùng kích thước/bố cục với feedback.html */
+.fb-grid{ column-width:330px; column-gap:14px;}
+.fb-card{ break-inside:avoid; margin:0 0 14px; background:var(--paper-2); border:.5px solid var(--line); border-radius:14px; padding:18px 18px 16px; display:flex; flex-direction:column; gap:12px; transition:border-color .2s;}
+.fb-card:hover{ border-color:rgba(252,82,41,.35);}
+.fb-top{ display:flex; align-items:center; justify-content:space-between; gap:8px;}
+.fb-stars{ color:var(--orange); font-size:12px; letter-spacing:2px;}
+.fb-service{ font-family:'Montserrat',sans-serif; font-size:10.5px; font-weight:600; background:var(--orange-tint); color:var(--orange); padding:3px 10px; border-radius:100px; white-space:nowrap;}
+.fb-quote{ position:relative; font-size:13.5px; color:var(--text); line-height:1.65; padding-left:20px;}
+.fb-quote::before{ content:"\201C"; position:absolute; left:0; top:-4px; font-family:Georgia,'Times New Roman',serif; font-size:34px; line-height:1; color:var(--orange); opacity:.55;}
+.fb-foot{ display:flex; flex-direction:column; gap:8px; border-top:.5px solid var(--line); padding-top:12px;}
+.fb-person{ display:flex; align-items:center; gap:10px; min-width:0;}
+.fb-person .avatar{ width:34px; height:34px; font-size:12px; flex:none;}
+.fb-person .avatar .verified{ width:12px; height:12px;}
+.fb-person-text{ min-width:0;}
+.fb-person-text strong{ display:block; font-size:13px; font-family:'Montserrat',sans-serif;}
+.fb-person-text span{ display:block; font-size:11px; color:var(--muted); line-height:1.4;}
+.fb-adv{ display:inline-flex; align-items:center; gap:7px; align-self:flex-start; max-width:100%; font-size:11.5px; color:var(--muted); text-decoration:none; background:var(--paper); border-radius:100px; padding:3px 11px 3px 4px;}
+.fb-adv .avatar{ width:20px; height:20px; font-size:8px; flex:none;}
+.fb-adv .avatar .verified{ display:none;}
+.fb-adv b{ color:var(--text); font-weight:600; font-family:'Montserrat',sans-serif;}
+a.fb-adv:hover{ color:var(--orange); background:var(--orange-tint-2);}
+a.fb-adv:hover b{ color:var(--orange);}
+.avatar.avatar-photo{ overflow:hidden; padding:0;}
+.avatar.avatar-photo img{ width:100%; height:100%; object-fit:cover; display:block; border-radius:50%;}
+.avatar-fallback-inner{ width:100%; height:100%; display:flex; align-items:center; justify-content:center;}
+/* section nền trắng → thẻ dùng nền paper để vẫn nổi bật */
+#ljTestiWrap .fb-card{ background:var(--paper);}
+#ljTestiWrap .fb-adv{ background:#fff;}
+.load-more-wrap{ text-align:center; margin-top:18px; display:flex; gap:12px; justify-content:center; flex-wrap:wrap;}
 
 /* FAQ */
 .faq-item{ border-top:.5px solid var(--line); padding:20px 0;}
@@ -223,7 +242,7 @@ footer span{ color:var(--orange);}
 
 @media(max-width:900px){
   .hero h1{ font-size:34px;}
-  .problem-grid, .audience-grid, .gift-grid, .testi-grid{ grid-template-columns:repeat(2,1fr);}
+  .problem-grid, .audience-grid, .gift-grid{ grid-template-columns:repeat(2,1fr);}
   .instructor-grid{ grid-template-columns:1fr;}
   .form-row{ grid-template-columns:1fr;}
 }
@@ -242,7 +261,7 @@ footer span{ color:var(--orange);}
   .price-grid{ grid-template-columns:1fr;}
 }
 @media(max-width:560px){
-  .problem-grid, .audience-grid, .gift-grid, .testi-grid{ grid-template-columns:1fr;}
+  .problem-grid, .audience-grid, .gift-grid{ grid-template-columns:1fr;}
   section{ padding:56px 0;}
   .wrap{ padding:0 20px;}
 }
@@ -271,7 +290,7 @@ footer span{ color:var(--orange);}
   .btn{ transition:opacity .2s, transform .15s, box-shadow .2s;}
   .btn:active{ transform:scale(.96);}
 
-  a, button, .fbtn, .story-card, .fb-card, .testi-card{ transition-property:opacity, transform, border-color, box-shadow, background-color; }
+  a, button, .fbtn, .story-card, .fb-card{ transition-property:opacity, transform, border-color, box-shadow, background-color; }
 }
 @media (prefers-reduced-motion: reduce){
   *{ animation-duration:0.001ms !important; animation-iteration-count:1 !important; transition-duration:0.001ms !important; }
@@ -741,43 +760,46 @@ button:focus-visible, a:focus-visible, .lj-nav-btn-plain:focus-visible, .fbtn:fo
   </div>
 </section>
 
-<section style="background:var(--paper-2)">
+<section style="background:var(--paper-2)" id="ljTestiWrap">
   <div class="wrap">
     <div class="section-head">
       <span class="eyebrow"><span class="eyebrow-dot"></span>Học viên nói gì</span>
       <h2>Kết quả từ cộng đồng học viên</h2>
     </div>
-    <div class="testi-grid" id="ljTestiGrid">
-      <div class="testi-card">
-        <div class="stars">★★★★★</div>
-        <p>"Nội dung tinh gọn, không bị ngợp. Buổi đi field giúp mình hiểu kiến thức áp dụng thực tế thế nào, mình đã đậu Online Marketing Intern tại LOTTE."</p>
-        <div class="testi-who"><div class="avatar on-light">NH<span class="verified"><i class="ti ti-check"></i></span></div><div><strong>Ngọc Hà</strong><span>Online Marketing Intern, Lotte</span></div></div>
-      </div>
-      <div class="testi-card">
-        <div class="stars">★★★★★</div>
-        <p>"Những insight về vận hành thực tế, nhà tuyển dụng thật sự tìm kiếm gì trong CV, điều không lớp học lý thuyết nào nói rõ. Mình đã nhận offer thật sự thích."</p>
-        <div class="testi-who"><div class="avatar on-light">PV<span class="verified"><i class="ti ti-check"></i></span></div><div><strong>Phương Vy</strong><span>Junior KAM, Intrepid</span></div></div>
-      </div>
-      <div class="testi-card">
-        <div class="stars">★★★★★</div>
-        <p>"Buổi đi field ấn tượng nhất, vừa xem vừa hiểu thuật ngữ ngành. Buổi phỏng vấn thử tiếng Anh 1:1 giúp mình onboard thành công tại Mondelez."</p>
-        <div class="testi-who"><div class="avatar on-light">KL<span class="verified"><i class="ti ti-check"></i></span></div><div><strong>Khánh Linh</strong><span>PE Sales Intern, Mondelez</span></div></div>
-      </div>
-      <div class="testi-card">
-        <div class="stars">★★★★★</div>
-        <p>"Các Advisor không chỉ dạy chuyên môn mà còn đào sâu về con người, giúp mình kể đúng câu chuyện của chính mình. Xứng đáng đến từng xu."</p>
-        <div class="testi-who"><div class="avatar on-light">HT<span class="verified"><i class="ti ti-check"></i></span></div><div><strong>Đức Thịnh</strong><span>Sales Trainee, Mondelez</span></div></div>
-      </div>
-      <div class="testi-card">
-        <div class="stars">★★★★★</div>
-        <p>"Feedback rất chi tiết, tranh luận đến cùng trong các buổi Group Case đã tạo nên một bộ khung tư duy vững chắc cho mình."</p>
-        <div class="testi-who"><div class="avatar on-light">HT<span class="verified"><i class="ti ti-check"></i></span></div><div><strong>Huyền Trang</strong><span>Marketing Intern, ACFC</span></div></div>
-      </div>
-      <div class="testi-card">
-        <div class="stars">★★★★★</div>
-        <p>"Không còn 'đánh cược' nữa, mình ra quyết định có cơ sở cho tương lai. Đã tìm được con đường tới ACCESSTRADE Vietnam."</p>
-        <div class="testi-who"><div class="avatar on-light">DM<span class="verified"><i class="ti ti-check"></i></span></div><div><strong>Đức Minh</strong><span>Business Planner, ACCESSTRADE</span></div></div>
-      </div>
+    <div class="fb-grid" id="ljTestiGrid">
+      <article class="fb-card">
+        <div class="fb-top"><div class="fb-stars">★★★★★</div></div>
+        <div class="fb-quote">Nội dung tinh gọn, không bị ngợp. Buổi đi field giúp mình hiểu kiến thức áp dụng thực tế thế nào, mình đã đậu Online Marketing Intern tại LOTTE.</div>
+        <div class="fb-foot"><div class="fb-person"><div class="avatar on-light">NH<span class="verified"><i class="ti ti-check"></i></span></div><div class="fb-person-text"><strong>Ngọc Hà</strong><span>Online Marketing Intern, Lotte</span></div></div></div>
+      </article>
+      <article class="fb-card">
+        <div class="fb-top"><div class="fb-stars">★★★★★</div></div>
+        <div class="fb-quote">Những insight về vận hành thực tế, nhà tuyển dụng thật sự tìm kiếm gì trong CV, điều không lớp học lý thuyết nào nói rõ. Mình đã nhận offer thật sự thích.</div>
+        <div class="fb-foot"><div class="fb-person"><div class="avatar on-light">PV<span class="verified"><i class="ti ti-check"></i></span></div><div class="fb-person-text"><strong>Phương Vy</strong><span>Junior KAM, Intrepid</span></div></div></div>
+      </article>
+      <article class="fb-card">
+        <div class="fb-top"><div class="fb-stars">★★★★★</div></div>
+        <div class="fb-quote">Buổi đi field ấn tượng nhất, vừa xem vừa hiểu thuật ngữ ngành. Buổi phỏng vấn thử tiếng Anh 1:1 giúp mình onboard thành công tại Mondelez.</div>
+        <div class="fb-foot"><div class="fb-person"><div class="avatar on-light">KL<span class="verified"><i class="ti ti-check"></i></span></div><div class="fb-person-text"><strong>Khánh Linh</strong><span>PE Sales Intern, Mondelez</span></div></div></div>
+      </article>
+      <article class="fb-card">
+        <div class="fb-top"><div class="fb-stars">★★★★★</div></div>
+        <div class="fb-quote">Các Advisor không chỉ dạy chuyên môn mà còn đào sâu về con người, giúp mình kể đúng câu chuyện của chính mình. Xứng đáng đến từng xu.</div>
+        <div class="fb-foot"><div class="fb-person"><div class="avatar on-light">HT<span class="verified"><i class="ti ti-check"></i></span></div><div class="fb-person-text"><strong>Đức Thịnh</strong><span>Sales Trainee, Mondelez</span></div></div></div>
+      </article>
+      <article class="fb-card">
+        <div class="fb-top"><div class="fb-stars">★★★★★</div></div>
+        <div class="fb-quote">Feedback rất chi tiết, tranh luận đến cùng trong các buổi Group Case đã tạo nên một bộ khung tư duy vững chắc cho mình.</div>
+        <div class="fb-foot"><div class="fb-person"><div class="avatar on-light">HT<span class="verified"><i class="ti ti-check"></i></span></div><div class="fb-person-text"><strong>Huyền Trang</strong><span>Marketing Intern, ACFC</span></div></div></div>
+      </article>
+      <article class="fb-card">
+        <div class="fb-top"><div class="fb-stars">★★★★★</div></div>
+        <div class="fb-quote">Không còn 'đánh cược' nữa, mình ra quyết định có cơ sở cho tương lai. Đã tìm được con đường tới ACCESSTRADE Vietnam.</div>
+        <div class="fb-foot"><div class="fb-person"><div class="avatar on-light">DM<span class="verified"><i class="ti ti-check"></i></span></div><div class="fb-person-text"><strong>Đức Minh</strong><span>Business Planner, ACCESSTRADE</span></div></div></div>
+      </article>
+    </div>
+    <div class="load-more-wrap">
+      <button class="btn btn-ghost-light" id="ljFbMore" style="display:none" type="button">Xem thêm đánh giá</button>
     </div>
   </div>
 </section>
@@ -886,7 +908,7 @@ button:focus-visible, a:focus-visible, .lj-nav-btn-plain:focus-visible, .fbtn:fo
   var reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   if(reduceMotion) return;
 
-  var revealSelector = '.problem-card, .about-card, .svc-card, .testi-card, .story-card, .fb-card, .gift-card, .audience-card, .instructor-card, .price-box, .module, .faq-item, .section-head, .rating-summary, .form-box';
+  var revealSelector = '.problem-card, .about-card, .svc-card, .story-card, .fb-card, .gift-card, .audience-card, .instructor-card, .price-box, .module, .faq-item, .section-head, .rating-summary, .form-box';
   var revealEls = document.querySelectorAll(revealSelector);
   revealEls.forEach(function(el, i){
     el.classList.add('reveal-init');
@@ -986,7 +1008,7 @@ button:focus-visible, a:focus-visible, .lj-nav-btn-plain:focus-visible, .fbtn:fo
 </script>
 <script>
 /* Đánh giá khoá học: lấy từ tab AdvisorReviews, chỉ những dòng có service = "Khoá học"
-   (tối đa 6, xếp theo sort_order). Tải lỗi hoặc chưa có dòng nào thì GIỮ NGUYÊN nội dung cũ. */
+   (hiện toàn bộ, 3 hàng/lần + nút "Xem thêm" như feedback.html). Tải lỗi hoặc chưa có dòng nào thì GIỮ NGUYÊN nội dung cũ. */
 (function(){
 
   var LJ_FB_FALLBACK_URL = 'https://script.google.com/macros/s/AKfycbx7Bd9VvoyzfiiezQV9huoY2BKHH_Br1RAFIz00mjdyKeis-Zv-38a0gf_b-fMlul2C/exec';
@@ -1001,27 +1023,62 @@ button:focus-visible, a:focus-visible, .lj-nav-btn-plain:focus-visible, .fbtn:fo
   }
   function ljFbUrl(){ return (typeof CW_WEBAPP_URL !== 'undefined' && CW_WEBAPP_URL) ? CW_WEBAPP_URL : LJ_FB_FALLBACK_URL; }
 
-  function testiCard(f){
-    var photo = ljDirectImg(f.photo_url), ini = ljInitials(f.name);
-    var av = photo
-      ? '<img src="'+ljEsc(photo)+'" alt="" loading="lazy" style="width:100%;height:100%;object-fit:cover;border-radius:50%" onerror="this.replaceWith(document.createTextNode(\''+ljEsc(ini)+'\'))">'
-      : ljEsc(ini);
-    return '<div class="testi-card">'
-      + '<div class="stars">'+'★★★★★'.slice(0, Math.max(1, Math.min(5, Number(f.rating)||5)))+'</div>'
-      + '<p>"'+ljEsc(f.quote)+'"</p>'
-      + '<div class="testi-who"><div class="avatar on-light">'+av+'<span class="verified"><i class="ti ti-check"></i></span></div>'
-      + '<div><strong>'+ljEsc(f.name)+'</strong><span>'+ljEsc(f.role)+'</span></div></div>'
-      + '</div>';
+  function ljAvatar(name, photoUrl, verified){
+    var src = ljDirectImg(photoUrl), ini = ljEsc(ljInitials(name));
+    var ver = verified ? '<span class="verified"><i class="ti ti-check"></i></span>' : '';
+    if (!src) return '<div class="avatar on-light">'+ini+ver+'</div>';
+    return '<div class="avatar on-light avatar-photo">'
+      + '<img src="'+ljEsc(src)+'" alt="" loading="lazy" onerror="this.style.display=\'none\'; this.nextElementSibling.style.display=\'flex\';">'
+      + '<div class="avatar-fallback-inner" style="display:none;">'+ini+'</div>'
+      + ver + '</div>';
+  }
+  // Trang này chỉ có khoá học → không lặp lại nhãn "Khoá học" / chip tên khoá; chỉ hiện badge (nếu có).
+  function fbCard(f){
+    var rating = Math.max(1, Math.min(5, Number(f.rating)||5));
+    var badge = f.badge ? '<span class="fb-service">'+ljEsc(f.badge)+'</span>' : '';
+    return '<article class="fb-card">'
+      + '<div class="fb-top"><div class="fb-stars">'+'★★★★★'.slice(0, rating)+'</div>'+badge+'</div>'
+      + '<div class="fb-quote">'+ljEsc(f.quote)+'</div>'
+      + '<div class="fb-foot"><div class="fb-person">'+ljAvatar(f.name, f.photo_url, true)
+      +   '<div class="fb-person-text"><strong>'+ljEsc(f.name)+'</strong><span>'+ljEsc(f.role)+'</span></div></div></div>'
+      + '</article>';
+  }
+
+  var LIST = [], shown = 0, ROWS = 3;
+  function pageSize(){
+    var g = document.getElementById('ljTestiGrid');
+    var cols = g ? Math.max(1, Math.floor((g.clientWidth + 14) / (330 + 14))) : 3;
+    return Math.max(6, cols * ROWS); // 3 hàng mỗi lần, giống feedback.html
+  }
+  function render(){
+    var grid = document.getElementById('ljTestiGrid'), more = document.getElementById('ljFbMore');
+    if (!grid) return;
+    if (!shown) shown = pageSize();
+    var visible = LIST.slice(0, shown);
+    grid.innerHTML = visible.map(fbCard).join('');
+    if (more) {
+      var left = LIST.length - visible.length;
+      more.style.display = left > 0 ? '' : 'none';
+      more.textContent = 'Xem thêm ' + Math.min(left, pageSize()) + ' đánh giá';
+    }
   }
   function load(){
     var grid = document.getElementById('ljTestiGrid');
     if (!grid) return;
+    var more = document.getElementById('ljFbMore');
+    if (more) more.addEventListener('click', function(){ shown += pageSize(); render(); });
     fetch(ljFbUrl() + '?action=getFeedbacks')
       .then(function(r){ return r.json(); })
       .then(function(res){
-        var list = ((res && res.success && res.data) ? res.data : []).filter(function(f){ return f.service === 'Khoá học'; }).slice(0, 6);
-        if (!list.length) return; // chưa có đánh giá "Khoá học" → giữ nội dung cũ
-        grid.innerHTML = list.map(testiCard).join('');
+        var all = ((res && res.success && res.data) ? res.data : []).filter(function(f){
+          return f && f.service === 'Khoá học' && String(f.quote || '').trim();
+        });
+        // Nếu trên Sheet có ghi rõ tên khoá "Land Your Dream Job" ở cột advisor → chỉ lấy đúng khoá này;
+        // nếu không ghi (hoặc chỉ có 1 khoá) → lấy toàn bộ đánh giá "Khoá học".
+        var mine = all.filter(function(f){ return /land\s*your\s*dream\s*job/i.test(String(f.advisor || '')); });
+        LIST = mine.length ? mine : all;
+        if (!LIST.length) return; // chưa có đánh giá "Khoá học" → giữ nội dung cũ
+        render();
       })
       .catch(function(){ /* giữ nội dung cũ */ });
   }
