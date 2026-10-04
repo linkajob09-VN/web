@@ -750,7 +750,7 @@ button:focus-visible, a:focus-visible, .lj-nav-btn-plain:focus-visible, .fbtn:fo
   // MỚI: ảnh offer letter cho section "Kết quả" giờ lấy từ Google Sheet (tab
   // "OfferResults") qua action getOfferResults — KHÔNG còn hardcode trong code
   // nữa. Muốn thêm/sửa/xoá/ẩn 1 người, chỉ cần mở Sheet, không cần sửa gì ở đây.
-  // Cột cần điền trong Sheet: result_id (số bất kỳ, không để trống) + photo_url
+  // Cột cần điền trong Sheet: result_id (số bất kỳ, không để trống) + photo_url — thiếu 1 trong 2 thì KHÔNG chạy ngang
   // (dán link Drive dạng .../file/d/XXXX/view). Cột name/company không bắt
   // buộc — ảnh đã tự có sẵn thông tin thiết kế trong đó rồi.
   // sort_order (số nhỏ hiện trước, để trống cũng được) | active (để trống hoặc
@@ -785,10 +785,18 @@ button:focus-visible, a:focus-visible, .lj-nav-btn-plain:focus-visible, .fbtn:fo
   // MỚI: cache vào localStorage để hiện ảnh NGAY LẬP TỨC cho khách quay lại
   // (không phải đợi gọi Sheet mỗi lần vào trang) — giống cách hàng advisor
   // đang làm. Lần đầu chưa có cache thì vẫn phải đợi gọi Sheet 1 lần.
-  function getLocalCache(){ try { return JSON.parse(localStorage.getItem('lj_offer_results_cache')); } catch(e){ return null; } }
-  function setLocalCache(version, data){ try { localStorage.setItem('lj_offer_results_cache', JSON.stringify({ version: version, data: data })); } catch(e){} }
+  function getLocalCache(){ try { return JSON.parse(localStorage.getItem('lj_offer_results_cache_v2')); } catch(e){ return null; } }
+  function setLocalCache(version, data){ try { localStorage.setItem('lj_offer_results_cache_v2', JSON.stringify({ version: version, data: data })); } catch(e){} }
+
+  // Quy tắc: chỉ dòng CÓ result_id và có photo_url mới chạy ngang (không phụ thuộc show_story)
+  function onlyMarquee(rows){
+    return (rows || []).filter(function(r){
+      return String(r.result_id == null ? '' : r.result_id).trim() !== '' && String(r.photo_url || '').trim() !== '';
+    });
+  }
 
   function render(results){
+    results = onlyMarquee(results);
     if (!results || !results.length) { track.parentElement.style.display = 'none'; return; }
     track.parentElement.style.display = '';
     // nhân đôi danh sách để marquee chạy vô hạn liền mạch (translateX -50% ↔ 0)
