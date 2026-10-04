@@ -546,7 +546,7 @@ function renderStories(){
   var html = '';
   STORIES.forEach(function(s, i){
     html += '<div class="story-card" onclick="openStoryDrawer('+i+')">'
-      + '<div class="story-photo-wrap"><img src="'+s.photo+'" alt="'+s.name+'" loading="lazy" onerror="this.style.display=\'none\';"></div>'
+      + '<div class="story-photo-wrap">'+(s.photo ? '<img src="'+s.photo+'" alt="'+s.name+'" loading="lazy" onerror="this.style.display=\'none\';">' : '<span style="display:flex;align-items:center;justify-content:center;width:100%;height:100%;font-size:42px;font-weight:700;color:var(--muted)">'+initials(s.name)+'</span>')+'</div>'
       + '<div class="story-body">'
       +   '<div class="story-name">'+s.name+'</div>'
       +   '<div class="story-blurb">'+s.blurb+'</div>'
@@ -650,7 +650,11 @@ var SS_WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbx7Bd9VvoyzfiiezQV9
 function renderResultMarquee(rows){
   var track = document.getElementById('resultTrack');
   if (!track) return;
-  var photos = rows.map(function(r){ return STORIES_toDirectImageUrl(r.photo_url); }).filter(Boolean);
+  // Quy tắc: chỉ dòng CÓ result_id mới chạy ngang, ảnh lấy từ photo_url. Không phụ thuộc show_story.
+  var photos = rows
+    .filter(function(r){ return String(r.result_id == null ? '' : r.result_id).trim() !== ''; })
+    .map(function(r){ return STORIES_toDirectImageUrl(r.photo_url); })
+    .filter(Boolean);
   if (!photos.length) { track.parentElement.parentElement.style.display = 'none'; return; }
   track.parentElement.parentElement.style.display = '';
   function cardHtml(src){
@@ -666,7 +670,8 @@ function renderAll(rows){
   // MỚI: chỉ những dòng có show_story=TRUE mới lên lưới card đầy đủ — các
   // ảnh offer letter còn lại (chưa có story) vẫn chạy trong marquee bình
   // thường, không bắt buộc phải viết đủ nội dung mới hiện được ảnh.
-  STORIES = rows.filter(function(r){ return r.show_story; }).map(offerResultToStory);
+  // Quy tắc: chỉ dòng show_story=TRUE mới tạo card, ảnh card = photo1_url. Không phụ thuộc result_id / photo_url.
+  STORIES = rows.filter(function(r){ return r.show_story === true || String(r.show_story).trim().toUpperCase() === 'TRUE'; }).map(offerResultToStory);
   renderStories();
   renderResultMarquee(rows);
 }
@@ -674,8 +679,8 @@ function renderAll(rows){
 // MỚI: cache vào localStorage để hiện ảnh + card NGAY LẬP TỨC cho khách quay
 // lại (không phải đợi gọi Sheet mỗi lần vào trang) — giống cách hàng advisor
 // trên index.html đang làm. Lần đầu chưa có cache thì vẫn phải đợi 1 lần.
-function getLocalCache(){ try { return JSON.parse(localStorage.getItem('lj_offer_results_cache')); } catch(e){ return null; } }
-function setLocalCache(version, data){ try { localStorage.setItem('lj_offer_results_cache', JSON.stringify({ version: version, data: data })); } catch(e){} }
+function getLocalCache(){ try { return JSON.parse(localStorage.getItem('lj_offer_results_cache_v2')); } catch(e){ return null; } }
+function setLocalCache(version, data){ try { localStorage.setItem('lj_offer_results_cache_v2', JSON.stringify({ version: version, data: data })); } catch(e){} }
 
 var localSS = getLocalCache();
 if (localSS && localSS.data) {
