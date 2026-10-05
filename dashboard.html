@@ -410,7 +410,7 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
 .anote-edit-btn { font-size:11px; color:#7C3AED; cursor:pointer; background:none; border:none; padding:2px 6px; font-family:inherit; border-radius:4px; }
 .anote-edit-btn:hover { background:#EDE9FE; }
 
- background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%); background-size: 200% 100%; border-radius: 6px; }
+.skeleton { animation: shimmer 1.4s linear infinite; background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%); background-size: 200% 100%; border-radius: 6px; }
 @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
 .skel-row { display: flex; gap: 12px; padding: 16px 24px; border-top: 1px solid var(--border); align-items: center; }
 /* ── Google Calendar style event list trong ô ngày ── */
@@ -422,6 +422,75 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
 .cal-event-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
 .cal-event-more { font-size: 11px; color: var(--muted); font-weight: 700; padding: 1px 4px; cursor: pointer; }
 .cal-event-more:hover { color: var(--brand); }
+/* ═══ Tiêu đề trang thống nhất ═══ */
+.page-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; flex-wrap: wrap; margin-bottom: 20px; }
+.page-title { font-size: 22px; font-weight: 800; margin: 0 0 4px; }
+.page-sub { font-size: 13px; color: var(--muted); }
+.page-actions { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.card-link { background: none; border: none; color: var(--brand); font-size: 13px; font-weight: 600; cursor: pointer; font-family: inherit; padding: 0; }
+.card-link:hover { text-decoration: underline; }
+
+/* ═══ Thanh chọn kỳ báo cáo dùng chung ═══ */
+.period-bar { margin-bottom: 20px; }
+.period-bar-inner { display: flex; align-items: center; justify-content: space-between; padding: 14px 20px; flex-wrap: wrap; gap: 10px; }
+.period-nav { display: flex; align-items: center; gap: 10px; }
+.period-label { font-weight: 700; font-size: 15px; min-width: 140px; text-align: center; }
+.period-actions { display: flex; align-items: center; gap: 10px; }
+.seg { display: inline-flex; border: 1.5px solid var(--border); border-radius: 100px; overflow: hidden; }
+.seg-btn { border: none; background: #fff; padding: 7px 16px; font-size: 13px; font-weight: 600; cursor: pointer; font-family: inherit; color: var(--muted); }
+.seg-btn.active { background: var(--brand); color: #fff; }
+.print-only { display: none; }
+
+/* ═══ Số liệu ═══ */
+.stats-row.cols-4 { grid-template-columns: repeat(4, 1fr); }
+.stat-cell.clickable { cursor: pointer; transition: background .15s; }
+.stat-cell.clickable:hover { background: var(--bg); }
+.stat-note { font-size: 13px; color: var(--muted); margin: -8px 4px 20px; }
+.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px; }
+.two-col .card { margin-bottom: 0; }
+@media (max-width: 1100px) {
+  .stats-row.cols-4 { grid-template-columns: repeat(2, 1fr); }
+  .stats-row.cols-4 .stat-cell:nth-child(odd) { border-left: none; }
+  .stats-row.cols-4 .stat-cell:nth-child(n+3) { border-top: 1px solid var(--border); }
+}
+@media (max-width: 900px) { .two-col { grid-template-columns: 1fr; } }
+
+/* ═══ Biểu đồ doanh thu ═══ */
+.rev-bars { display: flex; gap: 4px; align-items: stretch; height: 210px; padding: 12px 24px 20px; }
+.rev-col { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; min-width: 0; }
+.rev-barwrap { flex: 1; width: 100%; display: flex; align-items: flex-end; justify-content: center; }
+.rev-bar { width: 100%; max-width: 34px; background: var(--brand); border-radius: 5px 5px 0 0; }
+.rev-val { font-size: 10px; color: var(--muted); font-weight: 600; white-space: nowrap; min-height: 12px; }
+.rev-lbl { font-size: 10.5px; color: var(--muted); white-space: nowrap; }
+
+/* ═══ Bộ lọc lead + cờ SLA ═══ */
+.chip-row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 14px; }
+.chip { border: 1.5px solid var(--border); background: #fff; border-radius: 100px; padding: 6px 14px; font-size: 13px; font-weight: 600; cursor: pointer; color: var(--text); font-family: inherit; transition: all .15s; }
+.chip:hover { border-color: var(--brand); }
+.chip.active { background: var(--brand); border-color: var(--brand); color: #fff; }
+.chip-n { opacity: .75; margin-left: 4px; font-weight: 700; }
+.chip-danger:not(.active) { border-color: #FCA5A5; color: #B91C1C; }
+.chip-toggle { margin-left: auto; font-size: 12.5px; color: var(--muted); display: flex; align-items: center; gap: 6px; cursor: pointer; }
+.sla-badge { display: inline-block; font-size: 11px; font-weight: 700; padding: 3px 9px; border-radius: 100px; white-space: nowrap; max-width: 100%; overflow: hidden; text-overflow: ellipsis; vertical-align: middle; }
+.lead-sla { margin-top: 6px; }
+.lead-row-out { opacity: .35; transition: opacity .25s; }
+
+/* ═══ Trang Hôm nay ═══ */
+.today-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 24px; border-top: 1px solid var(--border); cursor: pointer; transition: background .15s; }
+.today-row:hover { background: var(--bg); }
+.today-row-title { font-weight: 700; font-size: 13.5px; }
+.today-row-sub { font-size: 12px; color: var(--muted); margin-top: 2px; }
+.today-row-side { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+.today-time { font-weight: 800; font-size: 15px; min-width: 52px; color: var(--brand); }
+.today-empty { padding: 28px 24px; text-align: center; color: var(--muted); font-size: 13.5px; border-top: 1px solid var(--border); line-height: 1.7; }
+.today-warn { background: #FEF3C7; color: #92400E; border-radius: 10px; padding: 10px 16px; font-size: 13px; margin-bottom: 16px; }
+
+/* ═══ Badge số trên menu ═══ */
+.nav-badge { margin-left: auto; background: var(--brand); color: #fff; font-size: 10.5px; font-weight: 700; min-width: 18px; height: 18px; border-radius: 9px; padding: 0 5px; display: inline-flex; align-items: center; justify-content: center; }
+.nav-badge-group { margin-left: 8px; background: var(--brand-light); color: var(--brand); }
+.sidebar.collapsed .nav-badge { display: none !important; }
+@media print { .print-only { display: block !important; } }
+
 @media print {
   body * { visibility: hidden; }
   #report-printable, #report-printable * { visibility: visible; }
@@ -1061,32 +1130,28 @@ function submitChangePassword() {
 // ════════════════════════════════════════════════════════════
 const SIDEBAR_DEF = {
   Staff: [
-    { id: 'lj', icon: '🏢', label: 'LinkaJob', children: [
-      { id: 'lj-newreg',   label: '🔴 Khách đăng ký mới' },
-      { id: 'lj-revenue',  label: 'Doanh thu' },
-      { id: 'lj-report',   label: 'Báo cáo vận hành' },
-      { id: 'lj-market-report', label: '📊 Báo cáo Marketing' },
-      { id: 'lj-sales-perf', label: '📈 Báo cáo hiệu suất Sale' },
-      { id: 'lj-meetings', label: 'Lịch meeting' },
-      { id: 'lj-products', label: 'Sản phẩm' },
-      { id: 'lj-courses', label: '🎓 Khoá học' },
+    { id: 'today', icon: '🏠', label: 'Hôm nay' },
+    { id: 'cus', icon: '👥', label: 'Khách hàng', children: [
+      { id: 'lj-newreg',      label: 'Khách đăng ký mới' },
+      { id: 'aee-list',       label: 'Advisee' },
+      { id: 'aee-reschedule', label: 'Yêu cầu đổi lịch' },
     ]},
-    { id: 'stf', icon: '👔', label: 'Staff', children: [
-      { id: 'stf-list',     label: 'Danh sách nhân viên' },
-      { id: 'stf-kpi',      label: '📊 So sánh KPI' },
+    { id: 'ops', icon: '⚙️', label: 'Vận hành', children: [
+      { id: 'lj-meetings',  label: 'Lịch meeting' },
       { id: 'stf-schedule', label: 'Lịch tư vấn (Sale)' },
+      { id: 'adv-list',     label: 'Advisor' },
+      { id: 'adv-new',      label: 'Thêm advisor' },
+      { id: 'lj-courses',   label: 'Khoá học' },
+      { id: 'lj-products',  label: 'Sản phẩm' },
     ]},
-    { id: 'adv', icon: '🎓', label: 'Advisor', children: [
-      { id: 'adv-list',   label: 'Danh sách' },
-      { id: 'adv-new',    label: 'Thêm mới' },
+    { id: 'rep', icon: '📊', label: 'Báo cáo', children: [
+      { id: 'lj-revenue',       label: 'Doanh thu' },
+      { id: 'lj-report',        label: 'Vận hành' },
+      { id: 'lj-market-report', label: 'Marketing' },
+      { id: 'lj-sales-perf',    label: 'Hiệu suất Sale' },
     ]},
-    { id: 'aee', icon: '🙋', label: 'Advisee', children: [
-      { id: 'aee-list',   label: 'Danh sách' },
-      { id: 'aee-reschedule', label: '🔔 Yêu cầu đổi lịch' },
-    ]},
-    { id: 'crs', icon: '📚', label: 'Khoá học', children: [
-      { id: 'crs-list',   label: 'Danh sách' },
-      { id: 'crs-new',    label: 'Thêm mới' },
+    { id: 'adm', icon: '🛠️', label: 'Quản trị', children: [
+      { id: 'stf-list', label: 'Nhân viên' },
     ]},
   ],
   Advisor: [
@@ -1102,16 +1167,17 @@ const SIDEBAR_DEF = {
 // Map sidebar id → render function / legacy tab id
 const ROUTE_MAP = {
   // Staff routes
+  'today':         { fn: function(){ loadTodayPageAsync(); } },
   'lj-newreg':     { fn: function(){ renderStaff('lj-newreg'); } },
-  'lj-revenue':    { fn: function(){ loadAdviseesFromSheet(function(){ renderStaff('lj-revenue'); }); } },
-  'lj-report':     { fn: function(){ loadAdviseesFromSheet(function(){ renderStaff('lj-report'); }); } },
+  'lj-revenue':    { fn: function(){ loadRevenuePageAsync(); } },
+  'lj-report':     { fn: function(){ loadOperationsReportAsync(); } },
   'lj-market-report': { fn: function(){ loadMarketingReportPageAsync(); } },
   'lj-sales-perf': { fn: function(){ loadSalesPerformancePageAsync(); } },
   'lj-meetings':   { fn: function(){ loadMeetingCalendarAsync(); } },
   'lj-products':   { fn: function(){ loadProductsPageAsync(); } },
   'lj-courses':    { fn: function(){ loadCoursesPageAsync(); } },
   'stf-list':      { fn: function(){ loadStaffListFromSheet(function(){ renderStaff('stf-list'); }); } },
-  'stf-kpi':       { fn: function(){ loadStaffKpiComparePageAsync(); } },
+  'stf-kpi':       { fn: function(){ loadSalesPerformancePageAsync(); } },
   'stf-schedule':  { fn: function(){ loadStaffSchedulePageAsync(); } },
   'adv-list':      { fn: function(){ loadAdvisorsFromSheet(function(){ renderStaff('advisor-mod'); }); } },
   'adv-new':       { fn: function(){ renderStaff('adv-new'); } },
@@ -1134,31 +1200,34 @@ function buildSidebar(role) {
   const defs = SIDEBAR_DEF[role] || [];
   const sidebar = document.getElementById('sidebar');
   let html = '';
+  NAV_PARENT = {};
 
   defs.forEach(function(group) {
     if (group.children && group.children.length > 0) {
       // Accordion group
       html += '<div class="nav-group" id="ng-' + group.id + '">';
       html += '<div class="nav-group-header" id="ngh-' + group.id + '" onclick="onNavGroupHeaderClick(\'' + group.id + '\')">';
-      html += '<span><span class="nav-icon">' + group.icon + '</span><span class="nav-label">' + group.label + '</span></span>';
+      html += '<span><span class="nav-icon">' + group.icon + '</span><span class="nav-label">' + group.label + '</span><span class="nav-badge nav-badge-group" id="nbg-' + group.id + '" style="display:none"></span></span>';
       html += '<span class="chevron">▼</span>';
       html += '</div>';
       html += '<div class="nav-sub" id="ns-' + group.id + '">';
       group.children.forEach(function(child) {
-        html += '<div class="nav-item" id="ni-' + child.id + '" onclick="navTo(\'' + child.id + '\')"><span class="nav-label">' + child.label + '</span></div>';
+        NAV_PARENT[child.id] = group.id;
+        html += '<div class="nav-item" id="ni-' + child.id + '" onclick="navTo(\'' + child.id + '\')"><span class="nav-label">' + child.label + '</span><span class="nav-badge" id="nb-' + child.id + '" style="display:none"></span></div>';
       });
       html += '</div></div>';
     } else {
       // Single item (no children)
       html += '<div class="nav-single" id="ni-' + group.id + '" onclick="navTo(\'' + group.id + '\')">';
-      html += '<span class="nav-icon">' + group.icon + '</span><span class="nav-label">' + group.label + '</span>';
+      html += '<span class="nav-icon">' + group.icon + '</span><span class="nav-label">' + group.label + '</span><span class="nav-badge" id="nb-' + group.id + '" style="display:none"></span>';
       html += '</div>';
     }
   });
 
   sidebar.innerHTML = html;
+  Object.keys(_navBadgeCounts).forEach(function(k){ setNavBadge(k, _navBadgeCounts[k]); });
 
-  // Mặc định mở group đầu tiên và chọn item đầu tiên
+  // Mặc định chọn mục đầu tiên (Staff: trang "Hôm nay")
   const firstGroup = defs[0];
   if (firstGroup) {
     if (firstGroup.children && firstGroup.children.length > 0) {
@@ -1188,14 +1257,9 @@ function onNavGroupHeaderClick(groupId) {
 }
 
 function toggleNavGroup(groupId) {
-  if (openGroupId === groupId) {
-    closeNavGroup(groupId);
-    openGroupId = null;
-  } else {
-    if (openGroupId) closeNavGroup(openGroupId);
-    openNavGroup(groupId);
-    openGroupId = groupId;
-  }
+  var sub = document.getElementById('ns-' + groupId);
+  if (sub && sub.classList.contains('open')) closeNavGroup(groupId);
+  else openNavGroup(groupId);
 }
 
 function openNavGroup(groupId) {
@@ -1223,6 +1287,7 @@ function navTo(id) {
   const el = document.getElementById('ni-' + id);
   if (el) el.classList.add('active');
   activeNavId = id;
+  if (NAV_PARENT[id]) openNavGroup(NAV_PARENT[id]);
   _staffDetailId = null; // rời khỏi trang chi tiết nhân viên
   try { localStorage.setItem('linkajob_last_route', id); } catch (e) {}
 
@@ -1728,19 +1793,6 @@ function sendDayRanges() {
 //  Apps Script ghi 1 dòng vào tab "Sessions" với advisor_name = 'LinkaJob Team'.
 //  Dashboard fetch trực tiếp từ Sheet qua action getSessions.
 // ════════════════════════════════════════════════════════════
-function loadNewRegistrationsPage() {
-  var c = document.getElementById('main-content');
-  c.innerHTML = pageHeader('🔴 Khách đăng ký tư vấn mới', 'Đồng bộ trực tiếp từ tab Leads — gồm cả khách đã chọn giờ và chưa chọn giờ, đã auto-assign sẵn') + skeletonRows(3);
-
-  apiGet('getLeads', {}).then(function(res){
-    var leads = (res && res.data) ? res.data : [];
-    leads.sort(function(a,b){ return String(b.created_at||'') > String(a.created_at||'') ? 1 : -1; });
-    c.innerHTML = renderNewRegistrationsList(leads);
-  }).catch(function(err){
-    c.innerHTML = pageHeader('🔴 Khách đăng ký tư vấn mới', 'Đồng bộ trực tiếp từ tab Leads') +
-      '<div class="card"><div class="empty-state"><div class="icon">⚠</div>Không kết nối được tới Sheet.<br><small style="color:var(--muted)">' + err.message + '</small></div></div>';
-  });
-}
 
 // Gộp 1 dòng lead từ Sheet vào cache MOCK.consultations (tạo mới hoặc cập nhật nếu đã có),
 // dùng chung cho cả trang "Khách đăng ký mới" và tab riêng của từng Sale.
@@ -1748,6 +1800,7 @@ function mergeLeadRow(r) {
   if (!r.lead_id) return null;
   var existing = MOCK.consultations.find(function(c){ return c.id === r.lead_id; });
   var obj = existing || { id: r.lead_id, log: [] };
+  obj.createdAt = r.created_at || obj.createdAt || '';
   obj.staff = r.staff || '';
   obj.name = String(r.name || ''); obj.phone = String(r.phone || ''); obj.email = String(r.email || '');
   obj.source = r.source || ''; obj.consultAbout = r.consult_about || '';
@@ -1819,7 +1872,7 @@ function getLeadSlaInfo(c) {
   var meetingDt = c.date ? new Date(c.date + 'T' + (c.time || '00:00')) : null;
   var phase, anchor;
   if (meetingDt && meetingDt <= now) { phase = 'after'; anchor = meetingDt; }
-  else if (!c.date) { phase = 'before'; anchor = (c.log && c.log[0]) ? parseVNDateTime(c.log[0].time) : now; }
+  else if (!c.date) { phase = 'before'; anchor = getLeadAnchor(c) || now; }
   else { return { label: '📅 Đã chốt lịch — chờ buổi hẹn', overdue: false, color: '#1D4ED8', bg: '#EFF6FF' }; }
   if (!anchor) return null;
 
@@ -1831,7 +1884,7 @@ function getLeadSlaInfo(c) {
   var overdue = days > 3;
   var color = overdue ? '#B91C1C' : (idx >= 2 ? '#92400E' : '#065F46');
   var bg = overdue ? '#FEE2E2' : (idx >= 2 ? '#FEF3C7' : '#F0FDF4');
-  return { label: (overdue ? '⚠ Quá hạn — ' : '') + label, overdue: overdue, color: color, bg: bg };
+  return { label: (overdue ? '⚠ Quá hạn — ' : '') + label, overdue: overdue, color: color, bg: bg, days: days };
 }
 
 function parseConsultNotes(notes) {
@@ -1850,73 +1903,6 @@ function parseConsultNotes(notes) {
   return out;
 }
 
-function renderNewRegistrationsList(leads) {
-  var html = '';
-  html += '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:10px">';
-  html += '<div style="font-size:15px;font-weight:700">🔴 Khách đăng ký tư vấn mới</div>';
-  html += '<button class="submit-btn" style="padding:8px 16px;font-size:13px;width:auto" onclick="openCreateLeadModal()">+ Tạo đơn mới</button>';
-  html += '</div>';
-  html += '<div class="card"><div class="card-header"><div class="card-header-left">Danh sách đăng ký (' + leads.length + ')</div>';
-  html += '<button class="refresh-btn" onclick="loadNewRegistrationsPage()">↻ Làm mới</button></div>';
-
-  if (leads.length === 0) {
-    html += '<div class="empty-state"><div class="icon">📭</div>Chưa có khách nào đăng ký từ website</div>';
-  } else {
-    html += '<div style="padding:16px 24px 0">' + searchBoxHtml('new-reg-tbody', 'Tìm theo tên, SĐT, email...') + '</div>';
-    var saleStaff = sheetData.staffList.filter(function(st){ return st.role === 'Sale' && st.active; });
-
-    html += '<div style="overflow-x:auto"><table class="bookings-table lead-table"><thead><tr>' +
-      '<th>KHÁCH HÀNG</th><th>TRẠNG THÁI TƯ VẤN</th><th>THỜI GIAN / LINK</th><th>DỊCH VỤ QUAN TÂM</th><th>KẾT QUẢ</th><th>NV PHỤ TRÁCH</th>' +
-      '</tr></thead><tbody id="new-reg-tbody">';
-
-    leads.forEach(function(r){
-      var obj = mergeLeadRow(r);
-      if (!obj) return;
-      var searchKey = (obj.name + ' ' + obj.phone + ' ' + fmtPhoneVN(obj.phone) + ' ' + obj.email).toLowerCase().replace(/"/g,'');
-      html += '<tr data-search="' + searchKey + '">';
-
-      // Cột 1 — tên/SĐT/email, bấm vào đây mở chi tiết (thay cho nút "Chi tiết →" cũ)
-      html += '<td><div style="cursor:pointer" onclick="navToConsultationDetail(\'' + obj.id + '\')">' +
-        '<div style="font-weight:700;font-size:13.5px">' + (obj.name || 'Khách hàng') + '</div>' +
-        '<div style="font-size:12px;color:var(--muted)">' + (fmtPhoneVN(obj.phone)||'—') + '</div>' +
-        '<div style="font-size:12px;color:var(--muted)">' + fmtContactEmail(obj.email,'—') + '</div>' +
-        '</div></td>';
-
-      // Cột 2 — trạng thái tư vấn (dropdown, sửa trực tiếp)
-      html += '<td><select class="form-select lead-select" onclick="event.stopPropagation()" onchange="updateLeadStatusInline(\'' + obj.id + '\', this.value)">' +
-        CONSULT_STATUS.map(function(s){ return '<option value="' + s + '"' + (obj.status===s?' selected':'') + '>' + s + '</option>'; }).join('') +
-        '</select></td>';
-
-      // Cột 3 — thời gian tư vấn + link Meet
-      if (obj.date) {
-        html += '<td><div style="font-size:12.5px"><strong>' + fmtDateStr(obj.date) + '</strong> · ' + obj.time + '</div>' +
-          (obj.meetLink ? '<a href="' + obj.meetLink + '" target="_blank" class="detail-btn" style="margin-top:4px;display:inline-block" onclick="event.stopPropagation()">🎥 Meet</a>' : '') + '</td>';
-      } else {
-        html += '<td><span class="badge" style="background:#FEF3C7;color:#92400E">Chưa chọn giờ</span></td>';
-      }
-
-      // Cột 4 — dịch vụ quan tâm (chỉ hiển thị, không sửa)
-      html += '<td style="font-size:12.5px">' + (obj.consultAbout || '—') + '</td>';
-
-      // Cột 5 — kết quả (dropdown, sửa trực tiếp — dùng handleConsultResultChange để giữ nguyên
-      // luồng tự mở form tạo Advisee khi chọn "Đăng ký", đã làm ở bản trước)
-      html += '<td><select class="form-select lead-select" onclick="event.stopPropagation()" onchange="handleConsultResultChange(\'' + obj.id + '\', this.value)">' +
-        CONSULT_RESULT.map(function(rs){ var label = rs || '— Chưa có —'; return '<option value="' + label + '"' + ((obj.result||'')===rs?' selected':'') + '>' + label + '</option>'; }).join('') +
-        '</select></td>';
-
-      // Cột 6 — NV phụ trách (dropdown, sửa trực tiếp)
-      html += '<td><select class="form-select lead-select" onclick="event.stopPropagation()" onchange="assignRegToStaff(\'' + obj.id + '\', this.value)">' +
-        '<option value=""' + (!obj.staff?' selected':'') + '>— Chưa gán —</option>' +
-        saleStaff.map(function(st){ return '<option value="' + st.name + '"' + (obj.staff===st.name?' selected':'') + '>' + st.name + '</option>'; }).join('') +
-        '</select></td>';
-
-      html += '</tr>';
-    });
-    html += '</tbody></table></div>';
-  }
-  html += '</div>';
-  return html;
-}
 
 
 // ── "Tạo đơn mới" — cho admin quản lý Fanpage/IG/TikTok chủ động tạo hồ sơ
@@ -1976,7 +1962,7 @@ function submitCreateLead() {
       if (res && res.success) {
         toast('Đã tạo đơn mới' + (res.assigned_staff ? ' — gán cho ' + res.assigned_staff : ''), 'success');
         closeModal();
-        loadNewRegistrationsPage();
+        loadNewRegistrationsPage(true);
       } else {
         errEl.textContent = (res && res.error) || 'Có lỗi khi tạo đơn, thử lại.';
         errEl.style.display = 'block';
@@ -2055,7 +2041,7 @@ function assignRegToStaff(cid, staffName) {
     persistLeadLog(c.id, entry);
 
     toast('Đã phân công cho ' + staffName + ' ✅', 'success');
-    loadNewRegistrationsPage();
+    loadNewRegistrationsPage(true);
   }).catch(function(err){
     toast('Lỗi kết nối: ' + err.message, 'error');
   });
@@ -2128,9 +2114,9 @@ function renderMeetingMonthCalendar(meetingsByDate) {
   const MAX_VISIBLE = 3;
   const typeColor = { 'Cố vấn 1-1': '#1D4ED8', 'Tư vấn miễn phí': '#F4451A', 'Khoá học': '#7C3AED' };
 
-  let html = '<div class="card"><div class="card-header"><div class="card-header-left">Lịch meeting</div>' +
-    '<div style="display:flex;gap:8px"><button class="submit-btn" style="padding:8px 16px;font-size:13px;width:auto" onclick="openCreateMeetingModal()">+ Tạo meeting</button>' +
-    '<button class="refresh-btn" onclick="loadMeetingCalendarAsync()">↻ Làm mới</button></div></div>';
+  let html = pageHeader('Lịch meeting', 'Tư vấn miễn phí, cố vấn 1-1 và buổi khoá học',
+    '<button class="refresh-btn" onclick="loadMeetingCalendarAsync()">↻ Làm mới</button>' +
+    '<button class="submit-btn" style="padding:8px 16px;font-size:13px;width:auto" onclick="openCreateMeetingModal()">+ Tạo meeting</button>') + '<div class="card">';
   html += '<div class="cal-nav"><div class="cal-nav-left"><button onclick="changeCalMonth(-1)">‹</button><span class="cal-nav-label">' + monthLabel + '</span><button onclick="changeCalMonth(1)">›</button></div>';
   html += '<button class="cal-today-btn" onclick="goToCalToday()">Hôm nay</button></div>';
 
@@ -2352,8 +2338,8 @@ function renderBookedSessions() {
 function renderStaff(tab) {
   const c = document.getElementById('main-content');
   if      (tab === 'lj-newreg')         loadNewRegistrationsPage();
-  else if (tab === 'lj-revenue')        c.innerHTML = renderRevenuePage();
-  else if (tab === 'lj-report')         c.innerHTML = renderReportPage();
+  else if (tab === 'lj-revenue')        loadRevenuePageAsync();
+  else if (tab === 'lj-report')         loadOperationsReportAsync();
   else if (tab === 'lj-sales-perf')     loadSalesPerformancePageAsync();
   else if (tab === 'linkajob-calendar' || tab === 'lj-meetings') loadMeetingCalendarAsync();
   else if (tab === 'lj-products')       loadProductsPageAsync();
@@ -2364,7 +2350,7 @@ function renderStaff(tab) {
   else if (tab === 'advisee-mod')       c.innerHTML = renderAdviseeModule();
   else if (tab === 'course-mod')        c.innerHTML = renderCourseModule();
   else if (tab === 'aee-reschedule')    loadRescheduleRequestsPage();
-  else c.innerHTML = renderRevenuePage();
+  else navTo('today');
 }
 
 // ════════════════════════════════════════════════════════════
@@ -2633,90 +2619,7 @@ function staffMatchesEntity(staffObj, entity, idField, nameField) {
   return false;
 }
 
-function loadStaffKpiComparePageAsync() {
-  var mc = document.getElementById('main-content');
-  mc.innerHTML = pageHeader('So sánh KPI nhân viên', 'Tổng hợp trực tiếp từ tab Leads và Sessions trên Sheet') + skeletonRows(4);
 
-  Promise.all([
-    apiGet('getStaffList', {}).catch(function(){ return null; }),
-    apiGet('getLeads', {}).catch(function(){ return null; }),
-    apiGet('getSessions', {}).catch(function(){ return null; }),
-  ]).then(function(results){
-    var staffRes = results[0], leadsRes = results[1], sessRes = results[2];
-    if (staffRes && staffRes.data) sheetData.staffList = staffRes.data.map(normalizeStaffFromSheet);
-    var leads = (leadsRes && leadsRes.data) ? leadsRes.data : [];
-    var sessions = (sessRes && sessRes.data) ? sessRes.data : [];
-    mc.innerHTML = renderStaffKpiComparePage(sheetData.staffList, leads, sessions);
-  }).catch(function(err){
-    mc.innerHTML = pageHeader('So sánh KPI nhân viên', '') +
-      '<div class="card"><div class="empty-state"><div class="icon">⚠</div>Không tải được dữ liệu.<br><small style="color:var(--muted)">' + err.message + '</small></div></div>';
-  });
-}
-
-function renderStaffKpiComparePage(staffList, leads, sessions) {
-  var html = pageHeader('So sánh KPI nhân viên', 'Tổng hợp từ tab Leads và Sessions trên Sheet');
-
-  var saleStaff = staffList.filter(function(s){ return s.subRole === 'Sale'; });
-  if (saleStaff.length === 0) {
-    return html + '<div class="card"><div class="empty-state"><div class="icon">📭</div>Chưa có nhân viên Sale nào trong SalesConfig (hoặc chưa thêm cột sub_role)</div></div>';
-  }
-
-  var rows = saleStaff.map(function(s){
-    var myLeads = leads.filter(function(l){ return staffMatchesEntity(s, l, 'staff_id', 'staff'); });
-    var converted = myLeads.filter(function(l){ return l.status === 'Đã chuyển đổi thành khách hàng'; }).length;
-    var closed = myLeads.filter(function(l){ return SLA_TERMINAL.indexOf(l.status) > -1; }).length;
-    var inProgress = myLeads.length - converted - closed;
-    var mySessions = sessions.filter(function(sess){ return staffMatchesEntity(s, sess, 'assigned_staff_id', 'assigned_staff'); });
-    var completedSessions = mySessions.filter(function(sess){ return sess.status === 'completed'; }).length;
-    var currentLoad = myLeads.filter(function(l){ return SLA_TERMINAL.indexOf(l.status) === -1; }).length;
-    var rate = myLeads.length > 0 ? Math.round(converted / myLeads.length * 100) : 0;
-    return {
-      staff: s, totalLeads: myLeads.length, converted: converted, inProgress: inProgress,
-      closed: closed, totalSessions: mySessions.length, completedSessions: completedSessions,
-      currentLoad: currentLoad, rate: rate,
-    };
-  });
-
-  rows.sort(function(a,b){ return b.rate - a.rate || b.converted - a.converted; });
-
-  var totalLeadsAll = rows.reduce(function(sum,r){ return sum + r.totalLeads; }, 0);
-  var totalConvertedAll = rows.reduce(function(sum,r){ return sum + r.converted; }, 0);
-  var avgRate = totalLeadsAll > 0 ? Math.round(totalConvertedAll / totalLeadsAll * 100) : 0;
-
-  html += '<div class="stats-row" style="grid-template-columns:repeat(3,1fr);margin-bottom:20px">';
-  html += '<div class="stat-cell"><div class="stat-num">' + totalLeadsAll + '</div><div class="stat-label">Tổng lead đã phân công</div></div>';
-  html += '<div class="stat-cell"><div class="stat-num">' + totalConvertedAll + '</div><div class="stat-label">Lead đã chuyển đổi</div></div>';
-  html += '<div class="stat-cell"><div class="stat-num">' + avgRate + '%</div><div class="stat-label">Tỷ lệ chuyển đổi trung bình</div></div>';
-  html += '</div>';
-
-  html += '<div class="card" style="margin-bottom:16px"><div class="card-header"><div class="card-header-left">Tỷ lệ chuyển đổi theo nhân viên</div></div>';
-  html += '<div style="padding:16px 28px 28px;display:flex;flex-direction:column;gap:14px">';
-  rows.forEach(function(r){
-    html += '<div><div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:6px"><span>' + avatarCircle(r.staff.name,22) + ' <b>' + r.staff.name + '</b></span><span style="color:var(--muted)">' + r.converted + '/' + r.totalLeads + ' lead · ' + r.rate + '%</span></div>';
-    html += '<div style="height:8px;background:var(--bg);border-radius:100px;overflow:hidden"><div style="height:100%;width:' + r.rate + '%;background:var(--brand);border-radius:100px;transition:width .4s"></div></div></div>';
-  });
-  html += '</div></div>';
-
-  html += '<div class="card"><div class="card-header"><div class="card-header-left">Chi tiết theo nhân viên</div>';
-  html += '<button class="refresh-btn" onclick="loadStaffKpiComparePageAsync()">↻ Làm mới</button></div>';
-  html += '<table class="bookings-table"><thead><tr><th>NHÂN VIÊN</th><th>TẢI HIỆN TẠI</th><th>TỔNG LEAD</th><th>ĐANG XỬ LÝ</th><th>ĐÃ CHUYỂN ĐỔI</th><th>TỶ LỆ</th><th>BUỔI TƯ VẤN</th><th>ĐÃ HOÀN THÀNH</th></tr></thead><tbody>';
-  rows.forEach(function(r){
-    var full = r.currentLoad >= r.staff.leadLimit;
-    html += '<tr>';
-    html += '<td><div style="display:flex;align-items:center;gap:10px">' + avatarCircle(r.staff.name,30) + '<b>' + r.staff.name + '</b></div></td>';
-    html += '<td><span style="' + (full?'color:var(--brand);font-weight:700':'') + '">' + r.currentLoad + '/' + r.staff.leadLimit + '</span>' + (full?' <span style="font-size:11px;color:var(--brand)">Đầy tải</span>':'') + '</td>';
-    html += '<td>' + r.totalLeads + '</td>';
-    html += '<td>' + r.inProgress + '</td>';
-    html += '<td><b>' + r.converted + '</b></td>';
-    html += '<td>' + r.rate + '%</td>';
-    html += '<td>' + r.totalSessions + '</td>';
-    html += '<td>' + r.completedSessions + '</td>';
-    html += '</tr>';
-  });
-  html += '</tbody></table></div>';
-
-  return html;
-}
 
 function openExtendModal(aeId) {
   document.getElementById('modal-title').textContent = '📅 Gia hạn thời gian sử dụng';
@@ -2871,6 +2774,7 @@ function loadStaffLeadsAsync() {
       if (!r.lead_id) return;
       var existing = MOCK.consultations.find(function(c){ return c.id === r.lead_id; });
       var obj = existing || { id: r.lead_id, log: [] };
+  obj.createdAt = r.created_at || obj.createdAt || '';
       obj.staff = r.staff || s.name;
       obj.name = r.name || ''; obj.phone = r.phone || ''; obj.email = r.email || '';
       obj.source = r.source || ''; obj.consultAbout = r.consult_about || '';
@@ -3274,7 +3178,7 @@ function renderStaffLeadsTab(s) {
 // - Chưa liên hệ: "Lead mới — liên hệ trong 1 tiếng"
 // - Quá 3 ngày mà vẫn chưa chốt được lịch: "Lead quá hạn"
 function getLeadFreshness(c) {
-  var anchor = (c.log && c.log[0]) ? parseVNDateTime(c.log[0].time) : new Date();
+  var anchor = getLeadAnchor(c) || new Date();
   var now = new Date();
   var days = anchor ? Math.floor((now - anchor) / 86400000) : 0;
   if (days > 3) {
@@ -4057,7 +3961,7 @@ function loadStaffSchedulePageAsync() {
     });
     window._newRegSessions = sessions;
 
-    mc.innerHTML = renderNewRegistrationsList(sessions) + renderStaffSchedulePage();
+    mc.innerHTML = renderStaffSchedulePage();
   }).catch(function(err){
     toast('Không tải được dữ liệu: ' + err.message, 'error');
     mc.innerHTML = renderStaffSchedulePage();
@@ -4287,107 +4191,10 @@ function openSaleBookingDetail(i) {
 // ════════════════════════════════════════════════════════════
 //  LINKAJOB — 4 TRANG RIÊNG
 // ════════════════════════════════════════════════════════════
-function pageHeader(title, sub) {
-  return '<div style="margin-bottom:24px"><h1 style="font-size:20px;font-weight:800;margin-bottom:4px">' + title + '</h1><div style="font-size:13px;color:var(--muted)">' + (sub||'') + '</div></div>';
-}
 
 // ── 1. DOANH THU ──
-function renderRevenuePage() {
-  let html = pageHeader('Doanh thu', 'Tổng quan doanh thu theo thời gian (tính từ Booking đã xác nhận)');
-
-  var now = new Date(); now.setHours(0,0,0,0);
-  var startOfWeek = new Date(now); startOfWeek.setDate(now.getDate() - ((now.getDay()+6)%7)); // T2 tuần này
-  var startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-  var startOfYear = new Date(now.getFullYear(), 0, 1);
-
-  var rev = { today: 0, week: 0, month: 0, year: 0 };
-  MOCK.advisees.forEach(function(ae){
-    if (!ae.registeredAt) return;
-    var d = new Date(ae.registeredAt + 'T00:00:00');
-    if (isNaN(d)) return;
-    if (d.getTime() === now.getTime()) rev.today += ae.paid;
-    if (d >= startOfWeek) rev.week += ae.paid;
-    if (d >= startOfMonth) rev.month += ae.paid;
-    if (d >= startOfYear) rev.year += ae.paid;
-  });
-
-  // 4 ô KPI
-  html += '<div class="stats-row" style="grid-template-columns:repeat(4,1fr);margin-bottom:20px">';
-  html += '<div class="stat-cell"><div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">HÔM NAY</div><div class="stat-num" style="font-size:22px">' + fmtMoney(rev.today) + '</div></div>';
-  html += '<div class="stat-cell"><div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">TUẦN NÀY</div><div class="stat-num" style="font-size:22px">' + fmtMoney(rev.week) + '</div></div>';
-  html += '<div class="stat-cell"><div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">THÁNG NÀY</div><div class="stat-num" style="font-size:22px">' + fmtMoney(rev.month) + '</div></div>';
-  html += '<div class="stat-cell"><div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">NĂM NAY</div><div class="stat-num" style="font-size:22px">' + fmtMoney(rev.year) + '</div></div>';
-  html += '</div>';
-
-  // Biểu đồ doanh thu 7 ngày gần nhất (dựa trên ngày đăng ký thật)
-  var last7 = [];
-  for (var i = 6; i >= 0; i--) { var d = new Date(now); d.setDate(now.getDate()-i); last7.push(d); }
-  var byDay = {};
-  MOCK.advisees.forEach(function(ae){ if (ae.registeredAt) byDay[ae.registeredAt] = (byDay[ae.registeredAt]||0) + ae.paid; });
-  var series = last7.map(function(d){ return { label: (d.getDate()<10?'0':'')+d.getDate()+'/'+(d.getMonth()+1<10?'0':'')+(d.getMonth()+1), value: byDay[ymd(d)] || 0 }; });
-  var maxVal = Math.max.apply(null, series.map(function(d){ return d.value; })) || 1;
-
-  html += '<div class="card"><div class="card-header"><div class="card-header-left">Doanh thu 7 ngày gần nhất</div></div>';
-  html += '<div style="display:flex;gap:10px;align-items:flex-end;height:160px;padding:12px 28px 28px">';
-  series.forEach(function(d){
-    const h = Math.round((d.value / maxVal) * 120);
-    html += '<div style="display:flex;flex-direction:column;align-items:center;gap:6px;flex:1">';
-    html += '<div style="font-size:10.5px;color:var(--muted);font-weight:600">' + (d.value?fmtMoney(d.value):'') + '</div>';
-    html += '<div style="width:100%;max-width:36px;height:' + Math.max(h,2) + 'px;background:var(--brand);border-radius:6px 6px 0 0"></div>';
-    html += '<div style="font-size:11px;color:var(--muted)">' + d.label + '</div>';
-    html += '</div>';
-  });
-  html += '</div></div>';
-
-  // Bảng chi tiết giao dịch — dữ liệu thật từ Bookings đã xác nhận
-  html += '<div class="card"><div class="card-header"><div class="card-header-left">Giao dịch (' + MOCK.advisees.length + ')</div></div>';
-  if (MOCK.advisees.length === 0) {
-    html += '<div class="empty-state"><div class="icon">💳</div>Chưa có giao dịch nào</div>';
-  } else {
-    html += '<table class="bookings-table"><thead><tr><th>ADVISEE</th><th>GÓI</th><th>GIÁ TRỊ</th><th>NGÀY</th><th>TRẠNG THÁI</th></tr></thead><tbody>';
-    MOCK.advisees.slice().sort(function(a,b){ return (b.registeredAt||'') > (a.registeredAt||'') ? 1 : -1; }).forEach(function(ae){
-      html += '<tr><td><b>' + ae.name + '</b></td><td>' + (ae.pkg||'—') + '</td><td><b>' + fmtMoney(ae.paid) + '</b></td><td>' + (ae.registeredAt||'—') + '</td><td><span class="badge badge-confirmed">Đã thanh toán</span></td></tr>';
-    });
-    html += '</tbody></table>';
-  }
-  html += '</div>';
-  return html;
-}
 
 // ── 2. BÁO CÁO VẬN HÀNH ──
-function renderReportPage() {
-  let html = pageHeader('Báo cáo vận hành', 'Theo tuần · Tháng · Năm');
-
-  html += '<div class="stats-row" style="margin-bottom:20px">';
-  html += '<div class="stat-cell"><div class="stat-num">' + MOCK.retentionRate + '%</div><div class="stat-label">Tỷ lệ Retention</div><div class="stat-detail">Advisee mua lại gói sau khi hết hạn</div></div>';
-  html += '<div class="stat-cell"><div class="stat-num">' + MOCK.newCustomerRate + '%</div><div class="stat-label">Tỷ lệ KH mới</div><div class="stat-detail">Trên tổng booking trong tháng</div></div>';
-  html += '<div class="stat-cell"><div class="stat-num">' + MOCK.advisees.length + '</div><div class="stat-label">Advisee đang active</div><div class="stat-detail">Có ít nhất 1 buổi còn lại</div></div>';
-  html += '</div>';
-
-  // Biểu đồ số buổi hoàn thành theo advisor
-  html += '<div class="card"><div class="card-header"><div class="card-header-left">Buổi hoàn thành theo Advisor</div></div>';
-  html += '<div style="padding:16px 28px 28px;display:flex;flex-direction:column;gap:14px">';
-  sheetData.advisors.forEach(function(a){
-    const pct = a.sessionsTotal > 0 ? pctOf(a.sessionsDone, a.sessionsTotal) : 0;
-    html += '<div><div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:6px"><span><b>' + a.name + '</b> · ' + a.title + '</span><span style="color:var(--muted)">' + a.sessionsDone + '/' + a.sessionsTotal + ' buổi</span></div>';
-    html += '<div style="height:8px;background:var(--bg);border-radius:100px;overflow:hidden"><div style="height:100%;width:' + pct + '%;background:var(--brand);border-radius:100px;transition:width .4s"></div></div></div>';
-  });
-  html += '</div></div>';
-
-  // Tỷ lệ gói bán
-  html += '<div class="card"><div class="card-header"><div class="card-header-left">Tỷ lệ gói được mua</div></div>';
-  const pkgCount = {};
-  MOCK.advisees.forEach(function(ae){ pkgCount[ae.pkg] = (pkgCount[ae.pkg]||0) + 1; });
-  const total = MOCK.advisees.length || 1;
-  html += '<div style="padding:16px 28px 28px;display:flex;flex-direction:column;gap:12px">';
-  Object.keys(pkgCount).forEach(function(pkg){
-    const pct = Math.round(pkgCount[pkg]/total*100);
-    html += '<div><div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:6px"><span><b>' + pkg + '</b></span><span style="color:var(--muted)">' + pkgCount[pkg] + ' đơn · ' + pct + '%</span></div>';
-    html += '<div style="height:8px;background:var(--bg);border-radius:100px;overflow:hidden"><div style="height:100%;width:' + pct + '%;background:#6D28D9;border-radius:100px"></div></div></div>';
-  });
-  html += '</div></div>';
-  return html;
-}
 
 // ════════════════════════════════════════════════════════════
 //  📊 BÁO CÁO MARKETING & KINH DOANH (theo tháng/quý)
@@ -4408,6 +4215,7 @@ function loadMarketingReportPageAsync() {
   ]).then(function(results){
     _reportLeadsCache = (results[0] && results[0].data) ? results[0].data : [];
     _reportBookingsCache = (results[1] && results[1].data) ? results[1].data : [];
+    _reportRerender = function(){ document.getElementById('main-content').innerHTML = renderMarketingReportPage(); };
     mc.innerHTML = renderMarketingReportPage();
   }).catch(function(err){
     mc.innerHTML = '<div class="card"><div class="empty-state"><div class="icon">⚠</div>Không tải được báo cáo.<br><small style="color:var(--muted)">' + err.message + '</small></div></div>';
@@ -4425,12 +4233,12 @@ function reportChangePeriod(delta) {
     if (q > 3) { q = 0; _reportPeriod.year++; }
     _reportPeriod.month = q * 3;
   }
-  document.getElementById('main-content').innerHTML = renderMarketingReportPage();
+  reportRerender();
 }
 
 function reportSetMode(mode) {
   _reportPeriod.mode = mode;
-  document.getElementById('main-content').innerHTML = renderMarketingReportPage();
+  reportRerender();
 }
 
 function reportPeriodRange() {
@@ -4600,21 +4408,10 @@ function renderMarketingReportPage() {
   var prevAgg = reportAggregate(leads, bookings, prevRange);
   var convRate = agg.totalLeads > 0 ? Math.round(agg.converted / agg.totalLeads * 100) : 0;
 
-  var html = pageHeader('📊 Báo cáo Marketing', 'Số liệu khách hàng theo tháng/quý — phục vụ ra quyết định marketing & mở rộng đội ngũ');
+  var html = pageHeader('Báo cáo Marketing', 'Khách hàng theo tháng hoặc quý, phục vụ quyết định marketing và mở rộng đội ngũ');
+  html += renderPeriodBar();
 
-  html += '<div class="card" style="margin-bottom:20px"><div style="display:flex;align-items:center;justify-content:space-between;padding:14px 20px;flex-wrap:wrap;gap:10px">';
-  html += '<div style="display:flex;align-items:center;gap:10px">';
-  html += '<button class="detail-btn" onclick="reportChangePeriod(-1)">‹</button>';
-  html += '<div style="font-weight:700;font-size:15px;min-width:140px;text-align:center">' + range.label + '</div>';
-  html += '<button class="detail-btn" onclick="reportChangePeriod(1)">›</button>';
-  html += '</div>';
-  html += '<div style="display:flex;gap:6px">';
-  html += '<button class="' + (_reportPeriod.mode==='month'?'login-btn':'btn-secondary') + '" style="width:auto;padding:8px 16px;font-size:13px" onclick="reportSetMode(\'month\')">Theo tháng</button>';
-  html += '<button class="' + (_reportPeriod.mode==='quarter'?'login-btn':'btn-secondary') + '" style="width:auto;padding:8px 16px;font-size:13px" onclick="reportSetMode(\'quarter\')">Theo quý</button>';
-  html += '<button class="update-btn" onclick="exportReportToPDF()">⬇ Xuất PDF</button>';
-  html += '</div></div></div>';
-
-  html += '<div id="report-printable">';
+  html += '<div id="report-printable">' + reportPrintTitle('Báo cáo Marketing', range);
 
   html += '<div class="stats-row" style="grid-template-columns:repeat(4,1fr);margin-bottom:20px">';
   html += '<div class="stat-cell"><div class="stat-num">' + agg.totalLeads + '</div><div class="stat-label">Tổng lead</div><div class="stat-detail">' + reportDeltaLabel(agg.totalLeads, prevAgg.totalLeads) + '</div></div>';
@@ -5582,7 +5379,7 @@ function showMeetingDetail(i) {
 function renderAdvisorModule() {
   var active   = sheetData.advisors.filter(function(a){ return a.active; });
   var inactive = sheetData.advisors.filter(function(a){ return !a.active; });
-  var html = '';
+  var html = pageHeader('Advisor', 'Danh sách advisor, số advisee phụ trách và chất lượng buổi meeting');
 
   // KPI strip
   html += '<div class="stats-row" style="margin-bottom:20px">';
@@ -6131,7 +5928,7 @@ function openAdvisorSelfEditModal() {
 //  MODULE 3: ADVISEE
 // ════════════════════════════════════════════════════════════
 function renderAdviseeModule() {
-  var html = '';
+  var html = pageHeader('Advisee', 'Danh sách advisee, tiến độ buổi học và yêu cầu đổi lịch');
   var pendingReschedules = MOCK.rescheduleRequests.filter(function(r){ return r.status === 'pending'; });
 
   // KPI
@@ -6139,7 +5936,7 @@ function renderAdviseeModule() {
   html += '<div class="stat-cell"><div class="stat-num">' + MOCK.advisees.length + '</div><div class="stat-label">Tổng advisee</div></div>';
   var needFb = MOCK.advisees.filter(function(ae){ return ae.sessions.some(function(s){ return s.status==='feedback'; }); }).length;
   var totalRevenue = MOCK.advisees.reduce(function(s,ae){ return s + ae.paid; }, 0);
-  html += '<div class="stat-cell"><div class="stat-num" style="' + (pendingReschedules.length?'color:var(--brand)':'') + '">' + pendingReschedules.length + '</div><div class="stat-label">🔔 Yêu cầu đổi lịch</div></div>';
+  html += '<div class="stat-cell clickable" onclick="navTo(\'aee-reschedule\')"><div class="stat-num" style="' + (pendingReschedules.length?'color:var(--brand)':'') + '">' + pendingReschedules.length + '</div><div class="stat-label">🔔 Yêu cầu đổi lịch</div></div>';
   html += '<div class="stat-cell"><div class="stat-num">' + fmtMoney(totalRevenue) + '</div><div class="stat-label">Tổng doanh thu</div></div>';
   html += '</div>';
 
@@ -7113,7 +6910,7 @@ function submitRescheduleRequest(aeId, sessionNo, requestedBy) {
 
 function loadRescheduleRequestsPage() {
   var c = document.getElementById('main-content');
-  c.innerHTML = pageHeader('🔔 Yêu cầu đổi lịch', 'Advisor/Advisee đề xuất đổi giờ meeting — cần Staff xác nhận') + skeletonRows(3);
+  c.innerHTML = pageHeader('Yêu cầu đổi lịch', 'Advisor và Advisee đề xuất đổi giờ meeting, cần Staff xác nhận') + skeletonRows(3);
 
   // Backend chỉ lưu session_id trong RescheduleRequests — cần ghép thêm Sessions
   // để lấy tên advisee/advisor/số buổi hiển thị.
@@ -7134,16 +6931,17 @@ function loadRescheduleRequestsPage() {
     window._rescheduleRequests = reqs;
     c.innerHTML = renderRescheduleRequestsPage(reqs);
   }).catch(function(err){
-    c.innerHTML = pageHeader('🔔 Yêu cầu đổi lịch', 'Advisor/Advisee đề xuất đổi giờ meeting — cần Staff xác nhận') +
+    c.innerHTML = pageHeader('Yêu cầu đổi lịch', 'Advisor và Advisee đề xuất đổi giờ meeting, cần Staff xác nhận') +
       '<div class="card"><div class="empty-state"><div class="icon">⚠</div>Không tải được danh sách yêu cầu.<br><small style="color:var(--muted)">' + err.message + '</small></div></div>';
   });
 }
 
 function renderRescheduleRequestsPage(reqs) {
   reqs = reqs || window._rescheduleRequests || [];
-  var html = pageHeader('🔔 Yêu cầu đổi lịch', 'Advisor/Advisee đề xuất đổi giờ meeting — cần Staff xác nhận');
+  var html = pageHeader('Yêu cầu đổi lịch', 'Advisor và Advisee đề xuất đổi giờ meeting, cần Staff xác nhận');
   var pending = reqs.filter(function(r){ return String(r.status||'').trim().toLowerCase() === 'pending'; });
   var resolved = reqs.filter(function(r){ return String(r.status||'').trim().toLowerCase() !== 'pending'; });
+  setNavBadge('aee-reschedule', pending.length);
 
   html += '<div class="card" style="margin-bottom:16px"><div class="card-header"><div class="card-header-left">Đang chờ xác nhận (' + pending.length + ')</div><button class="refresh-btn" onclick="loadRescheduleRequestsPage()">↻</button></div>';
   if (pending.length === 0) {
@@ -7431,6 +7229,812 @@ document.getElementById('login-password').addEventListener('keydown', function(e
 // Nếu đã có phiên đăng nhập hợp lệ trong localStorage, vào thẳng dashboard
 // thay vì hiện lại màn hình đăng nhập mỗi khi F5/mở lại trình duyệt.
 tryRestoreSession();
+
+// ════════════ PHASE 2: Hôm nay · Bộ lọc lead · Báo cáo thống nhất · Menu mới ════════════
+
+// ════════════════════════════════════════════════════════════
+//  TIỆN ÍCH DÙNG CHUNG: escape HTML, tiền rút gọn, kỳ báo cáo, badge menu
+// ════════════════════════════════════════════════════════════
+function escHtml(v) {
+  return String(v == null ? '' : v).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+function fmtMoneyShort(n) {
+  n = Number(n) || 0;
+  var s;
+  if (n >= 1e9) s = (n / 1e9).toFixed(1).replace(/\.0$/, '') + ' tỷ';
+  else if (n >= 1e6) s = (n / 1e6).toFixed(1).replace(/\.0$/, '') + 'tr';
+  else if (n >= 1e3) s = Math.round(n / 1e3) + 'k';
+  else s = String(n);
+  return s.replace('.', ',');
+}
+function fmtDMY(s) {
+  var m = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(s || ''));
+  return m ? (m[3] + '/' + m[2] + '/' + m[1]) : (s || '');
+}
+function safeHttpUrl(u) {
+  var s = String(u || '').trim();
+  return /^https?:\/\//i.test(s) ? escHtml(s) : '';
+}
+
+// ── Kỳ báo cáo dùng chung cho mọi trang báo cáo (tháng / quý) ──
+var _reportRerender = null;
+function reportRerender() { if (typeof _reportRerender === 'function') _reportRerender(); }
+function inRange(dateLike, range) {
+  var d = parseSheetDate(dateLike);
+  return !!d && d >= range.start && d < range.end;
+}
+function reportJumpTo(y, m) {
+  _reportPeriod.year = y; _reportPeriod.month = m; _reportPeriod.mode = 'month';
+  reportRerender();
+}
+function renderPeriodBar() {
+  var range = reportPeriodRange();
+  var mode = _reportPeriod.mode;
+  var h = '<div class="card period-bar"><div class="period-bar-inner">';
+  h += '<div class="period-nav">';
+  h += '<button class="detail-btn" onclick="reportChangePeriod(-1)" aria-label="Kỳ trước">‹</button>';
+  h += '<div class="period-label">' + range.label + '</div>';
+  h += '<button class="detail-btn" onclick="reportChangePeriod(1)" aria-label="Kỳ sau">›</button>';
+  h += '</div>';
+  h += '<div class="period-actions"><div class="seg">';
+  h += '<button class="seg-btn' + (mode === 'month' ? ' active' : '') + '" onclick="reportSetMode(\'month\')">Tháng</button>';
+  h += '<button class="seg-btn' + (mode === 'quarter' ? ' active' : '') + '" onclick="reportSetMode(\'quarter\')">Quý</button>';
+  h += '</div><button class="update-btn" onclick="exportReportToPDF()">⬇ Xuất PDF</button></div>';
+  h += '</div></div>';
+  return h;
+}
+function reportPrintTitle(title, range) {
+  return '<div class="print-only"><h2 style="margin:0 0 4px">' + title + '</h2><div style="color:#666;font-size:13px;margin-bottom:16px">' + range.label + '</div></div>';
+}
+
+// ── Badge số trên menu (Staff) ──
+var NAV_PARENT = {};
+var _navBadgeCounts = {};
+function setNavBadge(id, n) {
+  n = Number(n) || 0;
+  _navBadgeCounts[id] = n;
+  var el = document.getElementById('nb-' + id);
+  if (el) { el.textContent = n > 99 ? '99+' : String(n); el.style.display = n > 0 ? '' : 'none'; }
+  var g = NAV_PARENT[id];
+  if (g) {
+    var sum = 0;
+    Object.keys(NAV_PARENT).forEach(function(k){ if (NAV_PARENT[k] === g) sum += (_navBadgeCounts[k] || 0); });
+    var ge = document.getElementById('nbg-' + g);
+    if (ge) { ge.textContent = sum > 99 ? '99+' : String(sum); ge.style.display = sum > 0 ? '' : 'none'; }
+  }
+}
+function pageHeader(title, sub, actions) {
+  return '<div class="page-head"><div><h1 class="page-title">' + title + '</h1>' +
+    '<div class="page-sub">' + (sub || '') + '</div></div>' +
+    (actions ? '<div class="page-actions">' + actions + '</div>' : '') + '</div>';
+}
+// ════════════════════════════════════════════════════════════
+//  TRANG "KHÁCH ĐĂNG KÝ MỚI": bộ lọc, ưu tiên việc cần xử lý, cờ SLA
+// ════════════════════════════════════════════════════════════
+var _leadObjs = [];
+var _leadFilter = 'open';
+var _leadPresetFilter = null;
+var _leadShowClosed = false;
+var _leadSearch = '';
+
+// Mốc tính SLA: ưu tiên nhật ký đầu tiên, nếu chưa tải nhật ký thì dùng ngày tạo lead
+function parseLeadCreated(v) {
+  if (!v) return null;
+  var s = String(v).trim();
+  var d = parseVNDateTime(s);
+  if (d) return d;
+  d = new Date(s.replace(' ', 'T'));
+  if (!isNaN(d.getTime())) return d;
+  return parseSheetDate(s);
+}
+function getLeadAnchor(c) {
+  if (c.log && c.log[0]) { var t = parseVNDateTime(c.log[0].time); if (t) return t; }
+  if (c.createdAt) { var d = parseLeadCreated(c.createdAt); if (d) return d; }
+  return null;
+}
+function leadAgeDays(c) {
+  var a = getLeadAnchor(c);
+  return a ? Math.max(0, Math.floor((new Date() - a) / 86400000)) : 0;
+}
+
+function leadIsClosed(c) { return SLA_TERMINAL.indexOf(c.status) > -1 || String(c.result || '') === 'Đăng ký'; }
+function leadIsOverdue(c) { var s = getLeadSlaInfo(c); return !!(s && s.overdue); }
+function leadNeedsAction(c) {
+  if (leadIsClosed(c)) return false;
+  if (c.status === 'Chưa liên hệ') return true;
+  if (!c.staff) return true;
+  if (leadIsOverdue(c)) return true;
+  if (c.status === 'Đã tư vấn xong' && !c.result) return true;
+  return false;
+}
+function leadMatchesFilter(c, f) {
+  if (f === 'todo') return leadNeedsAction(c);
+  if (f === 'overdue') return !leadIsClosed(c) && leadIsOverdue(c);
+  if (f === 'unassigned') return !leadIsClosed(c) && !c.staff;
+  if (f === 'nodate') return !leadIsClosed(c) && !c.date;
+  return true;
+}
+function leadPriority(c) {
+  if (leadIsClosed(c)) return 3;
+  if (leadIsOverdue(c)) return 0;
+  if (leadNeedsAction(c)) return 1;
+  return 2;
+}
+function leadSearchKey(c) {
+  var raw = String(c.phone || '');
+  return stripDiacritics(c.name + ' ' + raw + ' ' + raw.replace(/\D/g, '') + ' ' + fmtPhoneVN(raw).replace(/\s/g, '') + ' ' + c.email);
+}
+function leadRowVisible(c, q) {
+  if (!_leadShowClosed && leadIsClosed(c)) return false;
+  if (!leadMatchesFilter(c, _leadFilter)) return false;
+  if (q === undefined) q = stripDiacritics(String(_leadSearch || '').trim());
+  if (q && leadSearchKey(c).indexOf(q) === -1) return false;
+  return true;
+}
+function getVisibleLeads() {
+  var q = stripDiacritics(String(_leadSearch || '').trim());
+  var dec = [];
+  _leadObjs.forEach(function(c, i){
+    if (!leadRowVisible(c, q)) return;
+    var s = getLeadSlaInfo(c);
+    dec.push({ c: c, i: i, p: leadPriority(c), d: (s && s.overdue) ? s.days : 0 });
+  });
+  dec.sort(function(a, b){ return a.p - b.p || b.d - a.d || a.i - b.i; });
+  return dec.map(function(x){ return x.c; });
+}
+function leadCounts() {
+  var open = _leadObjs.filter(function(c){ return !leadIsClosed(c); });
+  return {
+    all: _leadObjs.length,
+    open: open.length,
+    closed: _leadObjs.length - open.length,
+    todo: open.filter(leadNeedsAction).length,
+    overdue: open.filter(leadIsOverdue).length,
+    unassigned: open.filter(function(c){ return !c.staff; }).length,
+    nodate: open.filter(function(c){ return !c.date; }).length,
+  };
+}
+function updateLeadNavBadge() { setNavBadge('lj-newreg', leadCounts().todo); }
+
+function shortSlaLabel(label) {
+  return String(label || '').replace(/^⚠ Quá hạn — /, '').replace(/\s*\([^)]*\)/g, '').replace(/^(Ngày \d): /, '$1 · ');
+}
+function leadSlaBadgeHtml(c) {
+  if (String(c.result || '') === 'Đăng ký') return '';
+  var s = getLeadSlaInfo(c);
+  if (!s) return '';
+  var text = s.overdue ? '⚠ Quá hạn ' + Math.max(1, (s.days || 0) - 3) + ' ngày' : shortSlaLabel(s.label);
+  return '<span class="sla-badge" style="background:' + s.bg + ';color:' + s.color + '" title="' + escHtml(s.label) + '">' + escHtml(text) + '</span>';
+}
+
+// keepState = true khi làm mới / sau khi lưu (giữ nguyên bộ lọc đang chọn); mở từ menu thì đặt lại về mặc định
+function loadNewRegistrationsPage(keepState) {
+  if (keepState === true && activeNavId !== 'lj-newreg') return;
+  var c = document.getElementById('main-content');
+  c.innerHTML = pageHeader('Khách đăng ký mới', 'Đang tải danh sách lead...') + skeletonRows(3);
+
+  if (keepState !== true) {
+    _leadFilter = _leadPresetFilter || 'open';
+    _leadPresetFilter = null;
+    _leadShowClosed = false;
+    _leadSearch = '';
+  }
+
+  apiGet('getLeads', {}).then(function(res){
+    if (activeNavId !== 'lj-newreg') return; // người dùng đã chuyển trang khác trong lúc chờ tải
+    var leads = (res && res.data) ? res.data : [];
+    leads.sort(function(a, b){ return String(b.created_at || '') > String(a.created_at || '') ? 1 : -1; });
+    _leadObjs = leads.map(function(r){ return mergeLeadRow(r); }).filter(Boolean);
+    updateLeadNavBadge();
+    c.innerHTML = renderNewRegistrationsList();
+  }).catch(function(err){
+    if (activeNavId !== 'lj-newreg') return;
+    c.innerHTML = pageHeader('Khách đăng ký mới', 'Lead từ website và các kênh') +
+      '<div class="card"><div class="empty-state"><div class="icon">⚠</div>Không kết nối được tới Sheet.<br><small style="color:var(--muted)">' + escHtml(err.message) + '</small></div></div>';
+  });
+}
+
+function leadChip(key, label, n, tip) {
+  var active = _leadFilter === key;
+  return '<button class="chip' + (active ? ' active' : '') + (key === 'overdue' && n > 0 ? ' chip-danger' : '') + '" title="' + escHtml(tip) + '" onclick="setLeadFilter(\'' + key + '\')">' +
+    escHtml(label) + ' <span class="chip-n">' + n + '</span></button>';
+}
+function leadFilterBarHtml() {
+  var n = leadCounts();
+  var h = '<div class="chip-row">';
+  h += leadChip('open', _leadShowClosed ? 'Tất cả' : 'Đang mở', _leadShowClosed ? n.all : n.open, 'Tất cả lead chưa đóng');
+  h += leadChip('todo', 'Cần xử lý', n.todo, 'Lead đang mở mà: chưa liên hệ, chưa gán Sale, quá hạn SLA, hoặc đã tư vấn xong nhưng chưa có kết quả');
+  h += leadChip('overdue', 'Quá hạn', n.overdue, 'Quá 3 ngày theo nhịp SLA Ngày 0 đến 3');
+  h += leadChip('unassigned', 'Chưa gán', n.unassigned, 'Chưa có Sale phụ trách');
+  h += leadChip('nodate', 'Chưa chọn giờ', n.nodate, 'Khách chưa chọn giờ tư vấn');
+  h += '<label class="chip-toggle" title="Lead đã đóng, tạm đóng, không phù hợp hoặc đã đăng ký"><input type="checkbox" ' + (_leadShowClosed ? 'checked' : '') + ' onchange="toggleLeadClosed(this.checked)"> Hiện cả lead đã đóng (' + n.closed + ')</label>';
+  h += '</div>';
+  return h;
+}
+function leadCountText() { return 'Hiển thị ' + getVisibleLeads().length + ' / ' + _leadObjs.length + ' lead'; }
+
+function leadRowHtml(obj, saleStaff) {
+  var h = '<tr data-lead-id="' + escHtml(obj.id) + '">';
+
+  h += '<td><div style="cursor:pointer" onclick="navToConsultationDetail(\'' + escHtml(obj.id) + '\')">' +
+    '<div style="font-weight:700;font-size:13.5px">' + escHtml(obj.name || 'Khách hàng') + '</div>' +
+    '<div style="font-size:12px;color:var(--muted)">' + escHtml(fmtPhoneVN(obj.phone) || '—') + '</div>' +
+    '<div style="font-size:12px;color:var(--muted)">' + fmtContactEmail(obj.email, '—') + '</div>' +
+    '</div></td>';
+
+  h += '<td><select class="form-select lead-select" onclick="event.stopPropagation()" onchange="updateLeadStatusInline(\'' + escHtml(obj.id) + '\', this.value)">' +
+    CONSULT_STATUS.map(function(s){ return '<option value="' + s + '"' + (obj.status === s ? ' selected' : '') + '>' + s + '</option>'; }).join('') +
+    '</select><div class="lead-sla">' + leadSlaBadgeHtml(obj) + '</div></td>';
+
+  if (obj.date) {
+    h += '<td><div style="font-size:12.5px"><strong>' + fmtDateStr(obj.date) + '</strong> · ' + escHtml(obj.time) + '</div>' +
+      (safeHttpUrl(obj.meetLink) ? '<a href="' + safeHttpUrl(obj.meetLink) + '" target="_blank" rel="noopener" class="detail-btn" style="margin-top:4px;display:inline-flex" onclick="event.stopPropagation()">🎥 Meet</a>' : '') + '</td>';
+  } else {
+    h += '<td><span class="badge" style="background:#FEF3C7;color:#92400E">Chưa chọn giờ</span></td>';
+  }
+
+  h += '<td style="font-size:12.5px">' + escHtml(obj.consultAbout || '—') + '</td>';
+
+  h += '<td><select class="form-select lead-select" onclick="event.stopPropagation()" onchange="handleConsultResultChange(\'' + escHtml(obj.id) + '\', this.value)">' +
+    CONSULT_RESULT.map(function(rs){ var label = rs || '— Chưa có —'; return '<option value="' + label + '"' + ((obj.result || '') === rs ? ' selected' : '') + '>' + label + '</option>'; }).join('') +
+    '</select></td>';
+
+  h += '<td><select class="form-select lead-select" onclick="event.stopPropagation()" onchange="assignRegToStaff(\'' + escHtml(obj.id) + '\', this.value)">' +
+    '<option value=""' + (!obj.staff ? ' selected' : '') + '>— Chưa gán —</option>' +
+    saleStaff.map(function(st){ return '<option value="' + escHtml(st.name) + '"' + (obj.staff === st.name ? ' selected' : '') + '>' + escHtml(st.name) + '</option>'; }).join('') +
+    '</select></td>';
+
+  h += '</tr>';
+  return h;
+}
+
+function leadTableHtml() {
+  if (_leadObjs.length === 0) return '<div class="empty-state"><div class="icon">📭</div>Chưa có khách nào đăng ký từ website</div>';
+  var list = getVisibleLeads();
+  if (list.length === 0) {
+    return '<div class="empty-state"><div class="icon">🔍</div>Không có lead nào khớp bộ lọc hiện tại.<br>' +
+      '<a href="#" onclick="clearLeadFilters();return false" style="color:var(--brand);font-weight:600">Xoá bộ lọc</a></div>';
+  }
+  var saleStaff = sheetData.staffList.filter(function(st){ return st.role === 'Sale' && st.active; });
+  var h = '<div style="overflow-x:auto"><table class="bookings-table lead-table"><thead><tr>' +
+    '<th>KHÁCH HÀNG</th><th>TRẠNG THÁI TƯ VẤN</th><th>THỜI GIAN / LINK</th><th>DỊCH VỤ QUAN TÂM</th><th>KẾT QUẢ</th><th>NV PHỤ TRÁCH</th>' +
+    '</tr></thead><tbody onchange="onLeadRowChanged(event)">';
+  list.forEach(function(c){ h += leadRowHtml(c, saleStaff); });
+  h += '</tbody></table></div>';
+  return h;
+}
+
+function renderNewRegistrationsList() {
+  var actions = '<button class="refresh-btn" onclick="loadNewRegistrationsPage(true)">↻ Làm mới</button>' +
+    '<button class="submit-btn" style="padding:8px 16px;font-size:13px;width:auto" onclick="openCreateLeadModal()">+ Tạo đơn mới</button>';
+  var html = pageHeader('Khách đăng ký mới', 'Lead xếp theo ưu tiên: quá hạn trước, rồi đến việc cần xử lý', actions);
+  html += '<div class="card"><div class="card-header"><div class="card-header-left" id="lead-count">' + leadCountText() + '</div></div>';
+  html += '<div style="padding:0 24px" id="lead-filter-bar">' + leadFilterBarHtml() + '</div>';
+  html += '<div style="padding:0 24px"><div style="margin-bottom:14px;position:relative">' +
+    '<input id="lead-search" type="text" class="form-input" placeholder="Tìm theo tên, SĐT, email..." style="padding-left:34px" value="' + escHtml(_leadSearch) + '" oninput="onLeadSearch(this.value)">' +
+    '<span style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:14px">🔎</span></div></div>';
+  html += '<div id="lead-table-wrap">' + leadTableHtml() + '</div></div>';
+  return html;
+}
+
+function refreshLeadTable() {
+  var w = document.getElementById('lead-table-wrap');
+  if (w) w.innerHTML = leadTableHtml();
+  var cnt = document.getElementById('lead-count');
+  if (cnt) cnt.textContent = leadCountText();
+}
+function refreshLeadFilterBar() {
+  var b = document.getElementById('lead-filter-bar');
+  if (b) b.innerHTML = leadFilterBarHtml();
+}
+function setLeadFilter(key) { _leadFilter = key; refreshLeadFilterBar(); refreshLeadTable(); }
+function toggleLeadClosed(on) { _leadShowClosed = !!on; refreshLeadFilterBar(); refreshLeadTable(); }
+function onLeadSearch(v) { _leadSearch = v || ''; refreshLeadTable(); }
+function clearLeadFilters() {
+  _leadFilter = 'open'; _leadShowClosed = false; _leadSearch = '';
+  var inp = document.getElementById('lead-search'); if (inp) inp.value = '';
+  refreshLeadFilterBar(); refreshLeadTable();
+}
+function openLeadsWith(filter) { _leadPresetFilter = filter; navTo('lj-newreg'); }
+
+// Sau khi sửa dropdown trên 1 dòng: cập nhật cờ SLA + số đếm, ẩn dòng nếu không còn khớp bộ lọc.
+// Không sắp xếp lại ngay để dòng không nhảy vị trí khi Sale đang thao tác tiếp trên cùng dòng đó.
+function onLeadRowChanged(ev) {
+  var tr = ev && ev.target && ev.target.closest ? ev.target.closest('tr') : null;
+  if (!tr) return;
+  var id = tr.getAttribute('data-lead-id');
+  setTimeout(function(){
+    var c = MOCK.consultations.find(function(x){ return x.id === id; });
+    if (!c) return;
+    var slot = tr.querySelector('.lead-sla');
+    if (slot) slot.innerHTML = leadSlaBadgeHtml(c);
+    if (!leadRowVisible(c)) {
+      tr.classList.add('lead-row-out');
+      setTimeout(function(){ tr.style.display = 'none'; }, 260);
+    }
+    refreshLeadFilterBar();
+    var cnt = document.getElementById('lead-count');
+    if (cnt) cnt.textContent = leadCountText();
+    updateLeadNavBadge();
+  }, 350);
+}
+// ════════════════════════════════════════════════════════════
+//  TRANG "HÔM NAY": việc cần xử lý trong ngày (trang đầu tiên sau đăng nhập)
+// ════════════════════════════════════════════════════════════
+var _todayData = null;
+
+function todayLabelVN() {
+  var d = new Date();
+  var names = ['Chủ nhật', 'Thứ hai', 'Thứ ba', 'Thứ tư', 'Thứ năm', 'Thứ sáu', 'Thứ bảy'];
+  return names[d.getDay()] + ', ' + d.getDate() + '/' + (d.getMonth() + 1) + '/' + d.getFullYear();
+}
+function pendingReschedules(reqs) {
+  return (reqs || []).filter(function(r){ return String(r.status || '').trim().toLowerCase() === 'pending'; });
+}
+function scrollToToday(id) {
+  var el = document.getElementById(id);
+  if (el && el.scrollIntoView) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function loadTodayPageAsync() {
+  var mc = document.getElementById('main-content');
+  mc.innerHTML = pageHeader('Hôm nay', todayLabelVN()) + skeletonRows(4);
+
+  Promise.all([
+    apiGet('getLeads', {}).catch(function(){ return null; }),
+    apiGet('getRescheduleRequests', {}).catch(function(){ return null; }),
+    apiGet('getSessions', {}).catch(function(){ return null; }),
+  ]).then(function(results){
+    if (activeNavId !== 'today') return; // người dùng đã chuyển trang khác trong lúc chờ tải
+    var failed = [];
+    if (!results[0]) failed.push('danh sách lead');
+    if (!results[1]) failed.push('yêu cầu đổi lịch');
+    if (!results[2]) failed.push('lịch buổi tư vấn');
+
+    var leads = (results[0] && results[0].data) ? results[0].data : [];
+    var reqs = (results[1] && results[1].data) ? results[1].data : [];
+    var sessions = (results[2] && results[2].data) ? results[2].data : [];
+
+    var sessById = {};
+    sessions.forEach(function(s){ sessById[s.session_id] = s; });
+    reqs.forEach(function(r){
+      var s = sessById[r.session_id];
+      r._ae_name = s ? s.advisee_name : '';
+      r._advisor_name = s ? s.advisor_name : '';
+      r._session_no = s ? s.session_number : '';
+    });
+
+    leads.sort(function(a, b){ return String(b.created_at || '') > String(a.created_at || '') ? 1 : -1; });
+    _leadObjs = leads.map(function(r){ return mergeLeadRow(r); }).filter(Boolean);
+    _todayData = { leads: _leadObjs, reqs: reqs, sessions: sessions, failed: failed };
+
+    mc.innerHTML = renderTodayPage();
+    updateLeadNavBadge();
+    setNavBadge('aee-reschedule', pendingReschedules(reqs).length);
+    setNavBadge('today', _leadObjs.filter(function(c){ return !leadIsClosed(c) && leadIsOverdue(c); }).length + pendingReschedules(reqs).length);
+  }).catch(function(err){
+    if (activeNavId !== 'today') return;
+    mc.innerHTML = pageHeader('Hôm nay', todayLabelVN()) +
+      '<div class="card"><div class="empty-state"><div class="icon">⚠</div>Không tải được dữ liệu.<br><small style="color:var(--muted)">' + escHtml(err.message) + '</small></div></div>';
+  });
+}
+
+function todayMeetings(d) {
+  var today = ymd(new Date());
+  var list = [];
+  d.sessions.forEach(function(s){
+    if (String(s.scheduled_date || '').slice(0, 10) !== today) return;
+    var st = String(s.status || '').toLowerCase();
+    if (st === 'cancelled' || st === 'canceled') return;
+    var type = s.session_type === 'course' ? 'Khoá học'
+      : (s.session_type === 'consult' || s.advisor_name === STAFF_SLOT_IDENTITY) ? 'Tư vấn miễn phí'
+      : 'Cố vấn 1-1';
+    list.push({
+      time: fmtHHMM(s.scheduled_time), type: type, who: s.advisee_name || '',
+      host: s.advisor_name === STAFF_SLOT_IDENTITY ? 'LinkaJob' : (s.advisor_name || ''),
+      link: s.meet_link || '', done: st === 'completed', leadId: '',
+    });
+  });
+  d.leads.forEach(function(c){
+    if (c.date !== today) return;
+    if (SLA_TERMINAL.indexOf(c.status) > -1) return;
+    list.push({
+      time: c.time || '', type: 'Tư vấn miễn phí', who: c.name || '', host: c.staff || 'Chưa gán',
+      link: c.meetLink || '', done: c.status === 'Đã tư vấn xong', leadId: c.id,
+    });
+  });
+  list.sort(function(a, b){ return String(a.time).localeCompare(String(b.time)); });
+  return list;
+}
+
+function todayTile(label, n, hint, onclick, danger) {
+  return '<div class="stat-cell clickable" onclick="' + onclick + '">' +
+    '<div class="stat-num" style="' + (danger && n > 0 ? 'color:var(--brand)' : '') + '">' + n + '</div>' +
+    '<div class="stat-label">' + label + '</div><div class="stat-detail">' + hint + '</div></div>';
+}
+
+function todayLeadRow(c, kind) {
+  var s = getLeadSlaInfo(c);
+  var side;
+  if (kind === 'overdue' && s) {
+    side = '<span class="sla-badge" style="background:#FEE2E2;color:#B91C1C">Quá ' + Math.max(1, (s.days || 0) - 3) + ' ngày</span>';
+  } else {
+    var age = leadAgeDays(c);
+    side = '<span class="sla-badge" style="background:#FEF3C7;color:#92400E">' + (age > 0 ? 'Chờ ' + age + ' ngày' : 'Mới') + '</span>';
+  }
+  var sub = escHtml(fmtPhoneVN(c.phone) || 'Chưa có SĐT') + ' · ' +
+    (c.staff ? escHtml(c.staff) : '<span style="color:var(--brand);font-weight:600">Chưa gán</span>');
+  var action = (kind === 'overdue' && s) ? '<div class="today-row-sub">' + escHtml(shortSlaLabel(s.label)) + '</div>' : '';
+  return '<div class="today-row" onclick="navToConsultationDetail(\'' + escHtml(c.id) + '\')">' +
+    '<div style="min-width:0"><div class="today-row-title">' + escHtml(c.name || 'Khách hàng') + '</div><div class="today-row-sub">' + sub + '</div>' + action + '</div>' +
+    '<div class="today-row-side">' + side + '</div></div>';
+}
+
+function renderTodayPage() {
+  var d = _todayData || { leads: [], reqs: [], sessions: [], failed: [] };
+  var open = d.leads.filter(function(c){ return !leadIsClosed(c); });
+  var overdue = open.filter(leadIsOverdue).sort(function(a, b){
+    return ((getLeadSlaInfo(b) || {}).days || 0) - ((getLeadSlaInfo(a) || {}).days || 0);
+  });
+  var nodate = open.filter(function(c){ return !c.date; }).sort(function(a, b){ return leadAgeDays(b) - leadAgeDays(a); });
+  var meetings = todayMeetings(d);
+  var pend = pendingReschedules(d.reqs);
+  var remaining = meetings.filter(function(m){ return !m.done; }).length;
+
+  var html = pageHeader('Hôm nay', escHtml(todayLabelVN()) + ' · việc cần xử lý trong ngày',
+    '<button class="refresh-btn" onclick="loadTodayPageAsync()">↻ Làm mới</button>');
+
+  if (d.failed && d.failed.length) {
+    html += '<div class="today-warn">Không tải được: ' + escHtml(d.failed.join(', ')) + '. Số liệu bên dưới có thể chưa đầy đủ.</div>';
+  }
+
+  html += '<div class="stats-row cols-4">';
+  html += todayTile('Lead quá hạn', overdue.length, 'Quá 3 ngày theo SOP', 'openLeadsWith(\'overdue\')', true);
+  html += todayTile('Chưa chọn giờ', nodate.length, 'Khách chờ chốt lịch', 'openLeadsWith(\'nodate\')', false);
+  html += todayTile('Buổi hôm nay', meetings.length, remaining + ' buổi chưa diễn ra', 'scrollToToday(\'today-meetings\')', false);
+  html += todayTile('Chờ đổi lịch', pend.length, 'Cần Staff xác nhận', 'navTo(\'aee-reschedule\')', true);
+  html += '</div>';
+
+  // Buổi hôm nay
+  html += '<div class="card" id="today-meetings"><div class="card-header"><div class="card-header-left">Buổi tư vấn và meeting hôm nay (' + meetings.length + ')</div>' +
+    '<button class="card-link" onclick="navTo(\'lj-meetings\')">Xem lịch tháng</button></div>';
+  if (meetings.length === 0) {
+    html += '<div class="today-empty">Hôm nay chưa có buổi nào.</div>';
+  } else {
+    meetings.forEach(function(m){
+      var link = safeHttpUrl(m.link);
+      html += '<div class="today-row"' + (m.leadId ? ' onclick="navToConsultationDetail(\'' + escHtml(m.leadId) + '\')"' : ' style="cursor:default"') + '>' +
+        '<div style="display:flex;align-items:center;gap:14px;min-width:0"><div class="today-time">' + escHtml(m.time || '--:--') + '</div>' +
+        '<div style="min-width:0"><div class="today-row-title">' + escHtml(m.who || 'Chưa rõ') + '</div>' +
+        '<div class="today-row-sub">' + escHtml(m.type) + ' · ' + escHtml(m.host) + '</div></div></div>' +
+        '<div class="today-row-side">' + (m.done ? '<span class="badge badge-confirmed">Đã xong</span>' : '') +
+        (link ? '<a class="detail-btn" href="' + link + '" target="_blank" rel="noopener" onclick="event.stopPropagation()">🎥 Meet</a>' : '') + '</div></div>';
+    });
+  }
+  html += '</div>';
+
+  // Lead quá hạn + chưa chọn giờ
+  var LIMIT = 6;
+  html += '<div class="two-col">';
+  html += '<div class="card"><div class="card-header"><div class="card-header-left">Lead quá hạn (' + overdue.length + ')</div>' +
+    (overdue.length > LIMIT ? '<button class="card-link" onclick="openLeadsWith(\'overdue\')">Xem tất cả</button>' : '') + '</div>';
+  if (overdue.length === 0) html += '<div class="today-empty">✓ Không có lead quá hạn.</div>';
+  overdue.slice(0, LIMIT).forEach(function(c){ html += todayLeadRow(c, 'overdue'); });
+  html += '</div>';
+
+  html += '<div class="card"><div class="card-header"><div class="card-header-left">Lead chưa chọn giờ (' + nodate.length + ')</div>' +
+    (nodate.length > LIMIT ? '<button class="card-link" onclick="openLeadsWith(\'nodate\')">Xem tất cả</button>' : '') + '</div>';
+  if (nodate.length === 0) html += '<div class="today-empty">✓ Mọi lead đã có lịch.</div>';
+  nodate.slice(0, LIMIT).forEach(function(c){ html += todayLeadRow(c, 'nodate'); });
+  html += '</div>';
+  html += '</div>';
+
+  // Yêu cầu đổi lịch
+  html += '<div class="card"><div class="card-header"><div class="card-header-left">Yêu cầu đổi lịch chờ xác nhận (' + pend.length + ')</div>' +
+    (pend.length > 0 ? '<button class="card-link" onclick="navTo(\'aee-reschedule\')">Xử lý</button>' : '') + '</div>';
+  if (pend.length === 0) html += '<div class="today-empty">✓ Không có yêu cầu đổi lịch nào đang chờ.</div>';
+  pend.slice(0, 5).forEach(function(r){
+    var who = r._ae_name || '(không rõ)';
+    var reason = String(r.reason || '');
+    html += '<div class="today-row" onclick="navTo(\'aee-reschedule\')"><div style="min-width:0">' +
+      '<div class="today-row-title">' + escHtml(who) + (r._session_no ? ' · Buổi ' + escHtml(r._session_no) : '') + '</div>' +
+      '<div class="today-row-sub">' + (r._advisor_name ? 'Advisor: ' + escHtml(r._advisor_name) + ' · ' : '') + escHtml(reason.length > 70 ? reason.slice(0, 70) + '...' : reason) + '</div></div>' +
+      '<div class="today-row-side"><span class="sla-badge" style="background:#FEF3C7;color:#92400E">Chờ xử lý</span></div></div>';
+  });
+  html += '</div>';
+
+  return html;
+}
+// ════════════════════════════════════════════════════════════
+//  BÁO CÁO: dùng chung thanh chọn kỳ (Tháng / Quý) và cùng định nghĩa doanh thu
+//  Doanh thu = booking có trạng thái confirmed hoặc completed, tính theo ngày tạo booking
+// ════════════════════════════════════════════════════════════
+var _revBookings = null;
+var _opsBookings = null, _opsSessions = null;
+var _perfStaff = null, _perfLeads = null, _perfSessions = null;
+
+function bookingCounts(b) {
+  var st = String(b.status || '').trim().toLowerCase();
+  return st === 'confirmed' || st === 'completed';
+}
+function bookingStatusBadge(b) {
+  var st = String(b.status || '').trim().toLowerCase();
+  return st === 'completed' ? '<span class="badge badge-confirmed">Hoàn tất</span>' : '<span class="badge badge-confirmed" style="background:#DBEAFE;color:#1D4ED8">Đã xác nhận</span>';
+}
+
+// ── 1. DOANH THU ──
+function loadRevenuePageAsync() {
+  var mc = document.getElementById('main-content');
+  mc.innerHTML = pageHeader('Doanh thu', 'Đang tải...') + skeletonRows(3);
+  apiGet('getBookings', {}).then(function(res){
+    if (activeNavId !== 'lj-revenue') return;
+    _revBookings = (res && res.data) ? res.data : [];
+    _reportRerender = function(){ document.getElementById('main-content').innerHTML = renderRevenuePage(); };
+    mc.innerHTML = renderRevenuePage();
+  }).catch(function(err){
+    if (activeNavId !== 'lj-revenue') return;
+    mc.innerHTML = pageHeader('Doanh thu', '') + '<div class="card"><div class="empty-state"><div class="icon">⚠</div>Không tải được dữ liệu.<br><small style="color:var(--muted)">' + escHtml(err.message) + '</small></div></div>';
+  });
+}
+
+function revBars(items, maxVal) {
+  var h = '<div class="rev-bars">';
+  items.forEach(function(it, i){
+    var pct = maxVal > 0 ? Math.round(it.value / maxVal * 100) : 0;
+    var showLabel = items.length <= 12 || i % 5 === 0 || i === items.length - 1;
+    h += '<div class="rev-col" title="' + escHtml(it.title) + ': ' + escHtml(fmtMoney(it.value)) + '">' +
+      '<div class="rev-val">' + (it.value > 0 && items.length <= 12 ? fmtMoneyShort(it.value) : '') + '</div>' +
+      '<div class="rev-barwrap"><div class="rev-bar" style="height:' + Math.max(pct, it.value > 0 ? 3 : 0) + '%"></div></div>' +
+      '<div class="rev-lbl">' + (showLabel ? escHtml(it.label) : '&nbsp;') + '</div></div>';
+  });
+  return h + '</div>';
+}
+
+function renderRevenuePage() {
+  var range = reportPeriodRange(), prev = reportPrevPeriodRange();
+  var all = (_revBookings || []).filter(bookingCounts);
+  var cur = all.filter(function(b){ return inRange(b.created_at, range); });
+  var prv = all.filter(function(b){ return inRange(b.created_at, prev); });
+  function sum(list) { return list.reduce(function(s, b){ return s + (Number(b.package_price) || 0); }, 0); }
+  var total = sum(cur), prevTotal = sum(prv);
+  var avg = cur.length > 0 ? Math.round(total / cur.length) : 0;
+  var yearStart = new Date(range.start.getFullYear(), 0, 1), yearEnd = new Date(range.start.getFullYear() + 1, 0, 1);
+  var ytd = sum(all.filter(function(b){ return inRange(b.created_at, { start: yearStart, end: yearEnd }); }));
+
+  var html = pageHeader('Doanh thu', 'Tính từ booking đã xác nhận hoặc hoàn tất, theo ngày tạo booking');
+  html += renderPeriodBar();
+  html += '<div id="report-printable">' + reportPrintTitle('Báo cáo doanh thu', range);
+
+  html += '<div class="stats-row cols-4">';
+  html += '<div class="stat-cell"><div class="stat-num">' + fmtMoney(total) + '</div><div class="stat-label">Doanh thu ' + range.label + '</div><div class="stat-detail">' + reportDeltaLabel(total, prevTotal) + '</div></div>';
+  html += '<div class="stat-cell"><div class="stat-num">' + cur.length + '</div><div class="stat-label">Số giao dịch</div><div class="stat-detail">' + reportDeltaLabel(cur.length, prv.length) + '</div></div>';
+  html += '<div class="stat-cell"><div class="stat-num">' + fmtMoney(avg) + '</div><div class="stat-label">Giá trị trung bình / đơn</div><div class="stat-detail">Trong kỳ đang xem</div></div>';
+  html += '<div class="stat-cell"><div class="stat-num">' + fmtMoney(ytd) + '</div><div class="stat-label">Lũy kế năm ' + range.start.getFullYear() + '</div><div class="stat-detail">Từ 01/01 đến hết năm</div></div>';
+  html += '</div>';
+
+  // Biểu đồ trong kỳ
+  html += '<div class="card"><div class="card-header"><div class="card-header-left">' + (_reportPeriod.mode === 'month' ? 'Doanh thu theo ngày' : 'Doanh thu theo tháng') + '</div></div>';
+  if (cur.length === 0) {
+    var latest = null;
+    all.forEach(function(b){ var d = parseSheetDate(b.created_at); if (d && (!latest || d > latest)) latest = d; });
+    html += '<div class="today-empty">Chưa có doanh thu trong ' + range.label.toLowerCase() + '.' +
+      (latest ? '<br><a href="#" onclick="reportJumpTo(' + latest.getFullYear() + ',' + latest.getMonth() + ');return false" style="color:var(--brand);font-weight:600">Xem kỳ gần nhất có doanh thu: tháng ' + (latest.getMonth() + 1) + '/' + latest.getFullYear() + '</a>' : '') + '</div>';
+  } else {
+    var items = [], byKey = {};
+    cur.forEach(function(b){
+      var k = _reportPeriod.mode === 'month' ? String(b.created_at).slice(8, 10) : String(b.created_at).slice(0, 7);
+      byKey[k] = (byKey[k] || 0) + (Number(b.package_price) || 0);
+    });
+    if (_reportPeriod.mode === 'month') {
+      var days = new Date(range.start.getFullYear(), range.start.getMonth() + 1, 0).getDate();
+      for (var d = 1; d <= days; d++) { var k = (d < 10 ? '0' : '') + d; items.push({ label: String(d), title: 'Ngày ' + d, value: byKey[k] || 0 }); }
+    } else {
+      for (var m = 0; m < 3; m++) {
+        var dt = new Date(range.start.getFullYear(), range.start.getMonth() + m, 1);
+        var key = dt.getFullYear() + '-' + pad(dt.getMonth() + 1);
+        items.push({ label: 'Tháng ' + (dt.getMonth() + 1), title: 'Tháng ' + (dt.getMonth() + 1), value: byKey[key] || 0 });
+      }
+    }
+    var maxVal = Math.max.apply(null, items.map(function(x){ return x.value; })) || 1;
+    html += revBars(items, maxVal);
+  }
+  html += '</div>';
+
+  // Bảng giao dịch trong kỳ
+  html += '<div class="card"><div class="card-header"><div class="card-header-left">Giao dịch trong kỳ (' + cur.length + ')</div></div>';
+  if (cur.length === 0) {
+    html += '<div class="today-empty">Không có giao dịch nào trong kỳ này.</div>';
+  } else {
+    html += '<div style="overflow-x:auto"><table class="bookings-table"><thead><tr><th>ADVISEE</th><th>GÓI</th><th>GIÁ TRỊ</th><th>NGÀY TẠO</th><th>TRẠNG THÁI</th></tr></thead><tbody>';
+    cur.slice().sort(function(a, b){ return String(b.created_at) > String(a.created_at) ? 1 : -1; }).forEach(function(b){
+      html += '<tr><td><b>' + escHtml(b.advisee_name || '—') + '</b></td><td>' + escHtml(b.package_name || '—') + '</td><td><b>' + fmtMoney(Number(b.package_price) || 0) + '</b></td><td>' + fmtDMY(String(b.created_at).slice(0, 10)) + '</td><td>' + bookingStatusBadge(b) + '</td></tr>';
+    });
+    html += '</tbody></table></div>';
+  }
+  html += '</div></div>';
+  return html;
+}
+
+// ── 2. BÁO CÁO VẬN HÀNH (số liệu thật theo kỳ, thay cho số cứng 78% / 34%) ──
+function loadOperationsReportAsync() {
+  var mc = document.getElementById('main-content');
+  mc.innerHTML = pageHeader('Báo cáo vận hành', 'Đang tải...') + skeletonRows(4);
+  Promise.all([
+    apiGet('getBookings', {}).catch(function(){ return null; }),
+    apiGet('getSessions', {}).catch(function(){ return null; }),
+  ]).then(function(results){
+    if (activeNavId !== 'lj-report') return;
+    _opsBookings = (results[0] && results[0].data) ? results[0].data : [];
+    _opsSessions = (results[1] && results[1].data) ? results[1].data : [];
+    _reportRerender = function(){ document.getElementById('main-content').innerHTML = renderReportPage(); };
+    mc.innerHTML = renderReportPage(!results[0] || !results[1]);
+  }).catch(function(err){
+    if (activeNavId !== 'lj-report') return;
+    mc.innerHTML = pageHeader('Báo cáo vận hành', '') + '<div class="card"><div class="empty-state"><div class="icon">⚠</div>Không tải được dữ liệu.<br><small style="color:var(--muted)">' + escHtml(err.message) + '</small></div></div>';
+  });
+}
+
+function opsEmailKey(b) { return String(b.advisee_email || b.advisee_name || '').trim().toLowerCase(); }
+
+function opsAggregate(bookings, sessions, range) {
+  var all = bookings.filter(bookingCounts);
+  var inR = all.filter(function(b){ return inRange(b.created_at, range); });
+  // Khách mới = lần mua đầu tiên của email đó nằm trong kỳ; quay lại = đã có booking trước đó
+  var firstBuy = {};
+  all.forEach(function(b){
+    var k = opsEmailKey(b); if (!k) return;
+    var d = parseSheetDate(b.created_at); if (!d) return;
+    if (!firstBuy[k] || d < firstBuy[k]) firstBuy[k] = d;
+  });
+  var newCount = 0, returning = 0;
+  inR.forEach(function(b){
+    var k = opsEmailKey(b), d = parseSheetDate(b.created_at);
+    if (k && firstBuy[k] && d && d.getTime() > firstBuy[k].getTime() && firstBuy[k] < range.start) returning++; else newCount++;
+  });
+  // Mua lại sau khi hết hạn: gói hết hạn trong kỳ, cùng email có booking tạo sau booking đó
+  var expired = all.filter(function(b){ return inRange(b.expiry_date, range); });
+  var renewed = expired.filter(function(b){
+    var k = opsEmailKey(b); if (!k) return false;
+    return all.some(function(o){ return o !== b && opsEmailKey(o) === k && String(o.created_at) > String(b.created_at); });
+  });
+  var sessInR = sessions.filter(function(s){
+    var st = String(s.status || '').toLowerCase();
+    return inRange(s.scheduled_date, range) && st !== 'cancelled' && st !== 'canceled';
+  });
+  var done = sessInR.filter(function(s){ return String(s.status || '').toLowerCase() === 'completed'; });
+  var byAdvisor = {}, byPkg = {}, revByPkg = {};
+  done.forEach(function(s){
+    var n = (s.advisor_name === STAFF_SLOT_IDENTITY) ? 'LinkaJob (tư vấn)' : (s.advisor_name || 'Không rõ');
+    byAdvisor[n] = (byAdvisor[n] || 0) + 1;
+  });
+  inR.forEach(function(b){
+    var p = b.package_name || 'Không rõ';
+    byPkg[p] = (byPkg[p] || 0) + 1;
+    revByPkg[p] = (revByPkg[p] || 0) + (Number(b.package_price) || 0);
+  });
+  return { bookings: inR.length, newCount: newCount, returning: returning, expired: expired.length, renewed: renewed.length,
+    scheduled: sessInR.length, done: done.length, byAdvisor: byAdvisor, byPkg: byPkg, revByPkg: revByPkg };
+}
+
+function opsActiveAdvisees(bookings, sessions) {
+  var today = ymd(new Date());
+  return bookings.filter(function(b){
+    if (String(b.status || '').trim().toLowerCase() !== 'confirmed') return false;
+    var total = Number(b.sessions_total) || 0;
+    var done = sessions.filter(function(s){ return s.booking_id === b.booking_id && String(s.status || '').toLowerCase() === 'completed'; }).length;
+    var exp = String(b.expiry_date || '').slice(0, 10);
+    return done < total && (!exp || exp >= today);
+  }).length;
+}
+
+function renderReportPage(partial) {
+  var range = reportPeriodRange(), prev = reportPrevPeriodRange();
+  var bk = _opsBookings || [], ss = _opsSessions || [];
+  var cur = opsAggregate(bk, ss, range), prv = opsAggregate(bk, ss, prev);
+  var active = opsActiveAdvisees(bk, ss);
+
+  var html = pageHeader('Báo cáo vận hành', 'Booking, buổi hoàn thành và khách quay lại theo tháng hoặc quý');
+  html += renderPeriodBar();
+  if (partial) html += '<div class="today-warn">Một phần dữ liệu không tải được, số liệu có thể chưa đầy đủ.</div>';
+  html += '<div id="report-printable">' + reportPrintTitle('Báo cáo vận hành', range);
+
+  var newRate = cur.bookings > 0 ? Math.round(cur.newCount / cur.bookings * 100) : null;
+  var renewRate = cur.expired > 0 ? Math.round(cur.renewed / cur.expired * 100) : null;
+  html += '<div class="stats-row cols-4">';
+  html += '<div class="stat-cell"><div class="stat-num">' + cur.bookings + '</div><div class="stat-label">Booking trong kỳ</div><div class="stat-detail">' + reportDeltaLabel(cur.bookings, prv.bookings) + '</div></div>';
+  html += '<div class="stat-cell"><div class="stat-num">' + (newRate === null ? '—' : newRate + '%') + '</div><div class="stat-label">Tỷ lệ khách mới</div><div class="stat-detail">' + (newRate === null ? 'Chưa có booking trong kỳ' : cur.newCount + ' mới, ' + cur.returning + ' quay lại') + '</div></div>';
+  html += '<div class="stat-cell"><div class="stat-num">' + (renewRate === null ? '—' : renewRate + '%') + '</div><div class="stat-label">Mua lại sau khi hết hạn</div><div class="stat-detail">' + (renewRate === null ? 'Không có gói nào hết hạn trong kỳ' : cur.renewed + '/' + cur.expired + ' gói hết hạn trong kỳ đã mua lại') + '</div></div>';
+  html += '<div class="stat-cell"><div class="stat-num">' + cur.done + '</div><div class="stat-label">Buổi hoàn thành</div><div class="stat-detail">' + cur.done + '/' + cur.scheduled + ' buổi trong kỳ · ' + reportDeltaLabel(cur.done, prv.done) + '</div></div>';
+  html += '</div>';
+  html += '<div class="stat-note">Advisee đang học hiện tại (còn buổi và chưa hết hạn): <b>' + active + '</b></div>';
+
+  html += '<div class="two-col"><div class="card"><div class="card-header"><div class="card-header-left">Buổi hoàn thành theo Advisor</div></div><div style="padding:8px 24px 24px">' + svgBarList(cur.byAdvisor, { color: '#fc5229' }) + '</div></div>';
+  var pkgDisplay = {};
+  Object.keys(cur.byPkg).forEach(function(p){ pkgDisplay[p + ' · ' + fmtMoneyShort(cur.revByPkg[p])] = cur.byPkg[p]; });
+  html += '<div class="card"><div class="card-header"><div class="card-header-left">Gói được mua trong kỳ</div></div><div style="padding:8px 24px 24px">' + svgBarList(pkgDisplay, { color: '#6D28D9' }) + '</div></div></div>';
+  html += '</div>';
+  return html;
+}
+
+// ── 3. HIỆU SUẤT SALE (trước đây menu trỏ tới hàm chưa tồn tại; gộp luôn "So sánh KPI") ──
+function loadSalesPerformancePageAsync() {
+  var mc = document.getElementById('main-content');
+  mc.innerHTML = pageHeader('Hiệu suất Sale', 'Đang tải...') + skeletonRows(4);
+  Promise.all([
+    apiGet('getStaffList', {}).catch(function(){ return null; }),
+    apiGet('getLeads', {}).catch(function(){ return null; }),
+    apiGet('getSessions', {}).catch(function(){ return null; }),
+  ]).then(function(results){
+    if (activeNavId !== 'lj-sales-perf' && activeNavId !== 'stf-kpi') return;
+    if (results[0] && results[0].data) sheetData.staffList = results[0].data.map(normalizeStaffFromSheet);
+    _perfStaff = sheetData.staffList;
+    _perfLeads = (results[1] && results[1].data) ? results[1].data : [];
+    _perfSessions = (results[2] && results[2].data) ? results[2].data : [];
+    _reportRerender = function(){ document.getElementById('main-content').innerHTML = renderSalesPerformancePage(); };
+    mc.innerHTML = renderSalesPerformancePage(!results[1]);
+  }).catch(function(err){
+    mc.innerHTML = pageHeader('Hiệu suất Sale', '') + '<div class="card"><div class="empty-state"><div class="icon">⚠</div>Không tải được dữ liệu.<br><small style="color:var(--muted)">' + escHtml(err.message) + '</small></div></div>';
+  });
+}
+
+function perfRows(range) {
+  var sales = (_perfStaff || []).filter(function(s){ return s.subRole === 'Sale'; });
+  return sales.map(function(s){
+    var mine = _perfLeads.filter(function(l){ return staffMatchesEntity(s, l, 'staff_id', 'staff'); });
+    var inR = mine.filter(function(l){ return inRange(l.created_at, range); });
+    var booked = inR.filter(function(l){ return !!l.date; }).length;
+    var consulted = inR.filter(function(l){ return l.status === 'Đã tư vấn xong' || !!l.result; }).length;
+    var converted = inR.filter(function(l){ return String(l.result || '').trim() === 'Đăng ký'; }).length;
+    var openNow = mine.filter(function(l){ return SLA_TERMINAL.indexOf(l.status) === -1 && String(l.result || '') !== 'Đăng ký'; });
+    var overdueNow = openNow.filter(function(l){
+      var s2 = getLeadSlaInfo({ status: l.status, date: l.date ? String(l.date).slice(0, 10) : '', time: fmtHHMM(l.time), log: [], createdAt: l.created_at });
+      return !!(s2 && s2.overdue);
+    }).length;
+    var doneSess = _perfSessions.filter(function(x){
+      return staffMatchesEntity(s, x, 'assigned_staff_id', 'assigned_staff') && String(x.status || '').toLowerCase() === 'completed' && inRange(x.scheduled_date, range);
+    }).length;
+    return { staff: s, leads: inR.length, booked: booked, consulted: consulted, converted: converted,
+      rate: inR.length > 0 ? Math.round(converted / inR.length * 100) : null,
+      load: openNow.length, overdue: overdueNow, doneSess: doneSess };
+  });
+}
+
+function renderSalesPerformancePage(partial) {
+  var range = reportPeriodRange(), prev = reportPrevPeriodRange();
+  var rows = perfRows(range), prevRows = perfRows(prev);
+  var html = pageHeader('Hiệu suất Sale', 'Lead nhận trong kỳ và kết quả theo từng nhân viên Sale');
+  html += renderPeriodBar();
+  if (partial) html += '<div class="today-warn">Không tải được danh sách lead, số liệu có thể chưa đầy đủ.</div>';
+  html += '<div id="report-printable">' + reportPrintTitle('Báo cáo hiệu suất Sale', range);
+  if (rows.length === 0) {
+    html += '<div class="card"><div class="empty-state"><div class="icon">📭</div>Chưa có nhân viên Sale nào trong SalesConfig (hoặc chưa có cột sub_role).</div></div></div>';
+    return html;
+  }
+  function tot(list, k) { return list.reduce(function(s, r){ return s + r[k]; }, 0); }
+  var tl = tot(rows, 'leads'), tc = tot(rows, 'converted'), pl = tot(prevRows, 'leads'), pc = tot(prevRows, 'converted');
+  html += '<div class="stats-row cols-4">';
+  html += '<div class="stat-cell"><div class="stat-num">' + tl + '</div><div class="stat-label">Lead đã phân công</div><div class="stat-detail">' + reportDeltaLabel(tl, pl) + '</div></div>';
+  html += '<div class="stat-cell"><div class="stat-num">' + tot(rows, 'booked') + '</div><div class="stat-label">Đã chốt lịch</div><div class="stat-detail">' + (tl > 0 ? Math.round(tot(rows, 'booked') / tl * 100) + '% số lead trong kỳ' : 'Chưa có lead trong kỳ') + '</div></div>';
+  html += '<div class="stat-cell"><div class="stat-num">' + tc + '</div><div class="stat-label">Đã đăng ký</div><div class="stat-detail">' + reportDeltaLabel(tc, pc) + '</div></div>';
+  html += '<div class="stat-cell"><div class="stat-num">' + (tl > 0 ? Math.round(tc / tl * 100) + '%' : '—') + '</div><div class="stat-label">Tỷ lệ chốt chung</div><div class="stat-detail">Đăng ký / lead trong kỳ</div></div>';
+  html += '</div>';
+
+  var sorted = rows.slice().sort(function(a, b){ return (b.rate === null ? -1 : b.rate) - (a.rate === null ? -1 : a.rate) || b.converted - a.converted; });
+  html += '<div class="card"><div class="card-header"><div class="card-header-left">Chi tiết theo nhân viên</div></div><div style="overflow-x:auto"><table class="bookings-table"><thead><tr>' +
+    '<th>NHÂN VIÊN</th><th>LEAD NHẬN</th><th>CHỐT LỊCH</th><th>ĐÃ TƯ VẤN</th><th>ĐĂNG KÝ</th><th>TỶ LỆ CHỐT</th><th>BUỔI HOÀN THÀNH</th><th>ĐANG XỬ LÝ</th><th>QUÁ HẠN</th></tr></thead><tbody>';
+  sorted.forEach(function(r){
+    var limit = r.staff.leadLimit || 0, full = limit > 0 && r.load >= limit;
+    html += '<tr><td><div style="display:flex;align-items:center;gap:10px">' + avatarCircle(r.staff.name, 30) + '<b>' + escHtml(r.staff.name) + '</b></div></td>' +
+      '<td>' + r.leads + '</td><td>' + r.booked + '</td><td>' + r.consulted + '</td><td><b>' + r.converted + '</b></td>' +
+      '<td>' + (r.rate === null ? '<span style="color:var(--muted)">—</span>' : r.rate + '%') + '</td><td>' + r.doneSess + '</td>' +
+      '<td><span style="' + (full ? 'color:var(--brand);font-weight:700' : '') + '">' + r.load + (limit ? '/' + limit : '') + '</span>' + (full ? ' <span style="font-size:11px;color:var(--brand)">Đầy tải</span>' : '') + '</td>' +
+      '<td>' + (r.overdue > 0 ? '<span class="sla-badge" style="background:#FEE2E2;color:#B91C1C">' + r.overdue + '</span>' : '<span style="color:var(--muted)">0</span>') + '</td></tr>';
+  });
+  html += '</tbody></table></div><div style="padding:10px 24px 16px;font-size:11.5px;color:var(--muted)">Lead nhận, chốt lịch, đã tư vấn, đăng ký tính theo ngày tạo lead trong kỳ. Đang xử lý và quá hạn là số liệu hiện tại, không phụ thuộc kỳ.</div></div>';
+  html += '</div>';
+  return html;
+}
+
 </script>
 </body>
 </html>
