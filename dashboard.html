@@ -190,10 +190,10 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
 /* Month Calendar (Amelia-style) */
 .cal-nav { display: flex; align-items: center; justify-content: space-between; padding: 18px 24px 0; }
 .cal-nav-left { display: flex; align-items: center; gap: 12px; }
-.cal-nav button { width: 32px; height: 32px; border-radius: 50%; border: 1.5px solid var(--border); background: var(--white); font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all .15s; }
-.cal-nav button:hover { border-color: var(--brand); color: var(--brand); }
+.cal-nav button:not(.cal-today-btn) { width: 32px; height: 32px; border-radius: 50%; border: 1.5px solid var(--border); background: var(--white); font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all .15s; }
+.cal-nav button:not(.cal-today-btn):hover { border-color: var(--brand); color: var(--brand); }
 .cal-nav-label { font-size: 16px; font-weight: 700; min-width: 140px; text-align: center; }
-.cal-today-btn { padding: 6px 14px; font-size: 13px; font-weight: 500; border-radius: 100px; border: 1.5px solid var(--border); background: var(--white); cursor: pointer; color: var(--muted); transition: all .15s; }
+.cal-today-btn { white-space: nowrap; flex-shrink: 0; padding: 6px 14px; font-size: 13px; font-weight: 500; border-radius: 100px; border: 1.5px solid var(--border); background: var(--white); cursor: pointer; color: var(--muted); transition: all .15s; }
 .cal-today-btn:hover { border-color: var(--brand); color: var(--brand); }
 .cal-grid { display: grid; grid-template-columns: repeat(7,1fr); border-top: 1px solid var(--border); border-left: 1px solid var(--border); margin: 16px 24px 24px; border-radius: 10px; overflow: hidden; }
 .cal-weekday-hdr { text-align: center; font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; padding: 10px 0; background: var(--bg); border-right: 1px solid var(--border); border-bottom: 1px solid var(--border); }
@@ -240,6 +240,13 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
 .form-textarea { resize: vertical; min-height: 80px; }
 .form-textarea:focus { border-color: var(--brand); }
 .form-select { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23555' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 14px center; padding-right: 36px; }
+/* Bảng lead: dropdown không bị cắt chữ / mũi tên đè nội dung */
+.lead-table { min-width: 1020px; }
+.lead-table th { white-space: nowrap; padding: 10px 14px; }
+.lead-table td { padding: 12px 14px; }
+.lead-table td:first-child { min-width: 210px; max-width: 300px; overflow-wrap: anywhere; }
+.lead-table .badge { white-space: nowrap; }
+.lead-select { font-size: 12.5px; padding: 6px 30px 6px 10px; background-position: right 10px center; min-width: 142px; text-overflow: ellipsis; }
 .form-footer { padding: 0 24px 24px; display: flex; gap: 12px; align-items: center; }
 
 /* ── Nhóm mục trong modal chỉnh sửa (Advisor edit) ── */
@@ -1420,7 +1427,7 @@ function renderAdvisorOverview() {
         var d = new Date(nextS.date + 'T00:00:00');
         nextLabel = ['CN','T2','T3','T4','T5','T6','T7'][d.getDay()] + ' ' + d.getDate() + '/' + (d.getMonth()+1) + ' · ' + nextS.timeStart;
       }
-      var pct = Math.round(ae.sessionsDone / ae.sessionsTotal * 100);
+      var pct = pctOf(ae.sessionsDone, ae.sessionsTotal);
       var needFeedback = ae.sessions.some(function(s){ return s.status === 'done' && !s.advisorNotes; });
       html += '<tr>';
       html += '<td><div style="display:flex;align-items:center;gap:12px">' + avatarCircle(ae.name,36) + '<div><div class="advisee-name">' + ae.name + '</div><div class="advisee-sub">' + ae.bookingId + '</div></div></div></td>';
@@ -1858,25 +1865,25 @@ function renderNewRegistrationsList(leads) {
     html += '<div style="padding:16px 24px 0">' + searchBoxHtml('new-reg-tbody', 'Tìm theo tên, SĐT, email...') + '</div>';
     var saleStaff = sheetData.staffList.filter(function(st){ return st.role === 'Sale' && st.active; });
 
-    html += '<div style="overflow-x:auto"><table class="bookings-table"><thead><tr>' +
+    html += '<div style="overflow-x:auto"><table class="bookings-table lead-table"><thead><tr>' +
       '<th>KHÁCH HÀNG</th><th>TRẠNG THÁI TƯ VẤN</th><th>THỜI GIAN / LINK</th><th>DỊCH VỤ QUAN TÂM</th><th>KẾT QUẢ</th><th>NV PHỤ TRÁCH</th>' +
       '</tr></thead><tbody id="new-reg-tbody">';
 
     leads.forEach(function(r){
       var obj = mergeLeadRow(r);
       if (!obj) return;
-      var searchKey = (obj.name + ' ' + obj.phone + ' ' + obj.email).toLowerCase().replace(/"/g,'');
+      var searchKey = (obj.name + ' ' + obj.phone + ' ' + fmtPhoneVN(obj.phone) + ' ' + obj.email).toLowerCase().replace(/"/g,'');
       html += '<tr data-search="' + searchKey + '">';
 
       // Cột 1 — tên/SĐT/email, bấm vào đây mở chi tiết (thay cho nút "Chi tiết →" cũ)
       html += '<td><div style="cursor:pointer" onclick="navToConsultationDetail(\'' + obj.id + '\')">' +
         '<div style="font-weight:700;font-size:13.5px">' + (obj.name || 'Khách hàng') + '</div>' +
-        '<div style="font-size:12px;color:var(--muted)">' + (obj.phone||'—') + '</div>' +
-        '<div style="font-size:12px;color:var(--muted)">' + (obj.email||'—') + '</div>' +
+        '<div style="font-size:12px;color:var(--muted)">' + (fmtPhoneVN(obj.phone)||'—') + '</div>' +
+        '<div style="font-size:12px;color:var(--muted)">' + fmtContactEmail(obj.email,'—') + '</div>' +
         '</div></td>';
 
       // Cột 2 — trạng thái tư vấn (dropdown, sửa trực tiếp)
-      html += '<td><select class="form-select" style="font-size:12.5px;padding:6px 8px" onclick="event.stopPropagation()" onchange="updateLeadStatusInline(\'' + obj.id + '\', this.value)">' +
+      html += '<td><select class="form-select lead-select" onclick="event.stopPropagation()" onchange="updateLeadStatusInline(\'' + obj.id + '\', this.value)">' +
         CONSULT_STATUS.map(function(s){ return '<option value="' + s + '"' + (obj.status===s?' selected':'') + '>' + s + '</option>'; }).join('') +
         '</select></td>';
 
@@ -1893,12 +1900,12 @@ function renderNewRegistrationsList(leads) {
 
       // Cột 5 — kết quả (dropdown, sửa trực tiếp — dùng handleConsultResultChange để giữ nguyên
       // luồng tự mở form tạo Advisee khi chọn "Đăng ký", đã làm ở bản trước)
-      html += '<td><select class="form-select" style="font-size:12.5px;padding:6px 8px" onclick="event.stopPropagation()" onchange="handleConsultResultChange(\'' + obj.id + '\', this.value)">' +
+      html += '<td><select class="form-select lead-select" onclick="event.stopPropagation()" onchange="handleConsultResultChange(\'' + obj.id + '\', this.value)">' +
         CONSULT_RESULT.map(function(rs){ var label = rs || '— Chưa có —'; return '<option value="' + label + '"' + ((obj.result||'')===rs?' selected':'') + '>' + label + '</option>'; }).join('') +
         '</select></td>';
 
       // Cột 6 — NV phụ trách (dropdown, sửa trực tiếp)
-      html += '<td><select class="form-select" style="font-size:12.5px;padding:6px 8px" onclick="event.stopPropagation()" onchange="assignRegToStaff(\'' + obj.id + '\', this.value)">' +
+      html += '<td><select class="form-select lead-select" onclick="event.stopPropagation()" onchange="assignRegToStaff(\'' + obj.id + '\', this.value)">' +
         '<option value=""' + (!obj.staff?' selected':'') + '>— Chưa gán —</option>' +
         saleStaff.map(function(st){ return '<option value="' + st.name + '"' + (obj.staff===st.name?' selected':'') + '>' + st.name + '</option>'; }).join('') +
         '</select></td>';
@@ -2484,6 +2491,29 @@ const MOCK = {
 };
 
 function fmtMoney(n) { return (n||0).toLocaleString('vi-VN') + 'đ'; }
+
+// ── Hiển thị: chuẩn hoá SĐT Việt Nam (84985926902 / 985926902 → 0985 926 902). Chỉ đổi cách hiển thị, không đổi dữ liệu gốc.
+function fmtPhoneVN(p) {
+  var raw = String(p == null ? '' : p).trim();
+  if (!raw) return '';
+  var d = raw.replace(/\D/g, '');
+  if (d.indexOf('84') === 0 && d.length === 11) d = '0' + d.slice(2);
+  else if (d.length === 9 && d.charAt(0) !== '0') d = '0' + d;
+  if (/^0\d{9}$/.test(d)) return d.slice(0, 4) + ' ' + d.slice(4, 7) + ' ' + d.slice(7);
+  return raw;
+}
+// ── Hiển thị: ô email chứa link (vd link CV Drive) thì hiện thành nút link gọn thay vì URL dài
+function fmtContactEmail(v, emptyText) {
+  var e = String(v == null ? '' : v).trim();
+  if (!e) return emptyText || '';
+  if (/^https?:\/\//i.test(e)) {
+    return '<a href="' + e.replace(/"/g, '%22').replace(/</g, '%3C') + '" target="_blank" rel="noopener" onclick="event.stopPropagation()" style="color:var(--brand);font-weight:600;text-decoration:none">📎 Link hồ sơ / CV</a>';
+  }
+  return e.replace(/&/g, '&amp;').replace(/</g, '&lt;');
+}
+// ── % tiến độ an toàn khi tổng buổi = 0 (tránh NaN%)
+function pctOf(done, total) { return total > 0 ? Math.round(done / total * 100) : 0; }
+
 // Giá gói cho phép nhập chữ tự do (VD: "Theo thoả thuận") giống ô Nhóm/Tên mục —
 // chỉ format tiền tệ khi giá trị thực sự là số nguyên, còn lại hiển thị nguyên văn.
 function fmtPkgPrice(v) {
@@ -3042,23 +3072,23 @@ function renderConsultMasterTable(list, containerId, opts) {
   }
   var saleStaff = sheetData.staffList.filter(function(st){ return st.role === 'Sale' && st.active; });
 
-  var html = '<div style="overflow-x:auto"><table class="bookings-table" style="min-width:900px"><thead><tr>' +
+  var html = '<div style="overflow-x:auto"><table class="bookings-table lead-table"><thead><tr>' +
     '<th>KHÁCH HÀNG</th><th>TRẠNG THÁI TƯ VẤN</th><th>' + opts.middleLabel + '</th><th>DỊCH VỤ QUAN TÂM</th><th>KẾT QUẢ</th><th>NV PHỤ TRÁCH</th>' +
     '</tr></thead><tbody' + (containerId ? ' id="' + containerId + '"' : '') + '>';
 
   list.forEach(function(c){
-    var searchKey = (c.name + ' ' + (c.phone||'') + ' ' + (c.email||'')).toLowerCase().replace(/"/g,'');
+    var searchKey = (c.name + ' ' + (c.phone||'') + ' ' + fmtPhoneVN(c.phone) + ' ' + (c.email||'')).toLowerCase().replace(/"/g,'');
     html += '<tr data-search="' + searchKey + '">';
 
     // Cột 1 — tên/SĐT/email, bấm vào mở chi tiết
     html += '<td style="min-width:150px"><div style="cursor:pointer" onclick="navToConsultationDetail(\'' + c.id + '\')">' +
       '<div style="font-weight:700;font-size:13.5px">' + (c.name || 'Khách hàng') + '</div>' +
-      '<div style="font-size:12px;color:var(--muted)">' + (c.phone||'—') + '</div>' +
-      '<div style="font-size:12px;color:var(--muted)">' + (c.email||'') + '</div>' +
+      '<div style="font-size:12px;color:var(--muted)">' + (fmtPhoneVN(c.phone)||'—') + '</div>' +
+      '<div style="font-size:12px;color:var(--muted)">' + fmtContactEmail(c.email,'') + '</div>' +
       '</div></td>';
 
     // Cột 2 — trạng thái tư vấn (dropdown, sửa trực tiếp)
-    html += '<td><select class="form-select" style="font-size:12.5px;padding:6px 8px" onclick="event.stopPropagation()" onchange="updateLeadStatusInline(\'' + c.id + '\', this.value)">' +
+    html += '<td><select class="form-select lead-select" onclick="event.stopPropagation()" onchange="updateLeadStatusInline(\'' + c.id + '\', this.value)">' +
       CONSULT_STATUS.map(function(s){ return '<option value="' + s + '"' + (c.status===s?' selected':'') + '>' + s + '</option>'; }).join('') +
       '</select></td>';
 
@@ -3069,12 +3099,12 @@ function renderConsultMasterTable(list, containerId, opts) {
     html += '<td style="font-size:12.5px">' + (c.consultAbout || '—') + '</td>';
 
     // Cột 5 — kết quả (dropdown, sửa trực tiếp)
-    html += '<td><select class="form-select" style="font-size:12.5px;padding:6px 8px" onclick="event.stopPropagation()" onchange="handleConsultResultChange(\'' + c.id + '\', this.value)">' +
+    html += '<td><select class="form-select lead-select" onclick="event.stopPropagation()" onchange="handleConsultResultChange(\'' + c.id + '\', this.value)">' +
       CONSULT_RESULT.map(function(rs){ var label = rs || '— Chưa có —'; return '<option value="' + label + '"' + ((c.result||'')===rs?' selected':'') + '>' + label + '</option>'; }).join('') +
       '</select></td>';
 
     // Cột 6 — NV phụ trách (dropdown, sửa trực tiếp)
-    html += '<td><select class="form-select" style="font-size:12.5px;padding:6px 8px" onclick="event.stopPropagation()" onchange="assignRegToStaff(\'' + c.id + '\', this.value)">' +
+    html += '<td><select class="form-select lead-select" onclick="event.stopPropagation()" onchange="assignRegToStaff(\'' + c.id + '\', this.value)">' +
       '<option value=""' + (!c.staff?' selected':'') + '>— Chưa gán —</option>' +
       saleStaff.map(function(st){ return '<option value="' + st.name + '"' + (c.staff===st.name?' selected':'') + '>' + st.name + '</option>'; }).join('') +
       '</select></td>';
@@ -3835,7 +3865,7 @@ function renderStaffCareTab(s) {
     html += '<div style="padding:16px 24px 0">' + searchBoxHtml('care-list', 'Tìm theo tên, email, SĐT, advisor...') + '</div>';
     html += '<div id="care-list">';
     MOCK.advisees.forEach(function(ae){
-      var pct = Math.round(ae.sessionsDone / ae.sessionsTotal * 100);
+      var pct = pctOf(ae.sessionsDone, ae.sessionsTotal);
       var expiryDate = new Date(ae.expiry + 'T00:00:00');
       var today = new Date(); today.setHours(0,0,0,0);
       var daysLeft = Math.ceil((expiryDate - today) / 86400000);
@@ -4338,7 +4368,7 @@ function renderReportPage() {
   html += '<div class="card"><div class="card-header"><div class="card-header-left">Buổi hoàn thành theo Advisor</div></div>';
   html += '<div style="padding:16px 28px 28px;display:flex;flex-direction:column;gap:14px">';
   sheetData.advisors.forEach(function(a){
-    const pct = a.sessionsTotal > 0 ? Math.round(a.sessionsDone/a.sessionsTotal*100) : 0;
+    const pct = a.sessionsTotal > 0 ? pctOf(a.sessionsDone, a.sessionsTotal) : 0;
     html += '<div><div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:6px"><span><b>' + a.name + '</b> · ' + a.title + '</span><span style="color:var(--muted)">' + a.sessionsDone + '/' + a.sessionsTotal + ' buổi</span></div>';
     html += '<div style="height:8px;background:var(--bg);border-radius:100px;overflow:hidden"><div style="height:100%;width:' + pct + '%;background:var(--brand);border-radius:100px;transition:width .4s"></div></div></div>';
   });
@@ -5578,7 +5608,7 @@ function renderAdvisorModule() {
       html += '<tr data-search="' + searchKey + '">';
       html += '<td><div style="display:flex;align-items:center;gap:10px">' + avatarCircle(a.name, 36) + '<div><div style="font-weight:700">' + a.name + '</div><div style="font-size:12px;color:var(--muted)">' + a.title + '</div></div></div></td>';
       html += '<td><b>' + myAdvisees.length + '</b> <span style="color:var(--muted);font-size:12px">advisee</span></td>';
-      html += '<td><div style="display:flex;align-items:center;gap:8px"><div style="flex:1;height:6px;background:var(--bg);border-radius:100px;overflow:hidden;min-width:60px"><div style="height:100%;width:' + (a.sessionsTotal>0?Math.round(a.sessionsDone/a.sessionsTotal*100):0) + '%;background:var(--green);border-radius:100px"></div></div><span style="font-size:12px;color:var(--muted);white-space:nowrap">' + a.sessionsDone + '/' + a.sessionsTotal + '</span>' + (needNote ? '<span style="background:#FEF3C7;color:#92400E;font-size:10px;font-weight:700;padding:2px 7px;border-radius:100px">Cần nhận xét</span>' : '') + '</div></td>';
+      html += '<td><div style="display:flex;align-items:center;gap:8px"><div style="flex:1;height:6px;background:var(--bg);border-radius:100px;overflow:hidden;min-width:60px"><div style="height:100%;width:' + (a.sessionsTotal>0?pctOf(a.sessionsDone, a.sessionsTotal):0) + '%;background:var(--green);border-radius:100px"></div></div><span style="font-size:12px;color:var(--muted);white-space:nowrap">' + a.sessionsDone + '/' + a.sessionsTotal + '</span>' + (needNote ? '<span style="background:#FEF3C7;color:#92400E;font-size:10px;font-weight:700;padding:2px 7px;border-radius:100px">Cần nhận xét</span>' : '') + '</div></td>';
       html += '<td style="font-size:13px;color:var(--muted)">' + a.email + '</td>';
       html += '<td><button class="detail-btn" onclick="navToStaffAdvisorDetail(\'' + a.id + '\')">Xem chi tiết →</button></td>';
       html += '</tr>';
@@ -5790,7 +5820,7 @@ function renderStaffAdvisorDetail(advisorId) {
     html += '<div class="empty-state"><div class="icon">👤</div>Chưa có advisee nào</div>';
   } else {
     myAdvisees.forEach(function(ae) {
-      var pctAe = Math.round(ae.sessionsDone / ae.sessionsTotal * 100);
+      var pctAe = pctOf(ae.sessionsDone, ae.sessionsTotal);
       var needNoteAe = ae.sessions.some(function(s){ return (s.status==='done'||s.status==='feedback') && !s.advisorNotes; });
       html += '<div style="display:flex;align-items:center;gap:14px;padding:16px 24px;border-top:1px solid var(--border)">';
       html += avatarCircle(ae.name, 40);
@@ -6120,7 +6150,7 @@ function renderAdviseeModule() {
     html += '<div style="padding:0 20px">' + searchBoxHtml('advisee-list-tbody', 'Tìm theo tên, email, advisor...') + '</div>';
     html += '<table class="bookings-table"><thead><tr><th>ADVISEE</th><th>GÓI · ADVISOR</th><th>TIẾN ĐỘ</th><th>TRẠNG THÁI</th><th></th></tr></thead><tbody id="advisee-list-tbody">';
     MOCK.advisees.forEach(function(ae) {
-      var pct = Math.round(ae.sessionsDone / ae.sessionsTotal * 100);
+      var pct = pctOf(ae.sessionsDone, ae.sessionsTotal);
       var hasFeedback = ae.sessions.some(function(s){ return s.status === 'feedback'; });
       var hasUpcoming = ae.sessions.some(function(s){ return s.status === 'upcoming'; });
       var hasReschedule = pendingReschedules.some(function(r){ return r.aeId === ae.id; });
@@ -6128,7 +6158,9 @@ function renderAdviseeModule() {
         ? '<span style="background:#FEF3C7;color:#92400E;font-size:11px;font-weight:700;padding:3px 10px;border-radius:100px">Cần feedback</span>'
         : hasUpcoming
           ? '<span style="background:#EFF6FF;color:#1D4ED8;font-size:11px;font-weight:700;padding:3px 10px;border-radius:100px">Sắp tới</span>'
-          : '<span style="background:var(--green-bg);color:var(--green);font-size:11px;font-weight:700;padding:3px 10px;border-radius:100px">Hoàn thành</span>';
+          : (ae.sessionsTotal > 0 && ae.sessionsDone >= ae.sessionsTotal)
+            ? '<span style="background:var(--green-bg);color:var(--green);font-size:11px;font-weight:700;padding:3px 10px;border-radius:100px">Hoàn thành</span>'
+            : '<span style="background:#EDE9FE;color:#6D28D9;font-size:11px;font-weight:700;padding:3px 10px;border-radius:100px">Đang học</span>';
       if (hasReschedule) statusTag += ' <span style="background:var(--brand-light);color:var(--brand);font-size:11px;font-weight:700;padding:3px 10px;border-radius:100px">🔔 Yêu cầu đổi lịch</span>';
       var searchKey = (ae.name + ' ' + ae.email + ' ' + ae.advisor + ' ' + ae.pkg).toLowerCase().replace(/"/g,'');
       html += '<tr data-search="' + searchKey + '">';
@@ -6906,7 +6938,7 @@ function renderAdviseeDetailForAdvisor(aeId) {
   html += '<span style="background:#F3F4F6;color:var(--muted);font-size:12px;font-weight:600;padding:4px 12px;border-radius:100px">Hết hạn ' + ae.expiry + '</span>';
   html += '</div></div>';
   // Progress bar
-  html += '<div style="text-align:right;min-width:80px"><div style="font-size:24px;font-weight:800;color:var(--brand)">' + Math.round(ae.sessionsDone/ae.sessionsTotal*100) + '%</div><div style="font-size:11px;color:var(--muted)">hoàn thành</div></div>';
+  html += '<div style="text-align:right;min-width:80px"><div style="font-size:24px;font-weight:800;color:var(--brand)">' + pctOf(ae.sessionsDone, ae.sessionsTotal) + '%</div><div style="font-size:11px;color:var(--muted)">hoàn thành</div></div>';
   html += '</div></div>';
 
   // ── Danh sách buổi meeting ──
