@@ -473,6 +473,7 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
 .chip-toggle { margin-left: auto; font-size: 12.5px; color: var(--muted); display: flex; align-items: center; gap: 6px; cursor: pointer; }
 .sla-badge { display: inline-block; font-size: 11px; font-weight: 700; padding: 3px 9px; border-radius: 100px; white-space: nowrap; max-width: 100%; overflow: hidden; text-overflow: ellipsis; vertical-align: middle; }
 .lead-sla { margin-top: 6px; }
+.lead-q { margin-top: 4px; font-size: 12px; color: var(--muted); max-width: 240px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; font-style: italic; }
 .lead-row-out { opacity: .35; transition: opacity .25s; }
 
 /* ═══ Trang Hôm nay ═══ */
@@ -1801,6 +1802,7 @@ function mergeLeadRow(r) {
   var existing = MOCK.consultations.find(function(c){ return c.id === r.lead_id; });
   var obj = existing || { id: r.lead_id, log: [] };
   obj.createdAt = r.created_at || obj.createdAt || '';
+  obj.cvLink = r.cv_link || obj.cvLink || '';
   obj.staff = r.staff || '';
   obj.name = String(r.name || ''); obj.phone = String(r.phone || ''); obj.email = String(r.email || '');
   obj.source = r.source || ''; obj.consultAbout = r.consult_about || '';
@@ -1842,7 +1844,9 @@ function stripDiacritics(s) {
 // ════════════════════════════════════════════════════════════
 //  SOP VẬN HÀNH SALE — tải/giới hạn lead, nhịp SLA Ngày 0-1-2-3
 // ════════════════════════════════════════════════════════════
-var SLA_TERMINAL = ['Đã đóng','Tạm đóng','Không phù hợp'];
+// 'Đã chuyển đổi thành khách hàng' do Apps Script tự đặt khi khách mua gói (markLeadsAsConverted)
+var LEAD_CONVERTED_STATUS = 'Đã chuyển đổi thành khách hàng';
+var SLA_TERMINAL = ['Đã đóng','Tạm đóng','Không phù hợp', LEAD_CONVERTED_STATUS];
 
 // Tải hiện tại của 1 Sale = số lead đang xử lý (chưa đóng/không phù hợp)
 function getStaffLeadLoad(staffName) {
@@ -1916,7 +1920,11 @@ function openCreateLeadModal() {
     '<div class="modal-field"><div class="form-label">Số điện thoại <span style="color:var(--brand)">*</span></div>' +
     '<input class="form-input" id="cl-phone" placeholder="09xxxxxxxx" style="margin-top:6px"></div>' +
     '<div class="modal-field"><div class="form-label">Email</div>' +
-    '<input class="form-input" id="cl-email" placeholder="email@vidu.com" style="margin-top:6px"></div>' +
+    '<input class="form-input" id="cl-email" type="email" placeholder="email@vidu.com" style="margin-top:6px"></div>' +
+    '<div class="modal-field"><div class="form-label">Câu hỏi khách muốn tư vấn</div>' +
+    '<textarea class="form-textarea" id="cl-question" rows="2" placeholder="Nếu khách đã nhắn trước..." style="margin-top:6px"></textarea></div>' +
+    '<div class="modal-field"><div class="form-label">Link CV (nếu có)</div>' +
+    '<input class="form-input" id="cl-cv" placeholder="https://drive.google.com/..." style="margin-top:6px"></div>' +
     '<div class="modal-field"><div class="form-label">Nguồn</div>' +
     '<select class="form-input" id="cl-source" style="margin-top:6px">' +
       '<option value="Facebook">Facebook</option>' +
@@ -1946,6 +1954,8 @@ function submitCreateLead() {
   var email = (document.getElementById('cl-email')||{}).value.trim();
   var source  = (document.getElementById('cl-source')||{}).value;
   var service = (document.getElementById('cl-service')||{}).value;
+  var question = ((document.getElementById('cl-question')||{}).value || '').trim();
+  var cvLink = ((document.getElementById('cl-cv')||{}).value || '').trim();
   var errEl = document.getElementById('cl-error');
 
   if (!name || !phone) {
@@ -1954,10 +1964,21 @@ function submitCreateLead() {
     return;
   }
 
+  if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    errEl.textContent = /^https?:\/\//i.test(email) ? 'Ô Email đang chứa link. Hãy dán link vào ô Link CV.' : 'Email chưa đúng định dạng.';
+    errEl.style.display = 'block';
+    return;
+  }
+  if (cvLink && !/^https?:\/\//i.test(cvLink)) {
+    errEl.textContent = 'Link CV phải bắt đầu bằng http hoặc https.';
+    errEl.style.display = 'block';
+    return;
+  }
+
   var btn = document.getElementById('cl-submit-btn');
   btn.disabled = true; btn.textContent = 'Đang tạo...';
 
-  apiPost({ action: 'captureLead', name: name, phone: phone, email: email, source: source, service: service })
+  apiPost({ action: 'captureLead', name: name, phone: phone, email: email, source: source, service: service, question: question, cv_link: cvLink })
     .then(function(res){
       if (res && res.success) {
         toast('Đã tạo đơn mới' + (res.assigned_staff ? ' — gán cho ' + res.assigned_staff : ''), 'success');
@@ -2489,6 +2510,22 @@ function fmtPhoneVN(p) {
   return raw;
 }
 // ── Hiển thị: ô email chứa link (vd link CV Drive) thì hiện thành nút link gọn thay vì URL dài
+// Hồ sơ cũ có link nằm nhầm trong ô email: hiển thị sang ô CV để Staff bấm Lưu là tự chuyển đúng chỗ
+function leadEmailIsLink(c) { return /^https?:\/\//i.test(String((c && c.email) || '').trim()); }
+function leadEmailForInput(c) { return leadEmailIsLink(c) ? '' : (c.email || ''); }
+function leadCvForInput(c) { var p = c.profile || {}; return p.cvLink || (leadEmailIsLink(c) ? String(c.email).trim() : ''); }
+function leadQuestion(o) { return String((o && o.profile && o.profile.question) || '').trim(); }
+function leadQuestionHtml(o) {
+  var q = leadQuestion(o);
+  if (!q) return '';
+  return '<div class="lead-q" title="' + escHtml(q) + '">' + escHtml(q) + '</div>';
+}
+function cvLinkLine(o) {
+  var link = (o && (o.cvLink || (o.profile && o.profile.cvLink))) || '';
+  var u = safeHttpUrl(link);
+  if (!u || String(o.email || '').trim() === String(link).trim()) return '';
+  return '<div style="font-size:12px"><a href="' + u + '" target="_blank" rel="noopener" onclick="event.stopPropagation()" style="color:var(--brand);font-weight:600;text-decoration:none">📎 Link hồ sơ / CV</a></div>';
+}
 function fmtContactEmail(v, emptyText) {
   var e = String(v == null ? '' : v).trim();
   if (!e) return emptyText || '';
@@ -2775,6 +2812,7 @@ function loadStaffLeadsAsync() {
       var existing = MOCK.consultations.find(function(c){ return c.id === r.lead_id; });
       var obj = existing || { id: r.lead_id, log: [] };
   obj.createdAt = r.created_at || obj.createdAt || '';
+  obj.cvLink = r.cv_link || obj.cvLink || '';
       obj.staff = r.staff || s.name;
       obj.name = r.name || ''; obj.phone = r.phone || ''; obj.email = r.email || '';
       obj.source = r.source || ''; obj.consultAbout = r.consult_about || '';
@@ -2988,19 +3026,19 @@ function renderConsultMasterTable(list, containerId, opts) {
     html += '<td style="min-width:150px"><div style="cursor:pointer" onclick="navToConsultationDetail(\'' + c.id + '\')">' +
       '<div style="font-weight:700;font-size:13.5px">' + (c.name || 'Khách hàng') + '</div>' +
       '<div style="font-size:12px;color:var(--muted)">' + (fmtPhoneVN(c.phone)||'—') + '</div>' +
-      '<div style="font-size:12px;color:var(--muted)">' + fmtContactEmail(c.email,'') + '</div>' +
+      '<div style="font-size:12px;color:var(--muted)">' + fmtContactEmail(c.email,'') + '</div>' + cvLinkLine(c) +
       '</div></td>';
 
     // Cột 2 — trạng thái tư vấn (dropdown, sửa trực tiếp)
     html += '<td><select class="form-select lead-select" onclick="event.stopPropagation()" onchange="updateLeadStatusInline(\'' + c.id + '\', this.value)">' +
-      CONSULT_STATUS.map(function(s){ return '<option value="' + s + '"' + (c.status===s?' selected':'') + '>' + s + '</option>'; }).join('') +
+      CONSULT_STATUS.map(function(s){ return '<option value="' + s + '"' + (c.status===s?' selected':'') + '>' + s + '</option>'; }).join('') + extraStatusOption(c.status) +
       '</select></td>';
 
     // Cột 3 — tuỳ nơi gọi (thời gian/link hoặc next step)
     html += '<td style="min-width:170px">' + opts.middleHtml(c) + '</td>';
 
     // Cột 4 — dịch vụ quan tâm (chỉ hiển thị)
-    html += '<td style="font-size:12.5px">' + (c.consultAbout || '—') + '</td>';
+    html += '<td style="font-size:12.5px">' + escHtml(c.consultAbout || '—') + leadQuestionHtml(c) + '</td>';
 
     // Cột 5 — kết quả (dropdown, sửa trực tiếp)
     html += '<td><select class="form-select lead-select" onclick="event.stopPropagation()" onchange="handleConsultResultChange(\'' + c.id + '\', this.value)">' +
@@ -3231,6 +3269,12 @@ function updateLeadNoteInline(cid, field, value) {
 }
 
 const CONSULT_STATUS = ['Chưa liên hệ','Đang liên hệ','Đã chốt lịch','Đã tư vấn xong','Đã đóng','Tạm đóng','Không phù hợp'];
+// Trạng thái ngoài danh sách chọn tay (vd 'Đã chuyển đổi thành khách hàng') vẫn phải hiển thị đúng
+function extraStatusOption(cur) {
+  var v = String(cur || '').trim();
+  return (v && CONSULT_STATUS.indexOf(v) === -1) ? '<option value="' + escHtml(v) + '" selected disabled>' + escHtml(v) + '</option>' : '';
+}
+
 // 'Đã đóng' = quá Ngày 3 mà khách chưa chốt được lịch (theo SOP mục 3.2)
 // 'Tạm đóng' = quá Ngày 3 sau meeting mà khách không phản hồi thanh toán
 const CONSULT_RESULT = ['','Cân nhắc thêm','Không phản hồi','Từ chối','Đăng ký'];
@@ -3283,7 +3327,7 @@ function renderConsultationDetail(cid) {
   html += '<div class="form-grid" style="grid-template-columns:1fr 1fr 1fr;gap:16px;padding:0;flex:1">';
   html += '<div><div class="form-label">Họ tên</div><input class="form-input" id="cv-name" value="' + String(c.name||'').replace(/"/g,'&quot;') + '"></div>';
   html += '<div><div class="form-label">SĐT</div><input class="form-input" id="cv-phone" value="' + String(c.phone||'').replace(/"/g,'&quot;') + '"></div>';
-  html += '<div><div class="form-label">Email</div><input class="form-input" id="cv-email" value="' + String(c.email||'').replace(/"/g,'&quot;') + '"></div>';
+  html += '<div><div class="form-label">Email</div><input class="form-input" id="cv-email" type="email" value="' + String(leadEmailForInput(c)).replace(/"/g,'&quot;') + '"></div>';
   html += '</div></div>';
 
   html += '<div class="form-grid" style="padding:16px 0 0">';
@@ -3297,7 +3341,7 @@ function renderConsultationDetail(cid) {
   html += '<div><div class="form-label">Khu vực</div><select class="form-select" id="cv-region"><option value="">-- Chọn --</option>' + ['Miền Bắc','Miền Trung','Miền Nam'].map(function(r){ return '<option' + (p.region===r?' selected':'') + '>' + r + '</option>'; }).join('') + '</select></div>';
   html += '<div><div class="form-label">Biết đến LinkaJob qua đâu</div><select class="form-select" id="cv-source"><option value="">-- Chọn --</option>' + ['Facebook','Instagram','Threads','TikTok','Được giới thiệu','Khác'].map(function(s){ return '<option' + (p.sourceChannel===s?' selected':'') + '>' + s + '</option>'; }).join('') + '</select></div>';
   html += '<div class="full"><div class="form-label">Câu hỏi muốn tư vấn</div><textarea class="form-textarea" id="cv-question" rows="2">' + (p.question||'') + '</textarea></div>';
-  html += '<div class="full"><div class="form-label">CV</div><div style="display:flex;gap:8px"><input class="form-input" id="cv-cvlink" placeholder="Link CV khách gửi..." value="' + String(p.cvLink||'').replace(/"/g,'&quot;') + '" style="flex:1">' + (p.cvLink ? '<a href="' + p.cvLink + '" target="_blank" class="update-btn" style="flex-shrink:0;white-space:nowrap">🔗 Mở CV</a>' : '') + '</div></div>';
+  html += '<div class="full"><div class="form-label">CV</div><div style="display:flex;gap:8px"><input class="form-input" id="cv-cvlink" placeholder="Link CV khách gửi..." value="' + String(leadCvForInput(c)).replace(/"/g,'&quot;') + '" style="flex:1">' + (safeHttpUrl(leadCvForInput(c)) ? '<a href="' + safeHttpUrl(leadCvForInput(c)) + '" target="_blank" rel="noopener" class="update-btn" style="flex-shrink:0;white-space:nowrap">🔗 Mở CV</a>' : '') + '</div></div>';
   html += '</div>';
 
   // Lịch tư vấn — gộp vào cùng card, sửa được (đổi lịch khi cần), có nút tạo Meet nhanh
@@ -3316,7 +3360,7 @@ function renderConsultationDetail(cid) {
   // ── Card 2: Tiến trình tư vấn — ghi chú/đánh giá nội bộ của Staff ──
   html += '<div class="card" style="margin-bottom:16px"><div class="card-header"><div class="card-header-left">Tiến trình tư vấn (nội bộ)</div></div>';
   html += '<div class="form-grid">';
-  html += '<div><div class="form-label">Status tư vấn</div><select class="form-select" id="cv-status">' + CONSULT_STATUS.map(function(st){ return '<option' + (st===c.status?' selected':'') + '>' + st + '</option>'; }).join('') + '</select></div>';
+  html += '<div><div class="form-label">Status tư vấn</div><select class="form-select" id="cv-status">' + CONSULT_STATUS.map(function(st){ return '<option' + (st===c.status?' selected':'') + '>' + st + '</option>'; }).join('') + extraStatusOption(c.status) + '</select></div>';
   html += '<div><div class="form-label">Kết quả</div><select class="form-select" id="cv-result">' + CONSULT_RESULT.map(function(r){ return '<option' + (r===c.result?' selected':'') + '>' + (r||'— Chưa có —') + '</option>'; }).join('') + '</select></div>';
   html += '<div class="full"><div class="form-label">Next step (kèm deadline)</div><div style="display:grid;grid-template-columns:2fr 1fr;gap:10px"><input class="form-input" id="cv-nextstep" value="' + (c.nextStep||'') + '" placeholder="Việc cần làm tiếp theo..."><input class="form-input" id="cv-deadline" type="date" value="' + (c.nextStepDeadline||'') + '"></div></div>';
   html += '<div class="full"><div class="form-label">Học vấn</div><input class="form-input" id="cv-education" value="' + (p.education||'') + '"></div>';
@@ -3409,6 +3453,11 @@ function saveConsultationAll(cid) {
 
   var nameVal = document.getElementById('cv-name').value.trim();
   if (!nameVal) { toast('Họ tên không được để trống', 'error'); return; }
+  var emailRaw = document.getElementById('cv-email').value.trim();
+  if (emailRaw && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailRaw)) {
+    toast(/^https?:\/\//i.test(emailRaw) ? 'Ô Email đang chứa link. Hãy dán link vào ô CV bên dưới.' : 'Email chưa đúng định dạng', 'error');
+    return;
+  }
 
   var btn = document.getElementById('cv-save-all-btn');
   if (btn) { btn.disabled = true; btn.textContent = '⏳ Đang lưu...'; }
@@ -4278,7 +4327,7 @@ function reportAggregate(leads, bookings, range) {
     var d = parseSheetDate(r.created_at);
     if (!d || d < range.start || d >= range.end) return;
     agg.totalLeads++;
-    if (String(r.result||'').trim() === 'Đăng ký') agg.converted++;
+    if (String(r.result||'').trim() === 'Đăng ký' || String(r.status||'').trim() === LEAD_CONVERTED_STATUS) agg.converted++;
     var ch = r.source_channel || r.source || 'Không rõ';
     agg.byChannel[ch] = (agg.byChannel[ch]||0) + 1;
     var rg = r.region || 'Không rõ';
@@ -7447,7 +7496,7 @@ function leadFilterBarHtml() {
   h += leadChip('overdue', 'Quá hạn', n.overdue, 'Quá 3 ngày theo nhịp SLA Ngày 0 đến 3');
   h += leadChip('unassigned', 'Chưa gán', n.unassigned, 'Chưa có Sale phụ trách');
   h += leadChip('nodate', 'Chưa chọn giờ', n.nodate, 'Khách chưa chọn giờ tư vấn');
-  h += '<label class="chip-toggle" title="Lead đã đóng, tạm đóng, không phù hợp hoặc đã đăng ký"><input type="checkbox" ' + (_leadShowClosed ? 'checked' : '') + ' onchange="toggleLeadClosed(this.checked)"> Hiện cả lead đã đóng (' + n.closed + ')</label>';
+  h += '<label class="chip-toggle" title="Lead đã đóng, tạm đóng, không phù hợp, đã đăng ký hoặc đã chuyển thành khách hàng"><input type="checkbox" ' + (_leadShowClosed ? 'checked' : '') + ' onchange="toggleLeadClosed(this.checked)"> Hiện cả lead đã đóng (' + n.closed + ')</label>';
   h += '</div>';
   return h;
 }
@@ -7459,11 +7508,11 @@ function leadRowHtml(obj, saleStaff) {
   h += '<td><div style="cursor:pointer" onclick="navToConsultationDetail(\'' + escHtml(obj.id) + '\')">' +
     '<div style="font-weight:700;font-size:13.5px">' + escHtml(obj.name || 'Khách hàng') + '</div>' +
     '<div style="font-size:12px;color:var(--muted)">' + escHtml(fmtPhoneVN(obj.phone) || '—') + '</div>' +
-    '<div style="font-size:12px;color:var(--muted)">' + fmtContactEmail(obj.email, '—') + '</div>' +
+    '<div style="font-size:12px;color:var(--muted)">' + fmtContactEmail(obj.email, '—') + '</div>' + cvLinkLine(obj) +
     '</div></td>';
 
   h += '<td><select class="form-select lead-select" onclick="event.stopPropagation()" onchange="updateLeadStatusInline(\'' + escHtml(obj.id) + '\', this.value)">' +
-    CONSULT_STATUS.map(function(s){ return '<option value="' + s + '"' + (obj.status === s ? ' selected' : '') + '>' + s + '</option>'; }).join('') +
+    CONSULT_STATUS.map(function(s){ return '<option value="' + s + '"' + (obj.status === s ? ' selected' : '') + '>' + s + '</option>'; }).join('') + extraStatusOption(obj.status) +
     '</select><div class="lead-sla">' + leadSlaBadgeHtml(obj) + '</div></td>';
 
   if (obj.date) {
@@ -7473,7 +7522,7 @@ function leadRowHtml(obj, saleStaff) {
     h += '<td><span class="badge" style="background:#FEF3C7;color:#92400E">Chưa chọn giờ</span></td>';
   }
 
-  h += '<td style="font-size:12.5px">' + escHtml(obj.consultAbout || '—') + '</td>';
+  h += '<td style="font-size:12.5px">' + escHtml(obj.consultAbout || '—') + leadQuestionHtml(obj) + '</td>';
 
   h += '<td><select class="form-select lead-select" onclick="event.stopPropagation()" onchange="handleConsultResultChange(\'' + escHtml(obj.id) + '\', this.value)">' +
     CONSULT_RESULT.map(function(rs){ var label = rs || '— Chưa có —'; return '<option value="' + label + '"' + ((obj.result || '') === rs ? ' selected' : '') + '>' + label + '</option>'; }).join('') +
@@ -7984,7 +8033,7 @@ function perfRows(range) {
     var inR = mine.filter(function(l){ return inRange(l.created_at, range); });
     var booked = inR.filter(function(l){ return !!l.date; }).length;
     var consulted = inR.filter(function(l){ return l.status === 'Đã tư vấn xong' || !!l.result; }).length;
-    var converted = inR.filter(function(l){ return String(l.result || '').trim() === 'Đăng ký'; }).length;
+    var converted = inR.filter(function(l){ return String(l.result || '').trim() === 'Đăng ký' || String(l.status || '').trim() === LEAD_CONVERTED_STATUS; }).length;
     var openNow = mine.filter(function(l){ return SLA_TERMINAL.indexOf(l.status) === -1 && String(l.result || '') !== 'Đăng ký'; });
     var overdueNow = openNow.filter(function(l){
       var s2 = getLeadSlaInfo({ status: l.status, date: l.date ? String(l.date).slice(0, 10) : '', time: fmtHHMM(l.time), log: [], createdAt: l.created_at });
@@ -8021,16 +8070,16 @@ function renderSalesPerformancePage(partial) {
 
   var sorted = rows.slice().sort(function(a, b){ return (b.rate === null ? -1 : b.rate) - (a.rate === null ? -1 : a.rate) || b.converted - a.converted; });
   html += '<div class="card"><div class="card-header"><div class="card-header-left">Chi tiết theo nhân viên</div></div><div style="overflow-x:auto"><table class="bookings-table"><thead><tr>' +
-    '<th>NHÂN VIÊN</th><th>LEAD NHẬN</th><th>CHỐT LỊCH</th><th>ĐÃ TƯ VẤN</th><th>ĐĂNG KÝ</th><th>TỶ LỆ CHỐT</th><th>BUỔI HOÀN THÀNH</th><th>ĐANG XỬ LÝ</th><th>QUÁ HẠN</th></tr></thead><tbody>';
+    '<th>NHÂN VIÊN</th><th>LEAD NHẬN / HẠN MỨC</th><th>CHỐT LỊCH</th><th>ĐÃ TƯ VẤN</th><th>ĐĂNG KÝ</th><th>TỶ LỆ CHỐT</th><th>BUỔI HOÀN THÀNH</th><th>ĐANG MỞ</th><th>QUÁ HẠN</th></tr></thead><tbody>';
   sorted.forEach(function(r){
-    var limit = r.staff.leadLimit || 0, full = limit > 0 && r.load >= limit;
+    var quota = (r.staff.leadLimit || 0) * (_reportPeriod.mode === 'quarter' ? 3 : 1), full = quota > 0 && r.leads >= quota;
     html += '<tr><td><div style="display:flex;align-items:center;gap:10px">' + avatarCircle(r.staff.name, 30) + '<b>' + escHtml(r.staff.name) + '</b></div></td>' +
-      '<td>' + r.leads + '</td><td>' + r.booked + '</td><td>' + r.consulted + '</td><td><b>' + r.converted + '</b></td>' +
+      '<td><span style="' + (full ? 'color:var(--brand);font-weight:700' : '') + '">' + r.leads + '</span>' + (quota ? '<span style="color:var(--muted);font-size:12px">/' + quota + '</span>' : '') + (full ? ' <span style="font-size:11px;color:var(--brand)">Đủ hạn mức</span>' : '') + '</td><td>' + r.booked + '</td><td>' + r.consulted + '</td><td><b>' + r.converted + '</b></td>' +
       '<td>' + (r.rate === null ? '<span style="color:var(--muted)">—</span>' : r.rate + '%') + '</td><td>' + r.doneSess + '</td>' +
-      '<td><span style="' + (full ? 'color:var(--brand);font-weight:700' : '') + '">' + r.load + (limit ? '/' + limit : '') + '</span>' + (full ? ' <span style="font-size:11px;color:var(--brand)">Đầy tải</span>' : '') + '</td>' +
+      '<td>' + r.load + '</td>' +
       '<td>' + (r.overdue > 0 ? '<span class="sla-badge" style="background:#FEE2E2;color:#B91C1C">' + r.overdue + '</span>' : '<span style="color:var(--muted)">0</span>') + '</td></tr>';
   });
-  html += '</tbody></table></div><div style="padding:10px 24px 16px;font-size:11.5px;color:var(--muted)">Lead nhận, chốt lịch, đã tư vấn, đăng ký tính theo ngày tạo lead trong kỳ. Đang xử lý và quá hạn là số liệu hiện tại, không phụ thuộc kỳ.</div></div>';
+  html += '</tbody></table></div><div style="padding:10px 24px 16px;font-size:11.5px;color:var(--muted)">Lead nhận, chốt lịch, đã tư vấn, đăng ký tính theo ngày tạo lead trong kỳ. Hạn mức tính theo tháng (kỳ Quý nhân 3). Đang mở và quá hạn là số liệu hiện tại, không phụ thuộc kỳ.</div></div>';
   html += '</div>';
   return html;
 }
