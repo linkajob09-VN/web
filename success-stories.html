@@ -38,30 +38,9 @@ button,a{outline:none}button:focus-visible,a:focus-visible,.story-card:focus-vis
 .live-dot{width:7px;height:7px;border-radius:50%;background:var(--orange);flex:none;animation:pulse 1.5s infinite}
 @keyframes pulse{50%{opacity:.25;transform:scale(.8)}}
 
-/* offer marquee */
-.result-strip{background:var(--dark);padding:36px 0;border-top:.5px solid var(--line-dark)}
 .section-head{max-width:620px;margin-bottom:36px}
 .section-head h2{font-size:30px;margin-top:14px;letter-spacing:-1px}
 .section-head p{margin-top:14px;font-size:15px;color:var(--muted);line-height:1.7}
-.result-strip .section-head{margin-bottom:24px}
-.result-strip h2{color:var(--text-dark)}.result-strip p{color:var(--muted-dark)}
-.result-viewport{overflow:hidden}
-.result-track{display:flex;gap:16px;width:max-content;animation:rs 110s linear infinite}
-.result-track:hover{animation-play-state:paused}
-@keyframes rs{from{transform:translateX(-50%)}to{transform:translateX(0)}}
-.result-card{height:340px;flex:none;background:rgba(255,255,255,.04);border:.5px solid rgba(255,255,255,.1);border-radius:16px;overflow:hidden;cursor:zoom-in;transition:border-color .2s,transform .2s}
-.result-card:hover{border-color:rgba(252,82,41,.5);transform:translateY(-3px)}
-.result-card img{height:100%;width:auto;max-width:none;display:block}
-.rfb{width:220px;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;font-size:11px;color:var(--muted-dark-2)}
-.rfb i{font-size:26px;color:var(--orange)}
-
-/* logo ticker */
-.ticker{overflow:hidden;border-top:.5px solid var(--line-dark);border-bottom:.5px solid var(--line-dark);padding:18px 0;background:var(--dark)}
-.ticker-track{display:flex;gap:56px;align-items:center;animation:tk 26s linear infinite;width:max-content}
-.ticker-item{height:26px;display:flex;align-items:center;flex:none}
-.ticker-item img{height:100%;width:auto;max-width:110px;object-fit:contain;filter:grayscale(1) brightness(0) invert(1);opacity:.55}
-@keyframes tk{to{transform:translateX(-50%)}}
-
 /* stories */
 section.s{padding:80px 0}
 .filter-row{display:flex;gap:8px;flex-wrap:wrap;margin:-12px 0 28px}
@@ -151,7 +130,7 @@ footer span{color:var(--orange)}
 
 @media(max-width:900px){.story-grid{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:640px){.hero h1{font-size:26px}.hero-cta{flex-direction:column;align-items:stretch}.hero-stats{display:grid;grid-template-columns:1fr 1fr;gap:22px 14px}}
-@media(max-width:560px){.story-grid{grid-template-columns:1fr}section.s{padding:56px 0}.wrap{padding:0 20px}.result-card{height:240px}.sticky-cta span{font-size:11.5px}.sticky-cta .btn{padding:9px 14px;font-size:12px}.final h2{font-size:24px}}
+@media(max-width:560px){.story-grid{grid-template-columns:1fr}section.s{padding:56px 0}.wrap{padding:0 20px}.sticky-cta span{font-size:11.5px}.sticky-cta .btn{padding:9px 14px;font-size:12px}.final h2{font-size:24px}}
 @media(prefers-reduced-motion:reduce){*{animation-duration:.001ms!important;transition-duration:.001ms!important}}
 </style>
 <link rel="stylesheet" href="nav.css">
@@ -178,17 +157,6 @@ footer span{color:var(--orange)}
     <div class="live-pill" id="livePillBox" style="display:none"><span class="live-dot"></span><span id="livePill"></span></div>
   </div>
 </section>
-
-<section class="result-strip">
-  <div class="wrap"><div class="section-head">
-    <span class="eyebrow on-dark"><span class="eyebrow-dot"></span>Kết quả</span>
-    <h2>Không chỉ lời nói — đây là offer letter thật.</h2>
-    <p>Từng dòng chữ trong các offer letter dưới đây là hành trình thật của Advisee LinkaJob. Bấm vào ảnh để xem rõ hơn.</p>
-  </div></div>
-  <div class="result-viewport"><div class="result-track" id="resultTrack"></div></div>
-</section>
-
-<div class="ticker"><div class="ticker-track" id="tickerTrack"></div></div>
 
 <section class="s" id="stories">
   <div class="wrap">
@@ -251,14 +219,6 @@ footer span{color:var(--orange)}
 var SLOTS_LEFT = 0; // số suất tư vấn còn lại trong tuần — đặt 0 để ẩn dòng này. PHẢI khớp lịch thật.
 var SS_WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbx7Bd9VvoyzfiiezQV9huoY2BKHH_Br1RAFIz00mjdyKeis-Zv-38a0gf_b-fMlul2C/exec';
 
-var COMPANY_LOGOS = [
- 'https://linkajob.vn/wp-content/uploads/2025/09/54a982a075291e1998a81c40237ba3aa.png','https://linkajob.vn/wp-content/uploads/2025/09/Fonterra_Logo.svg.png',
- 'https://linkajob.vn/wp-content/uploads/2025/09/Herb-Tea-Futurology-.png','https://linkajob.vn/wp-content/uploads/2025/09/images.png',
- 'https://linkajob.vn/wp-content/uploads/2025/09/Logo_BIDV.svg.png','https://linkajob.vn/wp-content/uploads/2025/09/logo-01.png',
- 'https://linkajob.vn/wp-content/uploads/2025/09/logo.png','https://linkajob.vn/wp-content/uploads/2025/09/Lotte_Logo_2017.svg.png',
- 'https://linkajob.vn/wp-content/uploads/2025/09/Mondelez_international_2012_logo-1.svg','https://linkajob.vn/wp-content/uploads/2025/09/KUN-Logo-New-500x281-1.webp',
- 'https://linkajob.vn/wp-content/uploads/2025/09/TikTok_logo.svg.webp','https://linkajob.vn/wp-content/uploads/2025/10/Savills_logo.svg.webp'];
-
 var $ = function(i){ return document.getElementById(i); };
 function esc(s){ return String(s == null ? '' : s).replace(/[&<>"]/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
 function initials(n){ return String(n||'').trim().split(' ').filter(Boolean).slice(-2).map(function(p){return p[0];}).join('').toUpperCase(); }
@@ -267,9 +227,6 @@ function directUrl(u){
   var m = u.match(/drive\.google\.com\/file\/d\/([^/]+)/) || u.match(/[?&]id=([^&]+)/);
   return m && m[1] ? 'https://lh3.googleusercontent.com/d/' + m[1] : u;
 }
-
-/* ticker logo */
-(function(){ var h=''; for(var r=0;r<2;r++) COMPANY_LOGOS.forEach(function(s){ h+='<div class="ticker-item"><img src="'+s+'" alt="" loading="lazy" onerror="this.parentElement.style.display=\'none\'"></div>'; }); $('tickerTrack').innerHTML=h; })();
 
 /* ═══ DATA từ Google Sheet (tab OfferResults) ═══ */
 var STORIES = [], CUR_FIELD = 'Tất cả', _pill;
@@ -336,16 +293,6 @@ function closeDrawer(){ $('drawerOv').classList.remove('open'); document.body.st
 function openLightbox(src){ if(!src) return; $('lbImg').src=src; $('lb').classList.add('open'); }
 document.addEventListener('keydown',function(e){ if(e.key==='Escape'){ closeDrawer(); $('lb').classList.remove('open'); } });
 
-function renderMarquee(rows){
-  var track=$('resultTrack'), box=track.parentElement.parentElement;
-  var photos=rows.filter(function(r){ return String(r.result_id==null?'':r.result_id).trim()!==''; }).map(function(r){ return directUrl(r.photo_url); }).filter(Boolean);
-  if(!photos.length){ box.style.display='none'; return; }
-  box.style.display='';
-  var card=function(s){ return '<div class="result-card" data-src="'+esc(s)+'"><img src="'+esc(s)+'" alt="Offer letter" loading="lazy" onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'flex\'"><div class="rfb" style="display:none"><i class="ti ti-file-text"></i><span>Offer letter</span></div></div>'; };
-  var h=photos.map(card).join(''); track.innerHTML=h+h;
-}
-$('resultTrack').addEventListener('click',function(e){ var c=e.target.closest('.result-card'); if(c) openLightbox(c.getAttribute('data-src')); });
-
 function initLivePill(){
   if(!STORIES.length) return; clearInterval(_pill); var k=0, el=$('livePill');
   $('livePillBox').style.display='';
@@ -355,7 +302,7 @@ function initLivePill(){
 
 function renderAll(rows){
   STORIES=rows.filter(function(r){ return r.show_story===true||String(r.show_story).trim().toUpperCase()==='TRUE'; }).map(toStory);
-  renderFilters(); renderStories(); renderMarquee(rows); initLivePill();
+  renderFilters(); renderStories(); initLivePill();
   $('stickyN').textContent=Math.max(STORIES.length,20);
   if(SLOTS_LEFT>0){ $('slotsLeft').textContent=SLOTS_LEFT; $('slotLine').style.display=''; }
 }
@@ -372,7 +319,6 @@ function loadFresh(version){
   }).catch(function(){
     if(local) return;
     $('storyGrid').innerHTML='<div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--muted);font-size:13px">Không tải được câu chuyện, vui lòng thử lại sau.</div>';
-    $('resultTrack').parentElement.parentElement.style.display='none';
   });
 }
 fetch(SS_WEBAPP_URL+'?action=getOfferResultsVersion').then(function(r){return r.json();}).then(function(v){
