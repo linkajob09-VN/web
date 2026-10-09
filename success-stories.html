@@ -71,14 +71,19 @@ section.s{padding:80px 0}
 .story-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
 .story-card{background:var(--paper-2);border:.5px solid var(--line);border-radius:16px;overflow:hidden;display:flex;flex-direction:column;cursor:pointer;transition:border-color .2s,transform .2s}
 .story-card:hover{border-color:rgba(252,82,41,.3);transform:translateY(-3px)}
-.photo{position:relative;aspect-ratio:4/3;background:var(--dark-card);overflow:hidden}
-.photo>img{width:100%;height:100%;object-fit:cover;display:block}
-.photo-ini{display:flex;align-items:center;justify-content:center;width:100%;height:100%;font-size:42px;font-weight:700;color:var(--orange)}
-.badge{position:absolute;top:12px;left:12px;display:inline-flex;align-items:center;gap:5px;background:rgba(13,13,13,.78);backdrop-filter:blur(6px);color:#fff;border:.5px solid rgba(255,255,255,.15);border-radius:100px;padding:5px 11px;font-size:10.5px;font-weight:600}
-.badge i{color:var(--success);font-size:13px}
-.letter-btn{position:absolute;bottom:12px;right:12px;display:inline-flex;align-items:center;gap:5px;background:var(--orange);color:#fff;border-radius:100px;padding:6px 12px;font-size:11px;font-weight:700}
-.story-body{padding:18px 18px 20px;display:flex;flex-direction:column;gap:12px;flex:1}
-.story-name{font-size:15.5px;font-weight:700;letter-spacing:-.2px}
+.sc-top{display:flex;gap:12px;align-items:center;padding:16px 16px 0}
+.av{width:56px;height:56px;border-radius:50%;background:var(--dark-card);border:2px solid var(--orange);flex:none;display:flex;align-items:center;justify-content:center;color:var(--orange);font-weight:700;font-size:18px;overflow:hidden}
+.av img{width:100%;height:100%;object-fit:cover;display:block}
+.av.lg{width:72px;height:72px;font-size:22px}
+.sc-name{font-size:15.5px;font-weight:700;letter-spacing:-.2px;line-height:1.25}
+.vf{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:600;color:#12a150;margin-top:3px}
+.vf i{font-size:14px}
+.letter{position:relative;margin:14px 16px 0;min-height:160px;border-radius:12px;background:var(--dark);border:.5px solid var(--line);overflow:hidden;cursor:zoom-in}
+.letter>img{width:100%;height:auto;display:block}
+.letter-btn{position:absolute;bottom:10px;right:10px;z-index:1;display:inline-flex;align-items:center;gap:5px;background:var(--orange);color:#fff;border-radius:100px;padding:6px 12px;font-size:11px;font-weight:700}
+.letter-lbl{position:absolute;top:10px;left:10px;z-index:1;display:inline-flex;align-items:center;gap:5px;background:rgba(13,13,13,.78);color:#fff;border-radius:100px;padding:5px 11px;font-size:10.5px;font-weight:600}
+.d-id{display:flex;align-items:center;gap:14px;margin-bottom:14px}.d-id .d-name{margin:0}
+.story-body{padding:14px 18px 20px;display:flex;flex-direction:column;gap:12px;flex:1}
 .story-blurb{font-size:13px;color:var(--muted);line-height:1.55}
 .co-logo{height:22px;width:auto;max-width:120px;object-fit:contain;align-self:flex-start}
 .story-path{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
@@ -100,7 +105,7 @@ section.s{padding:80px 0}
 .dh{padding:18px 22px;border-bottom:.5px solid var(--line-dark);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:var(--dark-card);z-index:2}
 .dh-label{font-size:11px;color:var(--muted-dark-2);letter-spacing:.08em;text-transform:uppercase}
 .dclose{width:30px;height:30px;border-radius:50%;background:rgba(255,255,255,.06);border:none;color:var(--muted-dark);font-size:16px;cursor:pointer}
-.d-photo{width:100%;aspect-ratio:4/3;object-fit:cover;display:block}
+
 .d-body{padding:22px}
 .d-verified{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:600;color:var(--success);margin-bottom:8px}
 .d-name{font-size:21px;font-weight:700;color:var(--text-dark);margin-bottom:10px}
@@ -201,14 +206,13 @@ footer span{color:var(--orange)}
 <div class="ov" id="drawerOv" onclick="if(event.target===this)closeDrawer()">
   <div class="drawer">
     <div class="dh"><div class="dh-label">Câu chuyện thành công</div><button class="dclose" onclick="closeDrawer()" aria-label="Đóng"><i class="ti ti-x"></i></button></div>
-    <img class="d-photo" id="dPhoto" src="" alt="">
     <div class="d-body">
       <div class="d-verified"><i class="ti ti-rosette-discount-check-filled"></i>Offer đã được LinkaJob xác minh</div>
+      <div class="d-id"><div class="av lg" id="dAv"></div><div class="d-name" id="dName"></div></div>
       <div class="d-offer" id="dOfferWrap" style="display:none" onclick="openLightbox(document.getElementById('dOfferPhoto').src)">
         <img id="dOfferPhoto" src="" alt="Offer letter" onerror="this.parentElement.style.display='none'">
         <div class="d-cap" id="dCap"></div>
       </div>
-      <div class="d-name" id="dName"></div>
       <div class="d-blurb" id="dBlurb"></div>
       <div class="d-row"><img id="dCo" src="" alt="" onerror="this.style.display='none'"><div><div class="d-lbl">Trạng thái → Vị trí đạt được</div><div class="d-val" id="dPath"></div></div></div>
       <div class="d-row" id="dDaysRow" style="display:none"><div><div class="d-lbl">Thời gian từ buổi đầu đến offer</div><div class="d-val" id="dDays"></div></div></div>
@@ -282,18 +286,18 @@ function renderFilters(){
 }
 $('filterRow').onclick=function(e){ var f=e.target.getAttribute('data-f'); if(!f) return; CUR_FIELD=f; renderFilters(); renderStories(); };
 
+function avatarHtml(s){ return s.photo?'<img src="'+esc(s.photo)+'" alt="'+esc(s.name)+'" loading="lazy" onerror="this.remove()">':esc(initials(s.name)); }
 function renderStories(){
   var h='';
   STORIES.forEach(function(s,i){
     if(CUR_FIELD!=='Tất cả' && s.field!==CUR_FIELD) return;
     h+='<div class="story-card" tabindex="0" onclick="openDrawer('+i+')">'
-     +'<div class="photo">'+(s.photo?'<img src="'+esc(s.photo)+'" alt="'+esc(s.name)+'" loading="lazy" onerror="this.style.display=\'none\'">':'<span class="photo-ini">'+esc(initials(s.name))+'</span>')
-     +'<span class="badge"><i class="ti ti-rosette-discount-check-filled"></i>Offer đã xác minh</span>'
-     +(s.offerPhoto?'<span class="letter-btn"><i class="ti ti-file-text"></i>Xem offer letter</span>':'')+'</div>'
-     +'<div class="story-body"><div class="story-name">'+esc(s.name)+'</div><div class="story-blurb">'+esc(s.blurb)+'</div>'
+     +'<div class="sc-top"><div class="av">'+avatarHtml(s)+'</div><div><div class="sc-name">'+esc(s.name)+'</div><div class="vf"><i class="ti ti-rosette-discount-check-filled"></i>Offer đã xác minh</div></div></div>'
+     +(s.offerPhoto?'<div class="letter" onclick="event.stopPropagation();openLightbox(\''+esc(s.offerPhoto)+'\')"><img src="'+esc(s.offerPhoto)+'" alt="Offer letter của '+esc(s.name)+'" loading="lazy" onerror="this.parentElement.style.display=\'none\'"><span class="letter-lbl"><i class="ti ti-file-text"></i>Offer letter</span><span class="letter-btn"><i class="ti ti-zoom-in"></i>Phóng to</span></div>':'')
+     +'<div class="story-body"><div class="story-path"><span class="tag">'+esc(s.tag)+'</span><span class="arrow">→</span><span class="story-role">'+esc(s.role)+'</span></div>'
      +(s.co?'<img class="co-logo" src="'+esc(s.co)+'" alt="" loading="lazy" onerror="this.style.display=\'none\'">':'')
-     +'<div class="story-path"><span class="tag">'+esc(s.tag)+'</span><span class="arrow">→</span><span class="story-role">'+esc(s.role)+'</span></div>'
      +(s.days?'<span class="tag days"><i class="ti ti-clock"></i>'+esc(s.days)+' ngày đến offer</span>':'')
+     +'<div class="story-blurb">'+esc(s.blurb)+'</div>'
      +'<div class="story-advisor"><img src="'+esc(s.adv)+'" alt="" loading="lazy" onerror="this.style.display=\'none\'"><div><div class="pkg">'+esc(s.pkg)+'</div><div class="adv">Advisor: '+esc(s.advName)+'</div></div></div></div></div>';
   });
   $('storyGrid').innerHTML=h;
@@ -317,7 +321,7 @@ function parseOutline(t){
 
 function openDrawer(i){
   var s=STORIES[i]; if(!s) return;
-  $('dPhoto').src=s.photo; $('dPhoto').style.display=s.photo?'':'none';
+  $('dAv').innerHTML=avatarHtml(s);
   $('dName').textContent=s.name; $('dBlurb').textContent=s.blurb;
   $('dCo').src=s.co||''; $('dCo').style.display=s.co?'':'none';
   $('dPath').textContent=s.tag+' → '+s.role;
