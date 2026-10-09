@@ -54,15 +54,12 @@ section.s{padding:80px 0}
 .av{width:56px;height:56px;border-radius:50%;background:var(--dark-card);border:2px solid var(--orange);flex:none;display:flex;align-items:center;justify-content:center;color:var(--orange);font-weight:700;font-size:18px;overflow:hidden}
 .av img{width:100%;height:100%;object-fit:cover;display:block}
 .av.lg{width:72px;height:72px;font-size:22px}
-.sc-name{font-size:15.5px;font-weight:700;letter-spacing:-.2px;line-height:1.25}
-.vf{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:600;color:#12a150;margin-top:3px}
-.vf i{font-size:14px}
-.letter{position:relative;margin:14px 16px 0;min-height:160px;border-radius:12px;background:var(--dark);border:.5px solid var(--line);overflow:hidden;cursor:zoom-in}
+.sc-name{font-size:16px;font-weight:700;letter-spacing:-.2px;line-height:1.3;display:flex;align-items:center;gap:7px}
+.tick{flex:none;display:inline-flex}.tick svg{display:block}
+.letter{position:relative;margin:0 16px 16px;min-height:160px;border-radius:12px;background:var(--dark);border:.5px solid var(--line);overflow:hidden;cursor:zoom-in}
 .letter>img{width:100%;height:auto;display:block}
-.letter-btn{position:absolute;bottom:10px;right:10px;z-index:1;display:inline-flex;align-items:center;gap:5px;background:var(--orange);color:#fff;border-radius:100px;padding:6px 12px;font-size:11px;font-weight:700}
-.letter-lbl{position:absolute;top:10px;left:10px;z-index:1;display:inline-flex;align-items:center;gap:5px;background:rgba(13,13,13,.78);color:#fff;border-radius:100px;padding:5px 11px;font-size:10.5px;font-weight:600}
-.d-id{display:flex;align-items:center;gap:14px;margin-bottom:14px}.d-id .d-name{margin:0}
-.story-body{padding:14px 18px 20px;display:flex;flex-direction:column;gap:12px;flex:1}
+.d-id{display:flex;align-items:center;gap:14px;margin-bottom:14px}.d-id .d-name{margin:0;display:flex;align-items:center;gap:8px}
+.story-body{padding:16px 18px 16px;display:flex;flex-direction:column;gap:12px;flex:1}
 .story-blurb{font-size:13px;color:var(--muted);line-height:1.55}
 .co-logo{height:22px;width:auto;max-width:120px;object-fit:contain;align-self:flex-start}
 .story-path{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
@@ -71,7 +68,7 @@ section.s{padding:80px 0}
 .tag.days i{color:var(--orange);font-size:12px}
 .arrow{color:var(--muted-2);font-size:12px}
 .story-role{font-size:11.5px;font-weight:600}
-.story-advisor{display:flex;align-items:center;gap:10px;border-top:.5px solid var(--line);padding-top:12px;margin-top:auto}
+.story-advisor{display:flex;align-items:center;gap:10px;border-top:.5px solid var(--line);padding-top:12px}
 .story-advisor img{width:28px;height:28px;border-radius:50%;object-fit:cover;flex:none;background:var(--orange-tint)}
 .pkg{font-size:12px;font-weight:700;line-height:1.3}.adv{font-size:11px;color:var(--muted)}
 .load-more{text-align:center;margin-top:32px}
@@ -175,7 +172,6 @@ footer span{color:var(--orange)}
   <div class="drawer">
     <div class="dh"><div class="dh-label">Câu chuyện thành công</div><button class="dclose" onclick="closeDrawer()" aria-label="Đóng"><i class="ti ti-x"></i></button></div>
     <div class="d-body">
-      <div class="d-verified"><i class="ti ti-rosette-discount-check-filled"></i>Offer đã được LinkaJob xác minh</div>
       <div class="d-id"><div class="av lg" id="dAv"></div><div class="d-name" id="dName"></div></div>
       <div class="d-offer" id="dOfferWrap" style="display:none" onclick="openLightbox(document.getElementById('dOfferPhoto').src)">
         <img id="dOfferPhoto" src="" alt="Offer letter" onerror="this.parentElement.style.display='none'">
@@ -243,19 +239,23 @@ function renderFilters(){
 }
 $('filterRow').onclick=function(e){ var f=e.target.getAttribute('data-f'); if(!f) return; CUR_FIELD=f; renderFilters(); renderStories(); };
 
+var TICK='<span class="tick" title="Offer đã được LinkaJob xác minh"><svg viewBox="0 0 24 24" width="18" height="18"><circle cx="12" cy="12" r="12" fill="#fc5229"/><path d="M7 12.5l3.2 3.2L17 8.8" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></span>';
 function avatarHtml(s){ return s.photo?'<img src="'+esc(s.photo)+'" alt="'+esc(s.name)+'" loading="lazy" onerror="this.remove()">':esc(initials(s.name)); }
 function renderStories(){
   var h='';
   STORIES.forEach(function(s,i){
     if(CUR_FIELD!=='Tất cả' && s.field!==CUR_FIELD) return;
     h+='<div class="story-card" tabindex="0" onclick="openDrawer('+i+')">'
-     +'<div class="sc-top"><div class="av">'+avatarHtml(s)+'</div><div><div class="sc-name">'+esc(s.name)+'</div><div class="vf"><i class="ti ti-rosette-discount-check-filled"></i>Offer đã xác minh</div></div></div>'
-     +(s.offerPhoto?'<div class="letter" onclick="event.stopPropagation();openLightbox(\''+esc(s.offerPhoto)+'\')"><img src="'+esc(s.offerPhoto)+'" alt="Offer letter của '+esc(s.name)+'" loading="lazy" onerror="this.parentElement.style.display=\'none\'"><span class="letter-lbl"><i class="ti ti-file-text"></i>Offer letter</span><span class="letter-btn"><i class="ti ti-zoom-in"></i>Phóng to</span></div>':'')
-     +'<div class="story-body"><div class="story-path"><span class="tag">'+esc(s.tag)+'</span><span class="arrow">→</span><span class="story-role">'+esc(s.role)+'</span></div>'
+     +'<div class="sc-top"><div class="av">'+avatarHtml(s)+'</div><div class="sc-name">'+esc(s.name)+TICK+'</div></div>'
+     +'<div class="story-body">'
+     +'<div class="story-path"><span class="tag">'+esc(s.tag)+'</span><span class="arrow">→</span><span class="story-role">'+esc(s.role)+'</span></div>'
      +(s.co?'<img class="co-logo" src="'+esc(s.co)+'" alt="" loading="lazy" onerror="this.style.display=\'none\'">':'')
      +(s.days?'<span class="tag days"><i class="ti ti-clock"></i>'+esc(s.days)+' ngày đến offer</span>':'')
-     +'<div class="story-blurb">'+esc(s.blurb)+'</div>'
-     +'<div class="story-advisor"><img src="'+esc(s.adv)+'" alt="" loading="lazy" onerror="this.style.display=\'none\'"><div><div class="pkg">'+esc(s.pkg)+'</div><div class="adv">Advisor: '+esc(s.advName)+'</div></div></div></div></div>';
+     +((s.pkg||s.advName)?'<div class="story-advisor"><img src="'+esc(s.adv)+'" alt="" loading="lazy" onerror="this.style.display=\'none\'"><div>'+(s.pkg?'<div class="pkg">'+esc(s.pkg)+'</div>':'')+(s.advName?'<div class="adv">Advisor: '+esc(s.advName)+'</div>':'')+'</div></div>':'')
+     +(s.blurb?'<div class="story-blurb">'+esc(s.blurb)+'</div>':'')
+     +'</div>'
+     +(s.offerPhoto?'<div class="letter" onclick="event.stopPropagation();openLightbox(\''+esc(s.offerPhoto)+'\')"><img src="'+esc(s.offerPhoto)+'" alt="Offer letter của '+esc(s.name)+'" loading="lazy" onerror="this.parentElement.style.display=\'none\'"></div>':'')
+     +'</div>';
   });
   $('storyGrid').innerHTML=h;
 }
@@ -279,7 +279,7 @@ function parseOutline(t){
 function openDrawer(i){
   var s=STORIES[i]; if(!s) return;
   $('dAv').innerHTML=avatarHtml(s);
-  $('dName').textContent=s.name; $('dBlurb').textContent=s.blurb;
+  $('dName').innerHTML=esc(s.name)+TICK; $('dBlurb').textContent=s.blurb;
   $('dCo').src=s.co||''; $('dCo').style.display=s.co?'':'none';
   $('dPath').textContent=s.tag+' → '+s.role;
   $('dDaysRow').style.display=s.days?'':'none'; $('dDays').textContent=s.days+' ngày';
