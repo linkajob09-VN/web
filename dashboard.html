@@ -900,6 +900,7 @@ function normalizeStaffFromSheet(s) {
     name: s.name || '',
     role: STAFF_ROLE_LABELS[subRole] || subRole,
     subRole: subRole,
+    hasSubRole: !!s.sub_role,
     email: s.email || '',
     phone: s.phone || '',
     joinDate: s.join_date || '—',
@@ -969,6 +970,8 @@ function applyLoggedInUser(u) {
   // ngoài thời gian đọc Sheet, nên gộp 3 lượt thành 1 tiết kiệm rõ hơn cả
   // việc chỉ gọi song song 3 lượt riêng.
   loadBootstrapData().then(function(){
+    return syncStaffRole();
+  }).then(function(){
     buildTabBar(u.role);
 
     // Với Admin (điều hướng qua sidebar + navTo), buildTabBar/buildSidebar tự
@@ -978,6 +981,23 @@ function applyLoggedInUser(u) {
       var savedRoute = null;
       try { savedRoute = localStorage.getItem('linkajob_last_route'); } catch (e) {}
       if (savedRoute && ROUTE_MAP[savedRoute]) navTo(savedRoute);
+    }
+  });
+}
+
+// Đồng bộ lại quyền (subRole) từ tab SalesConfig mỗi lần vào dashboard.
+// Phiên đăng nhập lưu trong localStorage tối đa 24h nên có thể còn giữ quyền CŨ
+// (vd. vừa đổi Sale -> Admin trên Sheet nhưng trình duyệt vẫn nhớ "Sale").
+function syncStaffRole() {
+  if (!currentUser || currentUser.role !== 'Staff') return Promise.resolve();
+  return loadStaffListFromSheet(null, true).then(function(){
+    var u = currentUser;
+    var mail = String(u.email || '').trim().toLowerCase();
+    var s = (u.staffId && sheetData.staffList.find(function(x){ return x.id === u.staffId; }))
+         || (mail && sheetData.staffList.find(function(x){ return String(x.email || '').trim().toLowerCase() === mail; }));
+    if (s && s.hasSubRole && s.subRole && s.subRole !== u.subRole) {
+      u.subRole = s.subRole;
+      try { localStorage.setItem('linkajob_session', JSON.stringify({ user: u, savedAt: Date.now() })); } catch (e) {}
     }
   });
 }
