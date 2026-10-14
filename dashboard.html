@@ -934,11 +934,24 @@ function apiGet(action, params) {
   params = params || {};
   const merged = Object.assign({action: action}, params);
   const qs = new URLSearchParams(merged).toString();
-  return fetch(API + '?' + qs).then(function(r){ return r.json(); });
+  return fetchWithTimeout(API + '?' + qs).then(function(r){ return r.json(); });
+}
+// Có giới hạn thời gian chờ: nếu máy chủ Apps Script không trả lời thì báo lỗi rõ ràng
+// thay vì để nút "Đăng nhập" xoay mãi.
+function fetchWithTimeout(url, opts, ms) {
+  ms = ms || 30000;
+  var ctrl = (typeof AbortController !== 'undefined') ? new AbortController() : null;
+  var timer = setTimeout(function(){ if (ctrl) ctrl.abort(); }, ms);
+  var o = Object.assign({}, opts || {});
+  if (ctrl) o.signal = ctrl.signal;
+  return fetch(url, o).then(function(r){ clearTimeout(timer); return r; }, function(err){
+    clearTimeout(timer);
+    throw (err && err.name === 'AbortError') ? new Error('máy chủ Apps Script không phản hồi sau ' + Math.round(ms/1000) + ' giây') : err;
+  });
 }
 
 function apiPost(payload) {
-  return fetch(API, { method: 'POST', body: JSON.stringify(payload) }).then(function(r){ return r.json(); });
+  return fetchWithTimeout(API, { method: 'POST', body: JSON.stringify(payload) }).then(function(r){ return r.json(); });
 }
 
 function selectRole(role, btn) {
@@ -990,7 +1003,7 @@ function applyLoggedInUser(u) {
 // (vd. vừa đổi Sale -> Admin trên Sheet nhưng trình duyệt vẫn nhớ "Sale").
 function syncStaffRole() {
   if (!currentUser || currentUser.role !== 'Staff') return Promise.resolve();
-  return loadStaffListFromSheet(null, true).then(function(){
+  return loadStaffListFromSheet(null, false).then(function(){
     var u = currentUser;
     var mail = String(u.email || '').trim().toLowerCase();
     var s = (u.staffId && sheetData.staffList.find(function(x){ return x.id === u.staffId; }))
