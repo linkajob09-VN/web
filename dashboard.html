@@ -995,6 +995,7 @@ function syncStaffRole() {
     var mail = String(u.email || '').trim().toLowerCase();
     var s = (u.staffId && sheetData.staffList.find(function(x){ return x.id === u.staffId; }))
          || (mail && sheetData.staffList.find(function(x){ return String(x.email || '').trim().toLowerCase() === mail; }));
+    if (u.subRole === 'Admin') return; // không bao giờ hạ quyền Admin theo SalesConfig (dòng SalesConfig có thể là hồ sơ Sale dùng chung staff_id)
     if (s && s.hasSubRole && s.subRole && s.subRole !== u.subRole) {
       u.subRole = s.subRole;
       try { localStorage.setItem('linkajob_session', JSON.stringify({ user: u, savedAt: Date.now() })); } catch (e) {}
@@ -1868,9 +1869,14 @@ function stripDiacritics(s) {
 var LEAD_CONVERTED_STATUS = 'Đã chuyển đổi thành khách hàng';
 var SLA_TERMINAL = ['Đã đóng','Tạm đóng','Không phù hợp', LEAD_CONVERTED_STATUS];
 
-// Tải hiện tại của 1 Sale = số lead đang xử lý (chưa đóng/không phù hợp)
+// Tải của 1 Sale = số lead nhận trong THÁNG NÀY mà chưa đóng (lead đã đóng/đã đăng ký thì không tính vào hạn mức)
 function getStaffLeadLoad(staffName) {
-  return MOCK.consultations.filter(function(c){ return c.staff === staffName && SLA_TERMINAL.indexOf(c.status) === -1; }).length;
+  var now = new Date();
+  return MOCK.consultations.filter(function(c){
+    if (c.staff !== staffName || leadIsClosed(c)) return false;
+    var d = c.createdAt ? parseLeadCreated(c.createdAt) : null;
+    return !d || (d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth());
+  }).length;
 }
 
 // Tìm Sale đang Active, chưa đầy tải, có tải thấp nhất (mục 4 SOP)
@@ -1902,7 +1908,7 @@ function getLeadSlaInfo(c) {
 
   var days = Math.floor((now - anchor) / 86400000);
   var beforeTbl = ['Ngày 0: Nhắn Zalo hẹn lịch (trong 30 phút)','Ngày 1: Followup lần 1','Ngày 2: Gọi điện','Ngày 3: Chuyển "Đã đóng"'];
-  var afterTbl  = ['Ngày 0: Gửi link profile advisor (trong 2 giờ)','Ngày 1: Followup + hỗ trợ thanh toán','Ngày 2: Followup lần 2, push FOMO','Ngày 3: Gọi xác nhận — không phản hồi → "Tạm đóng"'];
+  var afterTbl  = ['Ngày 0: Gửi link profile advisor (trong 2 giờ)','Ngày 1: Followup + hỗ trợ thanh toán','Ngày 2: Followup lần 2, push FOMO','Ngày 3: Gọi xác nhận — không phản hồi → "Đã đóng" (Kết quả: Không phản hồi)'];
   var idx = Math.max(0, Math.min(days, 3));
   var label = (phase === 'before' ? beforeTbl : afterTbl)[idx];
   var overdue = days > 3;
@@ -2999,7 +3005,7 @@ function renderStaffMemberDetail(staffId, tab, selfView) {
   html += '</div></div>';
 
   // Local tab switcher (giống role-tabbar của Advisor)
-  var leadCount = MOCK.consultations.filter(function(c){ return c.staff === s.name && !c.date && !isHiddenOnDashboard(c) && c.result !== 'Đăng ký'; }).length;
+  var leadCount = MOCK.consultations.filter(function(c){ return c.staff === s.name && !c.date && !isHiddenOnDashboard(c) && !isRegisteredResult(c.result); }).length;
   var TABS = [
     { id:'consult', icon:'📞', label:'Lịch tư vấn' },
     { id:'leads', icon:'⚠', label:'Khách chưa đặt lịch', badge: leadCount },
@@ -3062,7 +3068,7 @@ function renderConsultMasterTable(list, containerId, opts) {
 
     // Cột 5 — kết quả (dropdown, sửa trực tiếp)
     html += '<td><select class="form-select lead-select" onclick="event.stopPropagation()" onchange="handleConsultResultChange(\'' + c.id + '\', this.value)">' +
-      CONSULT_RESULT.map(function(rs){ var label = rs || '— Chưa có —'; return '<option value="' + label + '"' + ((c.result||'')===rs?' selected':'') + '>' + label + '</option>'; }).join('') +
+      resultOptionsHtml(c.result) +
       '</select></td>';
 
     // Cột 6 — NV phụ trách (dropdown, sửa trực tiếp)
@@ -3127,7 +3133,7 @@ function handleConsultResultChange(cid, value) {
   c.result = newResult;
   persistLead(c);
 
-  if (newResult === 'Đăng ký') {
+  if (isRegisteredResult(newResult)) {
     // Nếu khách đã tự đăng ký trên web trùng tên/email → tự động tính doanh thu
     // cho đúng Sale phụ trách lượt tư vấn này (không tạo trùng hồ sơ Advisee).
     var existing = MOCK.advisees.find(function(ae){ return ae.email === c.email || ae.name === c.name; });
@@ -3217,7 +3223,7 @@ function confirmCreateAdviseeFromConsult(cid) {
   
 // ── Tab: Khách chưa đặt lịch — cần liên hệ ──
 function renderStaffLeadsTab(s) {
-  var leads = MOCK.consultations.filter(function(c){ return c.staff === s.name && !c.date && !isHiddenOnDashboard(c) && c.result !== 'Đăng ký'; });
+  var leads = MOCK.consultations.filter(function(c){ return c.staff === s.name && !c.date && !isHiddenOnDashboard(c) && !isRegisteredResult(c.result); });
 
   var html = '<div class="card"><div class="card-header"><div class="card-header-left">⚠ Khách chưa đặt lịch — cần liên hệ (' + leads.length + ')</div>';
   html += '<span style="font-size:12px;color:var(--muted)">Khách chỉ để lại thông tin, chưa tự chốt được giờ meeting</span></div>';
@@ -3259,7 +3265,7 @@ function updateLeadStatusInline(cid, newStatus) {
   var c = MOCK.consultations.find(function(x){ return x.id === cid; });
   if (!c) return;
   c.status = newStatus;
-  toast('Đã cập nhật status cho ' + c.name, 'success');
+  toast(newStatus === 'Đã đóng' && !c.result ? 'Đã đóng lead. Nhớ chọn lý do ở cột Kết quả nhé' : 'Đã cập nhật status cho ' + c.name, newStatus === 'Đã đóng' && !c.result ? 'info' : 'success');
   persistLead(c);
   // re-render đúng tab đang xem (leads) để badge/SLA cập nhật lại
   if (_staffDetailId) document.getElementById('main-content').innerHTML = renderStaffMemberDetail(_staffDetailId, 'leads', _staffDetailSelfView);
@@ -3288,7 +3294,10 @@ function updateLeadNoteInline(cid, field, value) {
   persistLead(c);
 }
 
-const CONSULT_STATUS = ['Chưa liên hệ','Đang liên hệ','Đã chốt lịch','Đã tư vấn xong','Đã đóng','Tạm đóng','Không phù hợp'];
+// TRẠNG THÁI = Sale đang ở bước nào với khách (theo thứ tự quy trình).
+// Giá trị cũ 'Tạm đóng' / 'Không phù hợp' không còn trong danh sách chọn (lý do nằm ở cột Kết quả),
+// nhưng dữ liệu cũ vẫn hiển thị đúng nhờ extraStatusOption() và vẫn tính là đã đóng (SLA_TERMINAL).
+const CONSULT_STATUS = ['Chưa liên hệ','Đang liên hệ','Đã chốt lịch','Đã tư vấn xong','Đang follow-up','Đã đóng'];
 // Trạng thái ngoài danh sách chọn tay (vd 'Đã chuyển đổi thành khách hàng') vẫn phải hiển thị đúng
 function extraStatusOption(cur) {
   var v = String(cur || '').trim();
@@ -3297,7 +3306,23 @@ function extraStatusOption(cur) {
 
 // 'Đã đóng' = quá Ngày 3 mà khách chưa chốt được lịch (theo SOP mục 3.2)
 // 'Tạm đóng' = quá Ngày 3 sau meeting mà khách không phản hồi thanh toán
-const CONSULT_RESULT = ['','Cân nhắc thêm','Không phản hồi','Từ chối','Đăng ký'];
+// KẾT QUẢ = khách đăng ký gì, hoặc vì sao chưa đăng ký.
+// Muốn thêm/sửa lựa chọn, chỉ cần sửa 2 mảng dưới đây.
+const RESULT_REGISTERED = ['Đăng ký - Cố vấn 1-1','Đăng ký - Khoá học'];
+const RESULT_NOT_REGISTERED = ['Giá cao / ngoài ngân sách','Cần thêm thời gian cân nhắc','Chưa phù hợp nhu cầu','Chọn đơn vị khác','Không phản hồi','Từ chối khác'];
+const CONSULT_RESULT = [''].concat(RESULT_REGISTERED, RESULT_NOT_REGISTERED);
+// Mọi kết quả bắt đầu bằng 'Đăng ký' (kể cả giá trị cũ 'Đăng ký') đều là đã đăng ký
+function isRegisteredResult(r) { return String(r == null ? '' : r).trim().indexOf('Đăng ký') === 0; }
+// Dropdown Kết quả có nhóm; giá trị cũ (vd 'Cân nhắc thêm', 'Từ chối') vẫn hiện đúng, chỉ không chọn lại được
+function resultOptionsHtml(cur) {
+  cur = String(cur == null ? '' : cur).trim();
+  var known = CONSULT_RESULT.indexOf(cur) > -1;
+  function opt(v) { return '<option value="' + escHtml(v) + '"' + (v === cur ? ' selected' : '') + '>' + escHtml(v) + '</option>'; }
+  return '<option value=""' + (cur === '' ? ' selected' : '') + '>— Chưa có —</option>' +
+    '<optgroup label="Đã đăng ký">' + RESULT_REGISTERED.map(opt).join('') + '</optgroup>' +
+    '<optgroup label="Chưa đăng ký (lý do)">' + RESULT_NOT_REGISTERED.map(opt).join('') + '</optgroup>' +
+    (cur && !known ? '<optgroup label="Giá trị cũ"><option value="' + escHtml(cur) + '" selected disabled>' + escHtml(cur) + '</option></optgroup>' : '');
+}
 
 // Tư vấn dịch vụ — đúng field "quan tâm dịch vụ" khách chọn ở widget đăng ký tư vấn,
 // staff có thể sửa lại trong lúc tư vấn nếu nhu cầu khách thay đổi.
@@ -3381,7 +3406,7 @@ function renderConsultationDetail(cid) {
   html += '<div class="card" style="margin-bottom:16px"><div class="card-header"><div class="card-header-left">Tiến trình tư vấn (nội bộ)</div></div>';
   html += '<div class="form-grid">';
   html += '<div><div class="form-label">Status tư vấn</div><select class="form-select" id="cv-status">' + CONSULT_STATUS.map(function(st){ return '<option' + (st===c.status?' selected':'') + '>' + st + '</option>'; }).join('') + extraStatusOption(c.status) + '</select></div>';
-  html += '<div><div class="form-label">Kết quả</div><select class="form-select" id="cv-result">' + CONSULT_RESULT.map(function(r){ return '<option' + (r===c.result?' selected':'') + '>' + (r||'— Chưa có —') + '</option>'; }).join('') + '</select></div>';
+  html += '<div><div class="form-label">Kết quả</div><select class="form-select" id="cv-result">' + resultOptionsHtml(c.result) + '</select></div>';
   html += '<div class="full"><div class="form-label">Next step (kèm deadline)</div><div style="display:grid;grid-template-columns:2fr 1fr;gap:10px"><input class="form-input" id="cv-nextstep" value="' + (c.nextStep||'') + '" placeholder="Việc cần làm tiếp theo..."><input class="form-input" id="cv-deadline" type="date" value="' + (c.nextStepDeadline||'') + '"></div></div>';
   html += '<div class="full"><div class="form-label">Học vấn</div><input class="form-input" id="cv-education" value="' + (p.education||'') + '"></div>';
   html += '<div class="full"><div class="form-label">Kinh nghiệm</div><input class="form-input" id="cv-experience" value="' + (p.experience||'') + '"></div>';
@@ -3820,7 +3845,7 @@ function findMatchingAdvisee(lead){
 
 function renderStaffCareTab(s) {
   // Lead đã "Đăng ký" của đúng staff này — tách 2 nhóm: đã khớp advisee thật / chưa có booking
-  var registeredLeads = MOCK.consultations.filter(function(c){ return c.staff === s.name && c.result === 'Đăng ký'; });
+  var registeredLeads = MOCK.consultations.filter(function(c){ return c.staff === s.name && isRegisteredResult(c.result); });
   var pendingBookingLeads = [];
   registeredLeads.forEach(function(lead){
     var match = findMatchingAdvisee(lead);
@@ -4347,7 +4372,7 @@ function reportAggregate(leads, bookings, range) {
     var d = parseSheetDate(r.created_at);
     if (!d || d < range.start || d >= range.end) return;
     agg.totalLeads++;
-    if (String(r.result||'').trim() === 'Đăng ký' || String(r.status||'').trim() === LEAD_CONVERTED_STATUS) agg.converted++;
+    if (isRegisteredResult(r.result) || String(r.status||'').trim() === LEAD_CONVERTED_STATUS) agg.converted++;
     var ch = r.source_channel || r.source || 'Không rõ';
     agg.byChannel[ch] = (agg.byChannel[ch]||0) + 1;
     var rg = r.region || 'Không rõ';
@@ -7406,7 +7431,7 @@ function leadAgeDays(c) {
   return a ? Math.max(0, Math.floor((new Date() - a) / 86400000)) : 0;
 }
 
-function leadIsClosed(c) { return SLA_TERMINAL.indexOf(c.status) > -1 || String(c.result || '') === 'Đăng ký'; }
+function leadIsClosed(c) { return SLA_TERMINAL.indexOf(c.status) > -1 || isRegisteredResult(c.result); }
 function leadIsOverdue(c) { var s = getLeadSlaInfo(c); return !!(s && s.overdue); }
 function leadNeedsAction(c) {
   if (leadIsClosed(c)) return false;
@@ -7469,7 +7494,7 @@ function shortSlaLabel(label) {
   return String(label || '').replace(/^⚠ Quá hạn — /, '').replace(/\s*\([^)]*\)/g, '').replace(/^(Ngày \d): /, '$1 · ');
 }
 function leadSlaBadgeHtml(c) {
-  if (String(c.result || '') === 'Đăng ký') return '';
+  if (isRegisteredResult(c.result)) return '';
   var s = getLeadSlaInfo(c);
   if (!s) return '';
   var text = s.overdue ? '⚠ Quá hạn ' + Math.max(1, (s.days || 0) - 3) + ' ngày' : shortSlaLabel(s.label);
@@ -7545,7 +7570,7 @@ function leadRowHtml(obj, saleStaff) {
   h += '<td style="font-size:12.5px">' + escHtml(obj.consultAbout || '—') + leadQuestionHtml(obj) + '</td>';
 
   h += '<td><select class="form-select lead-select" onclick="event.stopPropagation()" onchange="handleConsultResultChange(\'' + escHtml(obj.id) + '\', this.value)">' +
-    CONSULT_RESULT.map(function(rs){ var label = rs || '— Chưa có —'; return '<option value="' + label + '"' + ((obj.result || '') === rs ? ' selected' : '') + '>' + label + '</option>'; }).join('') +
+    resultOptionsHtml(obj.result) +
     '</select></td>';
 
   h += '<td><select class="form-select lead-select" onclick="event.stopPropagation()" onchange="assignRegToStaff(\'' + escHtml(obj.id) + '\', this.value)">' +
@@ -8053,8 +8078,8 @@ function perfRows(range) {
     var inR = mine.filter(function(l){ return inRange(l.created_at, range); });
     var booked = inR.filter(function(l){ return !!l.date; }).length;
     var consulted = inR.filter(function(l){ return l.status === 'Đã tư vấn xong' || !!l.result; }).length;
-    var converted = inR.filter(function(l){ return String(l.result || '').trim() === 'Đăng ký' || String(l.status || '').trim() === LEAD_CONVERTED_STATUS; }).length;
-    var openNow = mine.filter(function(l){ return SLA_TERMINAL.indexOf(l.status) === -1 && String(l.result || '') !== 'Đăng ký'; });
+    var converted = inR.filter(function(l){ return isRegisteredResult(l.result) || String(l.status || '').trim() === LEAD_CONVERTED_STATUS; }).length;
+    var openNow = mine.filter(function(l){ return SLA_TERMINAL.indexOf(l.status) === -1 && !isRegisteredResult(l.result); });
     var overdueNow = openNow.filter(function(l){
       var s2 = getLeadSlaInfo({ status: l.status, date: l.date ? String(l.date).slice(0, 10) : '', time: fmtHHMM(l.time), log: [], createdAt: l.created_at });
       return !!(s2 && s2.overdue);
