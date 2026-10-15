@@ -691,6 +691,8 @@ function doLogout() {
   document.getElementById('dashboard-page').style.display = 'none';
   document.getElementById('login-page').style.display = 'flex';
   closeUserMenu();
+  _route = null; _baseRoute = null; _modalPushed = false;
+  try { history.replaceState(null, '', location.pathname + location.search); } catch (e) {}
 }
 
 function toggleUserMenu() {
@@ -937,6 +939,9 @@ function loadLegacyTab(tab) {
 
 // Entry point sau khi login
 function loadDashboard(role, legacyTab) {
+  if (legacyTab && (role === 'Advisor' || role === 'Advisee') && (window._roleTabIds || []).indexOf(legacyTab) > -1) {
+    switchRoleTab(legacyTab); return;
+  }
   if (legacyTab) {
     if (role === 'Staff') { renderStaff(legacyTab); return; }
     loadLegacyTab(legacyTab); return;
@@ -1007,11 +1012,9 @@ function buildTabBar(role) {
   });
   tabbar.innerHTML = html;
 
-  // Mở đúng tab đang xem lần trước (nếu có và còn hợp lệ với role hiện tại), thay vì luôn về tab đầu tiên
-  var savedTab = null;
-  try { savedTab = localStorage.getItem('linkajob_last_tab'); } catch (e) {}
-  var validSavedTab = savedTab && tabs.some(function(t){ return t.id === savedTab; });
-  if (tabs.length) switchRoleTab(validSavedTab ? savedTab : tabs[0].id);
+  // Router đọc URL (#tab=...&ae=...&s=...) để mở đúng trang/buổi; nếu URL trống thì dùng tab lần trước
+  window._roleTabIds = tabs.map(function(t){ return t.id; });
+  if (tabs.length) applyRoute(true);
 }
 
 var _activeRoleTab = null;
@@ -1022,11 +1025,11 @@ function switchRoleTab(tabId) {
   if (el) el.classList.add('active');
   _activeRoleTab = tabId;
   try { localStorage.setItem('linkajob_last_tab', tabId); } catch (e) {}
+  commitRoute({ tab: tabId });
 
   // Render content (reuse loadLegacyTab flow)
   var role = currentUser ? currentUser.role : '';
-  if (role === 'Advisor') renderAdvisor(tabId);
-  else renderAdvisee(tabId);
+  return Promise.resolve(role === 'Advisor' ? renderAdvisor(tabId) : renderAdvisee(tabId));
 }
 
 // Giữ lại để không lỗi switchTab (legacy)
@@ -1226,8 +1229,8 @@ function renderAdvisor(tab) {
   c.innerHTML = skeletonRows(3);
   // Tab "Khoá học tôi dạy" là sản phẩm riêng (module Khoá học), tách khỏi
   // dữ liệu booking 1-1 — không cần loadAdvisorRealDataAsync.
-  if (tab === 'my-courses') { loadInstructorCoursesAsync(c); return; }
-  loadAdvisorRealDataAsync().then(function(){
+  if (tab === 'my-courses') { loadInstructorCoursesAsync(c); return Promise.resolve(); }
+  return loadAdvisorRealDataAsync().then(function(){
     if (tab === 'overview') c.innerHTML = renderAdvisorOverview();
     else if (tab === 'schedule') c.innerHTML = renderSchedulePicker();
     else c.innerHTML = renderAdvisorOverview();
@@ -1240,8 +1243,8 @@ function renderAdvisee(tab) {
   c.innerHTML = skeletonRows(3);
   // Tab "Khoá học" là sản phẩm riêng (học viên có thể chưa từng đặt lịch
   // advisor nào) — không bị chặn bởi gói booking 1-1 hết hạn.
-  if (tab === 'courses') { loadMyCoursesAsync(c); return; }
-  loadAdviseeRealDataAsync().then(function(){
+  if (tab === 'courses') { loadMyCoursesAsync(c); return Promise.resolve(); }
+  return loadAdviseeRealDataAsync().then(function(){
     var myAe = MOCK.advisees.filter(function(ae){ return ae.email === currentUser.email; });
     var activeAe = myAe.find(function(ae){ return !isAdviseeExpired(ae); });
     if (myAe.length && !activeAe) {
@@ -4545,6 +4548,7 @@ function openAdviseeSessionModal(sessionNo) {
   if (!ae) return;
   var s = ae.sessions.find(function(x){ return x.no === sessionNo; });
   if (!s) return;
+  commitRoute({ tab: 'my-bookings', s: sessionNo });
   var pd = safeParseYMD(s.date);
   var dateLabel = pd.valid ? (pd.dow + ' ' + pd.dd + '/' + pd.mm + '/' + pd.dateObj.getFullYear() + ' · ' + s.timeStart + (s.timeEnd ? '–' + s.timeEnd : '')) : 'Chưa xếp lịch';
   document.getElementById('modal-title').textContent = 'Buổi ' + sessionNo;
@@ -5018,6 +5022,8 @@ function openAdvisorNotesEdit(aeId, sessionNo) {
 
 // ── Navigate to advisee detail page ──
 function navToAdviseeDetail(aeId) {
+  _activeRoleTab = 'overview';
+  commitRoute({ tab: 'overview', ae: aeId });
   // Mark Tổng quan tab active (we're still in that context)
   document.querySelectorAll('.role-tab').forEach(function(el){ el.classList.remove('active'); });
   var el = document.getElementById('rt-overview');
@@ -5099,6 +5105,7 @@ function openSessionDetailModal(aeId, sessionNo) {
   if (!ae) return;
   var s = ae.sessions.find(function(x){ return x.no === sessionNo; });
   if (!s) return;
+  commitRoute({ tab: 'overview', ae: aeId, s: sessionNo });
 
   var pd = safeParseYMD(s.date);
   var dateLabel = pd.valid ? (pd.dow + ' ' + pd.dd + '/' + pd.mm + '/' + pd.dateObj.getFullYear() + ' · ' + s.timeStart + (s.timeEnd ? '–' + s.timeEnd : '')) : 'Chưa xếp lịch';
@@ -5411,7 +5418,8 @@ function showDetail(b) {
   document.getElementById('modal-actions').innerHTML = '<button class="login-btn" onclick="closeModal()" style="width:auto;padding:10px 24px">Đóng</button>';
   document.getElementById('modal-overlay').classList.add('open');
 }
-function closeModal() {
+function closeModal() { hideModal(); scheduleRouteClear(); }
+function hideModal() {
   document.getElementById('modal-overlay').classList.remove('open');
   var modalBox = document.querySelector('.modal');
   if (modalBox) modalBox.style.maxWidth = '';
@@ -5477,6 +5485,137 @@ function pad(n) { return String(n).padStart(2,'0'); }
 function v(id) { const el = document.getElementById(id); return el ? el.value.trim() : ''; }
 function esc(obj) { return JSON.stringify(obj).replace(/"/g, '&quot;'); }
 function mkInitials(name) { return name.split(' ').filter(Boolean).map(function(w){ return w[0]; }).join('').slice(0,2).toUpperCase(); }
+
+
+// ════════════════════════════════════════════════════════════
+//  ROUTER (hash URL) cho Advisor/Advisee
+//  #tab=overview                    Tổng quan
+//  #tab=overview&ae=<id>            Trang chi tiết 1 advisee (Advisor)
+//  #tab=overview&ae=<id>&s=2        Modal buổi 2 của advisee đó (Advisor)
+//  #tab=my-bookings&s=2             Modal buổi 2 (Advisee)
+//  Mở modal = pushState (nút Back đóng modal). Staff không dùng router.
+// ════════════════════════════════════════════════════════════
+var _route = null, _baseRoute = null, _modalPushed = false, _routeLock = 0, _routeSeq = 0, _clearTimer = null;
+
+function isRoutedRole() { return !!currentUser && (currentUser.role === 'Advisor' || currentUser.role === 'Advisee'); }
+function withRouteLock(fn) { _routeLock++; try { fn(); } finally { _routeLock--; } }
+
+function buildHash(r) {
+  var p = new URLSearchParams();
+  if (r && r.tab) p.set('tab', r.tab);
+  if (r && r.ae) p.set('ae', r.ae);
+  if (r && r.s) p.set('s', r.s);
+  return '#' + p.toString();
+}
+function parseHash() {
+  var p = new URLSearchParams(location.hash.replace(/^#\/?/, ''));
+  return { tab: p.get('tab') || '', ae: p.get('ae') || '', s: p.get('s') || '' };
+}
+
+// Chỉ giữ lại phần hợp lệ với vai trò đang đăng nhập (link của người khác/cũ không làm vỡ trang)
+function normalizeRoute(r) {
+  var ids = window._roleTabIds || [];
+  var tab = ids.indexOf(r.tab) > -1 ? r.tab : '';
+  if (!tab) {
+    var saved = null;
+    try { saved = localStorage.getItem('linkajob_last_tab'); } catch (e) {}
+    tab = (saved && ids.indexOf(saved) > -1) ? saved : ids[0];
+  }
+  var out = { tab: tab, ae: '', s: '' };
+  var validS = /^\d+$/.test(r.s);
+  if (currentUser.role === 'Advisor') {
+    if (tab === 'overview' && r.ae) { out.ae = r.ae; if (validS) out.s = r.s; }
+  } else if (tab === 'my-bookings' && validS) {
+    out.s = r.s;
+  }
+  return out;
+}
+
+// Ghi route mới lên URL (gọi từ các hàm điều hướng khi NGƯỜI DÙNG thao tác)
+function commitRoute(r) {
+  if (!isRoutedRole() || _routeLock) return;
+  clearTimeout(_clearTimer);
+  r = { tab: r.tab || '', ae: r.ae || '', s: r.s ? String(r.s) : '' };
+  var h = buildHash(r), prev = _route;
+  if (location.hash === h) { _route = r; return; }
+
+  if (prev && prev.s && !r.s) {            // rời khỏi modal
+    var wasPushed = _modalPushed, baseHash = buildHash(_baseRoute);
+    _route = r; _modalPushed = false;
+    if (wasPushed && h === baseHash) history.back();
+    else history.replaceState(null, '', h);
+    return;
+  }
+  if (prev && prev.s && r.s) {             // đổi sang buổi khác khi modal đang mở
+    _route = r; history.replaceState(null, '', h); return;
+  }
+  if (r.s) {                               // mở modal
+    _baseRoute = prev ? { tab: prev.tab, ae: prev.ae, s: '' } : { tab: r.tab, ae: '', s: '' };
+    _modalPushed = true;
+  }
+  _route = r;
+  history.pushState(null, '', h);
+}
+
+// Đóng modal bằng ×/Đóng/click nền thì URL quay về trang nền
+function scheduleRouteClear() {
+  if (!isRoutedRole() || _routeLock || !_route || !_route.s) return;
+  clearTimeout(_clearTimer);
+  // setTimeout 0: nếu ngay sau đó code mở modal/trang khác thì commitRoute sẽ huỷ bước này
+  _clearTimer = setTimeout(function(){
+    if (_route && _route.s) commitRoute(_baseRoute || { tab: _route.tab, ae: _route.ae });
+  }, 0);
+}
+
+// Đọc URL và dựng lại đúng màn hình (mở link, F5, nút Back/Forward)
+function applyRoute(initial) {
+  if (!isRoutedRole()) return;
+  var r = normalizeRoute(parseHash());
+  var had = !!_route && !initial;
+  if (had && r.tab === _route.tab && r.ae === _route.ae && r.s === _route.s) return;
+  var onlyModalChanged = had && r.tab === _route.tab && r.ae === _route.ae;
+
+  var h = buildHash(r);
+  if (location.hash !== h) history.replaceState(null, '', h);
+  // Điều hướng bằng Back/Forward tới một URL có buổi: entry ngay trước đó chính là trang nền, nên khi đóng modal có thể quay lại bằng history.back()
+  _route = r; _modalPushed = !initial && !!r.s; _baseRoute = { tab: r.tab, ae: r.ae, s: '' };
+  clearTimeout(_clearTimer);
+  hideModal();
+  var seq = ++_routeSeq;
+
+  if (onlyModalChanged) { if (r.s) openRouteSession(r); return; }
+  var p;
+  withRouteLock(function(){ p = renderRouteBase(r, seq); });
+  p.then(function(){ if (seq === _routeSeq && r.s) openRouteSession(r); });
+}
+
+function renderRouteBase(r, seq) {
+  if (currentUser.role === 'Advisor' && r.ae) {
+    document.querySelectorAll('.role-tab').forEach(function(el){ el.classList.remove('active'); });
+    var tabEl = document.getElementById('rt-' + r.tab);
+    if (tabEl) tabEl.classList.add('active');
+    _activeRoleTab = r.tab;
+    var c = document.getElementById('main-content');
+    c.className = 'content narrow';
+    c.innerHTML = skeletonRows(3);
+    return loadAdvisorRealDataAsync().then(function(){
+      if (seq !== _routeSeq) return;
+      withRouteLock(function(){ navToAdviseeDetail(r.ae); });
+    });
+  }
+  return Promise.resolve(switchRoleTab(r.tab));
+}
+
+function openRouteSession(r) {
+  var no = Number(r.s);
+  withRouteLock(function(){
+    if (currentUser.role === 'Advisor') { openSessionDetailModal(r.ae, no); return; }
+    var activeAe = MOCK.advisees.find(function(ae){ return ae.email === currentUser.email && !isAdviseeExpired(ae); });
+    if (activeAe) openAdviseeSessionModal(no);
+  });
+}
+
+window.addEventListener('popstate', function(){ applyRoute(false); });
 
 document.getElementById('login-password').addEventListener('keydown', function(e){ if (e.key === 'Enter') doLogin(); });
 
