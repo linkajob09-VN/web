@@ -176,8 +176,8 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
 /* Month Calendar (Amelia-style) */
 .cal-nav { display: flex; align-items: center; justify-content: space-between; padding: 18px 24px 0; }
 .cal-nav-left { display: flex; align-items: center; gap: 12px; }
-.cal-nav button { width: 32px; height: 32px; border-radius: 50%; border: 1.5px solid var(--border); background: var(--white); font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all .15s; }
-.cal-nav button:hover { border-color: var(--brand); color: var(--brand); }
+.cal-nav-left button { width: 32px; height: 32px; border-radius: 50%; border: 1.5px solid var(--border); background: var(--white); font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all .15s; }
+.cal-nav-left button:hover { border-color: var(--brand); color: var(--brand); }
 .cal-nav-label { font-size: 16px; font-weight: 700; min-width: 140px; text-align: center; }
 .cal-today-btn { padding: 6px 14px; font-size: 13px; font-weight: 500; border-radius: 100px; border: 1.5px solid var(--border); background: var(--white); cursor: pointer; color: var(--muted); transition: all .15s; }
 .cal-today-btn:hover { border-color: var(--brand); color: var(--brand); }
@@ -356,7 +356,7 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
 .anote-edit-btn { font-size:11px; color:#7C3AED; cursor:pointer; background:none; border:none; padding:2px 6px; font-family:inherit; border-radius:4px; }
 .anote-edit-btn:hover { background:#EDE9FE; }
 
- background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%); background-size: 200% 100%; border-radius: 6px; }
+.skeleton { background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%); background-size: 200% 100%; border-radius: 6px; animation: shimmer 1.4s infinite; }
 @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
 .skel-row { display: flex; gap: 12px; padding: 16px 24px; border-top: 1px solid var(--border); align-items: center; }
 /* ── Google Calendar style event list trong ô ngày ── */
@@ -368,6 +368,33 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
 .cal-event-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
 .cal-event-more { font-size: 11px; color: var(--muted); font-weight: 700; padding: 1px 4px; cursor: pointer; }
 .cal-event-more:hover { color: var(--brand); }
+
+/* ===== Layout mượt hơn cho Advisor/Advisee ===== */
+.content.narrow { max-width: 880px; }
+.role-tabbar { padding: 0 max(20px, calc((100% - 880px) / 2 + 24px)); }
+
+@keyframes calFade { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+.cal-today-btn { white-space: nowrap; }
+.cal-grid { gap: 6px; border: none; overflow: visible; animation: calFade .22s ease; }
+.cal-weekday-hdr { background: none; border: none; padding: 6px 0; }
+.cal-cell { min-height: 76px; border: 1px solid var(--border); border-radius: 12px; padding: 8px 10px; }
+.cal-cell-google { min-height: 108px; }
+.cal-cell:hover { border-color: var(--brand); background: var(--brand-light); }
+.cal-cell.today { background: #FFF5F0; border-color: var(--brand); }
+.cal-cell.other-month { background: transparent; border-color: transparent; }
+.cal-cell.past { opacity: .45; cursor: not-allowed; }
+.cal-cell.past:hover { background: var(--white); border-color: var(--border); }
+.cal-cell.past.other-month:hover { background: transparent; border-color: transparent; }
+
+@media (max-width: 640px) {
+  .role-tabbar { padding: 0 12px; overflow-x: auto; }
+  .role-tab { margin-right: 16px; }
+  .content { padding: 16px 12px; }
+  .cal-grid { margin: 12px 8px 16px; gap: 4px; }
+  .cal-cell { min-height: 56px; padding: 6px; border-radius: 8px; }
+  .cal-cell-google { min-height: 84px; }
+  .cal-badge { font-size: 9.5px; padding: 1px 5px; }
+}
 </style>
 </head>
 <body>
@@ -1460,8 +1487,9 @@ function renderMonthCalendar(opts) {
       const isToday = isSameDate(d, today);
       const counts = opts.countFn(dateStr);
 
-      let cls = 'cal-cell' + (isOther?' other-month':'') + (isToday?' today':'');
-      html += '<div class="' + cls + '" onclick="' + opts.onCellClick + '(\'' + dateStr + '\')">';
+      const isPast = dateStr < ymd(today);
+      let cls = 'cal-cell' + (isOther?' other-month':'') + (isToday?' today':'') + (isPast?' past':'');
+      html += '<div class="' + cls + '"' + (isPast ? '' : ' onclick="' + opts.onCellClick + '(\'' + dateStr + '\')"') + '>';
       html += '<div class="cal-daynum">' + d.getDate() + '</div>';
       html += '<div class="cal-add">+</div>';
       html += '<div class="cal-badges">';
@@ -1477,13 +1505,13 @@ function renderMonthCalendar(opts) {
 function changeCalMonth(dir) {
   calMonthOffset += dir;
   if (_calendarContext === 'meetings') { loadMeetingCalendarAsync(); return; }
-  if (currentUser.role === 'Advisor') switchRoleTab('schedule');
+  if (currentUser.role === 'Advisor') document.getElementById('main-content').innerHTML = renderSchedulePicker();
   else loadMeetingCalendarAsync();
 }
 function goToCalToday() {
   calMonthOffset = 0;
   if (_calendarContext === 'meetings') { loadMeetingCalendarAsync(); return; }
-  if (currentUser.role === 'Advisor') switchRoleTab('schedule');
+  if (currentUser.role === 'Advisor') document.getElementById('main-content').innerHTML = renderSchedulePicker();
   else loadMeetingCalendarAsync();
 }
 
