@@ -3878,13 +3878,9 @@ function renderStaffCareTab(s) {
     html += '<div id="care-list">';
     MOCK.advisees.forEach(function(ae){
       var pct = pctOf(ae.sessionsDone, ae.sessionsTotal);
-      var expiryDate = new Date(ae.expiry + 'T00:00:00');
       var today = new Date(); today.setHours(0,0,0,0);
-      var daysLeft = Math.ceil((expiryDate - today) / 86400000);
-      var expiryTag;
-      if (daysLeft < 0) expiryTag = '<span class="badge" style="background:#FEE2E2;color:#B91C1C">Hết hạn ' + Math.abs(daysLeft) + ' ngày trước</span>';
-      else if (daysLeft <= 7) expiryTag = '<span class="badge" style="background:#FEF3C7;color:#92400E">Còn ' + daysLeft + ' ngày</span>';
-      else expiryTag = '<span style="font-size:12px;color:var(--muted)">Hết hạn ' + ae.expiry + '</span>';
+      var exC = expiryAlert_(ae);
+      var expiryTag = exC.badge + (exC.hint ? '<div style="font-size:11.5px;color:' + (exC.red ? '#B91C1C' : 'var(--muted)') + ';margin-top:4px">' + exC.hint + '</div>' : '');
 
       // ── Notification: lịch meeting vừa đổi giờ ──
       var rescheduleNotices = MOCK.rescheduleRequests.filter(function(r){ return r.aeId === ae.id && r.status === 'confirmed'; });
@@ -6075,17 +6071,19 @@ function openAdvisorSelfEditModal() {
 // ════════════════════════════════════════════════════════════
 function renderAdviseeModule() {
   var html = pageHeader('Advisee', 'Danh sách advisee, tiến độ buổi học và yêu cầu đổi lịch',
-    (currentUser && currentUser.role === 'Admin')
+    (currentUser && (currentUser.role === 'Admin' || (currentUser.role === 'Staff' && currentUser.subRole === 'Admin')))
       ? '<button class="login-btn" style="width:auto;padding:9px 16px;font-size:13px" onclick="openLegacyImport()">⬆ Nhập khách từ web cũ</button>'
       : '');
   var pendingReschedules = MOCK.rescheduleRequests.filter(function(r){ return r.status === 'pending'; });
 
   // KPI
-  html += '<div class="stats-row" style="margin-bottom:20px">';
+  html += '<div class="stats-row cols-4" style="margin-bottom:20px">';
   html += '<div class="stat-cell"><div class="stat-num">' + MOCK.advisees.length + '</div><div class="stat-label">Tổng advisee</div></div>';
   var needFb = MOCK.advisees.filter(function(ae){ return ae.sessions.some(function(s){ return s.status==='feedback'; }); }).length;
   var totalRevenue = MOCK.advisees.reduce(function(s,ae){ return s + ae.paid; }, 0);
   html += '<div class="stat-cell clickable" onclick="navTo(\'aee-reschedule\')"><div class="stat-num" style="' + (pendingReschedules.length?'color:var(--brand)':'') + '">' + pendingReschedules.length + '</div><div class="stat-label">🔔 Yêu cầu đổi lịch</div></div>';
+  var urgentCount = MOCK.advisees.filter(function(ae){ return expiryAlert_(ae).red; }).length;
+  html += '<div class="stat-cell clickable" onclick="toggleAeUrgent()"><div class="stat-num" style="' + (urgentCount ? 'color:#B91C1C' : '') + '">' + urgentCount + '</div><div class="stat-label">⏰ Sắp hết hạn · cần nhắc/upsell' + (_aeUrgentOnly ? ' (đang lọc — bấm để bỏ)' : '') + '</div></div>';
   html += '<div class="stat-cell"><div class="stat-num">' + fmtMoney(totalRevenue) + '</div><div class="stat-label">Tổng doanh thu</div></div>';
   html += '</div>';
 
@@ -6094,8 +6092,15 @@ function renderAdviseeModule() {
     html += '<div class="empty-state"><div class="icon">🙋</div>Chưa có advisee nào</div>';
   } else {
     html += '<div style="padding:0 20px">' + searchBoxHtml('advisee-list-tbody', 'Tìm theo tên, email, advisor...') + '</div>';
-    html += '<table class="bookings-table"><thead><tr><th>ADVISEE</th><th>GÓI · ADVISOR</th><th>TIẾN ĐỘ</th><th>TRẠNG THÁI</th><th></th></tr></thead><tbody id="advisee-list-tbody">';
-    MOCK.advisees.forEach(function(ae) {
+    html += '<table class="bookings-table"><thead><tr><th>ADVISEE</th><th>GÓI · ADVISOR</th><th>TIẾN ĐỘ</th><th>HẠN DÙNG</th><th>TRẠNG THÁI</th><th></th></tr></thead><tbody id="advisee-list-tbody">';
+    var _aeList = MOCK.advisees.slice().sort(function(a, b){
+      var ea = expiryAlert_(a), eb = expiryAlert_(b);
+      if (ea.red !== eb.red) return ea.red ? -1 : 1;
+      return ea.rank - eb.rank;
+    });
+    if (_aeUrgentOnly) _aeList = _aeList.filter(function(a){ return expiryAlert_(a).red; });
+    _aeList.forEach(function(ae) {
+      var exA = expiryAlert_(ae);
       var pct = pctOf(ae.sessionsDone, ae.sessionsTotal);
       var hasFeedback = ae.sessions.some(function(s){ return s.status === 'feedback'; });
       var hasUpcoming = ae.sessions.some(function(s){ return s.status === 'upcoming'; });
@@ -6109,10 +6114,11 @@ function renderAdviseeModule() {
             : '<span style="background:#EDE9FE;color:#6D28D9;font-size:11px;font-weight:700;padding:3px 10px;border-radius:100px">Đang học</span>';
       if (hasReschedule) statusTag += ' <span style="background:var(--brand-light);color:var(--brand);font-size:11px;font-weight:700;padding:3px 10px;border-radius:100px">🔔 Yêu cầu đổi lịch</span>';
       var searchKey = (ae.name + ' ' + ae.email + ' ' + ae.advisor + ' ' + ae.pkg).toLowerCase().replace(/"/g,'');
-      html += '<tr data-search="' + searchKey + '">';
+      html += '<tr data-search="' + searchKey + '"' + (exA.red ? ' style="background:#FEF2F2;box-shadow:inset 3px 0 0 #DC2626"' : '') + '>';
       html += '<td><div style="display:flex;align-items:center;gap:10px">' + avatarCircle(ae.name, 34) + '<div><div style="font-weight:700">' + ae.name + '</div><div style="font-size:12px;color:var(--muted)">' + ae.email + '</div></div></div></td>';
       html += '<td><div style="font-weight:600;font-size:13px">Gói ' + ae.pkg + '</div><div style="font-size:12px;color:var(--muted)">' + ae.advisor + '</div></td>';
       html += '<td><div style="display:flex;align-items:center;gap:8px"><div style="flex:1;height:6px;background:var(--bg);border-radius:100px;overflow:hidden;min-width:60px"><div style="height:100%;width:' + pct + '%;background:var(--green);border-radius:100px"></div></div><span style="font-size:12px;font-weight:700;color:var(--muted);white-space:nowrap">' + ae.sessionsDone + '/' + ae.sessionsTotal + '</span></div></td>';
+      html += '<td>' + exA.badge + (exA.hint ? '<div style="font-size:11.5px;color:' + (exA.red ? '#B91C1C' : 'var(--muted)') + ';margin-top:4px;max-width:210px">' + exA.hint + '</div>' : '') + '</td>';
       html += '<td>' + statusTag + '</td>';
       html += '<td><button class="detail-btn" onclick="navToStaffAdviseeDetail(\'' + ae.id + '\',null)">Xem chi tiết →</button></td>';
       html += '</tr>';
@@ -6121,6 +6127,58 @@ function renderAdviseeModule() {
   }
   html += '</div>';
   return html;
+}
+
+
+// ════════════════════════════════════════════════════════════
+//  QUY TẮC NHẮC HẠN DÙNG GÓI (dùng chung: trang Advisee + tab "Chăm sóc khách hàng")
+//  Muốn đổi ngưỡng: sửa 2 số dưới đây.
+// ════════════════════════════════════════════════════════════
+var EXPIRY_WARN_DAYS = 7;    // còn ≤ 7 ngày là báo ĐỎ
+var EXPIRY_STALE_DAYS = 30;  // hết hạn quá 30 ngày thì thôi báo đỏ (chuyển xám)
+// Trả về { red, daysLeft, remaining, badge, hint, rank }
+//  - Còn buổi chưa dùng + sắp/đã hết hạn  → ĐỎ: "hối khách dùng nốt"
+//  - Đã dùng hết buổi + sắp hết hạn       → ĐỎ: "upsell gói mới"
+//  - Đã dùng hết buổi + đã hết hạn / quá hạn lâu → XÁM (không cần đuổi)
+function expiryAlert_(ae) {
+  var total = Number(ae.sessionsTotal) || 0, done = Number(ae.sessionsDone) || 0;
+  var remaining = Math.max(0, total - done);
+  var out = { red: false, daysLeft: null, remaining: remaining, badge: '', hint: '', rank: 9999 };
+  if (!ae.expiry) return out;
+  var today = new Date(); today.setHours(0,0,0,0);
+  var daysLeft = Math.ceil((new Date(ae.expiry + 'T00:00:00') - today) / 86400000);
+  if (isNaN(daysLeft)) return out;
+  out.daysLeft = daysLeft;
+  var redBadge = function(t){ return '<span class="badge" style="background:#FEE2E2;color:#B91C1C;font-weight:700">' + t + '</span>'; };
+  var greyBadge = function(t){ return '<span class="badge" style="background:#F3F4F6;color:var(--muted)">' + t + '</span>'; };
+  var plain = '<span style="font-size:12px;color:var(--muted)">Hết hạn ' + ae.expiry + '</span>';
+
+  if (daysLeft < 0) {
+    var ago = Math.abs(daysLeft);
+    if (remaining > 0 && ago <= EXPIRY_STALE_DAYS) {
+      out.red = true; out.rank = daysLeft;
+      out.badge = redBadge('Hết hạn ' + ago + ' ngày trước');
+      out.hint = '👉 Còn ' + remaining + ' buổi chưa dùng — hối khách hoặc đề xuất gia hạn';
+    } else {
+      out.badge = greyBadge('Hết hạn ' + ago + ' ngày trước');
+      out.hint = remaining > 0 ? 'Còn ' + remaining + ' buổi chưa dùng' : '';
+    }
+  } else if (daysLeft <= EXPIRY_WARN_DAYS) {
+    out.red = true; out.rank = daysLeft;
+    out.badge = redBadge(daysLeft === 0 ? 'Hết hạn hôm nay' : 'Còn ' + daysLeft + ' ngày');
+    out.hint = remaining > 0
+      ? '👉 Còn ' + remaining + ' buổi chưa dùng — nhắc khách đặt lịch'
+      : '👉 Đã dùng hết buổi — cơ hội upsell gói mới';
+  } else {
+    out.badge = plain;
+  }
+  return out;
+}
+
+var _aeUrgentOnly = false;
+function toggleAeUrgent() {
+  _aeUrgentOnly = !_aeUrgentOnly;
+  document.getElementById('main-content').innerHTML = renderAdviseeModule();
 }
 
 function navToStaffAdviseeDetail(aeId, fromAdvisorId) {
