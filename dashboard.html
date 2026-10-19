@@ -6074,7 +6074,10 @@ function openAdvisorSelfEditModal() {
 //  MODULE 3: ADVISEE
 // ════════════════════════════════════════════════════════════
 function renderAdviseeModule() {
-  var html = pageHeader('Advisee', 'Danh sách advisee, tiến độ buổi học và yêu cầu đổi lịch');
+  var html = pageHeader('Advisee', 'Danh sách advisee, tiến độ buổi học và yêu cầu đổi lịch',
+    (currentUser && currentUser.role === 'Admin')
+      ? '<button class="login-btn" style="width:auto;padding:9px 16px;font-size:13px" onclick="openLegacyImport()">⬆ Nhập khách từ web cũ</button>'
+      : '');
   var pendingReschedules = MOCK.rescheduleRequests.filter(function(r){ return r.status === 'pending'; });
 
   // KPI
@@ -8181,6 +8184,187 @@ function renderSalesPerformancePage(partial) {
   return html;
 }
 
+
+// ════════════════════════════════════════════════════════════
+//  NHẬP KHÁCH TỪ WEB CŨ (Admin) — KHÔNG gửi email cho khách / Advisor / Admin.
+//  Dán trực tiếp các dòng copy từ Google Sheet cũ (cột: Khách | Gói | ngày | Các buổi | giá).
+//  Ô "Khách" nhiều dòng (tên / SĐT / email) được tách tự động.
+// ════════════════════════════════════════════════════════════
+var LEGACY = { parsed: [], checked: false };
+
+// Parse TSV có hỗ trợ ô đặt trong "..." chứa xuống dòng (đúng định dạng Google Sheets khi copy).
+function legacyParseTsv_(text) {
+  var rows = [], row = [], cell = '', inQ = false;
+  for (var i = 0; i < text.length; i++) {
+    var ch = text[i];
+    if (inQ) {
+      if (ch === '"') { if (text[i+1] === '"') { cell += '"'; i++; } else inQ = false; }
+      else cell += ch;
+    } else if (ch === '"' && cell === '') inQ = true;
+    else if (ch === '\t') { row.push(cell); cell = ''; }
+    else if (ch === '\r') { /* bỏ qua */ }
+    else if (ch === '\n') { row.push(cell); rows.push(row); row = []; cell = ''; }
+    else cell += ch;
+  }
+  if (cell !== '' || row.length) { row.push(cell); rows.push(row); }
+  return rows;
+}
+function legacyDate_(s) {
+  s = String(s || '').trim();
+  var m, y, mo, d;
+  if ((m = s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/))) { y = +m[1]; mo = +m[2]; d = +m[3]; }
+  else if ((m = s.match(/^(\d{1,2})\/(\d{1,2})(?:\/(\d{2,4}))?$/))) {
+    mo = +m[1]; d = +m[2];            // định dạng tháng/ngày như trong sheet cũ (9/21)
+    if (m[3]) { y = +m[3]; if (y < 100) y += 2000; }
+    else {
+      var now = new Date(); y = now.getFullYear();
+      if (new Date(y, mo - 1, d) > new Date(now.getTime() + 86400000)) y -= 1; // chưa tới → năm trước
+    }
+  } else return '';
+  if (mo < 1 || mo > 12 || d < 1 || d > 31) return '';
+  return y + '-' + (mo < 10 ? '0' : '') + mo + '-' + (d < 10 ? '0' : '') + d;
+}
+function legacyFindPkg_(name) {
+  var key = String(name || '').trim().toLowerCase();
+  return Object.keys(PACKAGES).filter(function(k){ return k.toLowerCase() === key; })[0] || '';
+}
+function legacyParse_(text) {
+  var out = [];
+  legacyParseTsv_(text).forEach(function(c, idx) {
+    var a = String(c[0] || '').trim();
+    if (!a && !String(c[1] || '').trim()) return;                       // dòng trống
+    if (/^kh[aá]ch$/i.test(a) || /^g[oó]i$/i.test(String(c[1] || '').trim())) return; // dòng tiêu đề
+    var item = { line: idx + 1, errors: [], warns: [] };
+    var parts = a.split(/\n/).map(function(x){ return x.trim(); }).filter(Boolean);
+    var nameParts = [];
+    parts.forEach(function(p) {
+      if (/\S+@\S+\.\S+/.test(p)) item.email = p;
+      else if (/^\+?[\d\s.\-()]{8,}$/.test(p)) item.phone = p.replace(/[\s.\-()]/g, '');
+      else nameParts.push(p);
+    });
+    item.name = nameParts.join(' ');
+    var pkgRaw = String(c[1] || '').trim();
+    item.pkgRaw = pkgRaw;
+    item.dateRaw = String(c[2] || '').trim();
+    item.sessRaw = String(c[3] || '').trim();
+    item.priceRaw = String(c[4] || '').trim();
+
+    if (/kho[aá]\s*h[oọ]c/i.test(pkgRaw)) { item.skip = 'Khoá học — không phải gói meeting'; out.push(item); return; }
+    if (!item.email && !item.phone) { item.skip = 'Không có email/SĐT'; out.push(item); return; }
+
+    item.package_name = legacyFindPkg_(pkgRaw);
+    if (!item.package_name) item.errors.push('Gói "' + pkgRaw + '" không có trong Sản phẩm');
+    item.purchased_at = legacyDate_(item.dateRaw);
+    if (!item.purchased_at) item.errors.push('Ngày "' + item.dateRaw + '" không hiểu được');
+    var sm = item.sessRaw.match(/^(\d+)\s*\/\s*(\d+)$/);
+    if (!sm) { item.errors.push('Cột buổi "' + item.sessRaw + '" phải dạng 1/4'); }
+    else {
+      item.sessions_used = +sm[1];
+      var pk = PACKAGES[item.package_name];
+      if (pk) {
+        if (+sm[2] !== Number(pk.sessions)) item.warns.push('Sheet ghi ' + item.sessRaw + ' nhưng gói ' + item.package_name + ' có ' + pk.sessions + ' buổi → dùng ' + item.sessions_used + '/' + pk.sessions);
+        if (item.sessions_used > Number(pk.sessions)) item.errors.push('Đã dùng nhiều hơn tổng buổi');
+      }
+    }
+    var digits = item.priceRaw.replace(/[^\d]/g, '');
+    if (digits) item.price = +digits;
+    if (!item.name) item.errors.push('Thiếu tên');
+    out.push(item);
+  });
+  return out;
+}
+
+function openLegacyImport() {
+  LEGACY.parsed = []; LEGACY.checked = false;
+  document.getElementById('modal-title').textContent = 'Nhập khách hàng từ web cũ';
+  var box = document.querySelector('.modal'); if (box) box.style.maxWidth = '900px';
+  var mb = document.getElementById('modal-body'); mb.style.maxHeight = '68vh'; mb.style.overflowY = 'auto';
+  mb.innerHTML =
+    '<div style="background:var(--green-bg);color:var(--green);padding:10px 14px;border-radius:10px;font-size:13px;font-weight:600;margin-bottom:12px">✉️ Chức năng này KHÔNG gửi email cho khách, Advisor hay Admin. Chỉ ghi dữ liệu vào Bookings / Sessions.</div>' +
+    '<div style="font-size:13px;color:var(--muted);margin-bottom:8px">Trong Google Sheet cũ, bôi đen các dòng khách (cả 5 cột Khách · Gói · ngày · Các buổi · giá) → Copy → dán vào ô dưới. Ngày dạng <b>tháng/ngày</b> (9/21). Các dòng "Khoá học" và dòng không có email/SĐT sẽ tự bỏ qua.</div>' +
+    '<textarea id="legacy-text" class="form-input" rows="7" style="width:100%;font-family:monospace;font-size:12px" placeholder="Dán dữ liệu ở đây..." oninput="LEGACY.checked=false;document.getElementById(\'legacy-preview\').innerHTML=\'\';legacyUpdateButtons()"></textarea>' +
+    '<label style="display:flex;gap:8px;align-items:center;font-size:13px;margin:10px 0"><input type="checkbox" id="legacy-accounts"> Tạo luôn tài khoản đăng nhập cho khách (mật khẩu tạm, vẫn không gửi email — khách sẽ không biết mật khẩu cho tới khi bạn gửi)</label>' +
+    '<div id="legacy-preview"></div>';
+  document.getElementById('modal-actions').innerHTML =
+    '<button class="detail-btn" onclick="closeModal()">Đóng</button> ' +
+    '<button class="login-btn" id="legacy-check-btn" style="width:auto;padding:10px 20px" onclick="legacyCheck()">1. Kiểm tra</button> ' +
+    '<button class="login-btn" id="legacy-go-btn" style="width:auto;padding:10px 20px;background:var(--green)" onclick="legacyImport()" disabled>2. Nhập vào hệ thống</button>';
+  document.getElementById('modal-overlay').classList.add('open');
+}
+function legacyUpdateButtons() {
+  var go = document.getElementById('legacy-go-btn');
+  if (go) go.disabled = !LEGACY.checked;
+}
+function legacyPayload_(dry) {
+  return {
+    action: 'importLegacyCustomers', imported_by: currentUser.email, dry_run: dry,
+    create_accounts: !!(document.getElementById('legacy-accounts') || {}).checked,
+    customers: LEGACY.parsed.filter(function(x){ return !x.skip && !x.errors.length; }).map(function(x){
+      return { name: x.name, phone: x.phone || '', email: x.email || '', package_name: x.package_name,
+               purchased_at: x.purchased_at, sessions_used: x.sessions_used, price: x.price };
+    }),
+  };
+}
+function legacyCheck() {
+  LEGACY.parsed = legacyParse_(document.getElementById('legacy-text').value);
+  var pv = document.getElementById('legacy-preview');
+  if (!LEGACY.parsed.length) { pv.innerHTML = '<div style="color:var(--muted)">Chưa có dữ liệu để kiểm tra.</div>'; return; }
+  var payload = legacyPayload_(true);
+  if (!payload.customers.length) { LEGACY.checked = false; legacyRenderPreview_(null); legacyUpdateButtons(); return; }
+  var btn = document.getElementById('legacy-check-btn'); btn.disabled = true; btn.textContent = 'Đang kiểm tra...';
+  apiPost(payload).then(function(res){
+    btn.disabled = false; btn.textContent = '1. Kiểm tra';
+    if (!res.success) { toast(res.error || 'Lỗi kiểm tra', 'error'); LEGACY.checked = false; legacyUpdateButtons(); return; }
+    legacyRenderPreview_(res);
+    LEGACY.checked = res.summary.would_add > 0;
+    legacyUpdateButtons();
+    var go = document.getElementById('legacy-go-btn');
+    if (go) go.textContent = '2. Nhập ' + res.summary.would_add + ' khách vào hệ thống';
+  }).catch(function(e){
+    btn.disabled = false; btn.textContent = '1. Kiểm tra'; toast('Lỗi: ' + e.message, 'error');
+  });
+}
+function legacyRenderPreview_(res) {
+  var byIndex = {};
+  if (res) {
+    var sendable = LEGACY.parsed.filter(function(x){ return !x.skip && !x.errors.length; });
+    res.results.forEach(function(r){ if (sendable[r.index]) byIndex[LEGACY.parsed.indexOf(sendable[r.index])] = r; });
+  }
+  var html = '';
+  if (res && res.warnings && res.warnings.length) html += '<div style="background:#FEF3C7;color:#92400E;padding:8px 12px;border-radius:8px;font-size:12px;margin-bottom:8px">' + res.warnings.map(escHtml).join('<br>') + '</div>';
+  html += '<table class="bookings-table"><thead><tr><th>#</th><th>KHÁCH</th><th>GÓI</th><th>NGÀY MUA</th><th>BUỔI</th><th>GIÁ</th><th>KẾT QUẢ</th></tr></thead><tbody>';
+  LEGACY.parsed.forEach(function(x, i) {
+    var r = byIndex[i], tag = '', color = '';
+    if (x.skip) { tag = '⏭ Bỏ qua: ' + escHtml(x.skip); color = 'var(--muted)'; }
+    else if (x.errors.length) { tag = '❌ ' + x.errors.map(escHtml).join('; '); color = '#DC2626'; }
+    else if (r && r.status === 'would_add') { tag = '✅ Sẽ nhập'; color = 'var(--green)'; }
+    else if (r && r.status === 'skipped') { tag = '⏭ ' + escHtml(r.reason); color = 'var(--muted)'; }
+    else if (r && r.status === 'error') { tag = '❌ ' + escHtml(r.reason); color = '#DC2626'; }
+    if (x.warns.length) tag += '<div style="color:#92400E;font-size:11px">⚠ ' + x.warns.map(escHtml).join('; ') + '</div>';
+    html += '<tr><td>' + x.line + '</td><td><b>' + escHtml(x.name) + '</b><div style="font-size:11px;color:var(--muted)">' + escHtml(x.email || '') + ' ' + escHtml(x.phone || '') + '</div></td>' +
+      '<td>' + escHtml(x.package_name || x.pkgRaw) + '</td><td>' + escHtml(x.purchased_at || x.dateRaw) + '</td><td>' + escHtml(x.sessRaw) + '</td>' +
+      '<td>' + (x.price ? fmtMoney(x.price) : '') + '</td><td style="font-size:12px;color:' + color + '">' + tag + '</td></tr>';
+  });
+  html += '</tbody></table>';
+  if (res) html += '<div style="margin-top:8px;font-size:13px"><b>' + res.summary.would_add + '</b> khách sẽ được nhập · ' + res.summary.skipped + ' đã có sẵn · ' + res.summary.failed + ' lỗi. Chưa có gì được ghi vào Sheet.</div>';
+  document.getElementById('legacy-preview').innerHTML = html;
+}
+function legacyImport() {
+  if (!LEGACY.checked) return;
+  var payload = legacyPayload_(false);
+  if (!confirm('Nhập ' + payload.customers.length + ' khách vào hệ thống? (Không gửi email cho ai)')) return;
+  var go = document.getElementById('legacy-go-btn'); go.disabled = true; go.textContent = 'Đang nhập...';
+  apiPost(payload).then(function(res){
+    if (!res.success) { toast(res.error || 'Lỗi nhập', 'error'); go.disabled = false; go.textContent = '2. Nhập vào hệ thống'; return; }
+    toast('Đã nhập ' + res.summary.added + ' khách (' + res.summary.sessions_created + ' buổi đã học). Không gửi email.', 'success');
+    LEGACY.checked = false;
+    closeModal();
+    loadAdviseesFromSheet(function(){
+      var c = document.getElementById('main-content');
+      if (c) c.innerHTML = renderAdviseeModule();
+    });
+  }).catch(function(e){ toast('Lỗi: ' + e.message, 'error'); go.disabled = false; go.textContent = '2. Nhập vào hệ thống'; });
+}
 </script>
 </body>
 </html>
