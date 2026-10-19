@@ -1844,6 +1844,7 @@ function mergeLeadRow(r) {
   obj.date = r.date ? String(r.date).slice(0,10) : '';
   obj.time = fmtHHMM(r.time);
   obj.meetLink = r.meet_link || '';
+  obj.sessionId = r.session_id || obj.sessionId || '';
   obj.status = r.status || 'Chưa liên hệ';
   obj.result = r.result || '';
   obj.nextStep = r.next_step || '';
@@ -2815,14 +2816,15 @@ function loadSaleSelfDashboard() {
   var mc = document.getElementById('main-content');
   if (!s) { mc.innerHTML = '<div class="empty-state">Không tìm thấy hồ sơ nhân viên tương ứng tài khoản này</div>'; return; }
   _staffDetailId = s.id;
-  _staffDetailTab = 'consult';
+  _staffDetailTab = 'today';
   _staffDetailSelfView = true;
-  mc.innerHTML = renderStaffMemberDetail(s.id, 'consult', true);
-  loadStaffLeadsAsync();
+  _saleData = null;
+  loadSaleTabAsync('today');
 }
 
 function switchStaffDetailTab(tab) {
   _staffDetailTab = tab;
+  if (tab === 'today' || tab === 'meetings') { loadSaleTabAsync(tab); return; }
   if (tab === 'schedule') { loadStaffScheduleTabAsync(); return; }
   if (tab === 'consult' || tab === 'leads') { loadStaffLeadsAsync(); return; }
   if (tab === 'care') {
@@ -3026,6 +3028,21 @@ function renderStaffMemberDetail(staffId, tab, selfView) {
     { id:'care', icon:'💬', label:'Chăm sóc khách hàng' },
     { id:'kpi', icon:'📊', label:'KPI cá nhân' },
   ];
+  if (selfView) {
+    // Flow cho Sale: Hôm nay → Khách mới → Khách đã mua (nhắc hạn) → Lịch & đổi lịch → KPI
+    var sdOk = _saleData && _saleData.loadedFor === s.id;
+    var remindN = MOCK.advisees.filter(function(ae){ return expiryAlert_(ae).red; }).length;
+    var pendN = sdOk ? pendingReschedules(_saleData.reqs).length : 0;
+    var todayBadge = (sdOk ? pendN : 0) + remindN + leadCount;
+    TABS = [
+      { id:'today', icon:'🏠', label:'Hôm nay', badge: todayBadge },
+      { id:'consult', icon:'📞', label:'Khách đăng ký tư vấn' },
+      { id:'leads', icon:'⚠', label:'Chưa đặt lịch', badge: leadCount },
+      { id:'care', icon:'💳', label:'Khách đã mua', badge: remindN },
+      { id:'meetings', icon:'📅', label:'Lịch & đổi lịch', badge: pendN },
+      { id:'kpi', icon:'📊', label:'KPI cá nhân' },
+    ];
+  }
   html += '<div style="display:flex;gap:6px;border-bottom:1.5px solid var(--border);margin-bottom:20px;flex-wrap:wrap">';
   TABS.forEach(function(t){
     var active = t.id === tab;
@@ -3035,7 +3052,9 @@ function renderStaffMemberDetail(staffId, tab, selfView) {
   });
   html += '</div>';
 
-  if (tab === 'leads') html += renderStaffLeadsTab(s);
+  if (tab === 'today') html += renderSaleToday(s);
+  else if (tab === 'meetings') html += renderSaleMeetings(s);
+  else if (tab === 'leads') html += renderStaffLeadsTab(s);
   else if (tab === 'schedule') html += renderStaffScheduleTab(s);
   else if (tab === 'care') html += renderStaffCareTab(s);
   else if (tab === 'kpi') html += renderStaffKpiTab(s);
@@ -3876,7 +3895,7 @@ function renderStaffCareTab(s) {
   } else {
     html += '<div style="padding:16px 24px 0">' + searchBoxHtml('care-list', 'Tìm theo tên, email, SĐT, advisor...') + '</div>';
     html += '<div id="care-list">';
-    MOCK.advisees.forEach(function(ae){
+    MOCK.advisees.slice().sort(expiryCompare_).forEach(function(ae){
       var pct = pctOf(ae.sessionsDone, ae.sessionsTotal);
       var today = new Date(); today.setHours(0,0,0,0);
       var exC = expiryAlert_(ae);
@@ -3903,7 +3922,7 @@ function renderStaffCareTab(s) {
       html += '</div>';
       html += '<div style="min-width:140px">';
       html += '<div style="font-weight:600;font-size:13px">Gói ' + ae.pkg + '</div>';
-      html += '<div style="font-size:12px;color:var(--muted)">' + ae.advisor + '</div>';
+      html += advisorCellHtml_(ae, 'care');
       html += '</div>';
       html += '<div style="display:flex;align-items:center;gap:8px;min-width:110px"><div style="flex:1;height:6px;background:var(--bg);border-radius:100px;overflow:hidden;min-width:50px"><div style="height:100%;width:' + pct + '%;background:var(--green);border-radius:100px"></div></div><span style="font-size:12px;font-weight:700;color:var(--muted);white-space:nowrap">' + ae.sessionsDone + '/' + ae.sessionsTotal + '</span></div>';
       html += expiryTag;
@@ -6093,11 +6112,7 @@ function renderAdviseeModule() {
   } else {
     html += '<div style="padding:0 20px">' + searchBoxHtml('advisee-list-tbody', 'Tìm theo tên, email, advisor...') + '</div>';
     html += '<table class="bookings-table"><thead><tr><th>ADVISEE</th><th>GÓI · ADVISOR</th><th>TIẾN ĐỘ</th><th>HẠN DÙNG</th><th>TRẠNG THÁI</th><th></th></tr></thead><tbody id="advisee-list-tbody">';
-    var _aeList = MOCK.advisees.slice().sort(function(a, b){
-      var ea = expiryAlert_(a), eb = expiryAlert_(b);
-      if (ea.red !== eb.red) return ea.red ? -1 : 1;
-      return ea.rank - eb.rank;
-    });
+    var _aeList = MOCK.advisees.slice().sort(expiryCompare_);
     if (_aeUrgentOnly) _aeList = _aeList.filter(function(a){ return expiryAlert_(a).red; });
     _aeList.forEach(function(ae) {
       var exA = expiryAlert_(ae);
@@ -6112,11 +6127,12 @@ function renderAdviseeModule() {
           : (ae.sessionsTotal > 0 && ae.sessionsDone >= ae.sessionsTotal)
             ? '<span style="background:var(--green-bg);color:var(--green);font-size:11px;font-weight:700;padding:3px 10px;border-radius:100px">Hoàn thành</span>'
             : '<span style="background:#EDE9FE;color:#6D28D9;font-size:11px;font-weight:700;padding:3px 10px;border-radius:100px">Đang học</span>';
+      if (exA.state === 'expired' && exA.remaining > 0) statusTag = '<span style="background:#F3F4F6;color:var(--muted);font-size:11px;font-weight:700;padding:3px 10px;border-radius:100px">Đã hết hạn</span>';
       if (hasReschedule) statusTag += ' <span style="background:var(--brand-light);color:var(--brand);font-size:11px;font-weight:700;padding:3px 10px;border-radius:100px">🔔 Yêu cầu đổi lịch</span>';
       var searchKey = (ae.name + ' ' + ae.email + ' ' + ae.advisor + ' ' + ae.pkg).toLowerCase().replace(/"/g,'');
-      html += '<tr data-search="' + searchKey + '"' + (exA.red ? ' style="background:#FEF2F2;box-shadow:inset 3px 0 0 #DC2626"' : '') + '>';
+      html += '<tr data-search="' + searchKey + '"' + (exA.red ? ' style="background:#FEF2F2;box-shadow:inset 3px 0 0 #DC2626"' : (exA.group === 3 ? ' style="opacity:.72"' : '')) + '>';
       html += '<td><div style="display:flex;align-items:center;gap:10px">' + avatarCircle(ae.name, 34) + '<div><div style="font-weight:700">' + ae.name + '</div><div style="font-size:12px;color:var(--muted)">' + ae.email + '</div></div></div></td>';
-      html += '<td><div style="font-weight:600;font-size:13px">Gói ' + ae.pkg + '</div><div style="font-size:12px;color:var(--muted)">' + ae.advisor + '</div></td>';
+      html += '<td><div style="font-weight:600;font-size:13px">Gói ' + ae.pkg + '</div>' + advisorCellHtml_(ae, 'list') + '</td>';
       html += '<td><div style="display:flex;align-items:center;gap:8px"><div style="flex:1;height:6px;background:var(--bg);border-radius:100px;overflow:hidden;min-width:60px"><div style="height:100%;width:' + pct + '%;background:var(--green);border-radius:100px"></div></div><span style="font-size:12px;font-weight:700;color:var(--muted);white-space:nowrap">' + ae.sessionsDone + '/' + ae.sessionsTotal + '</span></div></td>';
       html += '<td>' + exA.badge + (exA.hint ? '<div style="font-size:11.5px;color:' + (exA.red ? '#B91C1C' : 'var(--muted)') + ';margin-top:4px;max-width:210px">' + exA.hint + '</div>' : '') + '</td>';
       html += '<td>' + statusTag + '</td>';
@@ -6131,48 +6147,56 @@ function renderAdviseeModule() {
 
 
 // ════════════════════════════════════════════════════════════
-//  QUY TẮC NHẮC HẠN DÙNG GÓI (dùng chung: trang Advisee + tab "Chăm sóc khách hàng")
-//  Muốn đổi ngưỡng: sửa 2 số dưới đây.
+//  QUY TẮC NHẮC HẠN DÙNG GÓI (dùng chung: trang Advisee, tab "Khách đã mua", trang Hôm nay của Sale)
+//  Chỉ hiện NGÀY hết hạn (dd/mm/yyyy), không hiện "còn/quá X ngày".
+//  Thứ tự ưu tiên (khách đang dùng dịch vụ lên trước):
+//    nhóm 0  ĐỎ   : còn hiệu lực và hết hạn trong EXPIRY_WARN_DAYS ngày → nhắc / upsell
+//    nhóm 1       : đang dùng, còn buổi, chưa sắp hết hạn
+//    nhóm 2       : đã dùng hết buổi, chưa hết hạn
+//    nhóm 3  XÁM  : đã hết hạn
+//  Muốn đổi ngưỡng "sắp hết hạn": sửa số dưới đây.
 // ════════════════════════════════════════════════════════════
-var EXPIRY_WARN_DAYS = 7;    // còn ≤ 7 ngày là báo ĐỎ
-var EXPIRY_STALE_DAYS = 30;  // hết hạn quá 30 ngày thì thôi báo đỏ (chuyển xám)
-// Trả về { red, daysLeft, remaining, badge, hint, rank }
-//  - Còn buổi chưa dùng + sắp/đã hết hạn  → ĐỎ: "hối khách dùng nốt"
-//  - Đã dùng hết buổi + sắp hết hạn       → ĐỎ: "upsell gói mới"
-//  - Đã dùng hết buổi + đã hết hạn / quá hạn lâu → XÁM (không cần đuổi)
+var EXPIRY_WARN_DAYS = 7;
+function fmtDmy_(s) {
+  var m = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(s || ''));
+  return m ? (m[3] + '/' + m[2] + '/' + m[1]) : String(s || '');
+}
+// Trả về { red, state, group, rank, daysLeft, remaining, badge, hint }
 function expiryAlert_(ae) {
   var total = Number(ae.sessionsTotal) || 0, done = Number(ae.sessionsDone) || 0;
   var remaining = Math.max(0, total - done);
-  var out = { red: false, daysLeft: null, remaining: remaining, badge: '', hint: '', rank: 9999 };
-  if (!ae.expiry) return out;
+  var out = { red: false, state: 'active', group: 1, rank: 0, daysLeft: null, remaining: remaining, badge: '', hint: '' };
+  if (!ae.expiry) { out.group = remaining > 0 ? 1 : 2; out.rank = 99999; return out; }
   var today = new Date(); today.setHours(0,0,0,0);
   var daysLeft = Math.ceil((new Date(ae.expiry + 'T00:00:00') - today) / 86400000);
-  if (isNaN(daysLeft)) return out;
+  if (isNaN(daysLeft)) { out.rank = 99999; return out; }
   out.daysLeft = daysLeft;
+  var dateTxt = 'Hết hạn ' + fmtDmy_(ae.expiry);
   var redBadge = function(t){ return '<span class="badge" style="background:#FEE2E2;color:#B91C1C;font-weight:700">' + t + '</span>'; };
   var greyBadge = function(t){ return '<span class="badge" style="background:#F3F4F6;color:var(--muted)">' + t + '</span>'; };
-  var plain = '<span style="font-size:12px;color:var(--muted)">Hết hạn ' + ae.expiry + '</span>';
-
   if (daysLeft < 0) {
-    var ago = Math.abs(daysLeft);
-    if (remaining > 0 && ago <= EXPIRY_STALE_DAYS) {
-      out.red = true; out.rank = daysLeft;
-      out.badge = redBadge('Hết hạn ' + ago + ' ngày trước');
-      out.hint = '👉 Còn ' + remaining + ' buổi chưa dùng — hối khách hoặc đề xuất gia hạn';
-    } else {
-      out.badge = greyBadge('Hết hạn ' + ago + ' ngày trước');
-      out.hint = remaining > 0 ? 'Còn ' + remaining + ' buổi chưa dùng' : '';
-    }
-  } else if (daysLeft <= EXPIRY_WARN_DAYS) {
-    out.red = true; out.rank = daysLeft;
-    out.badge = redBadge(daysLeft === 0 ? 'Hết hạn hôm nay' : 'Còn ' + daysLeft + ' ngày');
-    out.hint = remaining > 0
-      ? '👉 Còn ' + remaining + ' buổi chưa dùng — nhắc khách đặt lịch'
-      : '👉 Đã dùng hết buổi — cơ hội upsell gói mới';
-  } else {
-    out.badge = plain;
+    out.state = 'expired'; out.group = 3; out.rank = -daysLeft;   // mới hết hạn gần đây xếp trước
+    out.badge = greyBadge(dateTxt);
+    out.hint = remaining > 0 ? 'Còn ' + remaining + ' buổi chưa dùng' : '';
+    return out;
   }
+  var soon = daysLeft <= EXPIRY_WARN_DAYS;
+  out.rank = daysLeft;
+  if (remaining <= 0) {
+    out.state = 'allused'; out.group = soon ? 0 : 2;
+    out.hint = soon ? '👉 Đã dùng hết buổi — cơ hội upsell gói mới' : 'Đã dùng hết buổi';
+  } else {
+    out.state = 'active'; out.group = soon ? 0 : 1;
+    out.hint = soon ? '👉 Còn ' + remaining + ' buổi chưa dùng — nhắc khách đặt lịch' : '';
+  }
+  out.red = soon;
+  out.badge = soon ? redBadge(dateTxt) : '<span style="font-size:12px;color:var(--muted)">' + dateTxt + '</span>';
   return out;
+}
+function expiryCompare_(a, b) {
+  var ea = expiryAlert_(a), eb = expiryAlert_(b);
+  if (ea.group !== eb.group) return ea.group - eb.group;
+  return ea.rank - eb.rank;
 }
 
 var _aeUrgentOnly = false;
@@ -6227,7 +6251,7 @@ function renderStaffAdviseeDetail(aeId, fromAdvisorId) {
   html += '</div></div>';
   // Extra info row
   html += '<div style="display:flex;gap:24px;padding-top:14px;border-top:1px solid var(--border);font-size:13px">';
-  html += '<div><span style="color:var(--muted)">Advisor: </span><b>' + ae.advisor + '</b> <button class="update-btn" style="margin-left:6px;font-size:11px" onclick="toast(\'Mở form đổi Advisor (demo)\',\'success\')">Đổi</button></div>';
+  html += '<div><span style="color:var(--muted)">Advisor: </span><b>' + (isUnassignedAdvisor_(ae.advisor) ? '<span style="color:var(--brand)">Chưa xếp</span>' : escHtml(ae.advisor)) + '</b> <button class="update-btn" style="margin-left:6px;font-size:11px" onclick="openAssignAdvisor(\'' + ae.id + '\',\'detail\')">' + (isUnassignedAdvisor_(ae.advisor) ? 'Gán' : 'Đổi') + '</button></div>';
   html += '<div><span style="color:var(--muted)">Đăng ký: </span><b>' + ae.registeredAt + '</b></div>';
   html += '<div><span style="color:var(--muted)">Liên hệ: </span><b>' + ae.contact + '</b></div>';
   html += '</div></div></div>';
@@ -6246,6 +6270,7 @@ function renderStaffAdviseeDetail(aeId, fromAdvisorId) {
     html += '<span style="background:' + sc.bg + ';color:' + sc.color + ';font-size:12px;font-weight:700;padding:4px 12px;border-radius:100px">' + sc.label + '</span>';
     if (needNote) html += '<span style="background:#FEF3C7;color:#92400E;font-size:11px;font-weight:700;padding:3px 10px;border-radius:100px">Cần nhận xét</span>';
     if (s.meetLink && s.status !== 'locked') html += '<a href="' + s.meetLink + '" target="_blank" class="detail-btn" style="font-size:12px;padding:6px 12px">🎥 Meet</a>';
+    if (s.status === 'upcoming' && s.session_id) html += '<button class="detail-btn" onclick="openRescheduleSession(\'' + ae.id + '\',' + s.no + ')" style="font-size:12px;padding:6px 12px">📅 Đổi lịch</button>';
     if (s.status !== 'locked') html += '<button class="detail-btn" onclick="openSessionDetailModal(\'' + ae.id + '\',' + s.no + ')" style="font-size:12px;padding:6px 12px">Chi tiết</button>';
     html += '</div>';
   });
@@ -8430,6 +8455,300 @@ function legacyImport() {
       if (c) c.innerHTML = renderAdviseeModule();
     });
   }).catch(function(e){ toast('Lỗi: ' + e.message, 'error'); go.disabled = false; go.textContent = '2. Nhập vào hệ thống'; });
+}
+
+// ════════════════════════════════════════════════════════════
+//  GÁN / ĐỔI ADVISOR CHO ADVISEE (lưu thật vào Sheet, không gửi email)
+// ════════════════════════════════════════════════════════════
+function isUnassignedAdvisor_(name) {
+  var n = stripDiacritics(name || '').trim();
+  return !n || n === 'chua xep';
+}
+function advisorCellHtml_(ae, from) {
+  if (isUnassignedAdvisor_(ae.advisor)) {
+    return '<button class="update-btn" style="font-size:11px;margin-top:2px;border-color:var(--brand);color:var(--brand)" onclick="event.stopPropagation();openAssignAdvisor(\'' + ae.id + '\',\'' + from + '\')">+ Gán advisor</button>';
+  }
+  return '<div style="font-size:12px;color:var(--muted)">' + escHtml(ae.advisor) + '</div>';
+}
+function openAssignAdvisor(aeId, from) {
+  var ae = MOCK.advisees.find(function(x){ return x.id === aeId; });
+  if (!ae) return;
+  var advs = (sheetData.advisors || []).filter(function(a){ return a.active; });
+  if (!advs.length) { toast('Chưa có Advisor nào đang hoạt động để gán', 'error'); return; }
+  var opts = advs.map(function(a){
+    return '<option value="' + escHtml(a.name) + '"' + (a.name === ae.advisor ? ' selected' : '') + '>' + escHtml(a.name) + (a.title ? ' — ' + escHtml(a.title) : '') + '</option>';
+  }).join('');
+  document.getElementById('modal-title').textContent = (isUnassignedAdvisor_(ae.advisor) ? 'Gán Advisor cho ' : 'Đổi Advisor cho ') + ae.name;
+  document.getElementById('modal-body').innerHTML =
+    '<div style="font-size:13px;color:var(--muted);margin-bottom:12px">Gói <b>' + escHtml(ae.pkg) + '</b> · đã dùng ' + ae.sessionsDone + '/' + ae.sessionsTotal + ' buổi · Advisor hiện tại: <b>' + (isUnassignedAdvisor_(ae.advisor) ? 'Chưa xếp' : escHtml(ae.advisor)) + '</b></div>' +
+    '<div class="form-label" style="margin-bottom:6px">Chọn Advisor</div>' +
+    '<select class="form-select" id="aa-advisor">' + opts + '</select>' +
+    '<div style="font-size:12px;color:var(--muted);margin-top:12px;line-height:1.6">✉️ Không gửi email cho khách hay Advisor.<br>Chỉ cập nhật booking và các buổi chưa có Advisor. Buổi đã đặt lịch với Advisor khác được giữ nguyên.</div>';
+  document.getElementById('modal-actions').innerHTML =
+    '<button class="btn-secondary" onclick="closeModal()" style="width:auto;padding:10px 20px">Huỷ</button>' +
+    '<button class="login-btn" id="aa-save" onclick="saveAssignAdvisor(\'' + aeId + '\',\'' + from + '\')" style="width:auto;padding:10px 24px">Lưu</button>';
+  document.getElementById('modal-overlay').classList.add('open');
+}
+function saveAssignAdvisor(aeId, from) {
+  var ae = MOCK.advisees.find(function(x){ return x.id === aeId; });
+  if (!ae) return;
+  var name = document.getElementById('aa-advisor').value;
+  var btn = document.getElementById('aa-save'); btn.disabled = true; btn.textContent = 'Đang lưu...';
+  apiPost({ action: 'assignAdvisorToBooking', booking_id: ae.bookingId, advisor_name: name, assigned_by: currentUser.email }).then(function(res){
+    if (!res || !res.success) { toast((res && res.error) || 'Không gán được Advisor', 'error'); btn.disabled = false; btn.textContent = 'Lưu'; return; }
+    toast('Đã gán Advisor ' + name + (res.kept_sessions ? ' (' + res.kept_sessions + ' buổi đã đặt lịch giữ Advisor cũ)' : '') + ' ✅', 'success');
+    closeModal();
+    loadAdviseesFromSheet(function(){
+      var mc = document.getElementById('main-content');
+      if (from === 'detail') navToStaffAdviseeDetail(aeId, null);
+      else if (from === 'care') switchStaffDetailTab('care');
+      else if (from === 'sale') loadSaleTabAsync(_staffDetailTab);
+      else mc.innerHTML = renderAdviseeModule();
+    });
+  }).catch(function(e){ toast('Lỗi: ' + e.message, 'error'); btn.disabled = false; btn.textContent = 'Lưu'; });
+}
+
+// ════════════════════════════════════════════════════════════
+//  ĐỔI LỊCH MEETING (Sale / Staff): cố vấn 1:1 hoặc tư vấn miễn phí
+//  m = { sessionId, leadId, who, kind, date, time }
+// ════════════════════════════════════════════════════════════
+var _reschedAfter = null, _reschedCtx = null;
+function showRescheduleModal_(m, after) {
+  _reschedCtx = m; _reschedAfter = after || null;
+  document.getElementById('modal-title').textContent = 'Đổi lịch — ' + (m.who || 'buổi meeting');
+  document.getElementById('modal-body').innerHTML =
+    '<div style="font-size:13px;color:var(--muted);margin-bottom:12px">' + escHtml(m.kind || '') + ' · Lịch hiện tại: <b>' + (m.date ? fmtDmy_(m.date) : 'chưa xếp') + (m.time ? ' · ' + escHtml(m.time) : '') + '</b></div>' +
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">' +
+      '<div><div class="form-label" style="margin-bottom:6px">Ngày mới</div><input class="form-input" type="date" id="rs-date" value="' + escHtml(m.date || '') + '"></div>' +
+      '<div><div class="form-label" style="margin-bottom:6px">Giờ mới</div><input class="form-input" type="time" id="rs-time" value="' + escHtml(m.time || '') + '"></div>' +
+    '</div>' +
+    '<div class="form-label" style="margin-bottom:6px">Lý do đổi lịch (bắt buộc)</div>' +
+    '<textarea class="form-input" id="rs-reason" rows="3" placeholder="VD: Khách báo bận đột xuất, Advisor xin dời lịch..."></textarea>' +
+    '<label style="display:flex;gap:8px;align-items:center;font-size:13px;margin-top:12px"><input type="checkbox" id="rs-notify" checked> Gửi thông báo cập nhật giờ qua Google Calendar (nếu buổi có sự kiện Calendar)</label>' +
+    '<div style="font-size:12px;color:var(--muted);margin-top:8px">Lý do được lưu vào ghi chú buổi / nhật ký lead. Nên báo khách qua Zalo sau khi đổi.</div>';
+  document.getElementById('modal-actions').innerHTML =
+    '<button class="btn-secondary" onclick="closeModal()" style="width:auto;padding:10px 20px">Huỷ</button>' +
+    '<button class="login-btn" id="rs-save" onclick="saveReschedule_()" style="width:auto;padding:10px 24px">Lưu lịch mới</button>';
+  document.getElementById('modal-overlay').classList.add('open');
+}
+function saveReschedule_() {
+  var m = _reschedCtx; if (!m) return;
+  var d = document.getElementById('rs-date').value, t = document.getElementById('rs-time').value;
+  var reason = document.getElementById('rs-reason').value.trim();
+  if (!d || !t) { toast('Chọn ngày và giờ mới', 'error'); return; }
+  if (!reason) { toast('Vui lòng nhập lý do đổi lịch', 'error'); return; }
+  var btn = document.getElementById('rs-save'); btn.disabled = true; btn.textContent = 'Đang lưu...';
+  apiPost({ action: 'rescheduleMeeting', session_id: m.sessionId || '', lead_id: m.leadId || '', new_date: d, new_time: t,
+            reason: reason, notify: document.getElementById('rs-notify').checked, changed_by: currentUser.email }).then(function(res){
+    if (!res || !res.success) { toast((res && res.error) || 'Không đổi được lịch', 'error'); btn.disabled = false; btn.textContent = 'Lưu lịch mới'; return; }
+    var cal = res.calendar === 'updated_and_notified' ? ' Google Calendar đã báo các bên.' : (res.calendar && res.calendar.indexOf('error') === 0 ? ' (Calendar chưa cập nhật được — hãy báo khách thủ công.)' : '');
+    toast('Đã đổi lịch ✅' + cal, 'success');
+    closeModal();
+    if (_reschedAfter) _reschedAfter();
+  }).catch(function(e){ toast('Lỗi: ' + e.message, 'error'); btn.disabled = false; btn.textContent = 'Lưu lịch mới'; });
+}
+// Từ trang chi tiết Advisee: đổi lịch 1 buổi cố vấn
+function openRescheduleSession(aeId, no) {
+  var ae = MOCK.advisees.find(function(x){ return x.id === aeId; });
+  var sess = ae && ae.sessions.find(function(x){ return x.no === no; });
+  if (!sess || !sess.session_id) { toast('Buổi này chưa được xếp lịch nên chưa thể đổi', 'error'); return; }
+  showRescheduleModal_({ sessionId: sess.session_id, leadId: '', who: ae.name + ' · Buổi ' + no, kind: 'Cố vấn 1:1', date: sess.date || '', time: sess.timeStart || '' },
+    function(){ loadAdviseesFromSheet(function(){ navToStaffAdviseeDetail(aeId, null); }); });
+}
+
+// ════════════════════════════════════════════════════════════
+//  DASHBOARD SALE: tab "Hôm nay" + "Lịch & đổi lịch"
+//  Dữ liệu: lead của chính Sale, yêu cầu đổi lịch, buổi 1:1, khách đã mua (hạn dùng)
+// ════════════════════════════════════════════════════════════
+var _saleData = null;
+
+function loadSaleTabAsync(tab) {
+  var s = sheetData.staffList.find(function(x){ return x.id === _staffDetailId; });
+  if (!s) return;
+  _staffDetailTab = tab;
+  var mc = document.getElementById('main-content');
+  mc.innerHTML = renderStaffMemberDetail(_staffDetailId, tab, _staffDetailSelfView);   // hiện khung + skeleton ngay
+  Promise.all([
+    apiGet('getLeads', { staff: s.name }).catch(function(){ return null; }),
+    apiGet('getRescheduleRequests', {}).catch(function(){ return null; }),
+    apiGet('getSessions', {}).catch(function(){ return null; }),
+    new Promise(function(resolve){ loadAdviseesFromSheet(resolve); }),
+  ]).then(function(r){
+    var failed = [];
+    if (!r[0]) failed.push('danh sách lead'); if (!r[1]) failed.push('yêu cầu đổi lịch'); if (!r[2]) failed.push('lịch buổi');
+    var leadRows = (r[0] && r[0].data) ? r[0].data : [];
+    var reqs = (r[1] && r[1].data) ? r[1].data : [];
+    var sessions = (r[2] && r[2].data) ? r[2].data : [];
+    var sessById = {}; sessions.forEach(function(x){ sessById[x.session_id] = x; });
+    reqs.forEach(function(q){
+      var x = sessById[q.session_id];
+      q._ae_name = x ? x.advisee_name : ''; q._advisor_name = x ? x.advisor_name : ''; q._session_no = x ? x.session_number : '';
+    });
+    var leads = leadRows.map(function(x){ return mergeLeadRow(x); }).filter(Boolean);
+    _saleData = { leads: leads, reqs: reqs, sessions: sessions, failed: failed, loadedFor: s.id };
+    if (_staffDetailTab === tab && activeStaffDetailIsSale_()) {
+      document.getElementById('main-content').innerHTML = renderStaffMemberDetail(_staffDetailId, tab, _staffDetailSelfView);
+    }
+  });
+}
+function activeStaffDetailIsSale_() { return !!_staffDetailSelfView; }
+
+// Gom buổi meeting sắp tới (tư vấn của lead + cố vấn 1:1) trong khoảng [fromYmd, toYmd]
+function saleMeetings_(d, fromYmd, toYmd) {
+  var list = [];
+  d.sessions.forEach(function(x){
+    var date = String(x.scheduled_date || '').slice(0, 10);
+    if (!date || date < fromYmd || date > toYmd) return;
+    var st = String(x.status || '').toLowerCase();
+    if (st === 'completed' || st === 'cancelled' || st === 'canceled') return;
+    if (x.session_type === 'consult' || x.session_type === 'course' || x.advisor_name === STAFF_SLOT_IDENTITY) return;   // tư vấn lấy từ lead
+    list.push({ kind: 'Cố vấn 1:1', date: date, time: fmtHHMM(x.scheduled_time), who: x.advisee_name || '', host: x.advisor_name || '',
+                link: x.meet_link || '', sessionId: x.session_id, leadId: '' });
+  });
+  d.leads.forEach(function(c){
+    if (!c.date || c.date < fromYmd || c.date > toYmd) return;
+    if (SLA_TERMINAL.indexOf(c.status) > -1) return;
+    list.push({ kind: 'Tư vấn miễn phí', date: c.date, time: c.time || '', who: c.name || '', host: c.staff || 'LinkaJob',
+                link: c.meetLink || '', sessionId: c.sessionId || '', leadId: c.id });
+  });
+  list.sort(function(a, b){ return (a.date + ' ' + a.time).localeCompare(b.date + ' ' + b.time); });
+  return list;
+}
+function addDaysYmd_(n) { var x = new Date(); x.setDate(x.getDate() + n); return ymd(x); }
+
+function saleMeetingRowHtml_(m, idx, showDate) {
+  var link = safeHttpUrl(m.link);
+  return '<div class="today-row" style="cursor:default">' +
+    '<div style="display:flex;align-items:center;gap:14px;min-width:0"><div class="today-time">' + escHtml(m.time || '--:--') + '</div>' +
+    '<div style="min-width:0"><div class="today-row-title">' + escHtml(m.who || 'Chưa rõ') + '</div>' +
+    '<div class="today-row-sub">' + (showDate ? escHtml(fmtDmy_(m.date)) + ' · ' : '') + escHtml(m.kind) + ' · ' + escHtml(m.host) + '</div></div></div>' +
+    '<div class="today-row-side">' + (link ? '<a class="detail-btn" href="' + link + '" target="_blank" rel="noopener">🎥 Meet</a>' : '') +
+    '<button class="detail-btn" onclick="openSaleReschedule(' + idx + ')">📅 Đổi lịch</button></div></div>';
+}
+function openSaleReschedule(idx) {
+  var m = (_saleData && _saleData.meetList) ? _saleData.meetList[idx] : null;
+  if (!m) return;
+  showRescheduleModal_(m, function(){ loadSaleTabAsync(_staffDetailTab); });
+}
+
+function saleRescheduleReqHtml_(r) {
+  var who = r._ae_name || '(không rõ)';
+  var h = '<div style="padding:14px 24px;border-top:1px solid var(--border)">';
+  h += '<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px"><div style="flex:1"><div style="font-weight:700;font-size:14px">' + escHtml(who) + (r._session_no ? ' · Buổi ' + escHtml(r._session_no) : '') + '</div>' +
+       '<div style="font-size:12px;color:var(--muted)">' + (r._advisor_name ? 'Advisor: ' + escHtml(r._advisor_name) + ' · ' : '') + 'Đề xuất bởi ' + (r.requested_by === 'advisee' ? 'Advisee' : 'Advisor') + '</div></div>' +
+       '<button class="update-btn" style="border-color:var(--brand);color:var(--brand)" onclick="saleResolveReschedule(\'' + escHtml(r.request_id) + '\',false)">Từ chối</button></div>';
+  h += '<div style="font-size:13px;background:var(--bg);border-radius:8px;padding:8px 12px;margin-bottom:8px"><b>Lý do:</b> ' + escHtml(r.reason) + '</div>';
+  h += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">';
+  [[r.option1_date, r.option1_time], [r.option2_date, r.option2_time]].forEach(function(o){
+    if (!o[0]) return;
+    h += '<button class="detail-btn" style="padding:10px" onclick="saleResolveReschedule(\'' + escHtml(r.request_id) + '\',true,\'' + escHtml(o[0]) + '\',\'' + escHtml(o[1]) + '\')">✔ Chọn ' + escHtml(fmtDmy_(o[0])) + ' · ' + escHtml(o[1]) + '</button>';
+  });
+  return h + '</div></div>';
+}
+function saleResolveReschedule(reqId, approve, d, t) {
+  var payload = approve ? { action: 'resolveRescheduleRequest', request_id: reqId, approve: true, confirmed_date: d, confirmed_time: t }
+                        : { action: 'resolveRescheduleRequest', request_id: reqId, approve: false };
+  apiPost(payload).then(function(res){
+    if (!res || !res.success) { toast('Lỗi: ' + ((res && res.error) || 'không xử lý được'), 'error'); return; }
+    toast(approve ? 'Đã xác nhận đổi giờ ✅' : 'Đã từ chối yêu cầu', 'success');
+    loadSaleTabAsync(_staffDetailTab);
+  }).catch(function(e){ toast('Lỗi kết nối: ' + e.message, 'error'); });
+}
+
+function copyReminderMsg(aeId) {
+  var ae = MOCK.advisees.find(function(x){ return x.id === aeId; });
+  if (!ae) return;
+  var ex = expiryAlert_(ae);
+  var first = String(ae.name || '').trim();
+  var msg = ex.remaining > 0
+    ? 'Chào ' + first + ', gói ' + ae.pkg + ' của bạn sẽ hết hạn vào ngày ' + fmtDmy_(ae.expiry) + ' và bạn còn ' + ex.remaining + ' buổi chưa sử dụng. Bạn đặt lịch buổi tiếp theo sớm để không bị lỡ nhé! Cần hỗ trợ cứ nhắn LinkaJob ạ.'
+    : 'Chào ' + first + ', bạn đã hoàn thành các buổi trong gói ' + ae.pkg + ' (hạn dùng đến ' + fmtDmy_(ae.expiry) + '). Bạn có muốn tiếp tục lộ trình với gói tiếp theo không? LinkaJob có thể tư vấn gói phù hợp cho bạn ạ.';
+  var done = function(){ toast('Đã copy tin nhắn nhắc — dán vào Zalo/email gửi khách', 'success'); };
+  if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(msg).then(done, function(){ window.prompt('Copy tin nhắn:', msg); });
+  else window.prompt('Copy tin nhắn:', msg);
+}
+
+function saleRemindRowHtml_(ae) {
+  var ex = expiryAlert_(ae);
+  return '<div class="today-row" onclick="navToStaffAdviseeDetail(\'' + ae.id + '\',\'staffcare\')">' +
+    '<div style="min-width:0"><div class="today-row-title">' + escHtml(ae.name) + '</div>' +
+    '<div class="today-row-sub">Gói ' + escHtml(ae.pkg) + ' · ' + ae.sessionsDone + '/' + ae.sessionsTotal + ' buổi · ' + escHtml(fmtPhoneVN(ae.phone) || ae.email) + '</div>' +
+    '<div class="today-row-sub" style="color:#B91C1C;font-weight:600">' + escHtml(ex.hint) + '</div></div>' +
+    '<div class="today-row-side">' + ex.badge +
+    '<button class="detail-btn" onclick="event.stopPropagation();copyReminderMsg(\'' + ae.id + '\')">📋 Copy tin nhắn</button></div></div>';
+}
+
+function renderSaleToday(s) {
+  if (!_saleData || _saleData.loadedFor !== s.id) return skeletonRows(4);
+  var d = _saleData;
+  var today = ymd(new Date());
+  var meetings = saleMeetings_(d, today, addDaysYmd_(1));
+  d.meetList = meetings;
+  var todayCount = meetings.filter(function(m){ return m.date === today; }).length;
+  var open = d.leads.filter(function(c){ return !leadIsClosed(c); });
+  var needAct = open.filter(function(c){ return leadIsOverdue(c) || !c.date || c.status === 'Chưa liên hệ'; }).sort(function(a, b){
+    return ((leadIsOverdue(b) ? 1 : 0) - (leadIsOverdue(a) ? 1 : 0)) || (leadAgeDays(b) - leadAgeDays(a));
+  });
+  var remind = MOCK.advisees.filter(function(ae){ return expiryAlert_(ae).red; }).sort(expiryCompare_);
+  var pend = pendingReschedules(d.reqs);
+
+  var html = '<div style="font-size:13px;color:var(--muted);margin-bottom:12px">' + escHtml(todayLabelVN()) + ' · việc cần làm hôm nay</div>';
+  if (d.failed.length) html += '<div class="today-warn">Không tải được: ' + escHtml(d.failed.join(', ')) + '. Số liệu có thể chưa đầy đủ.</div>';
+  html += '<div class="stats-row cols-4">';
+  html += todayTile('Buổi hôm nay', todayCount, 'Tư vấn + cố vấn 1:1', "scrollToToday('sale-meetings')", false);
+  html += todayTile('Khách mới cần xử lý', needAct.length, 'Chưa liên hệ / chưa chọn giờ / quá hạn', "scrollToToday('sale-newleads')", true);
+  html += todayTile('Khách cần nhắc', remind.length, 'Hết hạn trong ' + EXPIRY_WARN_DAYS + ' ngày', "scrollToToday('sale-remind')", true);
+  html += todayTile('Yêu cầu đổi lịch', pend.length, 'Chờ bạn xác nhận', "scrollToToday('sale-resched')", true);
+  html += '</div>';
+
+  html += '<div class="card" id="sale-meetings"><div class="card-header"><div class="card-header-left">Lịch hôm nay & ngày mai (' + meetings.length + ')</div>' +
+          '<button class="card-link" onclick="switchStaffDetailTab(\'meetings\')">Xem 14 ngày</button></div>';
+  if (!meetings.length) html += '<div class="today-empty">Không có buổi nào hôm nay hoặc ngày mai.</div>';
+  meetings.forEach(function(m, i){ html += saleMeetingRowHtml_(m, i, m.date !== today); });
+  html += '</div>';
+
+  html += '<div class="card" id="sale-newleads"><div class="card-header"><div class="card-header-left">Khách đăng ký tư vấn mới cần xử lý (' + needAct.length + ')</div>' +
+          '<button class="card-link" onclick="switchStaffDetailTab(\'consult\')">Xem tất cả</button></div>';
+  if (!needAct.length) html += '<div class="today-empty">✓ Không có khách nào đang chờ bạn.</div>';
+  needAct.slice(0, 6).forEach(function(c){ html += todayLeadRow(c, leadIsOverdue(c) ? 'overdue' : 'nodate'); });
+  html += '</div>';
+
+  html += '<div class="card" id="sale-remind"><div class="card-header"><div class="card-header-left">Khách đã mua cần nhắc — sắp hết hạn (' + remind.length + ')</div>' +
+          '<button class="card-link" onclick="switchStaffDetailTab(\'care\')">Tất cả khách đã mua</button></div>';
+  if (!remind.length) html += '<div class="today-empty">✓ Chưa có khách nào sắp hết hạn.</div>';
+  remind.slice(0, 8).forEach(function(ae){ html += saleRemindRowHtml_(ae); });
+  html += '</div>';
+
+  html += '<div class="card" id="sale-resched"><div class="card-header"><div class="card-header-left">Yêu cầu đổi lịch chờ xác nhận (' + pend.length + ')</div></div>';
+  if (!pend.length) html += '<div class="today-empty">✓ Không có yêu cầu nào đang chờ.</div>';
+  pend.forEach(function(r){ html += saleRescheduleReqHtml_(r); });
+  html += '</div>';
+  return html;
+}
+
+function renderSaleMeetings(s) {
+  if (!_saleData || _saleData.loadedFor !== s.id) return skeletonRows(4);
+  var d = _saleData, today = ymd(new Date());
+  var meetings = saleMeetings_(d, today, addDaysYmd_(14));
+  d.meetList = meetings;
+  var pend = pendingReschedules(d.reqs);
+  var html = '<div class="card" style="margin-bottom:16px"><div class="card-header"><div class="card-header-left">Yêu cầu đổi lịch chờ xác nhận (' + pend.length + ')</div></div>';
+  if (!pend.length) html += '<div class="today-empty">✓ Không có yêu cầu nào đang chờ.</div>';
+  pend.forEach(function(r){ html += saleRescheduleReqHtml_(r); });
+  html += '</div>';
+  html += '<div class="card"><div class="card-header"><div class="card-header-left">Lịch 14 ngày tới (' + meetings.length + ')</div>' +
+          '<span style="font-size:12px;color:var(--muted)">Bấm "Đổi lịch" khi có phát sinh từ khách hoặc Advisor</span></div>';
+  if (!meetings.length) html += '<div class="today-empty">Không có buổi nào trong 14 ngày tới.</div>';
+  var lastDate = '';
+  meetings.forEach(function(m, i){
+    if (m.date !== lastDate) {
+      lastDate = m.date;
+      html += '<div style="padding:8px 24px;background:var(--bg);font-size:12px;font-weight:700;color:var(--muted);border-top:1px solid var(--border)">' + (m.date === today ? 'Hôm nay · ' : '') + escHtml(fmtDmy_(m.date)) + '</div>';
+    }
+    html += saleMeetingRowHtml_(m, i, false);
+  });
+  html += '</div>';
+  return html;
 }
 </script>
 </body>
