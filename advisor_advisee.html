@@ -395,6 +395,50 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
   .cal-cell-google { min-height: 84px; }
   .cal-badge { font-size: 9.5px; padding: 1px 5px; }
 }
+/* ── Calendar tuần/tháng dùng chung (Advisor gửi lịch trống + Advisee đặt lịch) ── */
+.sc-toolbar { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px; padding:16px 20px 0; }
+.sc-nav { display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+.sc-nav button { width:32px; height:32px; border-radius:50%; border:1.5px solid var(--border); background:var(--white); font-size:16px; cursor:pointer; color:var(--text); }
+.sc-nav button:hover { border-color:var(--brand); color:var(--brand); }
+.sc-nav .sc-today { width:auto; padding:0 14px; border-radius:100px; font-size:13px; font-weight:600; }
+.sc-label { font-size:15px; font-weight:700; min-width:140px; text-align:center; }
+.sc-seg { display:inline-flex; border:1.5px solid var(--border); border-radius:100px; overflow:hidden; }
+.sc-seg button { padding:6px 16px; border:none; background:var(--white); font-size:13px; font-weight:600; color:var(--muted); cursor:pointer; }
+.sc-seg button.on { background:var(--brand); color:#fff; }
+.sc-grid { display:grid; grid-template-columns:repeat(7,minmax(0,1fr)); gap:6px; margin:14px 20px 20px; }
+.sc-hdr { font-size:11px; font-weight:700; color:var(--muted); text-align:center; text-transform:uppercase; letter-spacing:.05em; }
+.sc-cell { min-height:96px; border:1px solid var(--border); border-radius:12px; padding:8px; background:var(--white); cursor:pointer; display:flex; flex-direction:column; gap:5px; min-width:0; transition:border-color .15s, background .15s; }
+.sc-grid.month .sc-cell { min-height:82px; }
+.sc-cell:hover { border-color:var(--brand); background:var(--brand-light); }
+.sc-cell.today { border-color:var(--brand); background:#FFF5F0; }
+.sc-cell.today .sc-dnum { color:var(--brand); }
+.sc-cell.other { opacity:.5; }
+.sc-cell.past, .sc-cell.off { opacity:.4; cursor:not-allowed; background:var(--bg); }
+.sc-cell.past:hover, .sc-cell.off:hover { border-color:var(--border); background:var(--bg); }
+.sc-cell.sel { border-color:var(--brand); background:var(--brand-light); box-shadow:0 0 0 1.5px var(--brand); }
+.sc-dnum { font-size:13px; font-weight:700; }
+.sc-dow { display:none; font-size:11px; color:var(--muted); font-weight:600; }
+.sc-chips { display:flex; flex-direction:column; gap:3px; min-width:0; }
+.sc-chip { display:inline-block; font-size:11px; font-weight:600; padding:2px 7px; border-radius:6px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%; }
+.sc-chip.free { background:var(--green-bg); color:var(--green); }
+.sc-chip.draft { background:#FFF7ED; color:#C2410C; border:1px dashed #FDBA74; }
+.sc-chip.booked { background:#EFF6FF; color:#1D4ED8; }
+.sc-more { font-size:11px; color:var(--muted); }
+.sc-bar { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px; background:#FFF7ED; border:1.5px solid #FED7AA; border-radius:12px; padding:10px 14px; margin:14px 20px 0; font-size:13px; color:#9A3412; }
+.sc-sel { padding:9px 12px; font-size:14px; border:1.5px solid var(--border); border-radius:10px; background:var(--white); color:var(--text); outline:none; }
+.sc-sel:focus { border-color:var(--brand); }
+.sc-time-row { display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+.sc-pick { margin:0 20px 16px; padding:14px 16px; border:1.5px solid var(--brand); border-radius:12px; background:var(--brand-light); }
+@media (max-width:640px) {
+  .sc-grid.week { grid-template-columns:1fr; }
+  .sc-grid.week .sc-hdr { display:none; }
+  .sc-grid.week .sc-cell { min-height:0; }
+  .sc-grid.week .sc-dow { display:inline; }
+  .sc-grid.month { gap:3px; margin:12px 8px 16px; }
+  .sc-grid.month .sc-cell { padding:4px; border-radius:8px; min-height:60px; }
+  .sc-grid.month .sc-chip { font-size:9px; padding:1px 3px; }
+  .sc-toolbar, .sc-bar, .sc-pick { margin-left:8px; margin-right:8px; padding-left:8px; padding-right:8px; }
+}
 </style>
 </head>
 <body>
@@ -692,6 +736,7 @@ function doLogout() {
   document.getElementById('login-page').style.display = 'flex';
   closeUserMenu();
   _route = null; _baseRoute = null; _modalPushed = false;
+  window._coursesChecked = false; window._hasCourses = false;
   try { history.replaceState(null, '', location.pathname + location.search); } catch (e) {}
 }
 
@@ -987,6 +1032,19 @@ function buildTabBar(role) {
   }
 
   // Advisor & Advisee — no sidebar, use tab bar
+  if ((role === 'Advisee' || role === 'Advisor') && !window._coursesChecked) {
+    window._coursesChecked = true;
+    // Advisee: chỉ hiện "Khoá học" khi đã đăng ký khoá. Advisor: chỉ khi được phân công dạy.
+    var courseReq = role === 'Advisee'
+      ? apiGet('getMyCourseEnrollments', { email: currentUser.email })
+      : apiGet('getInstructorCourses', { advisor: currentUser.name });
+    courseReq.then(function(res){
+      window._hasCourses = !!(res && res.data && res.data.length > 0);
+    }).catch(function(){
+      window._hasCourses = false;
+    }).then(function(){ if (currentUser && currentUser.role === role) buildTabBar(role); });
+    return;
+  }
   sidebar.className = 'sidebar hidden';
   tabbar.className  = 'role-tabbar show';
 
@@ -994,16 +1052,18 @@ function buildTabBar(role) {
     Advisor: [
       { id:'overview',  icon:'📊', label:'Tổng quan'       },
       { id:'schedule',  icon:'📅', label:'Gửi lịch trống'  },
-      { id:'my-courses', icon:'🎓', label:'Khoá học tôi dạy' },
     ],
     Advisee: [
-      { id:'my-bookings', icon:'📋', label:'Các buổi tư vấn' },
-      { id:'new-booking', icon:'➕', label:'Đặt lịch mới'    },
-      { id:'courses',     icon:'🎓', label:'Khoá học'        },
+      { id:'my-bookings', icon:'📋', label:'Cố vấn 1:1' },
     ],
   };
 
-  var tabs = TABS[role] || [];
+  var tabs = (TABS[role] || []).slice();
+  // Advisee: chỉ mở thêm section "Khoá học" khi đã đăng ký ít nhất 1 khoá
+  if (window._hasCourses) {
+    if (role === 'Advisee') tabs.push({ id:'courses', icon:'🎓', label:'Khoá học' });
+    if (role === 'Advisor') tabs.push({ id:'my-courses', icon:'🎓', label:'Khoá học' });
+  }
   var html = '';
   tabs.forEach(function(t) {
     html += '<div class="role-tab" id="rt-' + t.id + '" onclick="switchRoleTab(\'' + t.id + '\')">';
@@ -1253,8 +1313,7 @@ function renderAdvisee(tab) {
       c.innerHTML = renderAdviseeExpiredNotice(myAe[myAe.length - 1]);
       return;
     }
-    if (tab === 'my-bookings') c.innerHTML = renderMyBookings();
-    else c.innerHTML = renderNewBookingForm();
+    c.innerHTML = renderMyBookings();
   });
 }
 
@@ -1522,71 +1581,235 @@ const DAYS_VI_FULL = ['T2','T3','T4','T5','T6','T7','CN'];
 // Lưu ý: getCalendarMatrix() build tuần bắt đầu từ Thứ 2, nên header tương ứng T2→CN
 
 
-// ── Advisor: lịch trống dạng tháng ──
-function renderSchedulePicker() {
-  _calendarContext = 'advisor-schedule';
-  const slotsByDate = {};
-  sheetData.slots.forEach(function(s){
-    if (normName(s.advisor_name) !== normName(currentUser.name)) return;
-    const d = String(s.date).slice(0,10);
-    if (!slotsByDate[d]) slotsByDate[d] = { available: 0, booked: 0 };
-    if (s.status === 'booked') slotsByDate[d].booked++;
-    else slotsByDate[d].available++;
-  });
-  // gộp cả slot vừa chọn nhưng chưa gửi
-  selectedSlots.forEach(function(key){
-    const d = key.split('_')[0];
-    if (!slotsByDate[d]) slotsByDate[d] = { available: 0, booked: 0 };
-    slotsByDate[d].available++;
-  });
+// ════════════════════════════════════════════════════════════
+//  LỊCH TRỐNG (Advisor) — calendar tuần/tháng, chọn khoảng giờ từ–đến
+//  Mỗi buổi meeting = 60 phút. Khoảng giờ rảnh được tách thành các "giờ bắt đầu"
+//  cách nhau 15 phút (VD rảnh 08:00–12:00 → advisee đặt được 08:00, 08:15 … 11:00)
+//  để advisee có thể chọn cả giờ lẻ như 08:30.
+// ════════════════════════════════════════════════════════════
+var SC_STEP = 15, SC_DUR = 60;
+var _calRerender = {};
+var _cal = { advisor: { view: 'week', anchor: new Date() }, advisee: { view: 'week', anchor: new Date() } };
+var _schDraft = []; // [{ date:'YYYY-MM-DD', from:minutes, to:minutes }] — đã chọn nhưng chưa gửi
 
-  window._advisorSlotsByDate = slotsByDate; // dùng lại trong modal ngày
+function tmin(t) { var m = /(\d{1,2}):(\d{2})/.exec(String(t || '')); return m ? (+m[1]) * 60 + (+m[2]) : null; }
+function tstr(m) { return pad(Math.floor(m / 60)) + ':' + pad(m % 60); }
+function slotDate(s) { return String(s.date || '').slice(0, 10); }
+function addDays(d, n) { return new Date(d.getFullYear(), d.getMonth(), d.getDate() + n); }
+function calMonday(d) { var x = new Date(d.getFullYear(), d.getMonth(), d.getDate()); x.setDate(x.getDate() - ((x.getDay() + 6) % 7)); return x; }
+function minutesNowIfToday(dateStr) { var n = new Date(); return dateStr === ymd(n) ? n.getHours() * 60 + n.getMinutes() : -1; }
+function dayLabel(dateStr) { var d = new Date(dateStr + 'T00:00:00'); return DAYS_VI[d.getDay()] + ' ' + d.getDate() + '/' + (d.getMonth() + 1); }
 
-  return renderMonthCalendar({
-    title: 'Gửi lịch trống',
-    onCellClick: 'openAdvisorDayModal',
-    countFn: function(dateStr) {
-      const x = slotsByDate[dateStr];
-      return { slot: x ? x.available : 0, meeting: x ? x.booked : 0 };
-    }
+// Mỗi start phủ [s, s+60). Gộp các khoảng chồng/liền nhau thành khoảng rảnh liên tục.
+function startsToRanges(starts) {
+  var out = [];
+  starts.slice().sort(function(a, b){ return a - b; }).forEach(function(s) {
+    var e = s + SC_DUR;
+    if (out.length && s <= out[out.length - 1][1]) out[out.length - 1][1] = Math.max(out[out.length - 1][1], e);
+    else out.push([s, e]);
   });
+  return out;
+}
+// Giờ bắt đầu hợp lệ = còn ở tương lai và không đè lên buổi đã được đặt (±60 phút)
+function validStarts(starts, booked, minToday) {
+  return starts.filter(function(s){ return s > minToday && booked.every(function(b){ return Math.abs(s - b) >= SC_DUR; }); }).sort(function(a, b){ return a - b; });
 }
 
-function openAdvisorDayModal(dateStr) {
-  const dateObj = new Date(dateStr + 'T00:00:00');
-  const dow = DAYS_VI[dateObj.getDay()];
-  document.getElementById('modal-title').textContent = dow + ' ' + dateObj.getDate() + '/' + (dateObj.getMonth()+1) + ' — Chọn giờ trống';
+// ── Calendar dùng chung ──
+function calDays(key) {
+  var st = _cal[key], a = st.anchor, days = [], i;
+  if (st.view === 'week') { var m = calMonday(a); for (i = 0; i < 7; i++) days.push(addDays(m, i)); }
+  else {
+    var first = new Date(a.getFullYear(), a.getMonth(), 1), last = new Date(a.getFullYear(), a.getMonth() + 1, 0);
+    for (var d = calMonday(first), end = addDays(calMonday(last), 6); d <= end; d = addDays(d, 1)) days.push(d);
+  }
+  return days;
+}
+function calLabel(key) {
+  var st = _cal[key];
+  if (st.view === 'month') return 'Tháng ' + (st.anchor.getMonth() + 1) + ' ' + st.anchor.getFullYear();
+  var days = calDays(key), a = days[0], b = days[6];
+  return a.getDate() + '/' + (a.getMonth() + 1) + ' – ' + b.getDate() + '/' + (b.getMonth() + 1) + '/' + b.getFullYear();
+}
+function calNav(key, dir) {
+  var st = _cal[key];
+  st.anchor = st.view === 'week' ? addDays(st.anchor, 7 * dir) : new Date(st.anchor.getFullYear(), st.anchor.getMonth() + dir, 1);
+  _calRerender[key]();
+}
+function calSetView(key, v) { _cal[key].view = v; _calRerender[key](); }
+function calToday(key) { _cal[key].anchor = new Date(); _calRerender[key](); }
 
-  const bookedTimes = {};
-  const savedTimes = {};
-  sheetData.slots.forEach(function(s){
-    if (normName(s.advisor_name) !== normName(currentUser.name)) return;
-    if (String(s.date).slice(0,10) !== dateStr) return;
-    if (s.status === 'booked') bookedTimes[s.time_start] = true;
-    if (s.status === 'available') savedTimes[s.time_start] = true;
+// cfg: { title, hint, topHtml, onClick, cellFn(dateStr, view) -> { html, enabled }, selected }
+function renderCal(key, cfg) {
+  var st = _cal[key], view = st.view, today = ymd(new Date());
+  var html = '';
+  if (cfg.title) html += '<div class="card-header"><div class="card-header-left">' + cfg.title + '</div></div>';
+  if (cfg.hint) html += '<div style="padding:12px 20px 0;font-size:13px;color:var(--muted);line-height:1.6">' + cfg.hint + '</div>';
+  html += '<div class="sc-toolbar"><div class="sc-nav"><button onclick="calNav(\'' + key + '\',-1)">‹</button><span class="sc-label">' + calLabel(key) + '</span><button onclick="calNav(\'' + key + '\',1)">›</button>' +
+    '<button class="sc-today" onclick="calToday(\'' + key + '\')">Hôm nay</button></div>' +
+    '<div class="sc-seg"><button class="' + (view === 'week' ? 'on' : '') + '" onclick="calSetView(\'' + key + '\',\'week\')">Tuần</button>' +
+    '<button class="' + (view === 'month' ? 'on' : '') + '" onclick="calSetView(\'' + key + '\',\'month\')">Tháng</button></div></div>';
+  if (cfg.topHtml) html += cfg.topHtml;
+  html += '<div class="sc-grid ' + view + '">';
+  ['T2','T3','T4','T5','T6','T7','CN'].forEach(function(d){ html += '<div class="sc-hdr">' + d + '</div>'; });
+  calDays(key).forEach(function(d) {
+    var ds = ymd(d), isPast = ds < today, other = view === 'month' && d.getMonth() !== st.anchor.getMonth();
+    var cell = cfg.cellFn(ds, view) || { html: '', enabled: true };
+    var enabled = !isPast && cell.enabled !== false;
+    var cls = 'sc-cell' + (ds === today ? ' today' : '') + (other ? ' other' : '') + (isPast ? ' past' : (enabled ? '' : ' off')) + (cfg.selected === ds ? ' sel' : '');
+    html += '<div class="' + cls + '"' + (enabled ? ' onclick="' + cfg.onClick + '(\'' + ds + '\')"' : '') + '>' +
+      '<div><span class="sc-dnum">' + d.getDate() + (view === 'month' && d.getDate() === 1 ? '/' + (d.getMonth() + 1) : '') + '</span><span class="sc-dow"> ' + DAYS_VI[d.getDay()] + ' ' + d.getDate() + '/' + (d.getMonth() + 1) + '</span></div>' +
+      (cell.html || '') + '</div>';
   });
+  return html + '</div>';
+}
 
-  let html = '<div class="day-time-grid" id="day-time-grid">';
-  TIME_SLOTS.forEach(function(t){
-    const key = dateStr + '_' + t;
-    const isBooked = !!bookedTimes[t];
-    const isSel = selectedSlots.has(key) || !!savedTimes[t];
-    html += '<button class="day-time-chip' + (isBooked?' booked':isSel?' selected':'') + '" data-key="' + key + '" ' + (isBooked?'disabled':'') + ' onclick="toggleDaySlot(this,\'' + key + '\')">' + t + '</button>';
+// ── Advisor: tab "Gửi lịch trống" ──
+function schDayInfo(dateStr) {
+  var starts = [], booked = [];
+  sheetData.slots.forEach(function(s) {
+    if (normName(s.advisor_name) !== normName(currentUser.name) || slotDate(s) !== dateStr) return;
+    var m = tmin(s.time_start); if (m == null) return;
+    if (s.status === 'booked') booked.push(m); else if (s.status === 'available' || !s.status) starts.push(m);
   });
-  html += '</div>';
+  return { ranges: startsToRanges(validStarts(starts, booked, minutesNowIfToday(dateStr))), booked: booked.sort(function(a, b){ return a - b; }) };
+}
 
-  document.getElementById('modal-body').innerHTML = html;
+function renderSchedulePicker() {
+  _calendarContext = 'advisor-schedule';
+  _calRerender.advisor = function(){ document.getElementById('main-content').innerHTML = renderSchedulePicker(); };
+  var bar = '';
+  if (_schDraft.length) {
+    bar = '<div class="sc-bar"><div>📝 Bạn đã chọn <b>' + _schDraft.length + ' khung giờ</b> chưa gửi. Bấm vào ngày khác để chọn thêm.</div>' +
+      '<div style="display:flex;gap:8px"><button class="btn-secondary" style="width:auto;padding:8px 14px;font-size:13px" onclick="schClearDraft()">Xoá hết</button>' +
+      '<button class="login-btn" style="width:auto;padding:8px 16px;font-size:13px" onclick="schOpenConfirm()">Xem & gửi →</button></div></div>';
+  }
+  return '<div class="card">' + renderCal('advisor', {
+    title: 'Gửi lịch trống',
+    hint: 'Bấm vào ngày bạn rảnh → chọn <b>từ mấy giờ đến mấy giờ</b>. Mỗi buổi meeting kéo dài 60 phút, advisee có thể đặt bất kỳ giờ/phút nào nằm trong khoảng bạn mở.',
+    topHtml: bar, onClick: 'schOpenDay',
+    cellFn: function(ds, view) {
+      var info = schDayInfo(ds), chips = [];
+      info.ranges.forEach(function(r){ chips.push('<span class="sc-chip free">' + tstr(r[0]) + '–' + tstr(r[1]) + '</span>'); });
+      _schDraft.forEach(function(r){ if (r.date === ds) chips.push('<span class="sc-chip draft">' + tstr(r.from) + '–' + tstr(r.to) + ' · chưa gửi</span>'); });
+      info.booked.forEach(function(b){ chips.push('<span class="sc-chip booked">' + tstr(b) + ' · đã đặt</span>'); });
+      var max = view === 'week' ? 8 : 2, out = chips.slice(0, max).join('');
+      if (chips.length > max) out += '<span class="sc-more">+' + (chips.length - max) + ' nữa</span>';
+      return { html: '<div class="sc-chips">' + out + '</div>' };
+    }
+  }) + '</div>';
+}
+
+function schTimeSelect(id, valM, minH, maxH) {
+  var h = Math.floor(valM / 60), m = valM % 60, o = '<select class="sc-sel" id="' + id + '-h">';
+  for (var i = minH; i <= maxH; i++) o += '<option value="' + i + '"' + (i === h ? ' selected' : '') + '>' + pad(i) + '</option>';
+  o += '</select><span>:</span><select class="sc-sel" id="' + id + '-m">';
+  [0, 15, 30, 45].forEach(function(x){ o += '<option value="' + x + '"' + (x === m ? ' selected' : '') + '>' + pad(x) + '</option>'; });
+  return o + '</select>';
+}
+function schReadTime(id) { return (+document.getElementById(id + '-h').value) * 60 + (+document.getElementById(id + '-m').value); }
+
+var _schDay = null;
+function schOpenDay(dateStr) {
+  _schDay = dateStr;
+  var nowM = minutesNowIfToday(dateStr);
+  var from = nowM >= 0 ? Math.min(22 * 60, Math.ceil((nowM + 1) / 15) * 15) : 9 * 60;
+  var to = Math.min(23 * 60 + 45, from + 180);
+  document.getElementById('modal-title').textContent = dayLabel(dateStr) + ' — Chọn khung giờ rảnh';
+  var info = schDayInfo(dateStr), body = '';
+  if (info.ranges.length || info.booked.length) {
+    body += '<div style="font-size:12.5px;color:var(--muted);margin-bottom:12px">Đã gửi cho ngày này: ' +
+      info.ranges.map(function(r){ return '<span class="sc-chip free">' + tstr(r[0]) + '–' + tstr(r[1]) + '</span>'; }).join(' ') +
+      info.booked.map(function(b){ return ' <span class="sc-chip booked">' + tstr(b) + ' · đã đặt</span>'; }).join('') + '</div>';
+  }
+  var mine = _schDraft.map(function(r, i){ return { r: r, i: i }; }).filter(function(x){ return x.r.date === dateStr; });
+  if (mine.length) {
+    body += '<div style="font-size:12.5px;margin-bottom:12px">Đã chọn (chưa gửi): ' + mine.map(function(x){
+      return '<span class="sc-chip draft">' + tstr(x.r.from) + '–' + tstr(x.r.to) + ' <a href="#" onclick="schRemoveDraft(' + x.i + ');schOpenDay(\'' + dateStr + '\');return false" style="color:inherit;margin-left:4px">✕</a></span>';
+    }).join(' ') + '</div>';
+  }
+  body += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">' +
+    '<div><div class="form-label" style="margin-bottom:8px">Từ</div><div class="sc-time-row">' + schTimeSelect('sch-from', from, 6, 22) + '</div></div>' +
+    '<div><div class="form-label" style="margin-bottom:8px">Đến</div><div class="sc-time-row">' + schTimeSelect('sch-to', to, 7, 23) + '</div></div></div>' +
+    '<div style="font-size:12px;color:var(--muted);margin-top:12px;line-height:1.6">Khoảng giờ tối thiểu 60 phút. VD mở 08:00–12:00 thì advisee đặt được giờ bắt đầu từ 08:00 đến 11:00 (kể cả 08:30, 09:15…).</div>';
+  document.getElementById('modal-body').innerHTML = body;
   document.getElementById('modal-actions').innerHTML =
-    '<button class="btn-secondary" onclick="closeModal()" style="width:auto;padding:10px 20px">Đóng</button>' +
-    '<button class="login-btn" id="day-send-btn" style="width:auto;padding:10px 24px" onclick="sendSlots()">Gửi lịch trống đã chọn</button>';
+    '<button class="btn-secondary" onclick="closeModal()" style="width:auto;padding:10px 18px">Đóng</button>' +
+    '<button class="btn-secondary" onclick="schAddDraft(\'more\')" style="width:auto;padding:10px 18px">+ Chọn thêm</button>' +
+    '<button class="login-btn" onclick="schAddDraft(\'send\')" style="width:auto;padding:10px 20px">Gửi khung giờ →</button>';
   document.getElementById('modal-overlay').classList.add('open');
 }
 
-function toggleDaySlot(btn, key) {
-  if (selectedSlots.has(key)) { selectedSlots.delete(key); btn.classList.remove('selected'); }
-  else { selectedSlots.add(key); btn.classList.add('selected'); }
+function schAddDraft(next) {
+  var from = schReadTime('sch-from'), to = schReadTime('sch-to'), nowM = minutesNowIfToday(_schDay);
+  if (to - from < SC_DUR) { toast('Khoảng giờ phải dài ít nhất 60 phút', 'error'); return; }
+  if (from <= nowM) { toast('Giờ bắt đầu phải ở tương lai', 'error'); return; }
+  // gộp với khoảng đã chọn cùng ngày nếu chồng nhau
+  var merged = { date: _schDay, from: from, to: to };
+  _schDraft = _schDraft.filter(function(r) {
+    if (r.date === _schDay && r.from <= merged.to && r.to >= merged.from) { merged.from = Math.min(merged.from, r.from); merged.to = Math.max(merged.to, r.to); return false; }
+    return true;
+  });
+  _schDraft.push(merged);
+  _schDraft.sort(function(a, b){ return a.date === b.date ? a.from - b.from : (a.date < b.date ? -1 : 1); });
+  if (next === 'send') { schOpenConfirm(); return; }
+  closeModal();
+  toast('Đã thêm. Chọn thêm ngày khác hoặc bấm "Xem & gửi".', 'success');
+  _calRerender.advisor();
 }
+function schRemoveDraft(i) { _schDraft.splice(i, 1); }
+function schClearDraft() { _schDraft = []; _calRerender.advisor(); }
 
+function schOpenConfirm() {
+  if (!_schDraft.length) { toast('Chưa chọn khung giờ nào', 'error'); return; }
+  document.getElementById('modal-title').textContent = 'Xác nhận gửi lịch trống';
+  var html = '<div style="font-size:13.5px;margin-bottom:12px">Bạn sắp gửi <b>' + _schDraft.length + ' khung giờ</b> sau cho advisee đặt lịch:</div>';
+  _schDraft.forEach(function(r) {
+    html += '<div style="display:flex;justify-content:space-between;gap:10px;align-items:center;border:1.5px solid var(--border);border-radius:10px;padding:10px 14px;margin-bottom:8px">' +
+      '<div><div style="font-weight:700;font-size:14px">' + dayLabel(r.date) + '/' + r.date.slice(0, 4) + '</div>' +
+      '<div style="font-size:12px;color:var(--muted);margin-top:2px">Advisee đặt được giờ bắt đầu từ ' + tstr(r.from) + ' đến ' + tstr(r.to - SC_DUR) + '</div></div>' +
+      '<span class="sc-chip free" style="font-size:13px">' + tstr(r.from) + ' – ' + tstr(r.to) + '</span></div>';
+  });
+  document.getElementById('modal-body').innerHTML = html;
+  document.getElementById('modal-actions').innerHTML =
+    '<button class="btn-secondary" onclick="schBack()" style="width:auto;padding:10px 20px">← Quay lại</button>' +
+    '<button class="login-btn" id="sch-confirm-btn" onclick="schConfirmSend()" style="width:auto;padding:10px 24px">Confirm gửi</button>';
+  document.getElementById('modal-overlay').classList.add('open');
+}
+function schBack() { closeModal(); _calRerender.advisor(); }
+
+function schConfirmSend() {
+  var existing = {};
+  sheetData.slots.forEach(function(s){
+    if (normName(s.advisor_name) === normName(currentUser.name)) { var m = tmin(s.time_start); if (m != null) existing[slotDate(s) + '_' + tstr(m)] = true; }
+  });
+  var keys = [], seen = {};
+  _schDraft.forEach(function(r) {
+    var nowM = minutesNowIfToday(r.date);
+    for (var s = r.from; s + SC_DUR <= r.to; s += SC_STEP) {
+      var k = r.date + '_' + tstr(s);
+      if (s > nowM && !existing[k] && !seen[k]) { seen[k] = true; keys.push(k); }
+    }
+  });
+  if (!keys.length) { toast('Các khung giờ này đã được gửi trước đó', 'error'); return; }
+  var btn = document.getElementById('sch-confirm-btn');
+  if (btn) { btn.innerHTML = '<span class="spinner"></span> Đang gửi...'; btn.disabled = true; }
+  apiPost({
+    action: 'addSlots', advisor: currentUser.name, advisor_id: currentUser.advisorId || '',
+    advisor_email: currentUser.email, slots: keys, duration_minutes: SC_DUR,
+  }).then(function(res) {
+    if (res && res.success) {
+      toast('Đã gửi lịch trống thành công ✅', 'success');
+      _schDraft = []; closeModal(); switchRoleTab('schedule');
+    } else {
+      toast('Lỗi: ' + (res && res.error ? res.error : 'không gửi được'), 'error');
+      if (btn) { btn.innerHTML = 'Confirm gửi'; btn.disabled = false; }
+    }
+  }).catch(function(e) {
+    toast('Lỗi kết nối: ' + e.message, 'error');
+    if (btn) { btn.innerHTML = 'Confirm gửi'; btn.disabled = false; }
+  });
+}
 
 // ── Staff: lịch meeting dạng tháng (trong module LinkaJob) ──
 // ════════════════════════════════════════════════════════════
@@ -4237,10 +4460,23 @@ function saveAdvisorEdit(advisorId) {
 
 function openAdvisorSelfEditModal() {
   if (!currentUser) return;
-  var a = sheetData.advisors.find(function(x){ return x.name === currentUser.name; });
-  if (!a) { toast('Không tìm thấy hồ sơ Advisor tương ứng', 'error'); return; }
   closeUserMenu();
-  openEditAdvisorModal(a.id);
+  // sheetData.advisors chỉ được nạp ở trang Staff — Advisor tự đăng nhập thì phải nạp trước khi mở form
+  function findMe() {
+    return sheetData.advisors.find(function(x){
+      return (currentUser.advisorId && x.id === currentUser.advisorId) ||
+             normName(x.name) === normName(currentUser.name) ||
+             (x.email && normName(x.email) === normName(currentUser.email));
+    });
+  }
+  var a = findMe();
+  if (a) { openEditAdvisorModal(a.id); return; }
+  toast('Đang tải hồ sơ...', '');
+  loadAdvisorsFromSheet(function(){
+    var b = findMe();
+    if (!b) { toast('Không tìm thấy hồ sơ Advisor tương ứng', 'error'); return; }
+    openEditAdvisorModal(b.id);
+  });
 }
 
 // ════════════════════════════════════════════════════════════
@@ -4631,126 +4867,188 @@ function openAdviseeSessionModal(sessionNo) {
   document.getElementById('modal-overlay').classList.add('open');
 }
 
-  var _bookSessionCtx = null; // { aeId, sessionNo, advisorName }
-var _bookSessionSlots = {}; // { 'YYYY-MM-DD': [{slot_id, time}] }
+// ════════════════════════════════════════════════════════════
+//  ADVISEE ĐẶT LỊCH — calendar tuần/tháng, chọn giờ + phút, rồi xác nhận
+//  Chỉ hiện hôm nay & tương lai; ẩn giờ đã qua và giờ đè lên buổi đã được đặt.
+// ════════════════════════════════════════════════════════════
+var _bookSessionCtx = null; // { aeId, sessionNo, advisorName }
+var _bk = { avail: {}, booked: {}, selDate: null, selM: null, step: 'pick' };
 
 function openBookSessionModal(aeId, sessionNo) {
   var ae = MOCK.advisees.find(function(x){ return x.id === aeId; });
   if (!ae) return;
   _bookSessionCtx = { aeId: aeId, sessionNo: sessionNo, advisorName: ae.advisor };
-  _bookSessionSlots = {};
-  _bookSessionSelected = null;
+  _bk = { avail: {}, booked: {}, selDate: null, selM: null, step: 'pick' };
+  _cal.advisee = { view: 'week', anchor: new Date() };
+  _calRerender.advisee = renderBkBody;
 
   document.getElementById('modal-title').textContent = 'Chọn giờ meeting — Buổi ' + sessionNo;
   document.getElementById('modal-body').innerHTML = skeletonRows(2);
-  document.getElementById('modal-actions').innerHTML =
-    '<button class="btn-secondary" onclick="closeModal()" style="width:auto;padding:10px 20px">Đóng</button>';
+  document.getElementById('modal-actions').innerHTML = '<button class="btn-secondary" onclick="closeModal()" style="width:auto;padding:10px 20px">Đóng</button>';
+  var box = document.querySelector('.modal'); if (box) box.style.maxWidth = '780px';
   document.getElementById('modal-overlay').classList.add('open');
 
-  apiGet('getSlots', { advisor: ae.advisor, only_available: '1' }).then(function(res){
-    var raw = (res && res.data) ? res.data : [];
-    raw.forEach(function(s){
-      var d = String(s.date || '').slice(0, 10);
-      if (!d) return;
-      if (!_bookSessionSlots[d]) _bookSessionSlots[d] = [];
-      _bookSessionSlots[d].push({ slot_id: s.slot_id, time: s.time_start, timeEnd: s.time_end });
+  apiGet('getSlots', { advisor: ae.advisor }).then(function(res) {
+    var raw = (res && res.data) ? res.data : [], today = ymd(new Date()), starts = {};
+    raw.forEach(function(s) {
+      var d = slotDate(s), m = tmin(s.time_start);
+      if (!d || m == null || d < today) return; // chỉ từ hôm nay trở đi
+      var st = String(s.status || 'available').toLowerCase();
+      if (st === 'booked') { (_bk.booked[d] = _bk.booked[d] || []).push(m); }
+      else if (st === 'available') { (starts[d] = starts[d] || []).push({ slot_id: s.slot_id, m: m }); }
     });
-    Object.keys(_bookSessionSlots).forEach(function(d){
-      _bookSessionSlots[d].sort(function(a,b){ return a.time.localeCompare(b.time); });
+    Object.keys(starts).forEach(function(d) {
+      var nowM = minutesNowIfToday(d), bk = _bk.booked[d] || [];
+      var list = starts[d].filter(function(x){ return x.m > nowM && bk.every(function(b){ return Math.abs(x.m - b) >= SC_DUR; }); });
+      if (list.length) _bk.avail[d] = list.sort(function(a, b){ return a.m - b.m; });
     });
-    renderBookSessionModalBody();
-  }).catch(function(err){
+    // mở sẵn tuần có ngày trống gần nhất
+    var first = Object.keys(_bk.avail).sort()[0];
+    if (first) _cal.advisee.anchor = new Date(first + 'T00:00:00');
+    renderBkBody();
+  }).catch(function(err) {
     document.getElementById('modal-body').innerHTML =
       '<div class="empty-state"><div class="icon">⚠</div>Không tải được lịch trống của Advisor.<br><small style="color:var(--muted)">' + err.message + '</small></div>';
   });
 }
 
-var _bookSessionSelected = null; // { date, time, slotId } — slot đã chọn nhưng CHƯA xác nhận
+function bkStarts(d) { return (_bk.avail[d] || []).map(function(x){ return x.m; }); }
 
-function renderBookSessionModalBody() {
-  var dates = Object.keys(_bookSessionSlots).filter(function(d){ return _bookSessionSlots[d].length > 0; }).sort();
-  var html = '<div style="font-size:13px;color:var(--muted);margin-bottom:14px">Chọn 1 khung giờ trống từ lịch của Advisor <b>' + _bookSessionCtx.advisorName + '</b>, sau đó bấm "Xác nhận đặt lịch".</div>';
-
-  if (dates.length === 0) {
-    html += '<div class="empty-state"><div class="icon">📭</div>Advisor hiện chưa có giờ trống nào. Vui lòng liên hệ đội LinkaJob để được hỗ trợ xếp lịch.</div>';
-  } else {
-    dates.forEach(function(d){
-      var dateObj = new Date(d + 'T00:00:00');
-      var label = DAYS_VI[dateObj.getDay()] + ' ' + dateObj.getDate() + '/' + (dateObj.getMonth()+1) + '/' + dateObj.getFullYear();
-      html += '<div style="font-size:12.5px;font-weight:700;color:var(--text);margin:14px 0 8px">' + label + '</div>';
-      html += '<div style="display:flex;flex-wrap:wrap;gap:8px">';
-      _bookSessionSlots[d].forEach(function(sl){
-        var isSel = _bookSessionSelected && _bookSessionSelected.date === d && _bookSessionSelected.slotId === sl.slot_id;
-        html += '<button class="day-time-chip' + (isSel?' selected':'') + '" onclick="selectBookSlot(\'' + d + '\',\'' + sl.time + '\',\'' + sl.slot_id + '\')">' + sl.time + '</button>';
-      });
-      html += '</div>';
-    });
+function renderBkBody() {
+  if (_bk.step === 'confirm') { renderBkConfirm(); return; }
+  var hasAny = Object.keys(_bk.avail).length > 0;
+  var html = '<div style="font-size:13px;color:var(--muted);margin-bottom:6px;line-height:1.6">Chọn ngày có khung giờ trống của Advisor <b>' + _bookSessionCtx.advisorName + '</b>, sau đó chọn giờ và phút bắt đầu (buổi meeting 60 phút).</div>';
+  if (!hasAny) {
+    html += '<div class="empty-state"><div class="icon">📭</div>Advisor hiện chưa có giờ trống nào từ hôm nay trở đi. Vui lòng liên hệ đội LinkaJob để được hỗ trợ xếp lịch.</div>';
+    document.getElementById('modal-body').innerHTML = html;
+    document.getElementById('modal-actions').innerHTML = '<button class="btn-secondary" onclick="closeModal()" style="width:auto;padding:10px 20px">Đóng</button>';
+    return;
   }
+  html += renderCal('advisee', {
+    onClick: 'bkPickDay', selected: _bk.selDate,
+    cellFn: function(ds, view) {
+      var rs = startsToRanges(bkStarts(ds));
+      if (!rs.length) return { html: '', enabled: false };
+      var max = view === 'week' ? 6 : 2, out = rs.slice(0, max).map(function(r){ return '<span class="sc-chip free">' + tstr(r[0]) + '–' + tstr(r[1]) + '</span>'; }).join('');
+      if (rs.length > max) out += '<span class="sc-more">+' + (rs.length - max) + ' nữa</span>';
+      return { html: '<div class="sc-chips">' + out + '</div>' };
+    }
+  });
+  html += '<div id="bk-panel">' + bkPanelHtml() + '</div>';
   document.getElementById('modal-body').innerHTML = html;
-  renderBookSessionModalActions();
+  bkRenderActions();
 }
 
-// Bước 1: chỉ CHỌN slot (bôi sáng chip), chưa gửi request gì cả
-function selectBookSlot(dateStr, time, slotId) {
-  _bookSessionSelected = { date: dateStr, time: time, slotId: slotId };
-  renderBookSessionModalBody();
+function bkPanelHtml() {
+  if (!_bk.selDate) return '<div style="font-size:13px;color:var(--muted);padding:4px 20px 16px">👆 Bấm vào một ngày có giờ trống để chọn giờ.</div>';
+  var starts = bkStarts(_bk.selDate), hours = [], h = Math.floor(_bk.selM / 60);
+  starts.forEach(function(m){ var x = Math.floor(m / 60); if (hours.indexOf(x) < 0) hours.push(x); });
+  var mins = starts.filter(function(m){ return Math.floor(m / 60) === h; }).map(function(m){ return m % 60; });
+  var rs = startsToRanges(starts).map(function(r){ return tstr(r[0]) + '–' + tstr(r[1]); }).join(', ');
+  return '<div class="sc-pick">' +
+    '<div style="font-weight:700;font-size:14px;margin-bottom:2px">' + dayLabel(_bk.selDate) + '/' + _bk.selDate.slice(0, 4) + '</div>' +
+    '<div style="font-size:12.5px;color:var(--muted);margin-bottom:12px">Advisor rảnh: ' + rs + '</div>' +
+    '<div class="sc-time-row"><span class="form-label" style="margin:0">Giờ bắt đầu</span>' +
+    '<select class="sc-sel" onchange="bkHour(this.value)">' + hours.map(function(x){ return '<option value="' + x + '"' + (x === h ? ' selected' : '') + '>' + pad(x) + ' giờ</option>'; }).join('') + '</select>' +
+    '<select class="sc-sel" onchange="bkMin(this.value)">' + mins.map(function(x){ return '<option value="' + x + '"' + (x === _bk.selM % 60 ? ' selected' : '') + '>' + pad(x) + ' phút</option>'; }).join('') + '</select></div>' +
+    '<div style="margin-top:12px;font-size:14px">Buổi meeting: <b style="color:var(--brand)">' + tstr(_bk.selM) + ' – ' + tstr(_bk.selM + SC_DUR) + '</b> <span style="color:var(--muted);font-size:12.5px">(60 phút)</span></div></div>';
 }
 
-function renderBookSessionModalActions() {
-  var actions = '<button class="btn-secondary" onclick="closeModal()" style="width:auto;padding:10px 20px">Đóng</button>';
-  if (_bookSessionSelected) {
-    var t = _bookSessionSelected.date.split('-').reverse().join('/');
-    actions += '<button class="login-btn" onclick="confirmBookSession()" style="width:auto;padding:10px 24px">Xác nhận đặt lịch ' + t + ' · ' + _bookSessionSelected.time + ' →</button>';
+function bkPickDay(d) {
+  _bk.selDate = d;
+  _bk.selM = bkStarts(d)[0];
+  renderBkBody();
+  var p = document.getElementById('bk-panel'); if (p && p.scrollIntoView) p.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+function bkHour(h) {
+  var first = bkStarts(_bk.selDate).filter(function(m){ return Math.floor(m / 60) === +h; })[0];
+  if (first != null) _bk.selM = first;
+  document.getElementById('bk-panel').innerHTML = bkPanelHtml();
+}
+function bkMin(mm) { _bk.selM = Math.floor(_bk.selM / 60) * 60 + (+mm); document.getElementById('bk-panel').innerHTML = bkPanelHtml(); }
+
+function bkRenderActions() {
+  var a = '<button class="btn-secondary" onclick="closeModal()" style="width:auto;padding:10px 20px">Đóng</button>';
+  if (_bk.selDate && _bk.selM != null) {
+    a += '<button class="login-btn" onclick="bkGoConfirm()" style="width:auto;padding:10px 24px">Tiếp tục →</button>';
   } else {
-    actions += '<button class="login-btn" disabled style="width:auto;padding:10px 24px;opacity:.5;cursor:not-allowed">Chọn 1 khung giờ ở trên</button>';
+    a += '<button class="login-btn" disabled style="width:auto;padding:10px 24px;opacity:.5;cursor:not-allowed">Chọn ngày & giờ</button>';
   }
-  document.getElementById('modal-actions').innerHTML = actions;
+  document.getElementById('modal-actions').innerHTML = a;
+}
+function bkGoConfirm() { _bk.step = 'confirm'; renderBkConfirm(); }
+function bkBack() { _bk.step = 'pick'; renderBkBody(); }
+
+function renderBkConfirm() {
+  var d = _bk.selDate;
+  document.getElementById('modal-title').textContent = 'Xác nhận đặt lịch — Buổi ' + _bookSessionCtx.sessionNo;
+  document.getElementById('modal-body').innerHTML =
+    '<div style="border:1.5px solid var(--border);border-radius:12px;padding:16px 18px;margin-bottom:12px">' +
+      '<div style="font-size:12px;color:var(--muted);margin-bottom:2px">Advisor</div><div style="font-weight:700;margin-bottom:10px">' + _bookSessionCtx.advisorName + '</div>' +
+      '<div style="font-size:12px;color:var(--muted);margin-bottom:2px">Thời gian</div>' +
+      '<div style="font-weight:700;font-size:16px">' + dayLabel(d) + '/' + d.slice(0, 4) + ' · <span style="color:var(--brand)">' + tstr(_bk.selM) + ' – ' + tstr(_bk.selM + SC_DUR) + '</span></div>' +
+      '<div style="font-size:12.5px;color:var(--muted);margin-top:2px">Thời lượng 60 phút</div></div>' +
+    '<div style="background:#FFF7ED;border:1.5px solid #FED7AA;border-radius:10px;padding:12px 16px;font-size:13px;line-height:1.65;color:#9A3412">' +
+      '⚠ Sau khi đặt, bạn cần hoàn thành <b>form câu hỏi gửi Advisor trước giờ hẹn 2 tiếng</b>. Nếu chưa nhận được thông tin, team LinkaJob sẽ xoá lịch meeting và bạn sẽ mất 1 buổi.</div>';
+  document.getElementById('modal-actions').innerHTML =
+    '<button class="btn-secondary" onclick="bkBack()" style="width:auto;padding:10px 20px">← Quay lại</button>' +
+    '<button class="login-btn" id="bk-confirm-btn" onclick="confirmBookSession()" style="width:auto;padding:10px 24px">Xác nhận đặt lịch</button>';
 }
 
-// Bước 2: người dùng bấm nút xác nhận riêng thì mới thực sự gửi request đặt lịch
+// Bước cuối: gửi request đặt lịch thật
 function confirmBookSession() {
-  var ctx = _bookSessionCtx;
-  var sel = _bookSessionSelected;
-  if (!sel) { toast('Vui lòng chọn 1 khung giờ trước!', 'error'); return; }
+  var ctx = _bookSessionCtx, d = _bk.selDate, m = _bk.selM;
+  var slot = (_bk.avail[d] || []).filter(function(x){ return x.m === m; })[0];
+  if (!slot) { toast('Vui lòng chọn lại giờ meeting', 'error'); bkBack(); return; }
   var ae = MOCK.advisees.find(function(x){ return x.id === ctx.aeId; });
   if (!ae) return;
 
-  var btn = document.querySelector('#modal-actions .login-btn');
+  var btn = document.getElementById('bk-confirm-btn');
   if (btn) { btn.innerHTML = '<span class="spinner"></span> Đang đặt lịch...'; btn.disabled = true; }
 
   apiPost({
-    action: 'bookSession',
-    slot_id: sel.slotId,
-    booking_id: ae.bookingId,
-    session_number: ctx.sessionNo,
-    advisee_name: ae.name,
-  }).then(function(res){
+    action: 'bookSession', slot_id: slot.slot_id, booking_id: ae.bookingId,
+    session_number: ctx.sessionNo, advisee_name: ae.name,
+  }).then(function(res) {
     if (!res || !res.success) {
-      toast('Lỗi: ' + (res && res.error ? res.error : 'không đặt được lịch — slot có thể vừa bị người khác chọn'), 'error');
-      _bookSessionSelected = null;
+      toast('Lỗi: ' + (res && res.error ? res.error : 'không đặt được lịch — khung giờ có thể vừa bị người khác chọn'), 'error');
       openBookSessionModal(ctx.aeId, ctx.sessionNo);
       return;
     }
     var s = ae.sessions.find(function(x){ return x.no === ctx.sessionNo; });
-    if (s) {
-      s.date = sel.date;
-      s.timeStart = sel.time;
-      s.session_id = res.session_id; // backend trả về session_id thật vừa tạo
-      s.status = 'upcoming';
-      // Backend luôn tạo session với duration_minutes = 60 (xem action bookSession)
-      var parts = sel.time.split(':');
-      var endMins = (Number(parts[0])||0) * 60 + (Number(parts[1])||0) + 60;
-      var eh = Math.floor(endMins / 60) % 24, em = endMins % 60;
-      s.timeEnd = (eh<10?'0':'') + eh + ':' + (em<10?'0':'') + em;
-    }
-    toast('Đã đặt lịch buổi ' + ctx.sessionNo + ' ✅', 'success');
-    _bookSessionSelected = null;
-    closeModal();
+    var time = tstr(m);
+    if (s) { s.date = d; s.timeStart = time; s.timeEnd = tstr(m + SC_DUR); s.session_id = res.session_id; s.status = 'upcoming'; }
+    toast('Đã đặt lịch buổi ' + ctx.sessionNo + ' thành công ✅', 'success');
     document.getElementById('main-content').innerHTML = renderMyBookings();
-  }).catch(function(err){
+    showBookingSuccessNotice(ctx.sessionNo, d, time);
+  }).catch(function(err) {
     toast('Lỗi kết nối: ' + err.message, 'error');
-    if (btn) { btn.innerHTML = 'Xác nhận đặt lịch →'; btn.disabled = false; }
+    if (btn) { btn.innerHTML = 'Xác nhận đặt lịch'; btn.disabled = false; }
   });
+}
+
+// Thông báo sau khi advisee đặt lịch xong: chờ advisor xác nhận + nhắc điền form trước 2 tiếng
+function showBookingSuccessNotice(sessionNo, dateStr, time) {
+  var d = String(dateStr || '').split('-').reverse().join('/');
+  var _mb = document.querySelector('.modal'); if (_mb) _mb.style.maxWidth = '';
+  document.getElementById('modal-title').textContent = 'Đặt lịch thành công';
+  document.getElementById('modal-body').innerHTML =
+    '<div style="text-align:center;padding:4px 0 14px">' +
+      '<div style="font-size:44px;margin-bottom:8px">✅</div>' +
+      '<div style="font-size:16px;font-weight:800;margin-bottom:4px">Bạn đã đặt lịch buổi ' + sessionNo + ' thành công!</div>' +
+      '<div style="font-size:13.5px;color:var(--muted)">' + d + ' · ' + time + ' — đang chờ Advisor xác nhận</div>' +
+    '</div>' +
+    '<div style="background:var(--green-bg);border-radius:10px;padding:12px 16px;font-size:13.5px;line-height:1.65;margin-bottom:10px">' +
+      '🎥 Link meeting sẽ hiển thị trên dashboard và được gửi qua email của bạn.' +
+    '</div>' +
+    '<div style="background:#FFF7ED;border:1.5px solid #FED7AA;border-radius:10px;padding:12px 16px;font-size:13.5px;line-height:1.65;color:#9A3412">' +
+      '⚠ Vui lòng hoàn thành <b>form câu hỏi gửi đến Advisor trước giờ hẹn 2 tiếng</b>. ' +
+      'Nếu chưa hoàn thành, team LinkaJob sẽ huỷ buổi meeting và bạn sẽ bị mất 1 buổi.' +
+    '</div>';
+  document.getElementById('modal-actions').innerHTML =
+    '<button class="btn-secondary" onclick="closeModal()" style="width:auto;padding:10px 20px">Gửi câu hỏi sau</button>' +
+    '<button class="login-btn" onclick="openAdviseeSessionModal(' + sessionNo + ')" style="width:auto;padding:10px 24px">Điền câu hỏi luôn →</button>';
+  document.getElementById('modal-overlay').classList.add('open');
 }
 
 function aeeHoverStarModal(sessionNo, val) {
