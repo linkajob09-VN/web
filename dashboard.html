@@ -8282,9 +8282,17 @@ function legacyDate_(s) {
   if (mo < 1 || mo > 12 || d < 1 || d > 31) return '';
   return y + '-' + (mo < 10 ? '0' : '') + mo + '-' + (d < 10 ? '0' : '') + d;
 }
-function legacyFindPkg_(name) {
+// Tra cả gói ĐÃ ẨN (PACKAGES_RAW) — khách cũ có thể đang giữ gói không còn bán trên web mới.
+function legacyPkgInfo_(name) {
   var key = String(name || '').trim().toLowerCase();
-  return Object.keys(PACKAGES).filter(function(k){ return k.toLowerCase() === key; })[0] || '';
+  var raw = (PACKAGES_RAW || []).filter(function(p){ return String(p.name || '').trim().toLowerCase() === key; })[0];
+  if (raw) return { name: String(raw.name).trim(), sessions: Number(raw.sessions) || 0, active: raw.active === true || raw.active === 'TRUE' || raw.active === 'true' };
+  var k2 = Object.keys(PACKAGES).filter(function(k){ return k.toLowerCase() === key; })[0];
+  return k2 ? { name: k2, sessions: Number(PACKAGES[k2].sessions) || 0, active: true } : null;
+}
+function legacyFindPkg_(name) {
+  var info = legacyPkgInfo_(name);
+  return info ? info.name : '';
 }
 function legacyParse_(text) {
   var out = [];
@@ -8318,7 +8326,7 @@ function legacyParse_(text) {
     if (!sm) { item.errors.push('Cột buổi "' + item.sessRaw + '" phải dạng 1/4'); }
     else {
       item.sessions_used = +sm[1];
-      var pk = PACKAGES[item.package_name];
+      var pk = legacyPkgInfo_(item.package_name);
       if (pk) {
         if (+sm[2] !== Number(pk.sessions)) item.warns.push('Sheet ghi ' + item.sessRaw + ' nhưng gói ' + item.package_name + ' có ' + pk.sessions + ' buổi → dùng ' + item.sessions_used + '/' + pk.sessions);
         if (item.sessions_used > Number(pk.sessions)) item.errors.push('Đã dùng nhiều hơn tổng buổi');
