@@ -1175,7 +1175,6 @@ const SIDEBAR_DEF = {
       { id: 'lj-meetings',  label: 'Lịch meeting' },
       { id: 'stf-schedule', label: 'Lịch tư vấn (Sale)' },
       { id: 'adv-list',     label: 'Advisor' },
-      { id: 'adv-new',      label: 'Thêm advisor' },
       { id: 'lj-courses',   label: 'Khoá học' },
       { id: 'lj-products',  label: 'Sản phẩm' },
     ]},
@@ -1319,10 +1318,12 @@ function navTo(id) {
     if (old) old.classList.remove('active');
   }
   // Set active item mới
-  const el = document.getElementById('ni-' + id);
+  // Trang "Thêm advisor" không còn mục riêng trong sidebar, nên sáng mục "Advisor"
+  const navAliasId = (id === 'adv-new') ? 'adv-list' : id;
+  const el = document.getElementById('ni-' + navAliasId);
   if (el) el.classList.add('active');
-  activeNavId = id;
-  if (NAV_PARENT[id]) openNavGroup(NAV_PARENT[id]);
+  activeNavId = navAliasId;
+  if (NAV_PARENT[navAliasId]) openNavGroup(NAV_PARENT[navAliasId]);
   _staffDetailId = null; // rời khỏi trang chi tiết nhân viên
   try { localStorage.setItem('linkajob_last_route', id); } catch (e) {}
 
@@ -5406,16 +5407,27 @@ function renderAdvisorNewForm() {
   });
   html += '</div>';
 
-  html += '<div class="card"><div class="form-footer"><button class="submit-btn" onclick="saveNewAdvisor()">Thêm Advisor</button></div></div>';
+  html += '<div class="card"><div class="form-footer" style="display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap">' +
+    '<label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer"><input type="checkbox" id="na-active"> Hiển thị trên website ngay sau khi thêm</label>' +
+    '<button class="submit-btn" id="na-submit" onclick="saveNewAdvisor()">Thêm Advisor</button></div></div>';
   return html;
 }
 
 function saveNewAdvisor() {
+  var btn = document.getElementById('na-submit');
+  if (btn && btn.disabled) return; // chống bấm đúp tạo trùng
   var name = document.getElementById('na-name').value.trim();
   var title = document.getElementById('na-title').value.trim();
   var email = document.getElementById('na-email').value.trim();
   var phone = document.getElementById('na-phone').value.trim();
   if (!name || !title || !email || !phone) { toast('Vui lòng điền đầy đủ các trường bắt buộc (*)', 'error'); return; }
+  if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) { toast('Email chưa đúng định dạng', 'error'); return; }
+  var phoneDigits = phone.replace(/\D/g, '');
+  if (phoneDigits.length < 9 || phoneDigits.length > 12) { toast('SĐT cần 9 đến 12 chữ số', 'error'); return; }
+  var emailLower = email.toLowerCase();
+  if ((sheetData.advisors || []).some(function(a){ return String(a.email || '').trim().toLowerCase() === emailLower; })) {
+    toast('Email này đã có trong danh sách Advisor', 'error'); return;
+  }
 
   var supportItems = [];
   for (var i = 0; i < 3; i++) {
@@ -5438,6 +5450,10 @@ function saveNewAdvisor() {
   });
 
   var products = Array.from(document.querySelectorAll('.na-pkg-cb:checked')).map(function(cb){ return cb.value; });
+  var wantActive = !!document.getElementById('na-active').checked;
+
+  if (btn) { btn.disabled = true; btn.textContent = 'Đang lưu...'; }
+  function unlock() { if (btn) { btn.disabled = false; btn.textContent = 'Thêm Advisor'; } }
 
   apiPost({
     action: 'registerAdvisor',
@@ -5445,16 +5461,24 @@ function saveNewAdvisor() {
     company: document.getElementById('na-company').value.trim(),
     industry: document.getElementById('na-tags').value.trim(),
     email: email, phone: phone,
+    zalo_id: document.getElementById('na-contact').value.trim(), // cùng cột với trang sửa hồ sơ (hiển thị là "Liên hệ")
     bio: document.getElementById('na-bio').value.trim(),
+    message: document.getElementById('na-message').value.trim(),
     experience: experience,
+    support_items: supportItems,
+    products: products,
+    is_active: wantActive,
   }).then(function(res){
     if (res && res.success) {
-      toast('Đã thêm ' + name + ' — cần vào Sheet đổi is_active = TRUE để hiện trên web ✅', 'success');
-      navTo('adv-list');
+      toast('Đã thêm ' + name + (wantActive ? ' và bật hiển thị trên web ✅' : '. Bật "hoạt động" trong danh sách để hiện trên web ✅'), 'success');
+      // Tải lại danh sách từ Sheet để advisor mới xuất hiện ngay
+      loadAdvisorsFromSheet(function(){ navTo('adv-list'); }, true);
     } else {
-      toast('Lỗi khi lưu lên Sheet: ' + (res && res.error), 'error');
+      unlock();
+      toast('Lỗi khi lưu lên Sheet: ' + (res && res.error ? res.error : 'không rõ nguyên nhân'), 'error');
     }
   }).catch(function(err){
+    unlock();
     toast('Lỗi kết nối: ' + err.message, 'error');
   });
 }
@@ -5499,7 +5523,7 @@ function renderAdvisorModule() {
   // Active advisor cards
   html += '<div class="card"><div class="card-header"><div class="card-header-left">Advisor đang hoạt động</div>';
   html += '<div style="display:flex;gap:8px"><button class="refresh-btn" onclick="loadAdvisorsFromSheet(function(){ renderStaff(\'advisor-mod\'); }, true)">↻ Làm mới</button>';
-  html += '<button class="submit-btn" style="padding:8px 16px;font-size:13px" onclick="toast(\'Form thêm Advisor mới (demo)\',\'success\')">+ Thêm Advisor mới</button></div></div>';
+  html += '<button class="submit-btn" style="padding:8px 16px;font-size:13px" onclick="navTo(\'adv-new\')">+ Thêm Advisor mới</button></div></div>';
   html += '<div style="padding:0 20px">' + searchBoxHtml('advisor-list-tbody', 'Tìm theo tên, chức danh, email...') + '</div>';
   if (active.length === 0) {
     html += '<div class="empty-state"><div class="icon">👤</div>Chưa có advisor nào</div>';
@@ -5741,17 +5765,32 @@ function renderStaffAdvisorDetail(advisorId) {
   return html;
 }
 
+var _advToggleBusy = {};
 function toggleAdvisorActive(advisorId) {
   var a = sheetData.advisors.find(function(x){ return x.id === advisorId; });
-  if (!a) return;
-  a.active = !a.active;
-  apiPost({ action: 'updateAdvisor', advisor_id: advisorId, is_active: a.active }).then(function(res){
-    if (res && res.success) toast((a.active ? '✅ Đã hiện trên web' : '🔕 Đã ẩn khỏi web') + ' (đã đồng bộ Sheet)', 'success');
-    else { a.active = !a.active; toast('Lỗi khi lưu Sheet: ' + (res && res.error), 'error'); }
+  if (!advisorId || !a) { toast('Không tìm thấy advisor_id của người này. Bấm "Làm mới" ở danh sách rồi thử lại, hoặc kiểm tra cột advisor_id trong Sheet', 'error'); return; }
+  if (_advToggleBusy[advisorId]) return; // đang xử lý, bỏ qua lần bấm đúp
+  _advToggleBusy[advisorId] = true;
+  var want = !a.active;
+  toast('Đang cập nhật...');
+  function done() { _advToggleBusy[advisorId] = false; }
+
+  apiPost({ action: 'updateAdvisor', advisor_id: advisorId, is_active: want }).then(function(res){
+    if (!res || !res.success) throw new Error((res && res.error) ? res.error : 'máy chủ không trả kết quả hợp lệ');
+    // Tải lại từ Sheet để hiển thị đúng dữ liệu thật, không dựa vào giả định phía trình duyệt
+    return loadAdvisorsFromSheet(null, true);
+  }).then(function(){
+    done();
+    var fresh = sheetData.advisors.find(function(x){ return x.id === advisorId; });
+    if (fresh && fresh.active === want) {
+      toast(want ? '✅ Đã hiện trên web' : '🔕 Đã ẩn khỏi web', 'success');
+    } else {
+      toast('Sheet chưa đổi sang đúng trạng thái. Kiểm tra cột is_active của advisor này trong tab Advisors', 'error');
+    }
     navToStaffAdvisorDetail(advisorId);
   }).catch(function(err){
-    a.active = !a.active;
-    toast('Lỗi kết nối: ' + err.message, 'error');
+    done();
+    toast('Không đổi được trạng thái: ' + err.message, 'error');
     navToStaffAdvisorDetail(advisorId);
   });
 }
