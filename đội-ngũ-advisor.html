@@ -207,6 +207,11 @@ body{font-family:'Montserrat',sans-serif;background:#F5F4F1;color:#1C1C1C;overfl
 .apb-role{font-size:11px;color:var(--muted);}
 /* pkg list */
 .pkglist{display:flex;flex-direction:column;gap:7px;}
+.pkg-bonus{margin-top:14px;background:var(--orange-tint-2);border:.5px solid rgba(252,82,41,.22);border-radius:10px;padding:13px 14px;}
+.pkg-bonus-t{font-size:12px;color:var(--muted);line-height:1.65;}
+.pkg-bonus-t strong{color:#fc5229;font-family:'Montserrat',sans-serif;font-weight:700;}
+.pkg-bonus-btn{margin-top:10px;width:100%;padding:11px 16px;background:transparent;border:.5px solid #fc5229;border-radius:100px;font-family:'Montserrat',sans-serif;font-weight:600;font-size:12.5px;color:#fc5229;cursor:pointer;transition:all .2s;}
+.pkg-bonus-btn:hover{background:#fc5229;color:#fff;}
 .pkgitem{background:#fff;border:.5px solid var(--line);border-radius:10px;padding:12px 14px;display:flex;align-items:center;gap:12px;cursor:pointer;transition:border-color .2s;}
 .pkgitem:hover{border-color:rgba(252,82,41,.3);}
 .pkgitem.sel{border-color:#fc5229;background:var(--orange-tint-2);}
@@ -489,6 +494,10 @@ body{font-family:'Montserrat',sans-serif;background:#F5F4F1;color:#1C1C1C;overfl
       </div>
       <div class="pkglist" id="pkgList">
         <div style="padding:20px;text-align:center;color:rgba(240,240,240,.4);font-size:13px">Đang tải gói...</div>
+      </div>
+      <div class="pkg-bonus">
+        <div class="pkg-bonus-t"><strong>Bonus:</strong> Team LinkaJob có thực hiện một buổi tư vấn miễn phí giúp bạn chọn Career Advisor và gói meeting phù hợp. Nếu bạn chưa chắc với nội dung của gói meeting hoặc chưa biết kết nối với Advisor nào, vui lòng đăng ký tư vấn với team LinkaJob.</div>
+        <button type="button" class="pkg-bonus-btn" onclick="openConsultFromCheckout()">Đăng ký tư vấn miễn phí</button>
       </div>
       <div class="mnav"><button class="mnext" id="mBtn1" onclick="goStep(2)" disabled>Tiếp theo →</button></div>
     </div>
@@ -956,7 +965,7 @@ function openDrawer(id){
   document.getElementById('dRole').textContent = a.role;
   document.getElementById('dCo').textContent = a.co;
   document.getElementById('dMessage').innerHTML = a.message;
-  document.getElementById('dBtnBook').textContent = 'Đặt lịch với '+a.name.split(' ').pop()+' →';
+  document.getElementById('dBtnBook').textContent = 'Kết nối với Advisor này →';
  
   /* tags: chỉ hiện ngành, không gộp kinh nghiệm vào đây nữa */
   var tagsHtml = '';
@@ -1020,6 +1029,10 @@ function handleDrawerBg(e){
   if(e.target === document.getElementById('drawerOv')) closeDrawer();
 }
  
+function openConsultFromCheckout(){
+  closeCheckout();
+  setTimeout(function(){ if(typeof openConsultWidget==='function') openConsultWidget(); }, 280);
+}
 function bookFromDrawer(){
   var a = findAdvisorById(currentAdvisorId);
   if(!a) return;
