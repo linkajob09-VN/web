@@ -1946,8 +1946,11 @@ function getStaffLeadLoad(staffName) {
 }
 
 // Tìm Sale đang Active, chưa đầy tải, có tải thấp nhất (mục 4 SOP)
+// Nhân viên nhận khách/lead: Sale + Admin
+function isSaleLike_(st) { return !!st && (st.subRole === 'Sale' || st.subRole === 'Admin' || st.role === 'Sale'); }
+
 function findLeastLoadedSale() {
-  var candidates = sheetData.staffList.filter(function(s){ return s.role === 'Sale' && s.active; }).map(function(s){
+  var candidates = sheetData.staffList.filter(function(s){ return isSaleLike_(s) && s.active; }).map(function(s){
     return { staff: s, load: getStaffLeadLoad(s.name), limit: s.leadLimit || Infinity };
   }).filter(function(c){ return c.load < c.limit; });
   if (candidates.length === 0) return null;
@@ -2106,7 +2109,7 @@ function assignCandidateRowHtml(st, cid, load, limit, full) {
 function openAssignRegModal(cid) {
   var c = MOCK.consultations.find(function(x){ return x.id === cid; });
   if (!c) return;
-  var saleStaff  = sheetData.staffList.filter(function(st){ return st.role === 'Sale' && st.active; });
+  var saleStaff  = sheetData.staffList.filter(function(st){ return isSaleLike_(st) && st.active; });
   var otherStaff = sheetData.staffList.filter(function(st){ return st.role !== 'Sale' && st.active; });
 
   document.getElementById('modal-title').textContent = 'Phân công — ' + (c.name || 'Khách hàng');
@@ -2719,7 +2722,7 @@ function renderStaffListPage() {
     html += '<td><div style="display:flex;align-items:center;gap:10px">' + avatarCircle(s.name,32) + '<div><div style="font-weight:600">' + s.name + '</div><div style="font-size:12px;color:var(--muted)">' + s.note + '</div></div></div></td>';
     html += '<td>' + roleBadge(s.role) + '</td>';
     html += '<td><div style="font-size:13px">' + s.email + '</div><div style="font-size:12px;color:var(--muted)">' + s.phone + '</div></td>';
-    if (s.role === 'Sale') {
+    if (isSaleLike_(s)) {
       var load = getStaffLeadLoad(s.name), limit = s.leadLimit || 30;
       var full = load >= limit;
       html += '<td><span style="font-size:13px;font-weight:700;' + (full?'color:var(--brand)':'') + '">' + load + '/' + limit + '</span>' + (full?' <span style="font-size:11px;color:var(--brand)">Đầy tải</span>':'') + '</td>';
@@ -2730,7 +2733,7 @@ function renderStaffListPage() {
     html += '<td>' + (s.active ? '<span class="badge badge-confirmed">Đang làm</span>' : '<span class="badge badge-cancelled">Tạm nghỉ</span>') + '</td>';
     html += '<td style="display:flex;gap:6px">';
     html += '<button class="update-btn" onclick="navToStaffMemberDetail(\'' + s.id + '\')">Chi tiết →</button>';
-    if (s.role === 'Sale') html += '<button class="update-btn" style="border-color:#6D28D9;color:#6D28D9" onclick="navTo(\'stf-schedule\')">📅 Lịch</button>';
+    if (isSaleLike_(s)) html += '<button class="update-btn" style="border-color:#6D28D9;color:#6D28D9" onclick="navTo(\'stf-schedule\')">📅 Lịch</button>';
     html += '</td></tr>';
   });
   html += '</tbody></table></div>';
@@ -3152,7 +3155,7 @@ function renderConsultMasterTable(list, containerId, opts) {
   if (list.length === 0) {
     return '<div class="empty-state"><div class="icon">📭</div>Chưa có buổi nào</div>';
   }
-  var saleStaff = sheetData.staffList.filter(function(st){ return st.role === 'Sale' && st.active; });
+  var saleStaff = sheetData.staffList.filter(function(st){ return isSaleLike_(st) && st.active; });
 
   var html = '<div style="overflow-x:auto"><table class="bookings-table lead-table"><thead><tr>' +
     '<th>KHÁCH HÀNG</th><th>TRẠNG THÁI TƯ VẤN</th><th>' + opts.middleLabel + '</th><th>DỊCH VỤ QUAN TÂM</th><th>KẾT QUẢ</th><th>NV PHỤ TRÁCH</th>' +
@@ -4061,7 +4064,7 @@ function openStaffDetail(i) {
   html += '<div class="modal-field"><b>Ngày vào:</b> ' + s.joinDate + '</div>';
   html += '<div class="modal-field"><b>Ghi chú:</b> ' + s.note + '</div>';
   html += '<div class="modal-field"><b>Trạng thái:</b> ' + (s.active ? '<span class="badge badge-confirmed">Đang làm</span>' : '<span class="badge badge-cancelled">Tạm nghỉ</span>') + '</div>';
-  if (s.role === 'Sale') {
+  if (isSaleLike_(s)) {
     const mySlots = MOCK.saleSlots.filter(function(sl){ return sl.staff === s.name; });
     html += '<div style="font-size:13px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin:18px 0 8px">Lịch tư vấn gần nhất</div>';
     if (mySlots.length === 0) {
@@ -4135,7 +4138,7 @@ var staffCalMonthOffset = 0;
 function loadStaffSchedulePageAsync() {
   var mc = document.getElementById('main-content');
   mc.innerHTML = skeletonRows(3);
-  var saleStaff = sheetData.staffList.filter(function(s){ return s.role === 'Sale' && s.active; });
+  var saleStaff = sheetData.staffList.filter(function(s){ return isSaleLike_(s) && s.active; });
   var saleNames = saleStaff.map(function(s){ return s.name; });
 
   Promise.all([
@@ -4175,7 +4178,7 @@ function loadStaffSchedulePageAsync() {
     
 
 function renderStaffSchedulePage() {
-  const saleStaff = sheetData.staffList.filter(function(s){ return s.role === 'Sale' && s.active; });
+  const saleStaff = sheetData.staffList.filter(function(s){ return isSaleLike_(s) && s.active; });
 
   let html = pageHeader('Lịch tư vấn miễn phí (Sale)', 'Sale chọn giờ trống để KH đặt lịch tư vấn 1-1');
 
@@ -7847,7 +7850,7 @@ function leadTableHtml() {
     return '<div class="empty-state"><div class="icon">🔍</div>Không có lead nào khớp bộ lọc hiện tại.<br>' +
       '<a href="#" onclick="clearLeadFilters();return false" style="color:var(--brand);font-weight:600">Xoá bộ lọc</a></div>';
   }
-  var saleStaff = sheetData.staffList.filter(function(st){ return st.role === 'Sale' && st.active; });
+  var saleStaff = sheetData.staffList.filter(function(st){ return isSaleLike_(st) && st.active; });
   var h = '<div style="overflow-x:auto"><table class="bookings-table lead-table"><thead><tr>' +
     '<th>KHÁCH HÀNG</th><th>TRẠNG THÁI TƯ VẤN</th><th>THỜI GIAN / LINK</th><th>DỊCH VỤ QUAN TÂM</th><th>KẾT QUẢ</th><th>NV PHỤ TRÁCH</th>' +
     '</tr></thead><tbody onchange="onLeadRowChanged(event)">';
@@ -8590,7 +8593,7 @@ function isStaffAdminUser_() {
 function openAssignSale(aeId) {
   var ae = MOCK.advisees.find(function(x){ return x.id === aeId; });
   if (!ae) return;
-  var sales = (sheetData.staffList || []).filter(function(x){ return x.subRole === 'Sale' && x.active !== false; });
+  var sales = (sheetData.staffList || []).filter(function(x){ return isSaleLike_(x) && x.active !== false; });
   if (!sales.length) { toast('Chưa có Sale nào đang hoạt động', 'error'); return; }
   document.getElementById('modal-title').textContent = 'Đổi Sale phụ trách — ' + ae.name;
   document.getElementById('modal-body').innerHTML = '<div class="modal-field"><div class="form-label">Sale</div><select class="form-select" id="as-sale">' +
