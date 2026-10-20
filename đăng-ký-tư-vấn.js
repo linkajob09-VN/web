@@ -40,7 +40,7 @@ function openConsultWidget(){
     var el = document.getElementById(id); if(el) el.value = '';
   });
   var cvEl = document.getElementById('cwCv'); if (cvEl) cvEl.value = '';
-  var cvHint = document.getElementById('cwCvHint'); if (cvHint) { cvHint.textContent = 'Định dạng PDF/DOC/DOCX, tối đa 5MB'; cvHint.style.color = ''; }
+  var cvHint = document.getElementById('cwCvHint'); if (cvHint) { cvHint.textContent = CW_CV_HINT; cvHint.style.color = ''; }
   ['cwService','cwCustomerType','cwInterestedDept','cwRegion','cwSource'].forEach(function(id){
     var el = document.getElementById(id); if(el) el.selectedIndex = 0;
   });
@@ -63,7 +63,11 @@ function cwGoStep(n){
   var sub = document.getElementById('cwSub');
   if (sub) sub.textContent = subs[n] || '';
 }
-var CW_CV_MAX_BYTES = 5 * 1024 * 1024; // 5MB
+var CW_CV_HINT = 'Dán link Google Drive / Dropbox / LinkedIn... — nhớ bật quyền "Ai có link đều xem được"';
+
+function cwCvLinkOk(v){
+  return /^https?:\/\/[^\s]+\.[^\s]+$/i.test(v);
+}
 
 function cwCheckStep1(){
   var name  = document.getElementById('cwName').value.trim();
@@ -72,32 +76,15 @@ function cwCheckStep1(){
   var question = document.getElementById('cwQuestion').value.trim();
   var validEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
   var cvEl = document.getElementById('cwCv');
-  var cvFile = cvEl && cvEl.files && cvEl.files[0];
+  var cvLink = cvEl ? cvEl.value.trim() : '';
   var cvHint = document.getElementById('cwCvHint');
-  var cvOk = false;
-  if (cvFile) {
-    if (cvFile.size > CW_CV_MAX_BYTES) {
-      if (cvHint) { cvHint.textContent = 'File quá lớn (tối đa 5MB) — vui lòng chọn file khác.'; cvHint.style.color = '#e0453c'; }
-      cvOk = false;
-    } else {
-      if (cvHint) { cvHint.textContent = 'Đã chọn: ' + cvFile.name; cvHint.style.color = ''; }
-      cvOk = true;
-    }
-  } else if (cvHint) {
-    cvHint.textContent = 'Định dạng PDF/DOC/DOCX, tối đa 5MB';
-    cvHint.style.color = '';
+  var cvOk = cwCvLinkOk(cvLink);
+  if (cvHint) {
+    if (cvLink && !cvOk) { cvHint.textContent = 'Link chưa đúng — cần bắt đầu bằng http:// hoặc https://'; cvHint.style.color = '#e0453c'; }
+    else { cvHint.textContent = CW_CV_HINT; cvHint.style.color = ''; }
   }
   var btn = document.getElementById('cwBtn1');
   if (btn) btn.disabled = !(name && phone && validEmail && question && cvOk);
-}
-
-function cwFileToBase64(file){
-  return new Promise(function(resolve, reject){
-    var reader = new FileReader();
-    reader.onload = function(){ resolve(String(reader.result).split(',')[1] || ''); }; // bỏ phần "data:...;base64,"
-    reader.onerror = function(){ reject(new Error('Không đọc được file CV')); };
-    reader.readAsDataURL(file);
-  });
 }
 
 function cwSubmitLead(){
@@ -113,28 +100,25 @@ function cwSubmitLead(){
   var interestedDept = document.getElementById('cwInterestedDept').value;
   var region          = document.getElementById('cwRegion').value;
   var source          = document.getElementById('cwSource').value;
-  var cvFile = document.getElementById('cwCv').files[0];
+  var cvLink = document.getElementById('cwCv').value.trim();
 
   if (!name || !phone || !question) { alert('Vui lòng điền đầy đủ thông tin bắt buộc.'); return; }
-  if (!cvFile) { alert('Vui lòng đính kèm CV gần nhất của bạn.'); return; }
-  if (cvFile.size > CW_CV_MAX_BYTES) { alert('File CV quá lớn (tối đa 5MB) — vui lòng chọn file khác.'); return; }
+  if (!cvLink) { alert('Vui lòng dán link CV gần nhất của bạn.'); return; }
+  if (!cwCvLinkOk(cvLink)) { alert('Link CV chưa đúng — cần bắt đầu bằng http:// hoặc https://'); return; }
 
   btn.dataset.sending = '1';
   btn.disabled = true;
-  btn.textContent = 'Đang tải CV lên...';
+  btn.textContent = 'Đang gửi...';
 
-  cwFileToBase64(cvFile).then(function(base64){
-    btn.textContent = 'Đang gửi...';
-    return fetch(CW_WEBAPP_URL, {
-      method : 'POST',
-      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-      body   : JSON.stringify({
-        action: 'captureLead',
-        name: name, phone: phone, email: email, service: service, question: question,
-        customer_type: customerType, interested_dept: interestedDept, region: region, source_channel: source,
-        cv_base64: base64, cv_filename: cvFile.name, cv_mimetype: cvFile.type || 'application/octet-stream'
-      })
-    });
+  fetch(CW_WEBAPP_URL, {
+    method : 'POST',
+    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+    body   : JSON.stringify({
+      action: 'captureLead',
+      name: name, phone: phone, email: email, service: service, question: question,
+      customer_type: customerType, interested_dept: interestedDept, region: region, source_channel: source,
+      cv_link: cvLink
+    })
   })
   .then(function(r){ return r.json(); })
   .then(function(data){
