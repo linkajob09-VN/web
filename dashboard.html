@@ -853,7 +853,9 @@ function buildAdviseeFromBooking(b, allSessions) {
     });
   }
 
-  var sessionsDone = sessions.filter(function(s){ return s.status === 'done'; }).length;
+  // Buổi đã tới giờ (kể cả đang chờ Advisor nhận xét/feedback) đã được tính là ĐÃ MEET:
+  // 'done' = đã hoàn thành, 'feedback' = đã qua giờ hẹn, chỉ còn chờ nhận xét.
+  var sessionsDone = sessions.filter(function(s){ return s.status === 'done' || s.status === 'feedback'; }).length;
 
   return {
     id: b.booking_id, name: b.advisee_name, email: b.advisee_email, phone: b.advisee_phone,
@@ -1188,6 +1190,20 @@ const SIDEBAR_DEF = {
       { id: 'stf-list', label: 'Nhân viên' },
     ]},
   ],
+  // Menu bên trái cho tài khoản Sale (cùng kiểu với Admin; thu gọn/mở rộng bằng nút ‹ ›)
+  Sale: [
+    { id: 'sale-today', icon: '🏠', label: 'Hôm nay' },
+    { id: 'sale-cus', icon: '👥', label: 'Khách hàng', children: [
+      { id: 'sale-new',     label: 'Khách đăng ký tư vấn' },
+      { id: 'sale-nodate',  label: 'Chưa đặt lịch' },
+      { id: 'sale-buyers',  label: 'Khách đã mua' },
+    ]},
+    { id: 'sale-sch', icon: '📅', label: 'Lịch', children: [
+      { id: 'sale-cal',     label: 'Lịch meeting' },
+      { id: 'sale-resched', label: 'Đổi lịch' },
+    ]},
+    { id: 'sale-kpi', icon: '📊', label: 'KPI cá nhân' },
+  ],
   Advisor: [
     { id: 'adv-ov', icon: '📊', label: 'Tổng quan', children: [] },
     { id: 'adv-sc', icon: '📅', label: 'Gửi lịch trống', children: [] },
@@ -1219,6 +1235,14 @@ const ROUTE_MAP = {
   'aee-reschedule': { fn: function(){ renderStaff('aee-reschedule'); } },
   'crs-list':      { fn: function(){ renderStaff('course-mod'); } },
   'crs-new':       { fn: function(){ renderStaff('course-mod'); } },
+  // Sale routes (menu trái của Sale)
+  'sale-today':   { fn: function(){ saleEnter('today'); } },
+  'sale-new':     { fn: function(){ saleEnter('consult'); } },
+  'sale-nodate':  { fn: function(){ saleEnter('leads'); } },
+  'sale-buyers':  { fn: function(){ saleEnter('care'); } },
+  'sale-resched': { fn: function(){ saleEnter('meetings'); } },
+  'sale-kpi':     { fn: function(){ saleEnter('kpi'); } },
+  'sale-cal':     { fn: function(){ loadMeetingCalendarAsync(); } },
   // Advisor routes
   'adv-ov':      { legacy: 'overview' },
   'adv-sc':      { legacy: 'schedule' },
@@ -1391,7 +1415,19 @@ function buildTabBar(role) {
       return;
     }
 
-    // Sale / CourseManager / AdvisorManager — chỉ thấy đúng phạm vi việc của mình
+    // Sale: menu bên trái (giống Admin) — Hôm nay / Khách hàng / Lịch / KPI
+    if (subRole === 'Sale') {
+      tabbar.className  = 'role-tabbar';
+      sidebar.className = 'sidebar';
+      try { if (localStorage.getItem('lj_sidebar_collapsed') === '1') sidebar.classList.add('collapsed'); } catch (e) {}
+      var mcSale = document.getElementById('main-content');
+      mcSale.className = 'content';
+      mcSale.innerHTML = skeletonRows(3);
+      loadStaffListFromSheet(function(){ _saleSidebarMode = true; buildSidebar('Sale'); });
+      return;
+    }
+
+    // CourseManager / AdvisorManager — chỉ thấy đúng phạm vi việc của mình
     tabbar.className  = 'role-tabbar';
     sidebar.className = 'sidebar hidden';
     var mc = document.getElementById('main-content');
@@ -2822,7 +2858,31 @@ function loadSaleSelfDashboard() {
   loadSaleTabAsync('today');
 }
 
+var _saleSidebarMode = false;
+var SALE_TAB_NAV = { today: 'sale-today', consult: 'sale-new', leads: 'sale-nodate', care: 'sale-buyers', meetings: 'sale-resched', kpi: 'sale-kpi' };
+var SALE_TAB_TITLES = {
+  today:    ['Hôm nay', 'Việc cần làm trong ngày'],
+  consult:  ['Khách đăng ký tư vấn', 'Lịch tư vấn và tiến trình chăm sóc'],
+  leads:    ['Chưa đặt lịch', 'Khách đã đăng ký nhưng chưa chọn giờ tư vấn'],
+  care:     ['Khách đã mua', 'Theo dõi hạn dùng, tiến độ buổi và nhắc khách'],
+  meetings: ['Đổi lịch', 'Yêu cầu đổi lịch và lịch 14 ngày tới'],
+  kpi:      ['KPI cá nhân', 'Kết quả công việc của bạn'],
+};
+// Vào 1 trang của Sale từ menu trái
+function saleEnter(tab) {
+  var mc = document.getElementById('main-content');
+  var s = (currentUser.staffId && sheetData.staffList.find(function(x){ return x.id === currentUser.staffId; }))
+       || sheetData.staffList.find(function(x){ return x.name === currentUser.name; });
+  if (!s) { mc.innerHTML = '<div class="empty-state">Không tìm thấy hồ sơ nhân viên tương ứng tài khoản này</div>'; return; }
+  _staffDetailId = s.id; _staffDetailSelfView = true; _saleSidebarMode = true;
+  switchStaffDetailTabRaw(tab);
+}
+// Các nút/liên kết chuyển tab cũ → đi qua menu trái để mục menu sáng đúng
 function switchStaffDetailTab(tab) {
+  if (_saleSidebarMode && _staffDetailSelfView && SALE_TAB_NAV[tab]) { navTo(SALE_TAB_NAV[tab]); return; }
+  switchStaffDetailTabRaw(tab);
+}
+function switchStaffDetailTabRaw(tab) {
   _staffDetailTab = tab;
   if (tab === 'today' || tab === 'meetings') { loadSaleTabAsync(tab); return; }
   if (tab === 'schedule') { loadStaffScheduleTabAsync(); return; }
@@ -3052,15 +3112,21 @@ function renderStaffMemberDetail(staffId, tab, selfView) {
   });
   html += '</div>';
 
-  if (tab === 'today') html += renderSaleToday(s);
-  else if (tab === 'meetings') html += renderSaleMeetings(s);
-  else if (tab === 'leads') html += renderStaffLeadsTab(s);
-  else if (tab === 'schedule') html += renderStaffScheduleTab(s);
-  else if (tab === 'care') html += renderStaffCareTab(s);
-  else if (tab === 'kpi') html += renderStaffKpiTab(s);
-  else html += renderStaffConsultTab(s);
+  var bodyHtml;
+  if (tab === 'today') bodyHtml = renderSaleToday(s);
+  else if (tab === 'meetings') bodyHtml = renderSaleMeetings(s);
+  else if (tab === 'leads') bodyHtml = renderStaffLeadsTab(s);
+  else if (tab === 'schedule') bodyHtml = renderStaffScheduleTab(s);
+  else if (tab === 'care') bodyHtml = renderStaffCareTab(s);
+  else if (tab === 'kpi') bodyHtml = renderStaffKpiTab(s);
+  else bodyHtml = renderStaffConsultTab(s);
 
-  return html;
+  // Sale có menu trái: chỉ hiện tiêu đề trang + nội dung (không lặp thẻ hồ sơ + thanh tab)
+  if (selfView && _saleSidebarMode) {
+    var ttl = SALE_TAB_TITLES[tab] || [tab, ''];
+    return pageHeader(ttl[0], ttl[1]) + bodyHtml;
+  }
+  return html + bodyHtml;
 }
 
 // ── Bảng dùng chung cho mọi danh sách khách/lịch tư vấn — cấu trúc cột GIỐNG HỆT
@@ -8586,12 +8652,19 @@ function loadSaleTabAsync(tab) {
     });
     var leads = leadRows.map(function(x){ return mergeLeadRow(x); }).filter(Boolean);
     _saleData = { leads: leads, reqs: reqs, sessions: sessions, failed: failed, loadedFor: s.id };
+    if (_saleSidebarMode) {
+      var nOpen = leads.filter(function(c){ return !c.date && !isHiddenOnDashboard(c) && !isRegisteredResult(c.result); }).length;
+      var nRemind = MOCK.advisees.filter(function(ae){ return expiryAlert_(ae).red; }).length;
+      var nPend = pendingReschedules(reqs).length;
+      setNavBadge('sale-nodate', nOpen); setNavBadge('sale-buyers', nRemind); setNavBadge('sale-resched', nPend);
+      setNavBadge('sale-today', nOpen + nRemind + nPend);
+    }
     if (_staffDetailTab === tab && activeStaffDetailIsSale_()) {
       document.getElementById('main-content').innerHTML = renderStaffMemberDetail(_staffDetailId, tab, _staffDetailSelfView);
     }
   });
 }
-function activeStaffDetailIsSale_() { return !!_staffDetailSelfView; }
+function activeStaffDetailIsSale_() { return !!(_staffDetailSelfView && _staffDetailId); }
 
 // Gom buổi meeting sắp tới (tư vấn của lead + cố vấn 1:1) trong khoảng [fromYmd, toYmd]
 function saleMeetings_(d, fromYmd, toYmd) {
