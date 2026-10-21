@@ -14,6 +14,7 @@
 var CW_WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbx7Bd9VvoyzfiiezQV9huoY2BKHH_Br1RAFIz00mjdyKeis-Zv-38a0gf_b-fMlul2C/exec';
 var cwLeadCaptured = false;
 var cwWidgetLoaded = false;
+var cwWidgetFailed = false; // fetch dang-ky-tu-van.html lỗi (404 / mở bằng file:// / mất mạng)
 var cwPendingOpen = false; // nếu người dùng bấm "Đăng ký tư vấn" trước khi fetch widget.html xong
 
 function initConsultWidget(){
@@ -21,18 +22,25 @@ function initConsultWidget(){
   if (!root) { console.warn('[widget.js] Không tìm thấy #lj-widget-root trên trang này.'); return; }
 
   fetch('dang-ky-tu-van.html')
-    .then(function(r){ return r.text(); })
+    .then(function(r){ if (!r.ok) throw new Error('HTTP ' + r.status); return r.text(); })
     .then(function(html){
       root.innerHTML = html;
+      if (!document.getElementById('cwOverlay')) throw new Error('dang-ky-tu-van.html không có phần tử #cwOverlay');
       cwWidgetLoaded = true;
       if (cwPendingOpen) { cwPendingOpen = false; openConsultWidget(); }
     })
     .catch(function(err){
-      console.error('[widget.js] Không tải được widget.html:', err);
+      cwWidgetFailed = true;
+      console.error('[dang-ky-tu-van.js] Không tải được form đăng ký:', err);
+      if (cwPendingOpen) { cwPendingOpen = false; cwFallback(); }
     });
 }
 
+function cwFallback(){
+  alert('Không mở được form đăng ký lúc này. Bạn vui lòng nhắn Zalo 0903 374 648 để được tư vấn nhé.');
+}
 function openConsultWidget(){
+  if (cwWidgetFailed) { cwFallback(); return; }
   if (!cwWidgetLoaded) { cwPendingOpen = true; return; } // đợi fetch xong rồi tự mở
   document.getElementById('cwOverlay').classList.add('show');
   cwLeadCaptured = false;
@@ -78,7 +86,7 @@ function cwCheckStep1(){
   var cvEl = document.getElementById('cwCv');
   var cvLink = cvEl ? cvEl.value.trim() : '';
   var cvHint = document.getElementById('cwCvHint');
-  var cvOk = cwCvLinkOk(cvLink);
+  var cvOk = cvEl ? cwCvLinkOk(cvLink) : true; // form không có ô CV thì không chặn nút Gửi
   if (cvHint) {
     if (cvLink && !cvOk) { cvHint.textContent = 'Link chưa đúng — cần bắt đầu bằng http:// hoặc https://'; cvHint.style.color = '#e0453c'; }
     else { cvHint.textContent = CW_CV_HINT; cvHint.style.color = ''; }
@@ -87,24 +95,26 @@ function cwCheckStep1(){
   if (btn) btn.disabled = !(name && phone && validEmail && question && cvOk);
 }
 
+function cwVal(id){ var el = document.getElementById(id); return el ? String(el.value || '').trim() : ''; }
 function cwSubmitLead(){
   var btn = document.getElementById('cwBtn1');
-  if (btn.dataset.sending) return;
+  if (!btn || btn.dataset.sending) return;
 
-  var name     = document.getElementById('cwName').value.trim();
-  var phone    = document.getElementById('cwPhone').value.trim();
-  var email    = document.getElementById('cwEmail').value.trim();
-  var service  = document.getElementById('cwService').value;
-  var question = document.getElementById('cwQuestion').value.trim();
-  var customerType   = document.getElementById('cwCustomerType').value;
-  var interestedDept = document.getElementById('cwInterestedDept').value;
-  var region          = document.getElementById('cwRegion').value;
-  var source          = document.getElementById('cwSource').value;
-  var cvLink = document.getElementById('cwCv').value.trim();
+  var name     = cwVal('cwName');
+  var phone    = cwVal('cwPhone');
+  var email    = cwVal('cwEmail');
+  var service  = cwVal('cwService');
+  var question = cwVal('cwQuestion');
+  var customerType   = cwVal('cwCustomerType');
+  var interestedDept = cwVal('cwInterestedDept');
+  var region          = cwVal('cwRegion');
+  var source          = cwVal('cwSource');
+  var cvLink = cwVal('cwCv');
+  var hasCvField = !!document.getElementById('cwCv');
 
   if (!name || !phone || !question) { alert('Vui lòng điền đầy đủ thông tin bắt buộc.'); return; }
-  if (!cvLink) { alert('Vui lòng dán link CV gần nhất của bạn.'); return; }
-  if (!cwCvLinkOk(cvLink)) { alert('Link CV chưa đúng — cần bắt đầu bằng http:// hoặc https://'); return; }
+  if (hasCvField && !cvLink) { alert('Vui lòng dán link CV gần nhất của bạn.'); return; }
+  if (cvLink && !cwCvLinkOk(cvLink)) { alert('Link CV chưa đúng — cần bắt đầu bằng http:// hoặc https://'); return; }
 
   btn.dataset.sending = '1';
   btn.disabled = true;
@@ -124,7 +134,7 @@ function cwSubmitLead(){
   .then(function(data){
     if (!data.success) throw new Error(data.error || 'Lỗi không xác định');
     cwLeadCaptured = true;
-    document.getElementById('cwSuccessDetail').innerHTML =
+    var okEl = document.getElementById('cwSuccessDetail'); if (okEl) okEl.innerHTML =
       'Cảm ơn <strong>' + name + '</strong> đã đăng ký!<br><br>' +
       'Đội ngũ LinkaJob sẽ liên hệ với bạn trong thời gian sớm nhất.';
     cwGoStep(2);
