@@ -6,9 +6,9 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>LinkaJob · Kết nối Cố vấn, Xây dựng Sự nghiệp</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap');
 :root{
   --dark:#0D0D0D;
   --dark-card:#1A1A1A;
@@ -57,13 +57,17 @@ h1,h2,h3,h4{font-family:'Montserrat',sans-serif; font-weight:700; letter-spacing
 
 /* consult widget */
 
+
+/* FIX title hero: ép đậm + canh giữa, tránh bị nav.css / rule khác ghi đè */
+section.hero .wrap h1{ font-family:'Montserrat',sans-serif !important; font-weight:700 !important; text-align:center !important; width:100% !important; max-width:none !important; margin:0 auto 14px !important; padding:0 !important; letter-spacing:-1.6px;}
+section.hero .wrap h1 em{ font-weight:700 !important; color:var(--orange) !important; font-style:normal;}
+
 /* hero */
 .hero{ background:radial-gradient(circle at 50% -5%, rgba(252,82,41,.08), transparent 55%), var(--paper); padding:72px 0 48px; text-align:center;}
 .hero .eyebrow{ margin-bottom:20px;}
 .hero h1{ font-size:40px; color:var(--text); letter-spacing:-1.6px; margin-bottom:14px; white-space:nowrap;}
 @media(max-width:640px){ .hero h1{ font-size:26px; white-space:normal;} }
 .hero h1 em{ color:var(--orange); font-style:normal;}
-.hero h1{ text-align:center; margin-left:auto; margin-right:auto;}
 .hero .sub{ font-size:15px; color:var(--muted); max-width:480px; margin:0 auto 30px; line-height:1.7;}
 .hero-cta{ display:flex; gap:12px; justify-content:center; flex-wrap:wrap; margin-bottom:36px;}
 .hero-stats{ display:flex; gap:40px; justify-content:center; flex-wrap:wrap; max-width:640px; margin:52px auto 0; padding-top:32px; border-top:.5px solid var(--line);}
@@ -522,7 +526,7 @@ button:focus-visible, a:focus-visible, .lj-nav-btn-plain:focus-visible, .fbtn:fo
       <span class="eyebrow" style="margin-bottom:0;">Career advisor</span>
       <a class="eyebrow" style="margin-bottom:0;">Career course</a>
     </div>
-    <h1 style="white-space:normal; text-align:center; margin-left:auto; margin-right:auto;">Kết nối 1-1 với Advisor <br><em>đang làm tại các tập đoàn đa quốc gia</em></h1>
+    <h1 style="white-space:normal;">Kết nối 1-1 với Advisor <br><em>đang làm tại các tập đoàn đa quốc gia</em></h1>
     <p class="sub"> Để ứng tuyển & làm việc tại các công ty đa quốc gia không mơ hồ, không tự ti và hiểu rõ yêu cầu nhà tuyển dụng.</p>
     <div class="hero-cta">
       <button class="btn btn-orange" onclick="openConsultWidget()">Đăng ký tư vấn miễn phí</button>
