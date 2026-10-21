@@ -121,7 +121,7 @@
 .lj-footer-links{display:flex;gap:20px;}
 .lj-footer-links a{font-size:12px;color:rgba(240,240,240,.28);text-decoration:none;}
 
-/* ── RESPONSIVE (pricing.html) ── */
+/* ── RESPONSIVE (dang-ky-co-van-advisor.html) ── */
 @media(max-width:860px){
   .how{ grid-template-columns:1fr; gap:22px; margin:32px 20px 0; padding:26px 22px 22px;}
   .how-step{ padding:0;}
@@ -420,7 +420,7 @@ var PRICING_WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbx7Bd9Vvoyzfii
 /* MỚI: cache theo "version" trong localStorage — hiển thị NGAY bảng giá đã
    lưu trước đó (không chờ mạng), rồi âm thầm hỏi Apps Script xem Packages/
    PackageFeatures có đổi không (action=getDataVersion, rất nhẹ). Chỉ tải lại
-   khi có thay đổi thật từ Dashboard/Sheet. Cùng cơ chế với đội-ngũ-advisor.html
+   khi có thay đổi thật từ Dashboard/Sheet. Cùng cơ chế với doi-ngu-advisor.html
    và index.html. */
 var LJ_CACHE_PREFIX = 'lj_cache_';
 function ljGetLocalCache(name){
@@ -565,7 +565,7 @@ function renderPricingJourney(packages, featuresByPkg) {
     if (meta.description) journeyHtml += '<div class="pj-desc">' + pricingEscHtml(meta.description) + '</div>';
     journeyHtml += '<ul class="pj-benefits">' + benefitsHtml + '</ul>';
     journeyHtml += '<div class="pj-price">' + (meta.price_label ? pricingEscHtml(meta.price_label) : pricingFmtPriceK(p)) + '</div>';
-    journeyHtml += '<button class="pj-btn ' + (isHi ? 'pj-btn-main' : 'pj-btn-ghost') + '" onclick="location.href=\'đội-ngũ-advisor.html?package=' + slug + '\'">Chọn ' + pricingEscHtml(p.name) + '</button>';
+    journeyHtml += '<button class="pj-btn ' + (isHi ? 'pj-btn-main' : 'pj-btn-ghost') + '" onclick="location.href=\'doi-ngu-advisor.html?package=' + slug + '\'">Chọn ' + pricingEscHtml(p.name) + '</button>';
     journeyHtml += '</div></div>';
   });
   journeyHtml += '</div>';
