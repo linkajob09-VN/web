@@ -508,7 +508,7 @@ button:focus-visible, a:focus-visible, .lj-nav-btn-plain:focus-visible, .fbtn:fo
 }
 </style>
 <link rel="stylesheet" href="nav.css">
-<link rel="stylesheet" href="đăng-ký-tư-vấn.css">
+<link rel="stylesheet" href="dang-ky-tu-van.css">
 </head>
 <body>
 
@@ -550,7 +550,7 @@ button:focus-visible, a:focus-visible, .lj-nav-btn-plain:focus-visible, .fbtn:fo
   </div>
   <div class="wrap">
     <div style="text-align:center;margin-top:28px;">
-      <a href="đội-ngũ-advisor.html" class="btn btn-orange">Xem toàn bộ đội ngũ Advisor →</a>
+      <a href="doi-ngu-advisor.html" class="btn btn-orange">Xem toàn bộ đội ngũ Advisor →</a>
     </div>
   </div>
 </section>
@@ -634,7 +634,7 @@ button:focus-visible, a:focus-visible, .lj-nav-btn-plain:focus-visible, .fbtn:fo
             <div><div class="svc-benefit-title">Luyện phỏng vấn thực chiến</div><div class="svc-benefit-desc">HR interview, Manager round, Case interview, Group interview.</div></div>
           </div>
         </div>
-        <button class="btn-svc" onclick="location.href='đội-ngũ-advisor.html'">Xem qua đội ngũ Advisor →</button>
+        <button class="btn-svc" onclick="location.href='doi-ngu-advisor.html'">Xem qua đội ngũ Advisor →</button>
       </div>
 
       <div class="svc-card">
@@ -656,7 +656,7 @@ button:focus-visible, a:focus-visible, .lj-nav-btn-plain:focus-visible, .fbtn:fo
             <div><div class="svc-benefit-title">Business case cá nhân cho portfolio</div><div class="svc-benefit-desc">Hoàn thành 3-4 case thực tế, sẵn sàng bỏ vào CV và kể cho nhà tuyển dụng.</div></div>
           </div>
         </div>
-        <button class="btn-svc" onclick="location.href='land_your_dream_job.html'">Xem các khoá học →</button>
+        <button class="btn-svc" onclick="location.href='khoa-hoc-land_your_dream_job.html'">Xem các khoá học →</button>
       </div>
 
     </div>
@@ -835,7 +835,7 @@ button:focus-visible, a:focus-visible, .lj-nav-btn-plain:focus-visible, .fbtn:fo
   <div class="wrap" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
     <div class="footer-logo">Linka<span>Job</span></div>
     <div class="footer-copy">© 2025 LinkaJob · Kết nối Cố vấn, Xây dựng Sự nghiệp</div>
-    <div class="footer-links"><a href="#">Giới thiệu</a><a href="blog.html">Blog</a><a href="#">Liên hệ</a></div>
+    <div class="footer-links"><a href="#">Giới thiệu</a><a href="dang-ky-tu-van.html">Đăng ký tư vấn</a><a href="#">Liên hệ</a></div>
   </div>
 </footer>
 
@@ -847,7 +847,7 @@ button:focus-visible, a:focus-visible, .lj-nav-btn-plain:focus-visible, .fbtn:fo
 
 
 <script>
-/* ── HOMEPAGE ADVISOR PREVIEW — lấy dữ liệu thật từ cùng Google Sheet với đội-ngũ-advisor.html ── */
+/* ── HOMEPAGE ADVISOR PREVIEW — lấy dữ liệu thật từ cùng Google Sheet với doi-ngu-advisor.html ── */
 var HP_ADV_WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbx7Bd9VvoyzfiiezQV9huoY2BKHH_Br1RAFIz00mjdyKeis-Zv-38a0gf_b-fMlul2C/exec';
 
 function hpAdvToDirectImageUrl(url){
@@ -872,7 +872,7 @@ function hpAdvCoInitials(co){
    đóng tab). Hiển thị NGAY dữ liệu cũ, rồi mới âm thầm hỏi Apps Script xem
    Advisors có đổi không (action=getDataVersion — rất nhẹ, không đọc Sheet).
    Chỉ tải lại khi thực sự có thay đổi từ Dashboard/Sheet. Cùng cơ chế và
-   cùng key với đội-ngũ-advisor.html để 2 trang chia sẻ chung 1 bản cache. */
+   cùng key với doi-ngu-advisor.html để 2 trang chia sẻ chung 1 bản cache. */
 var LJ_CACHE_PREFIX = 'lj_cache_';
 function ljGetLocalCache(name){
   try {
@@ -910,7 +910,7 @@ function renderHomepageAdvisors(){
       var culogoHtml = companyLogo
         ? '<img src="'+companyLogo+'" alt="" loading="lazy" onerror="this.parentElement.textContent=\''+hpAdvCoInitials(co)+'\';">'
         : hpAdvCoInitials(co);
-      return '<div class="hp-adv-card" onclick="location.href=\'đội-ngũ-advisor.html\'">'
+      return '<div class="hp-adv-card" onclick="location.href=\'doi-ngu-advisor.html\'">'
         + '<div class="hp-adv-topbar"></div>'
         + '<div class="hp-adv-photo">'+photoHtml
         +   '<div class="hp-adv-match"><i class="ti ti-sparkles"></i></div>'
@@ -1098,7 +1098,7 @@ renderMentorChart();
     var label = (isCourse ? 'Khoá học ' : 'Advisor ') + '<b>'+ljEsc(f.advisor)+'</b>';
     var av = ljAvatar(f.advisor, f.advisor_photo_url, false);
     if (!f.advisor_id) return '<div class="fb-adv">'+av+'<span>'+label+'</span></div>';
-    return '<a class="fb-adv" href="đội-ngũ-advisor.html?advisor='+encodeURIComponent(f.advisor_id)+'" title="Xem hồ sơ Advisor">'+av+'<span>'+label+' ›</span></a>';
+    return '<a class="fb-adv" href="doi-ngu-advisor.html?advisor='+encodeURIComponent(f.advisor_id)+'" title="Xem hồ sơ Advisor">'+av+'<span>'+label+' ›</span></a>';
   }
   function reviewCard(f){
     var rating = Math.max(1, Math.min(5, Number(f.rating)||5));
@@ -1128,7 +1128,7 @@ renderMentorChart();
 </script>
 <script src="nav.js"></script>
 <script>initSharedNav();</script>
-<script src="đăng-ký-tư-vấn.js"></script>
+<script src="dang-ky-tu-van.js"></script>
 <script>initConsultWidget();</script>
 
 </body>
