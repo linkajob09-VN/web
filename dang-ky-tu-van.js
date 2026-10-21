@@ -20,7 +20,7 @@ function initConsultWidget(){
   var root = document.getElementById('lj-widget-root');
   if (!root) { console.warn('[widget.js] Không tìm thấy #lj-widget-root trên trang này.'); return; }
 
-  fetch('đăng-ký-tư-vấn.html')
+  fetch('dang-ky-tu-van.html')
     .then(function(r){ return r.text(); })
     .then(function(html){
       root.innerHTML = html;
