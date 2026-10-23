@@ -209,6 +209,34 @@ table.pc tr.pc-last .pc-hi{border-bottom:1.5px solid rgba(252,82,41,.5);border-r
   .pc-price{font-size:15px;}
   .pc-hint{display:block;}
 }
+
+/* ── SOCIAL PROOF: card offer lấy từ trang vinh danh advisee (tab OfferResults) ── */
+.sp-grid{align-items:stretch;}
+.sp-story{background:#FFFFFF;border:1px solid #EAE1D3;border-radius:16px;overflow:hidden;display:flex;flex-direction:column;}
+.sp-story .sps-top{display:flex;align-items:center;gap:12px;padding:18px 18px 0;}
+.sp-story .sps-av{width:52px;height:52px;border-radius:50%;background:#1A1A1A;border:2px solid #fc5229;flex:none;display:flex;align-items:center;justify-content:center;color:#fc5229;font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:17px;overflow:hidden;}
+.sp-story .sps-av img{width:100%;height:100%;object-fit:cover;display:block;}
+.sp-story .sps-name{display:flex;align-items:center;gap:7px;font-family:'Space Grotesk',sans-serif;font-size:16px;font-weight:700;color:#211C16;line-height:1.3;}
+.sp-story .sps-tick{display:inline-flex;flex:none;}
+.sp-story .sps-body{display:flex;flex-direction:column;gap:12px;padding:16px 18px 18px;flex:1;}
+.sp-story .sps-path{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+.sp-story .sps-tag{font-size:11px;font-weight:600;background:#FFF1E6;color:#C23D14;padding:3px 10px;border-radius:100px;white-space:nowrap;}
+.sp-story .sps-arrow{color:#A79C8C;font-size:12px;}
+.sp-story .sps-role{font-size:13px;font-weight:600;color:#211C16;}
+.sp-story .sps-logo{height:22px;width:auto;max-width:120px;object-fit:contain;align-self:flex-start;}
+.sp-story .sps-days{display:inline-flex;align-items:center;gap:5px;align-self:flex-start;background:#0D0D0D;color:#fff;font-size:11.5px;font-weight:600;padding:5px 12px;border-radius:100px;}
+.sp-story .sps-days i{color:#fc5229;font-size:13px;}
+.sp-story .sps-blurb{font-size:13.5px;line-height:1.65;color:#6B6255;}
+.sp-story .sps-adv{display:flex;align-items:center;gap:10px;border-top:1px solid #EFE7DA;padding-top:12px;margin-top:auto;}
+.sp-story .sps-adv img{width:28px;height:28px;border-radius:50%;object-fit:cover;flex:none;background:#FFF1E6;}
+.sp-story .sps-pkg{font-size:12.5px;font-weight:700;color:#211C16;line-height:1.3;}
+.sp-story .sps-advname{font-size:11.5px;color:#6B6255;}
+.sp-story .sps-letter{margin:0 18px 18px;border-radius:12px;background:#0D0D0D;border:1px solid #EAE1D3;overflow:hidden;cursor:zoom-in;max-height:240px;position:relative;}
+.sp-story .sps-letter img{width:100%;display:block;object-fit:cover;object-position:top;}
+.sp-story .sps-letter span{position:absolute;right:8px;bottom:8px;background:rgba(13,13,13,.78);color:#fff;font-size:11px;font-weight:600;padding:4px 10px;border-radius:100px;}
+.sp-lb{position:fixed;inset:0;background:rgba(0,0,0,.82);z-index:900;display:none;align-items:center;justify-content:center;padding:24px;cursor:zoom-out;}
+.sp-lb.open{display:flex;}
+.sp-lb img{max-width:100%;max-height:100%;border-radius:12px;}
 </style>
 <link rel="stylesheet" href="nav.css">
 </head>
@@ -270,7 +298,7 @@ table.pc tr.pc-last .pc-hi{border-bottom:1.5px solid rgba(252,82,41,.5);border-r
 <section class="sp-section">
   <div class="sec-label">Từ advisee thật</div>
   <div class="sec-title">Họ đã làm được.</div>
-  <div class="sp-grid">
+  <div class="sp-grid" id="sp-grid">
 
     <div class="sp-card real">
       <div class="sp-quote">Chị ấy đi chi tiết về CV của em lắm. Em khá rõ ràng về thực tế các vị trí mà em quan tâm — và nhận được lời mời phỏng vấn sau 3 buổi meeting.</div>
@@ -379,6 +407,7 @@ table.pc tr.pc-last .pc-hi{border-bottom:1.5px solid rgba(252,82,41,.5);border-r
 </div><!-- /.lj-light-zone -->
 
 </div>
+<div class="sp-lb" id="sp-lb" role="dialog" aria-label="Offer letter" onclick="this.classList.remove('open')"><img id="sp-lb-img" src="" alt="Offer letter"></div>
 <script>
 function toggleFaq(btn){
   var item=btn.parentElement,wasOpen=item.classList.contains('open');
@@ -597,6 +626,67 @@ function loadPricingTable() {
   });
 }
 document.addEventListener('DOMContentLoaded', loadPricingTable);
+
+/* ─── MỚI: phần "Họ đã làm được" lấy card offer thật từ trang vinh danh advisee (cùng tab OfferResults,
+   cùng cache). Chưa tải được dữ liệu thì giữ 3 feedback viết tay có sẵn trong HTML. ─── */
+(function(){
+  var SP_MAX = 3;                       // số card hiển thị
+  var SP_CK = 'lj_offer_results_cache_v3';  // dùng chung cache với trang vinh danh
+  function esc(s){ return String(s == null ? '' : s).replace(/[&<>"]/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
+  function initials(n){ return String(n||'').trim().split(' ').filter(Boolean).slice(-2).map(function(x){return x[0];}).join('').toUpperCase(); }
+  function direct(u){
+    if(!u) return ''; u = String(u).trim();
+    var m = u.match(/drive\.google\.com\/file\/d\/([^/]+)/) || u.match(/[?&]id=([^&]+)/);
+    return m && m[1] ? 'https://lh3.googleusercontent.com/d/' + m[1] : u;
+  }
+  var TICK = '<span class="sps-tick" title="Offer đã được LinkaJob xác minh"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><circle cx="12" cy="12" r="12" fill="#fc5229"/><path d="M7 12.5l3.2 3.2L17 8.8" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></span>';
+  function toStory(r){ return {
+    photo: direct(r.photo1_url), offerPhoto: direct(r.photo_url), name: r.name||'', company: r.company||'',
+    blurb: r.blurb||'', co: direct(r.company_logo_url), tag: r.tag||'', role: r.role||'',
+    adv: direct(r.advisor_photo_url), pkg: r.package||'', advName: r.advisor_name||'',
+    days: r.days_to_offer ? String(r.days_to_offer).trim() : '' }; }
+  window.spOpenLb = function(src){ if(!src) return; document.getElementById('sp-lb-img').src = src; document.getElementById('sp-lb').classList.add('open'); };
+  document.addEventListener('keydown', function(e){ if(e.key === 'Escape') document.getElementById('sp-lb').classList.remove('open'); });
+
+  function cardHtml(s){
+    var av = s.photo ? '<img src="' + esc(s.photo) + '" alt="' + esc(s.name) + '" loading="lazy" onerror="this.remove()">' : esc(initials(s.name));
+    var h = '<div class="sp-story">' +
+      '<div class="sps-top"><div class="sps-av">' + av + '</div><div class="sps-name">' + esc(s.name) + TICK + '</div></div>' +
+      '<div class="sps-body">';
+    if (s.tag || s.role) h += '<div class="sps-path">' + (s.tag ? '<span class="sps-tag">' + esc(s.tag) + '</span>' : '') + (s.tag && s.role ? '<span class="sps-arrow">→</span>' : '') + (s.role ? '<span class="sps-role">' + esc(s.role) + (s.company ? ' · ' + esc(s.company) : '') + '</span>' : '') + '</div>';
+    if (s.co) h += '<img class="sps-logo" src="' + esc(s.co) + '" alt="" loading="lazy" onerror="this.style.display=\'none\'">';
+    if (s.days) h += '<span class="sps-days"><i class="ti ti-clock" aria-hidden="true"></i>' + esc(s.days) + ' ngày đến offer</span>';
+    if (s.blurb) h += '<div class="sps-blurb">' + esc(s.blurb) + '</div>';
+    if (s.pkg || s.advName) h += '<div class="sps-adv">' + (s.adv ? '<img src="' + esc(s.adv) + '" alt="" loading="lazy" onerror="this.style.display=\'none\'">' : '') + '<div>' + (s.pkg ? '<div class="sps-pkg">' + esc(s.pkg) + '</div>' : '') + (s.advName ? '<div class="sps-advname">Advisor: ' + esc(s.advName) + '</div>' : '') + '</div></div>';
+    h += '</div>';
+    if (s.offerPhoto) h += '<div class="sps-letter" tabindex="0" role="button" aria-label="Xem offer letter của ' + esc(s.name) + '" onclick="spOpenLb(\'' + esc(s.offerPhoto) + '\')"><img src="' + esc(s.offerPhoto) + '" alt="Offer letter của ' + esc(s.name) + '" loading="lazy" onerror="this.parentElement.style.display=\'none\'"><span>Xem offer letter</span></div>';
+    return h + '</div>';
+  }
+  function render(rows){
+    var grid = document.getElementById('sp-grid');
+    if (!grid || !Array.isArray(rows)) return;
+    var st = rows.filter(function(r){ return r.show_story === true || String(r.show_story).trim().toUpperCase() === 'TRUE'; }).map(toStory);
+    if (!st.length) return;                                   // không có dữ liệu -> giữ feedback viết tay
+    st = st.filter(function(s){ return s.offerPhoto; }).concat(st.filter(function(s){ return !s.offerPhoto; })); // ưu tiên card có ảnh offer
+    grid.innerHTML = st.slice(0, SP_MAX).map(cardHtml).join('');
+  }
+  var local = null;
+  try { local = JSON.parse(localStorage.getItem(SP_CK)); } catch(e) {}
+  if (local && local.data) render(local.data);
+  function loadFresh(version){
+    fetch(PRICING_WEBAPP_URL + '?action=getOfferResults').then(function(r){ return r.json(); }).then(function(res){
+      var rows = (res && res.success && res.data) ? res.data : [];
+      try { localStorage.setItem(SP_CK, JSON.stringify({ version: version, data: rows })); } catch(e) {}
+      render(rows);
+    }).catch(function(){});
+  }
+  fetch(PRICING_WEBAPP_URL + '?action=getOfferResultsVersion').then(function(r){ return r.json(); }).then(function(v){
+    var ver = (v && v.success) ? v.data.version : null;
+    if (local && ver && local.version === ver) return;
+    loadFresh(ver);
+  }).catch(function(){ loadFresh(null); });
+})();
+
 
 </script>
 <script src="nav.js"></script>
