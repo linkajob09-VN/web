@@ -233,6 +233,54 @@
 .lj-light-zone .lj-dark-zone .pj-btn-ghost:hover{background:rgba(255,255,255,.06); color:#F0F0F0; border-color:rgba(255,255,255,.3);}
 .lj-light-zone .lj-dark-zone .pj-scrollhint{color:rgba(240,240,240,.3);}
 
+
+/* ── COMPARE TABLE (so sánh các gói) — nền tối cùng vùng Chọn gói, chữ tương phản cao, khoảng cách rộng ── */
+.pc-toggle-wrap{display:flex;justify-content:center;margin-top:28px;}
+.pc-toggle{display:inline-flex;align-items:center;gap:10px;background:transparent;color:#F0F0F0;border:1px solid rgba(255,255,255,.28);border-radius:100px;padding:13px 26px;font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:14px;cursor:pointer;transition:all .2s;}
+.pc-toggle:hover{background:rgba(255,255,255,.07);border-color:rgba(255,255,255,.5);}
+.pc-toggle:focus-visible,.pc-scroll:focus-visible{outline:2px solid #fc5229;outline-offset:3px;}
+.pc-toggle i{font-size:18px;color:#fc5229;}
+.pc-toggle .pc-chev{transition:transform .25s;color:rgba(240,240,240,.7);}
+.pc-toggle[aria-expanded="true"] .pc-chev{transform:rotate(180deg);}
+.pc-panel{margin-top:24px;}
+.pc-panel[hidden]{display:none;}
+.pc-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;background:#141414;border:1px solid rgba(255,255,255,.12);border-radius:18px;}
+table.pc{width:100%;min-width:980px;border-collapse:separate;border-spacing:0;table-layout:fixed;font-family:'Inter',sans-serif;}
+table.pc col.pc-c0{width:200px;}
+table.pc th,table.pc td{padding:20px 22px;text-align:left;vertical-align:top;border-bottom:1px solid rgba(255,255,255,.1);}
+table.pc thead th{vertical-align:bottom;padding-top:28px;padding-bottom:22px;border-bottom:1px solid rgba(255,255,255,.2);}
+table.pc tr:last-child td,table.pc tr:last-child th{border-bottom:none;}
+table.pc .pc-rowhead{position:sticky;left:0;z-index:2;background:#141414;font-family:'Space Grotesk',sans-serif;font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#ff7a57;box-shadow:1px 0 0 rgba(255,255,255,.12);}
+table.pc .pc-rowhead i{font-size:15px;margin-right:7px;vertical-align:-2px;}
+table.pc thead .pc-rowhead{color:rgba(240,240,240,.7);}
+.pc-name{font-family:'Space Grotesk',sans-serif;font-size:17px;font-weight:700;color:#FFFFFF;line-height:1.3;}
+.pc-tag{display:inline-block;margin-bottom:8px;background:#fc5229;color:#fff;font-family:'Space Grotesk',sans-serif;font-size:10px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;padding:4px 10px;border-radius:100px;}
+.pc-big{font-family:'Space Grotesk',sans-serif;font-size:20px;font-weight:700;color:#FFFFFF;letter-spacing:-.3px;}
+.pc-val{font-size:14.5px;font-weight:500;color:rgba(255,255,255,.92);line-height:1.5;}
+.pc-list{list-style:none;display:flex;flex-direction:column;gap:12px;}
+.pc-list li{display:flex;align-items:flex-start;gap:10px;font-size:14px;line-height:1.55;color:rgba(255,255,255,.88);}
+.pc-list li i{color:#ff7a57;font-size:16px;margin-top:2px;flex-shrink:0;}
+.pc-none{color:rgba(255,255,255,.4);font-size:18px;line-height:1;}
+table.pc .pc-hi{background:rgba(252,82,41,.11);border-left:1px solid rgba(252,82,41,.35);border-right:1px solid rgba(252,82,41,.35);}
+table.pc thead .pc-hi{border-top:3px solid #fc5229;}
+table.pc .pc-hi .pc-big{color:#ff7a57;}
+.pc-btn{display:block;width:100%;padding:12px 14px;border-radius:100px;font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:13.5px;cursor:pointer;text-align:center;background:transparent;color:#F0F0F0;border:1px solid rgba(255,255,255,.3);transition:all .2s;}
+.pc-btn:hover{background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.5);}
+.pc-btn.main{background:#fc5229;border-color:#fc5229;color:#fff;box-shadow:0 8px 20px rgba(252,82,41,.3);}
+.pc-btn.main:hover{background:#e84820;}
+.pc-hint{display:none;text-align:center;font-size:12px;font-family:'Space Grotesk',sans-serif;color:rgba(240,240,240,.6);margin-top:12px;}
+@media(max-width:640px){
+  .pc-toggle{width:100%;justify-content:center;}
+  table.pc{min-width:860px;table-layout:fixed;}
+  table.pc col.pc-c0{width:112px;}
+  table.pc th,table.pc td{padding:16px 14px;}
+  table.pc thead th{padding-top:22px;}
+  table.pc .pc-rowhead{font-size:11px;letter-spacing:.03em;}
+  table.pc .pc-rowhead i{display:block;margin:0 0 6px;}
+  .pc-name{font-size:15px;}
+  .pc-hint{display:block;}
+}
+
 </style>
 <link rel="stylesheet" href="nav.css">
 </head>
@@ -342,6 +390,15 @@
     <div style="text-align:center;color:rgba(240,240,240,.4);font-size:13px;padding:24px 0">Đang tải bảng giá...</div>
   </div>
   <div class="pj-scrollhint" id="pj-scrollhint">← Vuốt để xem thêm →</div>
+  <div class="pc-toggle-wrap" id="pc-toggle-wrap" hidden>
+    <button class="pc-toggle" id="pc-toggle" type="button" aria-expanded="false" aria-controls="pc-panel">
+      <i class="ti ti-columns-3" aria-hidden="true"></i><span id="pc-toggle-label">So sánh các gói</span><i class="ti ti-chevron-down pc-chev" aria-hidden="true"></i>
+    </button>
+  </div>
+  <div class="pc-panel" id="pc-panel" hidden>
+    <div class="pc-scroll" id="pc-scroll" tabindex="0" role="region" aria-label="Bảng so sánh các gói, vuốt ngang để xem thêm"></div>
+    <div class="pc-hint">← Vuốt ngang để xem các gói khác →</div>
+  </div>
 </section>
 </div><!-- /.lj-dark-zone -->
 
@@ -574,7 +631,120 @@ function renderPricingJourney(packages, featuresByPkg) {
   if (wrapEl) wrapEl.innerHTML = journeyHtml;
   var hintEl = document.getElementById('pj-scrollhint');
   if (hintEl) hintEl.style.display = n > 2 ? 'block' : 'none';
+  renderPricingCompare(packages, featuresByPkg);
 }
+
+
+/* ─── MỚI: bảng so sánh các gói — dựng từ cùng dữ liệu với thẻ gói (Packages + PackageFeatures).
+   Hàng = Giá / Thời gian / Số buổi + 4 chủ đề; cột = từng gói. Mỗi ô liệt kê quyền lợi của gói đó
+   trong chủ đề, nên vẫn đúng khi mỗi gói có câu chữ riêng. ─── */
+function pcMetaFor(p, feats) {
+  var meta = {};
+  (feats || []).forEach(function(f){
+    if (String(f.group_label || '').trim() === '_meta') meta[String(f.feature_label || '').trim()] = f.value == null ? '' : String(f.value).trim();
+  });
+  ['description', 'sessions_label', 'duration_label', 'price_label'].forEach(function(k){ if (p[k]) meta[k] = String(p[k]); });
+  return meta;
+}
+function renderPricingCompare(packages, featuresByPkg) {
+  var scrollEl = document.getElementById('pc-scroll');
+  var toggleWrap = document.getElementById('pc-toggle-wrap');
+  if (!scrollEl || !packages || packages.length < 2) { if (toggleWrap) toggleWrap.hidden = true; return; }
+  toggleWrap.hidden = false;
+
+  var hiIdx = packages.findIndex(function(p){ return p.badge_label && String(p.badge_label).trim(); });
+  var TOPICS_PC = [
+    { name: 'Định hướng',      icon: 'ti-compass' },
+    { name: 'Sửa CV',          icon: 'ti-file-text' },
+    { name: 'Luyện phỏng vấn', icon: 'ti-microphone' },
+    { name: 'Khác',            icon: 'ti-sparkles' }
+  ];
+  function topicOf(group, label) {
+    var g = String(group || '').trim().toLowerCase();
+    for (var i = 0; i < TOPICS_PC.length; i++) if (TOPICS_PC[i].name.toLowerCase() === g) return TOPICS_PC[i].name;
+    var t = String(label || '').toLowerCase();
+    if (/phỏng vấn|interview|case study|aptitude/.test(t)) return 'Luyện phỏng vấn';
+    if (/\bcv\b|hồ sơ|cover letter|linkedin|portfolio/.test(t)) return 'Sửa CV';
+    if (/định hướng|hướng nghề|career/.test(t)) return 'Định hướng';
+    return 'Khác';
+  }
+
+  var cols = packages.map(function(p){
+    var feats = featuresByPkg[p.package_id] || [];
+    var meta = pcMetaFor(p, feats);
+    var byTopic = {};
+    feats.slice().sort(function(a, b){ return (Number(a.sort_order) || 0) - (Number(b.sort_order) || 0); }).forEach(function(f){
+      if (String(f.group_label || '').trim() === '_meta') return;
+      var label = String(f.feature_label || '').trim();
+      var val = f.value == null ? '' : String(f.value).trim();
+      if (!label || !val || val === 'dash') return;
+      var text = label + (val !== 'check' ? ' — ' + val : '');
+      var tp = topicOf(f.group_label, label);
+      byTopic[tp] = byTopic[tp] || [];
+      if (byTopic[tp].indexOf(text) === -1) byTopic[tp].push(text);
+    });
+    return {
+      p: p, byTopic: byTopic,
+      price: meta.price_label ? meta.price_label : pricingFmtPriceK(p),
+      duration: meta.duration_label || pricingFmtDuration(p.days) || '',
+      sessions: meta.sessions_label || pricingFmtSessions(p)
+    };
+  });
+
+  function cls(i) { return i === hiIdx ? ' class="pc-hi"' : ''; }
+  var html = '<table class="pc"><colgroup><col class="pc-c0">' + cols.map(function(){ return '<col>'; }).join('') + '</colgroup>';
+
+  html += '<thead><tr><th class="pc-rowhead" scope="col">Gói</th>';
+  cols.forEach(function(c, i){
+    html += '<th scope="col"' + cls(i) + '>' + (i === hiIdx ? '<span class="pc-tag">' + pricingEscHtml(c.p.badge_label) + '</span><br>' : '') +
+      '<div class="pc-name">' + pricingEscHtml(c.p.name) + '</div></th>';
+  });
+  html += '</tr></thead><tbody>';
+
+  html += '<tr><th class="pc-rowhead" scope="row"><i class="ti ti-tag" aria-hidden="true"></i>Giá</th>';
+  cols.forEach(function(c, i){ html += '<td' + cls(i) + '><div class="pc-big">' + pricingEscHtml(c.price) + '</div></td>'; });
+  html += '</tr>';
+
+  html += '<tr><th class="pc-rowhead" scope="row"><i class="ti ti-clock" aria-hidden="true"></i>Thời gian</th>';
+  cols.forEach(function(c, i){ html += '<td' + cls(i) + '><div class="pc-val">' + (c.duration ? pricingEscHtml(c.duration) : '<span class="pc-none">·</span>') + '</div></td>'; });
+  html += '</tr>';
+
+  html += '<tr><th class="pc-rowhead" scope="row"><i class="ti ti-calendar-event" aria-hidden="true"></i>Số buổi</th>';
+  cols.forEach(function(c, i){ html += '<td' + cls(i) + '><div class="pc-val">' + pricingEscHtml(c.sessions) + '</div></td>'; });
+  html += '</tr>';
+
+  TOPICS_PC.forEach(function(tp){
+    var any = cols.some(function(c){ return c.byTopic[tp.name] && c.byTopic[tp.name].length; });
+    if (!any) return;
+    html += '<tr><th class="pc-rowhead" scope="row"><i class="ti ' + tp.icon + '" aria-hidden="true"></i>' + pricingEscHtml(tp.name) + '</th>';
+    cols.forEach(function(c, i){
+      var rows = c.byTopic[tp.name];
+      if (!rows || !rows.length) { html += '<td' + cls(i) + '><span class="pc-none" aria-label="Không bao gồm">·</span></td>'; return; }
+      html += '<td' + cls(i) + '><ul class="pc-list">' + rows.map(function(t){
+        return '<li><i class="ti ti-check" aria-hidden="true"></i><span>' + pricingEscHtml(t) + '</span></li>';
+      }).join('') + '</ul></td>';
+    });
+    html += '</tr>';
+  });
+
+  html += '<tr><th class="pc-rowhead" scope="row"></th>';
+  cols.forEach(function(c, i){
+    html += '<td' + cls(i) + '><button type="button" class="pc-btn' + (i === hiIdx ? ' main' : '') + '" onclick="location.href=\'doi-ngu-advisor.html?package=' + pricingSlugify(c.p.name) + '\'">Chọn ' + pricingEscHtml(c.p.name) + '</button></td>';
+  });
+  html += '</tr></tbody></table>';
+  scrollEl.innerHTML = html;
+}
+document.addEventListener('DOMContentLoaded', function(){
+  var btn = document.getElementById('pc-toggle'), panel = document.getElementById('pc-panel');
+  if (!btn || !panel) return;
+  btn.addEventListener('click', function(){
+    var open = btn.getAttribute('aria-expanded') === 'true';
+    btn.setAttribute('aria-expanded', open ? 'false' : 'true');
+    panel.hidden = open;
+    document.getElementById('pc-toggle-label').textContent = open ? 'So sánh các gói' : 'Ẩn bảng so sánh';
+    if (!open) setTimeout(function(){ panel.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 50);
+  });
+});
 
 function fetchAndRenderPricing(versions, hasCache) {
   return Promise.all([
