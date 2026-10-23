@@ -207,11 +207,18 @@ body{font-family:'Montserrat',sans-serif;background:#F5F4F1;color:#1C1C1C;overfl
 .apb-role{font-size:11px;color:var(--muted);}
 /* pkg list */
 .pkglist{display:flex;flex-direction:column;gap:7px;}
-.pkg-bonus{margin-top:14px;background:var(--orange-tint-2);border:.5px solid rgba(252,82,41,.22);border-radius:10px;padding:13px 14px;}
-.pkg-bonus-t{font-size:12px;color:var(--muted);line-height:1.65;}
-.pkg-bonus-t strong{color:#fc5229;font-family:'Montserrat',sans-serif;font-weight:700;}
-.pkg-bonus-btn{margin-top:10px;width:100%;padding:11px 16px;background:transparent;border:.5px solid #fc5229;border-radius:100px;font-family:'Montserrat',sans-serif;font-weight:600;font-size:12.5px;color:#fc5229;cursor:pointer;transition:all .2s;}
-.pkg-bonus-btn:hover{background:#fc5229;color:#fff;}
+/* lưu ý tư vấn miễn phí — nổi bật, hiện ở cả 2 flow (chọn gói trước / chọn advisor trước) */
+.consult-note{margin-top:16px;background:#FFEBDD;border:1.5px solid #fc5229;border-radius:14px;padding:16px 16px 16px;}
+.consult-note.top{margin:0 0 18px;}
+.cn-head{display:flex;align-items:center;gap:12px;margin-bottom:10px;}
+.cn-ico{width:40px;height:40px;border-radius:50%;background:#fc5229;color:#fff;display:flex;align-items:center;justify-content:center;flex:none;font-size:21px;}
+.cn-title{font-family:'Montserrat',sans-serif;font-size:14.5px;font-weight:700;color:#1C1C1C;line-height:1.35;letter-spacing:-.1px;}
+.cn-free{display:inline-block;margin-bottom:3px;background:#fc5229;color:#fff;font-family:'Montserrat',sans-serif;font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:2px 9px;border-radius:100px;}
+.cn-text{font-size:12.5px;line-height:1.7;color:#4A4339;margin-bottom:12px;}
+.cn-btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:13px 16px;background:#fc5229;border:none;border-radius:100px;font-family:'Montserrat',sans-serif;font-weight:700;font-size:13.5px;color:#fff;cursor:pointer;box-shadow:0 6px 16px rgba(252,82,41,.28);transition:background .2s,transform .15s;}
+.cn-btn:hover{background:#e84820;}
+.cn-btn:active{transform:scale(.99);}
+.cn-btn:focus-visible{outline:2px solid #1C1C1C;outline-offset:2px;}
 .pkgitem{background:#fff;border:.5px solid var(--line);border-radius:10px;padding:12px 14px;display:flex;align-items:center;gap:12px;cursor:pointer;transition:border-color .2s;}
 .pkgitem:hover{border-color:rgba(252,82,41,.3);}
 .pkgitem.sel{border-color:#fc5229;background:var(--orange-tint-2);}
@@ -367,7 +374,10 @@ body{font-family:'Montserrat',sans-serif;background:#F5F4F1;color:#1C1C1C;overfl
  
 <div class="preset-banner" id="presetBanner" style="display:none;margin:16px 32px 0;background:#1C0A06;border:.5px solid rgba(252,82,41,.25);border-radius:14px;padding:14px 20px;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;">
   <div style="font-family:'Montserrat',sans-serif;font-size:13px;color:#F0F0F0;"><strong style="color:#fc5229;">Gói đã chọn:</strong> <span id="presetPkgName"></span> — chọn 1 Advisor bên dưới để đặt lịch ngay.</div>
+  <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+    <button type="button" onclick="openConsultWidget()" style="background:#fc5229;border:none;color:#fff;font-family:'Montserrat',sans-serif;font-weight:700;font-size:12px;padding:8px 16px;border-radius:100px;cursor:pointer;display:inline-flex;align-items:center;gap:6px;"><i class="ti ti-headset" aria-hidden="true"></i>Chưa chắc chọn Advisor? Tư vấn miễn phí</button>
   <button onclick="presetPackage=null;document.getElementById('presetBanner').style.display='none';" style="background:transparent;border:.5px solid rgba(255,255,255,.15);color:rgba(240,240,240,.5);font-family:'Montserrat',sans-serif;font-size:11px;padding:6px 14px;border-radius:100px;cursor:pointer;">Bỏ chọn gói</button>
+  </div>
 </div>
  
 <!-- WAVE DIVIDER -->
@@ -495,9 +505,13 @@ body{font-family:'Montserrat',sans-serif;background:#F5F4F1;color:#1C1C1C;overfl
       <div class="pkglist" id="pkgList">
         <div style="padding:20px;text-align:center;color:rgba(240,240,240,.4);font-size:13px">Đang tải gói...</div>
       </div>
-      <div class="pkg-bonus">
-        <div class="pkg-bonus-t"><strong>Bonus:</strong> Team LinkaJob có thực hiện một buổi tư vấn miễn phí giúp bạn chọn Career Advisor và gói meeting phù hợp. Nếu bạn chưa chắc với nội dung của gói meeting hoặc chưa biết kết nối với Advisor nào, vui lòng đăng ký tư vấn với team LinkaJob.</div>
-        <button type="button" class="pkg-bonus-btn" onclick="openConsultFromCheckout()">Đăng ký tư vấn miễn phí</button>
+      <div class="consult-note ">
+        <div class="cn-head">
+          <div class="cn-ico"><i class="ti ti-headset" aria-hidden="true"></i></div>
+          <div><span class="cn-free">Bonus · Miễn phí</span><div class="cn-title">Chưa chắc chọn Advisor hay gói nào?</div></div>
+        </div>
+        <div class="cn-text">Team LinkaJob có thực hiện một buổi tư vấn miễn phí giúp bạn chọn Career Advisor và gói meeting phù hợp. Nếu bạn chưa chắc với nội dung của gói meeting hoặc chưa biết kết nối với Advisor nào, vui lòng đăng ký tư vấn với team LinkaJob.</div>
+        <button type="button" class="cn-btn" onclick="openConsultFromCheckout()"><i class="ti ti-calendar-event" aria-hidden="true"></i>Đăng ký tư vấn miễn phí</button>
       </div>
       <div class="mnav"><button class="mnext" id="mBtn1" onclick="goStep(2)" disabled>Tiếp theo →</button></div>
     </div>
@@ -507,6 +521,14 @@ body{font-family:'Montserrat',sans-serif;background:#F5F4F1;color:#1C1C1C;overfl
       <div class="mpl">Bước 2 / 3</div>
       <div class="mpt">Thông tin của bạn</div>
       <div class="mps">Để advisor chuẩn bị tốt nhất cho buổi đầu tiên.</div>
+      <div class="consult-note top" id="mp2Consult" style="display:none">
+        <div class="cn-head">
+          <div class="cn-ico"><i class="ti ti-headset" aria-hidden="true"></i></div>
+          <div><span class="cn-free">Bonus · Miễn phí</span><div class="cn-title">Chưa chắc chọn Advisor hay gói nào?</div></div>
+        </div>
+        <div class="cn-text">Team LinkaJob có thực hiện một buổi tư vấn miễn phí giúp bạn chọn Career Advisor và gói meeting phù hợp. Nếu bạn chưa chắc với nội dung của gói meeting hoặc chưa biết kết nối với Advisor nào, vui lòng đăng ký tư vấn với team LinkaJob.</div>
+        <button type="button" class="cn-btn" onclick="openConsultFromCheckout()"><i class="ti ti-calendar-event" aria-hidden="true"></i>Đăng ký tư vấn miễn phí</button>
+      </div>
       <div class="fgrid">
         <div class="mf"><label>Họ và tên <span>*</span></label><input type="text" id="mName" placeholder="Nguyễn Văn A" oninput="chkF()"></div>
         <div class="mf"><label>Số điện thoại <span>*</span></label><input type="tel" id="mPhone" placeholder="09xx xxx xxx" oninput="chkF()"></div>
@@ -1054,8 +1076,10 @@ function openCheckout(adv, role, co, initials, photo){
   document.getElementById('mApbRole').textContent = role ? role+' · '+co : 'Tư vấn miễn phí trước khi chọn';
   document.getElementById('mhSub').textContent = adv ? 'Advisor: '+adv : 'LinkaJob · Career Consulting';
  
+  var n2=document.getElementById('mp2Consult'); if(n2) n2.style.display='none';
   if(presetPackage && applyPackageSelection(presetPackage)){
     setCtx((adv||'LinkaJob')+' · Gói '+S.pkg, S.sess);
+    if(n2) n2.style.display='block';   // flow chọn gói trước: bỏ qua Bước 1 nên hiện lưu ý ở Bước 2
     renderSteps(2); showPanel('mp2');
   } else {
     setCtx(adv||'LinkaJob', role ? role+' · '+co : 'Chọn gói để bắt đầu');
