@@ -234,7 +234,7 @@
 .lj-light-zone .lj-dark-zone .pj-scrollhint{color:rgba(240,240,240,.3);}
 
 
-/* ── COMPARE TABLE (so sánh các gói) — nền tối cùng vùng Chọn gói, chữ tương phản cao, khoảng cách rộng ── */
+/* ── COMPARE TABLE (so sánh các gói) — bản gọn nền sáng: mỗi ô chỉ 1 giá trị ngắn hoặc dấu tick ── */
 .pc-toggle-wrap{display:flex;justify-content:center;margin-top:28px;}
 .pc-toggle{display:inline-flex;align-items:center;gap:10px;background:transparent;color:#F0F0F0;border:1px solid rgba(255,255,255,.28);border-radius:100px;padding:13px 26px;font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:14px;cursor:pointer;transition:all .2s;}
 .pc-toggle:hover{background:rgba(255,255,255,.07);border-color:rgba(255,255,255,.5);}
@@ -244,43 +244,40 @@
 .pc-toggle[aria-expanded="true"] .pc-chev{transform:rotate(180deg);}
 .pc-panel{margin-top:24px;}
 .pc-panel[hidden]{display:none;}
-.pc-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;background:#141414;border:1px solid rgba(255,255,255,.12);border-radius:18px;}
-table.pc{width:100%;min-width:980px;border-collapse:separate;border-spacing:0;table-layout:fixed;font-family:'Inter',sans-serif;}
-table.pc col.pc-c0{width:200px;}
-table.pc th,table.pc td{padding:20px 22px;text-align:left;vertical-align:top;border-bottom:1px solid rgba(255,255,255,.1);}
-table.pc thead th{vertical-align:bottom;padding-top:28px;padding-bottom:22px;border-bottom:1px solid rgba(255,255,255,.2);}
-table.pc tr:last-child td,table.pc tr:last-child th{border-bottom:none;}
-table.pc .pc-rowhead{position:sticky;left:0;z-index:2;background:#141414;font-family:'Space Grotesk',sans-serif;font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#ff7a57;box-shadow:1px 0 0 rgba(255,255,255,.12);}
-table.pc .pc-rowhead i{font-size:15px;margin-right:7px;vertical-align:-2px;}
-table.pc thead .pc-rowhead{color:rgba(240,240,240,.7);}
-.pc-name{font-family:'Space Grotesk',sans-serif;font-size:17px;font-weight:700;color:#FFFFFF;line-height:1.3;}
-.pc-tag{display:inline-block;margin-bottom:8px;background:#fc5229;color:#fff;font-family:'Space Grotesk',sans-serif;font-size:10px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;padding:4px 10px;border-radius:100px;}
-.pc-big{font-family:'Space Grotesk',sans-serif;font-size:20px;font-weight:700;color:#FFFFFF;letter-spacing:-.3px;}
-.pc-val{font-size:14.5px;font-weight:500;color:rgba(255,255,255,.92);line-height:1.5;}
-.pc-list{list-style:none;display:flex;flex-direction:column;gap:12px;}
-.pc-list li{display:flex;align-items:flex-start;gap:10px;font-size:14px;line-height:1.55;color:rgba(255,255,255,.88);}
-.pc-list li i{color:#ff7a57;font-size:16px;margin-top:2px;flex-shrink:0;}
-.pc-none{color:rgba(255,255,255,.4);font-size:18px;line-height:1;}
-table.pc .pc-hi{background:rgba(252,82,41,.11);border-left:1px solid rgba(252,82,41,.35);border-right:1px solid rgba(252,82,41,.35);}
-table.pc thead .pc-hi{border-top:3px solid #fc5229;}
-table.pc .pc-hi .pc-big{color:#ff7a57;}
-.pc-btn{display:block;width:100%;padding:12px 14px;border-radius:100px;font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:13.5px;cursor:pointer;text-align:center;background:transparent;color:#F0F0F0;border:1px solid rgba(255,255,255,.3);transition:all .2s;}
-.pc-btn:hover{background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.5);}
-.pc-btn.main{background:#fc5229;border-color:#fc5229;color:#fff;box-shadow:0 8px 20px rgba(252,82,41,.3);}
+.pc-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;background:#FFFFFF;border:1px solid #EAE1D3;border-radius:18px;padding:12px 20px 20px;color:#211C16;}
+table.pc{width:100%;min-width:760px;border-collapse:separate;border-spacing:0;table-layout:fixed;font-family:'Inter',sans-serif;}
+table.pc col.pc-c0{width:190px;}
+table.pc th,table.pc td{padding:17px 12px;text-align:center;vertical-align:middle;border-bottom:1px solid #EFE7DA;font-size:14px;color:#211C16;line-height:1.45;}
+table.pc tbody tr:last-child th,table.pc tbody tr:last-child td{border-bottom:none;}
+table.pc thead th{padding:22px 12px 18px;border-bottom:1px solid #E2D8C8;vertical-align:bottom;}
+table.pc .pc-rowhead{position:sticky;left:0;z-index:2;background:#FFFFFF;text-align:left;font-weight:400;font-size:14px;color:#6B6255;padding-left:4px;padding-right:12px;}
+table.pc thead .pc-rowhead{background:#FFFFFF;}
+.pc-name{font-family:'Space Grotesk',sans-serif;font-size:15px;font-weight:700;color:#211C16;}
+.pc-sub{display:block;margin-top:4px;font-size:11px;font-weight:500;color:#D8481E;letter-spacing:.02em;text-transform:uppercase;}
+.pc-price{font-family:'Space Grotesk',sans-serif;font-size:16px;font-weight:700;color:#211C16;}
+.pc-ok{color:#2F7D4F;font-size:20px;}
+.pc-dot{color:#B7AB99;font-size:20px;line-height:1;}
+table.pc .pc-hi{background:#FFEBDD;border-left:2px solid #FFB08C;border-right:2px solid #FFB08C;border-bottom-color:#F7D3BC;}
+table.pc thead .pc-hi{border-top:2px solid #FFB08C;border-radius:14px 14px 0 0;}
+table.pc .pc-hi .pc-name{color:#B93A14;}
+table.pc .pc-hi .pc-price{color:#C23D14;}
+table.pc tr.pc-last .pc-hi{border-bottom:2px solid #FFB08C;border-radius:0 0 14px 14px;}
+.pc-btn{display:block;width:100%;padding:11px 8px;border-radius:100px;font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:13px;cursor:pointer;text-align:center;background:#FFFFFF;color:#4A4236;border:1px solid #D9CFBF;transition:all .2s;white-space:normal;}
+.pc-btn:hover{background:#F5EFE4;border-color:#C9BDA9;}
+.pc-btn.main{background:#fc5229;border-color:#fc5229;color:#fff;}
 .pc-btn.main:hover{background:#e84820;}
 .pc-hint{display:none;text-align:center;font-size:12px;font-family:'Space Grotesk',sans-serif;color:rgba(240,240,240,.6);margin-top:12px;}
 @media(max-width:640px){
   .pc-toggle{width:100%;justify-content:center;}
-  table.pc{min-width:860px;table-layout:fixed;}
+  .pc-scroll{padding:8px 12px 16px;}
+  table.pc{min-width:700px;}
   table.pc col.pc-c0{width:112px;}
-  table.pc th,table.pc td{padding:16px 14px;}
-  table.pc thead th{padding-top:22px;}
-  table.pc .pc-rowhead{font-size:11px;letter-spacing:.03em;}
-  table.pc .pc-rowhead i{display:block;margin:0 0 6px;}
-  .pc-name{font-size:15px;}
+  table.pc th,table.pc td{padding:15px 8px;font-size:13px;}
+  table.pc .pc-rowhead{font-size:13px;padding-left:2px;box-shadow:1px 0 0 #EFE7DA;}
+  .pc-name{font-size:14px;}
+  .pc-price{font-size:15px;}
   .pc-hint{display:block;}
 }
-
 </style>
 <link rel="stylesheet" href="nav.css">
 </head>
@@ -635,99 +632,103 @@ function renderPricingJourney(packages, featuresByPkg) {
 }
 
 
-/* ─── MỚI: bảng so sánh các gói — dựng từ cùng dữ liệu với thẻ gói (Packages + PackageFeatures).
-   Hàng = Giá / Thời gian / Số buổi + 4 chủ đề; cột = từng gói. Mỗi ô liệt kê quyền lợi của gói đó
-   trong chủ đề, nên vẫn đúng khi mỗi gói có câu chữ riêng. ─── */
+/* ─── MỚI: bảng so sánh các gói — bản gọn. Hàng cố định (Giá, Thời gian, Số buổi, Sửa CV, Luyện phỏng vấn,
+   Case Study, Tài liệu ngành, Khoá học, Hoàn tiền); mỗi ô được rút gọn từ các dòng quyền lợi trong Sheet
+   (vd "...cho 2 vị trí" -> "2 vị trí", "(không giới hạn)" -> "Không giới hạn", có -> dấu tick).
+   Quyền lợi nào không khớp hàng nào vẫn xem đầy đủ ở thẻ gói phía trên. ─── */
 function pcMetaFor(p, feats) {
   var meta = {};
   (feats || []).forEach(function(f){
     if (String(f.group_label || '').trim() === '_meta') meta[String(f.feature_label || '').trim()] = f.value == null ? '' : String(f.value).trim();
   });
-  ['description', 'sessions_label', 'duration_label', 'price_label'].forEach(function(k){ if (p[k]) meta[k] = String(p[k]); });
+  ['sessions_label', 'duration_label', 'price_label'].forEach(function(k){ if (p[k]) meta[k] = String(p[k]); });
   return meta;
+}
+function pcShortLimit(t, unit) {
+  var s = String(t || '');
+  if (/^\s*hoặc\b/i.test(s)) return 'Chọn 1 mục';
+  if (/không giới hạn/i.test(s)) return 'Không giới hạn';
+  var m = s.match(/(\d+)\s*vị trí/i);
+  if (m) return m[1] + ' vị trí';
+  m = s.match(/(\d+)\s*(?:case study|bài)/i);
+  if (m) return m[1] + ' bài';
+  return null; // có, nhưng không nêu số lượng -> dấu tick
 }
 function renderPricingCompare(packages, featuresByPkg) {
   var scrollEl = document.getElementById('pc-scroll');
   var toggleWrap = document.getElementById('pc-toggle-wrap');
   if (!scrollEl || !packages || packages.length < 2) { if (toggleWrap) toggleWrap.hidden = true; return; }
   toggleWrap.hidden = false;
-
   var hiIdx = packages.findIndex(function(p){ return p.badge_label && String(p.badge_label).trim(); });
-  var TOPICS_PC = [
-    { name: 'Định hướng',      icon: 'ti-compass' },
-    { name: 'Sửa CV',          icon: 'ti-file-text' },
-    { name: 'Luyện phỏng vấn', icon: 'ti-microphone' },
-    { name: 'Khác',            icon: 'ti-sparkles' }
-  ];
-  function topicOf(group, label) {
-    var g = String(group || '').trim().toLowerCase();
-    for (var i = 0; i < TOPICS_PC.length; i++) if (TOPICS_PC[i].name.toLowerCase() === g) return TOPICS_PC[i].name;
-    var t = String(label || '').toLowerCase();
-    if (/phỏng vấn|interview|case study|aptitude/.test(t)) return 'Luyện phỏng vấn';
-    if (/\bcv\b|hồ sơ|cover letter|linkedin|portfolio/.test(t)) return 'Sửa CV';
-    if (/định hướng|hướng nghề|career/.test(t)) return 'Định hướng';
-    return 'Khác';
-  }
 
   var cols = packages.map(function(p){
     var feats = featuresByPkg[p.package_id] || [];
     var meta = pcMetaFor(p, feats);
-    var byTopic = {};
-    feats.slice().sort(function(a, b){ return (Number(a.sort_order) || 0) - (Number(b.sort_order) || 0); }).forEach(function(f){
+    var items = [];
+    feats.forEach(function(f){
       if (String(f.group_label || '').trim() === '_meta') return;
       var label = String(f.feature_label || '').trim();
       var val = f.value == null ? '' : String(f.value).trim();
       if (!label || !val || val === 'dash') return;
-      var text = label + (val !== 'check' ? ' — ' + val : '');
-      var tp = topicOf(f.group_label, label);
-      byTopic[tp] = byTopic[tp] || [];
-      if (byTopic[tp].indexOf(text) === -1) byTopic[tp].push(text);
+      items.push((label + (val !== 'check' ? ' ' + val : '')).normalize('NFC'));
     });
+    function find(re, not) { return items.filter(function(t){ return re.test(t) && !(not && not.test(t)); }); }
+    function cell(list) {   // -> {t:'text'|'ok'|'none', v}
+      if (!list.length) return { t: 'none' };
+      var txt = list.map(function(t){ return pcShortLimit(t); }).filter(Boolean);
+      return txt.length ? { t: 'text', v: txt[0] } : { t: 'ok' };
+    }
+    var refund = find(/ho\u00e0n\s*(\d+)\s*%/i);
+    var pct = refund.length ? (refund[0].match(/ho\u00e0n\s*(\d+)\s*%/i) || [])[1] : null;
+    var sessions = String(meta.sessions_label || pricingFmtSessions(p)).replace(/\s*bu\u1ed5i\s*$/i, '');
     return {
-      p: p, byTopic: byTopic,
+      p: p,
       price: meta.price_label ? meta.price_label : pricingFmtPriceK(p),
-      duration: meta.duration_label || pricingFmtDuration(p.days) || '',
-      sessions: meta.sessions_label || pricingFmtSessions(p)
+      duration: String(meta.duration_label || pricingFmtDuration(p.days) || '').replace(/\s*s\u1eed d\u1ee5ng\s*$/i, ''),
+      sessions: sessions,
+      cv: cell(find(/\bcv\b/i, /cover|portfolio|linkedin/i)),
+      pv: cell(find(/ph\u1ecfng v\u1ea5n/i)),
+      cs: cell(find(/case study/i)),
+      doc: find(/t\u00e0i li\u1ec7u chuy\u00ean ng\u00e0nh/i).length ? { t: 'ok' } : { t: 'none' },
+      course: find(/kho\u00e1\s*h\u1ecdc|kh\u00f3a\s*h\u1ecdc/i).length ? { t: 'ok' } : { t: 'none' },
+      refund: refund.length ? { t: 'ok' } : { t: 'none' },
+      pct: pct
     };
   });
 
+  var refundPct = null;
+  cols.forEach(function(c){ if (!refundPct && c.pct) refundPct = c.pct; });
   function cls(i) { return i === hiIdx ? ' class="pc-hi"' : ''; }
-  var html = '<table class="pc"><colgroup><col class="pc-c0">' + cols.map(function(){ return '<col>'; }).join('') + '</colgroup>';
+  function show(c) {
+    if (c.t === 'text') return pricingEscHtml(c.v);
+    if (c.t === 'ok') return '<i class="ti ti-check pc-ok" aria-label="Có"></i>';
+    return '<span class="pc-dot" aria-label="Không có">·</span>';
+  }
+  var rows = [
+    { label: 'Giá', get: function(c){ return '<span class="pc-price">' + pricingEscHtml(c.price) + '</span>'; } },
+    { label: 'Thời gian', get: function(c){ return c.duration ? pricingEscHtml(c.duration) : '<span class="pc-dot">·</span>'; } },
+    { label: 'Số buổi', get: function(c){ return pricingEscHtml(c.sessions); } },
+    { label: 'Sửa CV', key: 'cv' },
+    { label: 'Luyện phỏng vấn', key: 'pv' },
+    { label: 'Case Study', key: 'cs' },
+    { label: 'Tài liệu ngành', key: 'doc' },
+    { label: 'Khoá học LinkaJob', key: 'course' },
+    { label: refundPct ? 'Hoàn ' + refundPct + '% nếu chưa có offer' : 'Hoàn tiền nếu chưa có offer', key: 'refund' }
+  ].filter(function(r){ return !r.key || cols.some(function(c){ return c[r.key].t !== 'none'; }); });
 
-  html += '<thead><tr><th class="pc-rowhead" scope="col">Gói</th>';
+  var html = '<table class="pc"><colgroup><col class="pc-c0">' + cols.map(function(){ return '<col>'; }).join('') + '</colgroup>';
+  html += '<thead><tr><th class="pc-rowhead" scope="col"></th>';
   cols.forEach(function(c, i){
-    html += '<th scope="col"' + cls(i) + '>' + (i === hiIdx ? '<span class="pc-tag">' + pricingEscHtml(c.p.badge_label) + '</span><br>' : '') +
-      '<div class="pc-name">' + pricingEscHtml(c.p.name) + '</div></th>';
+    html += '<th scope="col"' + cls(i) + '><span class="pc-name">' + pricingEscHtml(c.p.name) + '</span>' +
+      (i === hiIdx ? '<span class="pc-sub">' + pricingEscHtml(c.p.badge_label) + '</span>' : '') + '</th>';
   });
   html += '</tr></thead><tbody>';
-
-  html += '<tr><th class="pc-rowhead" scope="row"><i class="ti ti-tag" aria-hidden="true"></i>Giá</th>';
-  cols.forEach(function(c, i){ html += '<td' + cls(i) + '><div class="pc-big">' + pricingEscHtml(c.price) + '</div></td>'; });
-  html += '</tr>';
-
-  html += '<tr><th class="pc-rowhead" scope="row"><i class="ti ti-clock" aria-hidden="true"></i>Thời gian</th>';
-  cols.forEach(function(c, i){ html += '<td' + cls(i) + '><div class="pc-val">' + (c.duration ? pricingEscHtml(c.duration) : '<span class="pc-none">·</span>') + '</div></td>'; });
-  html += '</tr>';
-
-  html += '<tr><th class="pc-rowhead" scope="row"><i class="ti ti-calendar-event" aria-hidden="true"></i>Số buổi</th>';
-  cols.forEach(function(c, i){ html += '<td' + cls(i) + '><div class="pc-val">' + pricingEscHtml(c.sessions) + '</div></td>'; });
-  html += '</tr>';
-
-  TOPICS_PC.forEach(function(tp){
-    var any = cols.some(function(c){ return c.byTopic[tp.name] && c.byTopic[tp.name].length; });
-    if (!any) return;
-    html += '<tr><th class="pc-rowhead" scope="row"><i class="ti ' + tp.icon + '" aria-hidden="true"></i>' + pricingEscHtml(tp.name) + '</th>';
-    cols.forEach(function(c, i){
-      var rows = c.byTopic[tp.name];
-      if (!rows || !rows.length) { html += '<td' + cls(i) + '><span class="pc-none" aria-label="Không bao gồm">·</span></td>'; return; }
-      html += '<td' + cls(i) + '><ul class="pc-list">' + rows.map(function(t){
-        return '<li><i class="ti ti-check" aria-hidden="true"></i><span>' + pricingEscHtml(t) + '</span></li>';
-      }).join('') + '</ul></td>';
-    });
+  rows.forEach(function(r){
+    html += '<tr><th class="pc-rowhead" scope="row">' + pricingEscHtml(r.label) + '</th>';
+    cols.forEach(function(c, i){ html += '<td' + cls(i) + '>' + (r.get ? r.get(c) : show(c[r.key])) + '</td>'; });
     html += '</tr>';
   });
-
-  html += '<tr><th class="pc-rowhead" scope="row"></th>';
+  html += '<tr class="pc-last"><th class="pc-rowhead" scope="row"></th>';
   cols.forEach(function(c, i){
     html += '<td' + cls(i) + '><button type="button" class="pc-btn' + (i === hiIdx ? ' main' : '') + '" onclick="location.href=\'doi-ngu-advisor.html?package=' + pricingSlugify(c.p.name) + '\'">Chọn ' + pricingEscHtml(c.p.name) + '</button></td>';
   });
