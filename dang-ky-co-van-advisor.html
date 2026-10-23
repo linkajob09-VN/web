@@ -57,36 +57,6 @@
 /* ── PRICING JOURNEY (option 2 — gói theo hành trình, thay bảng so sánh cũ) ── */
 .pt-section{padding:60px 32px 0;}
 .pj-wrap{padding:4px 2px;}
-.pj-scrollhint{display:none;text-align:center;font-size:10px;font-family:'Space Grotesk',sans-serif;color:rgba(240,240,240,.3);margin-top:14px;}
-.pj-journey{position:relative;display:grid;gap:20px;}
-.pj-line{position:absolute;top:19px;height:1px;background:rgba(255,255,255,.1);z-index:0;}
-.pj-stage{position:relative;display:flex;flex-direction:column;z-index:1;}
-.pj-dot{width:38px;height:38px;border-radius:50%;background:#1A1A1A;border:1px solid rgba(255,255,255,.14);display:flex;align-items:center;justify-content:center;font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:15px;color:rgba(240,240,240,.5);margin-bottom:16px;flex-shrink:0;}
-.pj-stage.hi .pj-dot{background:#fc5229;border-color:#fc5229;color:#fff;}
-.pj-card{background:#141414;border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:22px;display:flex;flex-direction:column;flex:1;position:relative;}
-.pj-card.hi{background:linear-gradient(165deg, rgba(252,82,41,.14), #141414 70%);border-color:rgba(252,82,41,.35);}
-.pj-badge{position:absolute;top:-11px;left:50%;transform:translateX(-50%);background:#fc5229;color:#fff;font-family:'Space Grotesk',sans-serif;font-size:10px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;padding:4px 12px;border-radius:100px;white-space:nowrap;box-shadow:0 4px 12px rgba(252,82,41,.35);}
-.pj-tag{font-family:'Space Grotesk',sans-serif;font-size:11px;font-weight:700;letter-spacing:.04em;color:#fc5229;margin-bottom:8px;}
-.pj-name{font-family:'Space Grotesk',sans-serif;font-size:16px;font-weight:700;color:#F0F0F0;margin-bottom:6px;}
-.pj-price{font-family:'Space Grotesk',sans-serif;font-size:24px;font-weight:700;color:#F0F0F0;letter-spacing:-.3px;margin-bottom:16px;}
-.pj-card.hi .pj-price{color:#fc5229;}
-.pj-meta{font-size:12.5px;color:rgba(240,240,240,.4);margin-bottom:16px;line-height:1.6;}
-.pj-benefits{list-style:none;flex:1;margin-bottom:16px;display:flex;flex-direction:column;gap:8px;}
-.pj-benefits li{display:flex;align-items:flex-start;gap:8px;font-size:13px;color:rgba(240,240,240,.65);line-height:1.5;}
-.pj-benefits li i{color:#fc5229;font-size:13px;margin-top:2px;flex-shrink:0;}
-.pj-btn{margin-top:auto;width:100%;padding:12px;border-radius:100px;font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:13.5px;cursor:pointer;border:none;transition:all .2s;white-space:nowrap;text-align:center;text-decoration:none;display:block;}
-.pj-btn-ghost{background:transparent;color:rgba(240,240,240,.6);border:.5px solid rgba(255,255,255,.16);}
-.pj-btn-ghost:hover{background:rgba(255,255,255,.06);color:#F0F0F0;border-color:rgba(255,255,255,.3);}
-.pj-btn-main{background:#fc5229;color:#fff;box-shadow:0 8px 20px rgba(252,82,41,.3);}
-.pj-btn-main:hover{background:#e84820;}
-.pj-desc{font-size:13px;color:rgba(240,240,240,.55);line-height:1.6;margin-bottom:14px;}
-.pj-topic{display:flex;align-items:center;gap:6px;font-family:'Space Grotesk',sans-serif;font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#fc5229;margin:2px 0 -2px;}
-.pj-topic i{font-size:13px;color:#fc5229;}
-.pj-benefits{gap:6px;}
-.pj-benefits li.pj-topic-wrap{display:block;}
-.pj-benefits ul{list-style:none;display:flex;flex-direction:column;gap:8px;margin:8px 0 10px;padding:0;}
-.pj-sub{font-family:'Space Grotesk',sans-serif;font-size:12.5px;font-weight:700;color:#F0F0F0;line-height:1.5;margin-bottom:10px;}
-.lj-light-zone .lj-dark-zone .pj-sub{color:#F0F0F0;}
 
 
 /* ── ADVISOR NOTE ── */
@@ -143,10 +113,6 @@
   .cta-box h2{ font-size:22px;}
   .lj-footer{ padding:20px; flex-direction:column; text-align:center;}
   table.pt{ min-width:640px;}
-  .pj-journey{ grid-template-columns:1fr !important; gap:14px;}
-  .pj-line{ display:none;}
-  .pj-stage{ flex-direction:row; gap:14px; align-items:flex-start;}
-  .pj-dot{ margin-bottom:0;}
 }
 /* ── LIGHT ZONE (Social Proof → Pricing → Payment → FAQ → CTA cuối → Footer) ──
    Hero + How it works giữ nguyên nền đen (ấn tượng đầu, "chất").
@@ -183,18 +149,6 @@
 .lj-light-zone .sp-more a{color:var(--lj-light-text-dim);}
 .lj-light-zone .sp-more a:hover{color:#fc5229;}
 
-.lj-light-zone .pj-line{background:var(--lj-light-border);}
-.lj-light-zone .pj-dot{background:var(--lj-light-surface); border-color:var(--lj-light-border); color:var(--lj-light-text-faint);}
-.lj-light-zone .pj-card{background:var(--lj-light-surface); border-color:var(--lj-light-border);}
-.lj-light-zone .pj-card.hi{background:linear-gradient(165deg,#FFE3D0,var(--lj-light-surface) 70%); border-color:#FFB08C;}
-.lj-light-zone .pj-name{color:var(--lj-light-text);}
-.lj-light-zone .pj-price{color:var(--lj-light-text);}
-.lj-light-zone .pj-card.hi .pj-price{color:var(--lj-accent-dark);}
-.lj-light-zone .pj-meta{color:var(--lj-light-text-faint);}
-.lj-light-zone .pj-benefits li{color:var(--lj-light-text-dim);}
-.lj-light-zone .pj-btn-ghost{background:var(--lj-light-surface); color:var(--lj-light-text-dim); border-color:var(--lj-light-border);}
-.lj-light-zone .pj-btn-ghost:hover{background:#F5EFE4; color:var(--lj-light-text); border-color:#DCD2C2;}
-.lj-light-zone .pj-scrollhint{color:var(--lj-light-text-faint);}
 
 .lj-light-zone .adv-note{background:var(--lj-light-surface); border-color:var(--lj-light-border);}
 .lj-light-zone .adv-note-icon{background:#F0E9DD;}
@@ -220,60 +174,37 @@
 .lj-light-zone .lj-dark-zone{background:#0D0D0D; padding-bottom:56px;}
 .lj-light-zone .lj-dark-zone .sec-label{color:rgba(240,240,240,.28);}
 .lj-light-zone .lj-dark-zone .sec-title{color:#F0F0F0;}
-.lj-light-zone .lj-dark-zone .pj-line{background:rgba(255,255,255,.1);}
-.lj-light-zone .lj-dark-zone .pj-dot{background:#1A1A1A; border-color:rgba(255,255,255,.14); color:rgba(240,240,240,.5);}
-.lj-light-zone .lj-dark-zone .pj-card{background:#141414; border-color:rgba(255,255,255,.08);}
-.lj-light-zone .lj-dark-zone .pj-card.hi{background:linear-gradient(165deg, rgba(252,82,41,.14), #141414 70%); border-color:rgba(252,82,41,.35);}
-.lj-light-zone .lj-dark-zone .pj-name{color:#F0F0F0;}
-.lj-light-zone .lj-dark-zone .pj-price{color:#F0F0F0;}
-.lj-light-zone .lj-dark-zone .pj-card.hi .pj-price{color:#fc5229;}
-.lj-light-zone .lj-dark-zone .pj-meta{color:rgba(240,240,240,.4);}
-.lj-light-zone .lj-dark-zone .pj-benefits li{color:rgba(240,240,240,.65);}
-.lj-light-zone .lj-dark-zone .pj-btn-ghost{background:transparent; color:rgba(240,240,240,.6); border-color:rgba(255,255,255,.16);}
-.lj-light-zone .lj-dark-zone .pj-btn-ghost:hover{background:rgba(255,255,255,.06); color:#F0F0F0; border-color:rgba(255,255,255,.3);}
-.lj-light-zone .lj-dark-zone .pj-scrollhint{color:rgba(240,240,240,.3);}
 
 
-/* ── COMPARE TABLE (so sánh các gói) — bản gọn nền sáng: mỗi ô chỉ 1 giá trị ngắn hoặc dấu tick ── */
-.pc-toggle-wrap{display:flex;justify-content:center;margin-top:28px;}
-.pc-toggle{display:inline-flex;align-items:center;gap:10px;background:transparent;color:#F0F0F0;border:1px solid rgba(255,255,255,.28);border-radius:100px;padding:13px 26px;font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:14px;cursor:pointer;transition:all .2s;}
-.pc-toggle:hover{background:rgba(255,255,255,.07);border-color:rgba(255,255,255,.5);}
-.pc-toggle:focus-visible,.pc-scroll:focus-visible{outline:2px solid #fc5229;outline-offset:3px;}
-.pc-toggle i{font-size:18px;color:#fc5229;}
-.pc-toggle .pc-chev{transition:transform .25s;color:rgba(240,240,240,.7);}
-.pc-toggle[aria-expanded="true"] .pc-chev{transform:rotate(180deg);}
-.pc-panel{margin-top:24px;}
-.pc-panel[hidden]{display:none;}
-.pc-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;background:#FFFFFF;border:1px solid #EAE1D3;border-radius:18px;padding:12px 20px 20px;color:#211C16;}
-table.pc{width:100%;min-width:760px;border-collapse:separate;border-spacing:0;table-layout:fixed;font-family:'Inter',sans-serif;}
-table.pc col.pc-c0{width:190px;}
-table.pc th,table.pc td{padding:17px 12px;text-align:center;vertical-align:middle;border-bottom:1px solid #EFE7DA;font-size:14px;color:#211C16;line-height:1.45;}
+/* ── BẢNG GÓI (thay thế thẻ gói cũ) — nền tối, mỗi ô chỉ 1 giá trị ngắn hoặc dấu tick ── */
+.pc-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;background:#141414;border:1px solid rgba(255,255,255,.1);border-radius:18px;padding:12px 20px 20px;color:#F0F0F0;}
+.pc-scroll:focus-visible{outline:2px solid #fc5229;outline-offset:3px;}
+table.pc{width:100%;min-width:780px;border-collapse:separate;border-spacing:0;table-layout:fixed;font-family:'Inter',sans-serif;}
+table.pc col.pc-c0{width:200px;}
+table.pc th,table.pc td{padding:18px 12px;text-align:center;vertical-align:middle;border-bottom:1px solid rgba(255,255,255,.09);font-size:14.5px;color:rgba(255,255,255,.92);line-height:1.45;}
 table.pc tbody tr:last-child th,table.pc tbody tr:last-child td{border-bottom:none;}
-table.pc thead th{padding:22px 12px 18px;border-bottom:1px solid #E2D8C8;vertical-align:bottom;}
-table.pc .pc-rowhead{position:sticky;left:0;z-index:2;background:#FFFFFF;text-align:left;font-weight:400;font-size:14px;color:#6B6255;padding-left:4px;padding-right:12px;}
-table.pc thead .pc-rowhead{background:#FFFFFF;}
-.pc-name{font-family:'Space Grotesk',sans-serif;font-size:15px;font-weight:700;color:#211C16;}
-.pc-sub{display:block;margin-top:4px;font-size:11px;font-weight:500;color:#D8481E;letter-spacing:.02em;text-transform:uppercase;}
-.pc-price{font-family:'Space Grotesk',sans-serif;font-size:16px;font-weight:700;color:#211C16;}
-.pc-ok{color:#2F7D4F;font-size:20px;}
-.pc-dot{color:#B7AB99;font-size:20px;line-height:1;}
-table.pc .pc-hi{background:#FFEBDD;border-left:2px solid #FFB08C;border-right:2px solid #FFB08C;border-bottom-color:#F7D3BC;}
-table.pc thead .pc-hi{border-top:2px solid #FFB08C;border-radius:14px 14px 0 0;}
-table.pc .pc-hi .pc-name{color:#B93A14;}
-table.pc .pc-hi .pc-price{color:#C23D14;}
-table.pc tr.pc-last .pc-hi{border-bottom:2px solid #FFB08C;border-radius:0 0 14px 14px;}
-.pc-btn{display:block;width:100%;padding:11px 8px;border-radius:100px;font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:13px;cursor:pointer;text-align:center;background:#FFFFFF;color:#4A4236;border:1px solid #D9CFBF;transition:all .2s;white-space:normal;}
-.pc-btn:hover{background:#F5EFE4;border-color:#C9BDA9;}
-.pc-btn.main{background:#fc5229;border-color:#fc5229;color:#fff;}
+table.pc thead th{padding:30px 12px 20px;border-bottom:1px solid rgba(255,255,255,.2);vertical-align:bottom;}
+table.pc .pc-rowhead{position:sticky;left:0;z-index:2;background:#141414;text-align:left;font-weight:400;font-size:14px;color:rgba(255,255,255,.68);padding-left:4px;padding-right:12px;}
+.pc-name{display:block;font-family:'Space Grotesk',sans-serif;font-size:16px;font-weight:700;color:#FFFFFF;}
+.pc-tag{display:inline-block;margin-bottom:9px;background:#fc5229;color:#fff;font-family:'Space Grotesk',sans-serif;font-size:10px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;padding:4px 10px;border-radius:100px;white-space:nowrap;}
+.pc-price{font-family:'Space Grotesk',sans-serif;font-size:17px;font-weight:700;color:#FFFFFF;letter-spacing:-.2px;}
+.pc-ok{color:#ff7a57;font-size:20px;}
+.pc-dot{color:rgba(255,255,255,.3);font-size:20px;line-height:1;}
+table.pc .pc-hi{background:rgba(252,82,41,.12);border-left:1.5px solid rgba(252,82,41,.5);border-right:1.5px solid rgba(252,82,41,.5);border-bottom-color:rgba(252,82,41,.2);}
+table.pc thead .pc-hi{border-top:1.5px solid rgba(252,82,41,.5);border-radius:14px 14px 0 0;}
+table.pc .pc-hi .pc-price{color:#ff7a57;}
+table.pc tr.pc-last .pc-hi{border-bottom:1.5px solid rgba(252,82,41,.5);border-radius:0 0 14px 14px;}
+.pc-btn{display:block;width:100%;padding:12px 8px;border-radius:100px;font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:13px;cursor:pointer;text-align:center;background:transparent;color:#F0F0F0;border:1px solid rgba(255,255,255,.3);transition:all .2s;white-space:normal;}
+.pc-btn:hover{background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.5);}
+.pc-btn.main{background:#fc5229;border-color:#fc5229;color:#fff;box-shadow:0 8px 20px rgba(252,82,41,.3);}
 .pc-btn.main:hover{background:#e84820;}
 .pc-hint{display:none;text-align:center;font-size:12px;font-family:'Space Grotesk',sans-serif;color:rgba(240,240,240,.6);margin-top:12px;}
 @media(max-width:640px){
-  .pc-toggle{width:100%;justify-content:center;}
   .pc-scroll{padding:8px 12px 16px;}
-  table.pc{min-width:700px;}
-  table.pc col.pc-c0{width:112px;}
+  table.pc{min-width:720px;}
+  table.pc col.pc-c0{width:116px;}
   table.pc th,table.pc td{padding:15px 8px;font-size:13px;}
-  table.pc .pc-rowhead{font-size:13px;padding-left:2px;box-shadow:1px 0 0 #EFE7DA;}
+  table.pc .pc-rowhead{font-size:13px;padding-left:2px;box-shadow:1px 0 0 rgba(255,255,255,.12);}
   .pc-name{font-size:14px;}
   .pc-price{font-size:15px;}
   .pc-hint{display:block;}
@@ -385,16 +316,6 @@ table.pc tr.pc-last .pc-hi{border-bottom:2px solid #FFB08C;border-radius:0 0 14p
   <div class="sec-title">Chọn gói phù hợp.</div>
   <div class="pj-wrap" id="pj-wrap">
     <div style="text-align:center;color:rgba(240,240,240,.4);font-size:13px;padding:24px 0">Đang tải bảng giá...</div>
-  </div>
-  <div class="pj-scrollhint" id="pj-scrollhint">← Vuốt để xem thêm →</div>
-  <div class="pc-toggle-wrap" id="pc-toggle-wrap" hidden>
-    <button class="pc-toggle" id="pc-toggle" type="button" aria-expanded="false" aria-controls="pc-panel">
-      <i class="ti ti-columns-3" aria-hidden="true"></i><span id="pc-toggle-label">So sánh các gói</span><i class="ti ti-chevron-down pc-chev" aria-hidden="true"></i>
-    </button>
-  </div>
-  <div class="pc-panel" id="pc-panel" hidden>
-    <div class="pc-scroll" id="pc-scroll" tabindex="0" role="region" aria-label="Bảng so sánh các gói, vuốt ngang để xem thêm"></div>
-    <div class="pc-hint">← Vuốt ngang để xem các gói khác →</div>
   </div>
 </section>
 </div><!-- /.lj-dark-zone -->
@@ -523,119 +444,10 @@ function pricingEscHtml(s) {
   return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
 
-function renderPricingJourney(packages, featuresByPkg) {
-  var highlightIdx = packages.findIndex(function(p){ return p.badge_label && String(p.badge_label).trim(); });
-  var n = packages.length || 1;
-
-  // ── Tag "chủ đề" hiện 1 lần/thẻ (TRẢI NGHIỆM, HỒ SƠ ỨNG TUYỂN...) — map
-  //    theo tên gói thật, có fallback theo vị trí nếu tên không khớp bảng
-  //    (vd Sheet đổi tên gói) để không bao giờ thiếu tag. ──
-  var JOURNEY_TAGS = {
-    'trial': 'TRẢI NGHIỆM', 'dùng thử': 'TRẢI NGHIỆM',
-    'cơ bản': 'HỒ SƠ CƠ BẢN',
-    'đặc biệt': 'HỒ SƠ ỨNG TUYỂN', 'chuyên sửa cv': 'HỒ SƠ ỨNG TUYỂN',
-    'chuyên sâu': 'HỒ SƠ + PHỎNG VẤN',
-  };
-  function journeyTagFor(p, i) {
-    var key = String(p.name || '').trim().toLowerCase();
-    if (JOURNEY_TAGS[key]) return JOURNEY_TAGS[key];
-    if (key.indexOf('đồng hành') !== -1 || key.indexOf('vvip') !== -1) return 'CAM KẾT CÓ OFFER';
-    if (i === 0) return 'TRẢI NGHIỆM';
-    if (i === n - 1) return 'CAM KẾT CÓ OFFER';
-    return 'HỒ SƠ ỨNG TUYỂN';
-  }
-
-  // ── Nội dung hỗ trợ: mỗi gói có danh sách RIÊNG, mỗi dòng gồm 1 trong 4 chủ đề + mô tả.
-  //    Gom theo chủ đề (thứ tự cố định) để người đọc thấy rõ quyền lợi. Các dòng nhóm
-  //    "_meta" là chữ hiển thị (nhãn giai đoạn, mô tả ngắn, số buổi, hạn dùng) — không
-  //    phải quyền lợi. Dòng cũ (chưa theo 4 chủ đề) tự được xếp vào chủ đề gần nhất. ──
-  var TOPICS = [
-    { name: 'Định hướng',      icon: 'ti-compass' },
-    { name: 'Sửa CV',          icon: 'ti-file-text' },
-    { name: 'Luyện phỏng vấn', icon: 'ti-microphone' },
-    { name: 'Khác',            icon: 'ti-sparkles' }
-  ];
-  function normTopic(group, label) {
-    var g = String(group || '').trim().toLowerCase();
-    for (var i = 0; i < TOPICS.length; i++) if (TOPICS[i].name.toLowerCase() === g) return TOPICS[i].name;
-    var t = String(label || '').toLowerCase();
-    if (/phỏng vấn|interview|case study|aptitude/.test(t)) return 'Luyện phỏng vấn';
-    if (/\bcv\b|hồ sơ|cover letter|linkedin|portfolio/.test(t)) return 'Sửa CV';
-    if (/định hướng|hướng nghề|career/.test(t)) return 'Định hướng';
-    return 'Khác';
-  }
-
-  var halfColPct = 50 / n;
-  var journeyHtml = '<div class="pj-journey" style="grid-template-columns:repeat(' + n + ',1fr)">' +
-    '<div class="pj-line" style="left:calc(' + halfColPct + '% - 1px);right:calc(' + halfColPct + '% - 1px)"></div>';
-
-  packages.forEach(function(p, i){
-    var isHi = i === highlightIdx;
-    var slug = pricingSlugify(p.name);
-
-    var meta = {}, byTopic = {};
-    (featuresByPkg[p.package_id] || []).slice()
-      .sort(function(a, b){ return (Number(a.sort_order) || 0) - (Number(b.sort_order) || 0); })
-      .forEach(function(f){
-        var label = String(f.feature_label || '').trim();
-        var val = f.value == null ? '' : String(f.value).trim();
-        if (String(f.group_label || '').trim() === '_meta') { meta[label] = val; return; }
-        if (!label || !val || val === 'dash') return;
-        var text = label + (val !== 'check' ? ' — ' + val : '');
-        var tp = normTopic(f.group_label, label);
-        byTopic[tp] = byTopic[tp] || [];
-        if (byTopic[tp].indexOf(text) === -1) byTopic[tp].push(text);   // bỏ dòng lặp của dữ liệu cũ
-      });
-
-    // Cột trong tab Packages (do dashboard/Sheet điền) ưu tiên hơn dòng "_meta" cũ
-    ['tag', 'description', 'sessions_label', 'duration_label', 'session_length_label', 'price_label'].forEach(function(k){
-      var col = k === 'tag' ? p.tag_label : p[k];
-      if (col) meta[k] = String(col);
-    });
-
-    var benefitsHtml = '';
-    TOPICS.forEach(function(tp){
-      var rows = byTopic[tp.name];
-      if (!rows || !rows.length) return;
-      benefitsHtml += '<li class="pj-topic-wrap"><div class="pj-topic"><i class="ti ' + tp.icon + '"></i>' + pricingEscHtml(tp.name) + '</div><ul>';
-      rows.forEach(function(t){ benefitsHtml += '<li><i class="ti ti-check"></i>' + pricingEscHtml(t) + '</li>'; });
-      benefitsHtml += '</ul></li>';
-    });
-    if (!benefitsHtml) benefitsHtml = '<li style="color:rgba(240,240,240,.35)">Chưa có nội dung hỗ trợ được thêm.</li>';
-
-    // Dòng "Số buổi · Hạn dùng" — chữ admin tự nhập; chưa có thì dựng từ số liệu cũ.
-    var subParts = [
-      meta.sessions_label || pricingFmtSessions(p),
-      meta.duration_label || (pricingFmtDuration(p.days) ? pricingFmtDuration(p.days) + ' sử dụng' : '')
-    ].filter(Boolean);
-
-    journeyHtml += '<div class="pj-stage' + (isHi ? ' hi' : '') + '">';
-    journeyHtml += '<div class="pj-dot">' + (i + 1) + '</div>';
-    journeyHtml += '<div class="pj-card' + (isHi ? ' hi' : '') + '">';
-    if (isHi) journeyHtml += '<div class="pj-badge">' + pricingEscHtml(p.badge_label) + '</div>';
-    journeyHtml += '<div class="pj-tag">' + pricingEscHtml(meta.tag || journeyTagFor(p, i)) + '</div>';
-    journeyHtml += '<div class="pj-name">' + pricingEscHtml(p.name) + '</div>';
-    if (subParts.length) journeyHtml += '<div class="pj-sub">' + pricingEscHtml(subParts.join(' · ')) + '</div>';
-    if (meta.description) journeyHtml += '<div class="pj-desc">' + pricingEscHtml(meta.description) + '</div>';
-    journeyHtml += '<ul class="pj-benefits">' + benefitsHtml + '</ul>';
-    journeyHtml += '<div class="pj-price">' + (meta.price_label ? pricingEscHtml(meta.price_label) : pricingFmtPriceK(p)) + '</div>';
-    journeyHtml += '<button class="pj-btn ' + (isHi ? 'pj-btn-main' : 'pj-btn-ghost') + '" onclick="location.href=\'doi-ngu-advisor.html?package=' + slug + '\'">Chọn ' + pricingEscHtml(p.name) + '</button>';
-    journeyHtml += '</div></div>';
-  });
-  journeyHtml += '</div>';
-
-  var wrapEl = document.getElementById('pj-wrap');
-  if (wrapEl) wrapEl.innerHTML = journeyHtml;
-  var hintEl = document.getElementById('pj-scrollhint');
-  if (hintEl) hintEl.style.display = n > 2 ? 'block' : 'none';
-  renderPricingCompare(packages, featuresByPkg);
-}
-
-
-/* ─── MỚI: bảng so sánh các gói — bản gọn. Hàng cố định (Giá, Thời gian, Số buổi, Sửa CV, Luyện phỏng vấn,
-   Case Study, Tài liệu ngành, Khoá học, Hoàn tiền); mỗi ô được rút gọn từ các dòng quyền lợi trong Sheet
-   (vd "...cho 2 vị trí" -> "2 vị trí", "(không giới hạn)" -> "Không giới hạn", có -> dấu tick).
-   Quyền lợi nào không khớp hàng nào vẫn xem đầy đủ ở thẻ gói phía trên. ─── */
+/* ─── Bảng gói (thay thế thẻ gói cũ): dựng từ Packages + PackageFeatures trên Sheet.
+   Hàng cố định: Giá, Thời gian, Số buổi, Định hướng, Sửa CV, Luyện phỏng vấn, Case Study, Tài liệu ngành,
+   Khoá học, Hoàn tiền. Mỗi ô được rút gọn từ các dòng quyền lợi (vd "...cho 2 vị trí" -> "2 vị trí",
+   "(không giới hạn)" -> "Không giới hạn", có -> dấu tick). Hàng nào không gói nào có thì tự ẩn. ─── */
 function pcMetaFor(p, feats) {
   var meta = {};
   (feats || []).forEach(function(f){
@@ -644,7 +456,7 @@ function pcMetaFor(p, feats) {
   ['sessions_label', 'duration_label', 'price_label'].forEach(function(k){ if (p[k]) meta[k] = String(p[k]); });
   return meta;
 }
-function pcShortLimit(t, unit) {
+function pcShortLimit(t) {
   var s = String(t || '');
   if (/^\s*hoặc\b/i.test(s)) return 'Chọn 1 mục';
   if (/không giới hạn/i.test(s)) return 'Không giới hạn';
@@ -654,11 +466,9 @@ function pcShortLimit(t, unit) {
   if (m) return m[1] + ' bài';
   return null; // có, nhưng không nêu số lượng -> dấu tick
 }
-function renderPricingCompare(packages, featuresByPkg) {
-  var scrollEl = document.getElementById('pc-scroll');
-  var toggleWrap = document.getElementById('pc-toggle-wrap');
-  if (!scrollEl || !packages || packages.length < 2) { if (toggleWrap) toggleWrap.hidden = true; return; }
-  toggleWrap.hidden = false;
+function renderPricingJourney(packages, featuresByPkg) {
+  var wrapEl = document.getElementById('pj-wrap');
+  if (!wrapEl) return;
   var hiIdx = packages.findIndex(function(p){ return p.badge_label && String(p.badge_label).trim(); });
 
   var cols = packages.map(function(p){
@@ -673,24 +483,25 @@ function renderPricingCompare(packages, featuresByPkg) {
       items.push((label + (val !== 'check' ? ' ' + val : '')).normalize('NFC'));
     });
     function find(re, not) { return items.filter(function(t){ return re.test(t) && !(not && not.test(t)); }); }
-    function cell(list) {   // -> {t:'text'|'ok'|'none', v}
+    function cell(list) {
       if (!list.length) return { t: 'none' };
       var txt = list.map(function(t){ return pcShortLimit(t); }).filter(Boolean);
       return txt.length ? { t: 'text', v: txt[0] } : { t: 'ok' };
     }
+    function has(re) { return find(re).length ? { t: 'ok' } : { t: 'none' }; }
     var refund = find(/ho\u00e0n\s*(\d+)\s*%/i);
     var pct = refund.length ? (refund[0].match(/ho\u00e0n\s*(\d+)\s*%/i) || [])[1] : null;
-    var sessions = String(meta.sessions_label || pricingFmtSessions(p)).replace(/\s*bu\u1ed5i\s*$/i, '');
     return {
       p: p,
       price: meta.price_label ? meta.price_label : pricingFmtPriceK(p),
       duration: String(meta.duration_label || pricingFmtDuration(p.days) || '').replace(/\s*s\u1eed d\u1ee5ng\s*$/i, ''),
-      sessions: sessions,
+      sessions: String(meta.sessions_label || pricingFmtSessions(p)).replace(/\s*bu\u1ed5i\s*$/i, ''),
+      guide: has(/\u0111\u1ecbnh h\u01b0\u1edbng ng\u00e0nh|ph\u00f2ng ban/i),
       cv: cell(find(/\bcv\b/i, /cover|portfolio|linkedin/i)),
       pv: cell(find(/ph\u1ecfng v\u1ea5n/i)),
       cs: cell(find(/case study/i)),
-      doc: find(/t\u00e0i li\u1ec7u chuy\u00ean ng\u00e0nh/i).length ? { t: 'ok' } : { t: 'none' },
-      course: find(/kho\u00e1\s*h\u1ecdc|kh\u00f3a\s*h\u1ecdc/i).length ? { t: 'ok' } : { t: 'none' },
+      doc: has(/t\u00e0i li\u1ec7u chuy\u00ean ng\u00e0nh/i),
+      course: has(/kho\u00e1\s*h\u1ecdc|kh\u00f3a\s*h\u1ecdc/i),
       refund: refund.length ? { t: 'ok' } : { t: 'none' },
       pct: pct
     };
@@ -708,6 +519,7 @@ function renderPricingCompare(packages, featuresByPkg) {
     { label: 'Giá', get: function(c){ return '<span class="pc-price">' + pricingEscHtml(c.price) + '</span>'; } },
     { label: 'Thời gian', get: function(c){ return c.duration ? pricingEscHtml(c.duration) : '<span class="pc-dot">·</span>'; } },
     { label: 'Số buổi', get: function(c){ return pricingEscHtml(c.sessions); } },
+    { label: 'Định hướng ngành/phòng ban/vị trí phù hợp', key: 'guide' },
     { label: 'Sửa CV', key: 'cv' },
     { label: 'Luyện phỏng vấn', key: 'pv' },
     { label: 'Case Study', key: 'cs' },
@@ -716,11 +528,12 @@ function renderPricingCompare(packages, featuresByPkg) {
     { label: refundPct ? 'Hoàn ' + refundPct + '% nếu chưa có offer' : 'Hoàn tiền nếu chưa có offer', key: 'refund' }
   ].filter(function(r){ return !r.key || cols.some(function(c){ return c[r.key].t !== 'none'; }); });
 
-  var html = '<table class="pc"><colgroup><col class="pc-c0">' + cols.map(function(){ return '<col>'; }).join('') + '</colgroup>';
+  var html = '<div class="pc-scroll" tabindex="0" role="region" aria-label="Bảng so sánh các gói, vuốt ngang để xem thêm">' +
+    '<table class="pc"><colgroup><col class="pc-c0">' + cols.map(function(){ return '<col>'; }).join('') + '</colgroup>';
   html += '<thead><tr><th class="pc-rowhead" scope="col"></th>';
   cols.forEach(function(c, i){
-    html += '<th scope="col"' + cls(i) + '><span class="pc-name">' + pricingEscHtml(c.p.name) + '</span>' +
-      (i === hiIdx ? '<span class="pc-sub">' + pricingEscHtml(c.p.badge_label) + '</span>' : '') + '</th>';
+    html += '<th scope="col"' + cls(i) + '>' + (i === hiIdx ? '<span class="pc-tag">' + pricingEscHtml(c.p.badge_label) + '</span>' : '') +
+      '<span class="pc-name">' + pricingEscHtml(c.p.name) + '</span></th>';
   });
   html += '</tr></thead><tbody>';
   rows.forEach(function(r){
@@ -732,20 +545,9 @@ function renderPricingCompare(packages, featuresByPkg) {
   cols.forEach(function(c, i){
     html += '<td' + cls(i) + '><button type="button" class="pc-btn' + (i === hiIdx ? ' main' : '') + '" onclick="location.href=\'doi-ngu-advisor.html?package=' + pricingSlugify(c.p.name) + '\'">Chọn ' + pricingEscHtml(c.p.name) + '</button></td>';
   });
-  html += '</tr></tbody></table>';
-  scrollEl.innerHTML = html;
+  html += '</tr></tbody></table></div><div class="pc-hint">← Vuốt ngang để xem các gói khác →</div>';
+  wrapEl.innerHTML = html;
 }
-document.addEventListener('DOMContentLoaded', function(){
-  var btn = document.getElementById('pc-toggle'), panel = document.getElementById('pc-panel');
-  if (!btn || !panel) return;
-  btn.addEventListener('click', function(){
-    var open = btn.getAttribute('aria-expanded') === 'true';
-    btn.setAttribute('aria-expanded', open ? 'false' : 'true');
-    panel.hidden = open;
-    document.getElementById('pc-toggle-label').textContent = open ? 'So sánh các gói' : 'Ẩn bảng so sánh';
-    if (!open) setTimeout(function(){ panel.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 50);
-  });
-});
 
 function fetchAndRenderPricing(versions, hasCache) {
   return Promise.all([
