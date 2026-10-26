@@ -1202,6 +1202,9 @@ const SIDEBAR_DEF = {
       { id: 'lj-products',  label: 'Sản phẩm' },
     ]},
     { id: 'rep', icon: '📊', label: 'Báo cáo', children: [
+      { id: 'lj-exec',          label: 'Tổng quan điều hành' },
+      { id: 'lj-insights',      label: 'Cung – Cầu & Phễu' },
+      { id: 'lj-capacity',      label: 'Kênh & Công suất' },
       { id: 'lj-revenue',       label: 'Doanh thu' },
       { id: 'lj-report',        label: 'Vận hành' },
       { id: 'lj-market-report', label: 'Marketing' },
@@ -1241,6 +1244,9 @@ const ROUTE_MAP = {
   'today':         { fn: function(){ loadTodayPageAsync(); } },
   'lj-newreg':     { fn: function(){ renderStaff('lj-newreg'); } },
   'lj-revenue':    { fn: function(){ loadRevenuePageAsync(); } },
+  'lj-insights':   { fn: function(){ loadInsightsPageAsync(); } },
+  'lj-capacity':   { fn: function(){ loadCapacityPageAsync(); } },
+  'lj-exec':       { fn: function(){ loadExecPageAsync(); } },
   'lj-report':     { fn: function(){ loadOperationsReportAsync(); } },
   'lj-market-report': { fn: function(){ loadMarketingReportPageAsync(); } },
   'lj-sales-perf': { fn: function(){ loadSalesPerformancePageAsync(); } },
@@ -2477,6 +2483,9 @@ function renderStaff(tab) {
   const c = document.getElementById('main-content');
   if      (tab === 'lj-newreg')         loadNewRegistrationsPage();
   else if (tab === 'lj-revenue')        loadRevenuePageAsync();
+  else if (tab === 'lj-insights')     loadInsightsPageAsync();
+  else if (tab === 'lj-capacity')     loadCapacityPageAsync();
+  else if (tab === 'lj-exec')         loadExecPageAsync();
   else if (tab === 'lj-report')         loadOperationsReportAsync();
   else if (tab === 'lj-sales-perf')     loadSalesPerformancePageAsync();
   else if (tab === 'linkajob-calendar' || tab === 'lj-meetings') loadMeetingCalendarAsync();
@@ -8551,6 +8560,436 @@ function renderReportPage(partial) {
   html += '<div class="card"><div class="card-header"><div class="card-header-left">Gói được mua trong kỳ</div></div><div style="padding:8px 24px 24px">' + svgBarList(pkgDisplay, { color: '#6D28D9' }) + '</div></div></div>';
   html += '</div>';
   return html;
+}
+
+// ── 0. CUNG – CẦU & PHỄU (Giai đoạn 1): nối Lead → Booking → Buổi tư vấn → Advisor theo NGÀNH ──
+var INSIGHT_DEFAULTS = { overload: 3, drop: 20, minLeads: 3, lowConv: 20 };
+var INSIGHT_DEPTS = ['Marketing','Sales','Tài chính','Kế toán','Công nghệ','Nhân sự','Vận hành','Thiết kế','Kinh doanh'];
+var INSIGHT_TOPICS = {
+  'CV': ['cv','resume','ho so'], 'Phỏng vấn': ['phong van','interview'], 'Chuyển ngành': ['chuyen nganh','doi nganh','trai nganh'],
+  'Định hướng': ['dinh huong','lo trinh','huong di'], 'Thực tập/Fresher': ['thuc tap','fresher','intern','moi ra truong','sinh vien'],
+  'Lương': ['luong','thu nhap','offer'], 'Portfolio': ['portfolio'], 'LinkedIn': ['linkedin'], 'Kỹ năng': ['ky nang','skill']
+};
+var _insData = { leads: [], bookings: [], sessions: [] };
+
+function insightCfg() {
+  var c = {}; try { c = JSON.parse(localStorage.getItem('lj_insight_cfg') || '{}') || {}; } catch (e) { c = {}; }
+  var out = {};
+  Object.keys(INSIGHT_DEFAULTS).forEach(function(k){ var v = Number(c[k]); out[k] = (isFinite(v) && c[k] !== '' && c[k] != null && v >= 0) ? v : INSIGHT_DEFAULTS[k]; });
+  return out;
+}
+function saveInsightCfg() {
+  var c = {};
+  Object.keys(INSIGHT_DEFAULTS).forEach(function(k){ var el = document.getElementById('ins-cfg-' + k); if (el) c[k] = el.value; });
+  try { localStorage.setItem('lj_insight_cfg', JSON.stringify(c)); } catch (e) {}
+  reportRerender();
+}
+function resetInsightCfg() { try { localStorage.removeItem('lj_insight_cfg'); } catch (e) {} reportRerender(); }
+
+function insNorm_(s) { return ' ' + stripDiacritics(String(s || '')).toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim() + ' '; }
+function deptAliases_(dept) {
+  return String(dept || '').split('/').map(function(p){ return insNorm_(p).trim(); }).filter(Boolean);
+}
+function advisorMatchesDept_(adv, dept) {
+  var al = deptAliases_(dept); if (!al.length) return false;
+  return (adv.tags || []).some(function(t){ var n = insNorm_(t).trim(); return al.indexOf(n) > -1; });
+}
+function insPhoneKey_(p) {
+  var s = String(p || '').replace(/\D/g, '');
+  if (s.indexOf('84') === 0 && s.length >= 11) s = '0' + s.slice(2);
+  return s.length >= 9 ? s : '';
+}
+function insEmailKey_(e) { var s = String(e || '').trim().toLowerCase(); return s.indexOf('@') > 0 ? s : ''; }
+function insDeptOf_(lead) { return String((lead && lead.interested_dept) || '').trim() || 'Không rõ'; }
+
+function insightCompute(D, range, prev, cfg) {
+  var leads = D.leads || [], bookings = (D.bookings || []).filter(bookingCounts), sessions = D.sessions || [], advisors = D.advisors || [];
+  // index lead → ngành theo email / sđt (lead mới nhất thắng)
+  var byEmail = {}, byPhone = {};
+  leads.slice().sort(function(a, b){ return String(a.created_at) > String(b.created_at) ? 1 : -1; }).forEach(function(l){
+    var e = insEmailKey_(l.email), p = insPhoneKey_(l.phone), dp = insDeptOf_(l);
+    if (dp === 'Không rõ') return;
+    if (e) byEmail[e] = dp; if (p) byPhone[p] = dp;
+  });
+  var bkDept = {};
+  bookings.forEach(function(b){
+    bkDept[b.booking_id] = byEmail[insEmailKey_(b.advisee_email)] || byPhone[insPhoneKey_(b.advisee_phone)] || 'Không rõ';
+  });
+  var months = function(r){ return Math.max(1, Math.round((r.end.getTime() - r.start.getTime()) / (30.44 * 864e5))); };
+  function period(r) {
+    var m = {}; var get = function(d){ return m[d] || (m[d] = { dept: d, leads: 0, advisees: 0, meetings: 0, registered: 0, topics: {} }); };
+    leads.forEach(function(l){
+      if (!inRange(l.created_at, r)) return;
+      var x = get(insDeptOf_(l)); x.leads++;
+      if (isRegisteredResult(l.result) || String(l.status || '').trim() === LEAD_CONVERTED_STATUS) x.registered++;
+      var q = insNorm_(l.question);
+      Object.keys(INSIGHT_TOPICS).forEach(function(t){ if (INSIGHT_TOPICS[t].some(function(w){ return q.indexOf(' ' + w + ' ') > -1 || q.indexOf(w) > -1 && w.length > 4; })) x.topics[t] = (x.topics[t] || 0) + 1; });
+    });
+    bookings.forEach(function(b){ if (inRange(b.created_at, r)) get(bkDept[b.booking_id]).advisees++; });
+    sessions.forEach(function(s){
+      var st = String(s.status || '').toLowerCase();
+      if (st === 'cancelled' || st === 'canceled' || s.advisor_name === STAFF_SLOT_IDENTITY || s.session_type === 'consult' || s.session_type === 'course') return;
+      if (!inRange(s.scheduled_date, r)) return;
+      if (bkDept[s.booking_id] != null) get(bkDept[s.booking_id]).meetings++;
+    });
+    return m;
+  }
+  var cur = period(range), prv = period(prev);
+  // 3 tháng gần nhất tính đến cuối kỳ: lead ≥ minLeads mỗi tháng?
+  var last3 = [];
+  for (var i = 0; i < 3; i++) last3.push({ start: new Date(range.end.getFullYear(), range.end.getMonth() - 1 - i, 1), end: new Date(range.end.getFullYear(), range.end.getMonth() - i, 1) });
+  var stable = {};
+  leads.forEach(function(l){ var d = insDeptOf_(l); last3.forEach(function(r, idx){ if (inRange(l.created_at, r)) { stable[d] = stable[d] || [0,0,0]; stable[d][idx]++; } }); });
+  var depts = {}; Object.keys(cur).forEach(function(k){ depts[k] = 1; }); Object.keys(prv).forEach(function(k){ depts[k] = 1; });
+  // Ngành chỉ có Advisor (chưa có lead) vẫn hiện, trừ khi đã nằm trong 1 ngành có lead
+  var known = []; Object.keys(depts).forEach(function(k){ known = known.concat(deptAliases_(k)); });
+  advisors.forEach(function(a){ (a.tags || []).forEach(function(t){ var n = insNorm_(t).trim(); if (n && known.indexOf(n) < 0) { depts[String(t).trim()] = 1; known.push(n); } }); });
+  var rows = Object.keys(depts).map(function(d){
+    var c = cur[d] || { leads: 0, advisees: 0, meetings: 0, registered: 0, topics: {} }, p = prv[d] || { leads: 0, advisees: 0, meetings: 0 };
+    var adv = advisors.filter(function(a){ return advisorMatchesDept_(a, d); }).length;
+    return { dept: d, cur: c, prev: p, advisors: adv, perAdvisor: adv > 0 ? c.advisees / months(range) / adv : null,
+      convPct: c.leads > 0 ? Math.round(c.registered / c.leads * 100) : null,
+      stable3: !!(stable[d] && stable[d].every(function(n){ return n >= cfg.minLeads; })) };
+  }).filter(function(r){ return r.cur.leads || r.cur.advisees || r.cur.meetings || r.prev.leads || r.prev.advisees || r.prev.meetings || r.advisors; });
+  rows.forEach(function(r){ r.actions = insightActions_(r, cfg); });
+  rows.sort(function(a, b){ return (b.cur.leads + b.cur.advisees) - (a.cur.leads + a.cur.advisees); });
+  return rows;
+}
+
+function insightActions_(r, cfg) {
+  var out = [], c = r.cur, p = r.prev;
+  if (r.dept === 'Không rõ') return [{ type: 'data', level: 'amber', text: 'Bổ sung ngành quan tâm cho lead/booking để phân tích' }];
+  if (r.advisors === 0 && (c.leads > 0 || c.advisees > 0)) out.push({ type: 'hire', level: 'red', text: 'Chưa có Advisor ngành này nhưng có nhu cầu → tuyển Advisor mới' });
+  else if (r.perAdvisor != null && r.perAdvisor > cfg.overload) out.push({ type: 'hire', level: 'red', text: 'Quá tải (' + r.perAdvisor.toFixed(1) + ' advisee/advisor/tháng > ' + cfg.overload + ') → tuyển thêm Advisor' });
+  var dropped = [];
+  var chk = function(a, b, n){ if (b >= 2 && (b - a) / b * 100 > cfg.drop) dropped.push(n + ' ' + Math.round((a - b) / b * 100) + '%'); };
+  chk(c.leads, p.leads, 'lead'); chk(c.advisees, p.advisees, 'advisee'); chk(c.meetings, p.meetings, 'meeting');
+  if (dropped.length) out.push({ type: 'content', level: 'amber', text: 'Cầu giảm (' + dropped.join(', ') + ') → Marketing đẩy content cho ngành này' });
+  if (r.stable3 && !dropped.length) out.push({ type: 'event', level: 'blue', text: 'Nhu cầu ổn định cao 3 tháng liền → mở webinar / khoá học' });
+  if (c.leads >= 5 && r.convPct != null && r.convPct < cfg.lowConv) out.push({ type: 'sale', level: 'amber', text: 'Nhiều lead nhưng chỉ ' + r.convPct + '% đăng ký → xem lại giá/gói/kịch bản Sale' });
+  if (!out.length) out.push({ type: 'ok', level: 'green', text: 'Ổn định' });
+  return out;
+}
+
+function loadInsightsPageAsync() {
+  var mc = document.getElementById('main-content');
+  mc.innerHTML = pageHeader('Cung – Cầu & Phễu', 'Đang tải...') + skeletonRows(4);
+  Promise.all([
+    apiGet('getLeads', {}).catch(function(){ return null; }),
+    apiGet('getBookings', {}).catch(function(){ return null; }),
+    apiGet('getSessions', {}).catch(function(){ return null; }),
+    loadAdvisorsFromSheet(null, false).catch(function(){ return null; })
+  ]).then(function(r){
+    if (activeNavId !== 'lj-insights') return;
+    _insData = { leads: (r[0] && r[0].data) || [], bookings: (r[1] && r[1].data) || [], sessions: (r[2] && r[2].data) || [], partial: !r[0] || !r[1] || !r[2] };
+    _reportRerender = function(){ document.getElementById('main-content').innerHTML = renderInsightsPage(); };
+    mc.innerHTML = renderInsightsPage();
+  }).catch(function(err){
+    if (activeNavId !== 'lj-insights') return;
+    mc.innerHTML = pageHeader('Cung – Cầu & Phễu', '') + '<div class="card"><div class="empty-state"><div class="icon">⚠</div>Không tải được dữ liệu.<br><small style="color:var(--muted)">' + escHtml(err.message) + '</small></div></div>';
+  });
+}
+
+function insDelta_(a, b) {
+  if (!b) return a ? '<span style="color:var(--muted);font-size:11px"> mới</span>' : '';
+  var d = Math.round((a - b) / b * 100); if (!d) return '';
+  return '<span style="font-size:11px;color:' + (d < 0 ? '#B91C1C' : '#047857') + '"> ' + (d > 0 ? '▲+' : '▼') + d + '%</span>';
+}
+
+function renderInsightsPage() {
+  var range = reportPeriodRange(), prev = reportPrevPeriodRange(), cfg = insightCfg();
+  var D = { leads: _insData.leads, bookings: _insData.bookings, sessions: _insData.sessions, advisors: (typeof sheetData !== 'undefined' && sheetData.advisors) || [] };
+  var rows = insightCompute(D, range, prev, cfg);
+  var h = pageHeader('Cung – Cầu & Phễu', 'Nối lead → booking → buổi tư vấn → advisor theo ngành để biết nên tuyển, mở webinar hay đẩy content');
+  h += renderPeriodBar();
+  if (_insData.partial) h += '<div class="today-warn">Một phần dữ liệu không tải được, số liệu có thể chưa đầy đủ.</div>';
+  h += '<div id="report-printable">' + reportPrintTitle('Cung – Cầu & Phễu', range);
+  // Ngưỡng
+  var fld = function(k, label, suffix){ return '<label style="font-size:12px;color:var(--muted);display:flex;flex-direction:column;gap:4px">' + label + '<span><input id="ins-cfg-' + k + '" type="number" min="0" value="' + cfg[k] + '" style="width:70px;padding:6px 8px;border:1px solid var(--border);border-radius:6px"> ' + suffix + '</span></label>'; };
+  h += '<div class="card" style="padding:16px 24px;margin-bottom:16px"><div style="font-weight:600;margin-bottom:10px">Ngưỡng cảnh báo</div><div style="display:flex;flex-wrap:wrap;gap:20px;align-items:flex-end">' +
+    fld('overload', 'Quá tải khi >', 'advisee/advisor/tháng') + fld('drop', 'Cầu giảm khi giảm >', '%') + fld('minLeads', 'Nhu cầu ổn định: lead/tháng ≥', '') + fld('lowConv', 'Chuyển đổi thấp khi <', '%') +
+    '<button class="update-btn no-print" onclick="saveInsightCfg()">Áp dụng</button><button class="detail-btn no-print" onclick="resetInsightCfg()">Mặc định</button></div></div>';
+  // Tóm tắt hành động
+  var groups = { hire: ['Cần tuyển Advisor', '#FEE2E2', '#B91C1C'], content: ['Marketing đẩy content', '#FEF3C7', '#B45309'], event: ['Mở webinar / khoá học', '#DBEAFE', '#1D4ED8'], sale: ['Xem lại Sale/giá/gói', '#FEF3C7', '#B45309'] };
+  var gh = '';
+  Object.keys(groups).forEach(function(t){
+    var names = rows.filter(function(r){ return r.actions.some(function(a){ return a.type === t; }); }).map(function(r){ return r.dept; });
+    if (!names.length) return;
+    gh += '<div style="flex:1;min-width:200px;background:' + groups[t][1] + ';color:' + groups[t][2] + ';border-radius:10px;padding:12px 16px"><div style="font-weight:700;font-size:13px">' + groups[t][0] + ' (' + names.length + ')</div><div style="font-size:13px;margin-top:4px">' + names.map(escHtml).join(', ') + '</div></div>';
+  });
+  h += '<div style="display:flex;flex-wrap:wrap;gap:12px;margin-bottom:16px">' + (gh || '<div class="card" style="padding:14px 24px;flex:1;color:var(--muted)">Chưa có cảnh báo nào trong kỳ.</div>') + '</div>';
+  // Bảng
+  var colr = { red: '#FEE2E2;color:#B91C1C', amber: '#FEF3C7;color:#B45309', blue: '#DBEAFE;color:#1D4ED8', green: '#D1FAE5;color:#047857' };
+  h += '<div class="card"><div class="card-header"><div class="card-header-left">Cung – Cầu theo ngành</div></div><div style="overflow-x:auto"><table class="bookings-table"><thead><tr><th>NGÀNH</th><th>LEAD</th><th>ADVISEE MỚI</th><th>BUỔI MEETING</th><th>% ĐĂNG KÝ</th><th>ADVISOR</th><th>ADVISEE/ADVISOR/THÁNG</th><th>CHỦ ĐỀ HAY HỎI</th><th>GỢI Ý HÀNH ĐỘNG</th></tr></thead><tbody>';
+  if (!rows.length) h += '<tr><td colspan="9" style="text-align:center;color:var(--muted);padding:20px">Không có dữ liệu trong kỳ.</td></tr>';
+  rows.forEach(function(r){
+    var tp = Object.keys(r.cur.topics).sort(function(a, b){ return r.cur.topics[b] - r.cur.topics[a]; }).slice(0, 3).map(function(t){ return t + ' (' + r.cur.topics[t] + ')'; }).join(', ') || '—';
+    h += '<tr><td><b>' + escHtml(r.dept) + '</b></td><td>' + r.cur.leads + insDelta_(r.cur.leads, r.prev.leads) + '</td><td>' + r.cur.advisees + insDelta_(r.cur.advisees, r.prev.advisees) + '</td><td>' + r.cur.meetings + insDelta_(r.cur.meetings, r.prev.meetings) + '</td><td>' + (r.convPct == null ? '—' : r.convPct + '%') + '</td><td>' + r.advisors + '</td><td>' + (r.perAdvisor == null ? '—' : r.perAdvisor.toFixed(1)) + '</td><td style="font-size:12px">' + escHtml(tp) + '</td><td>' +
+      r.actions.map(function(a){ return '<div style="margin:2px 0"><span style="display:inline-block;padding:3px 8px;border-radius:6px;font-size:12px;background:' + colr[a.level] + '">' + escHtml(a.text) + '</span></div>'; }).join('') + '</td></tr>';
+  });
+  h += '</tbody></table></div><div style="padding:12px 24px;font-size:12px;color:var(--muted)">Advisee = booking mới đã xác nhận/hoàn tất trong kỳ. Advisee/advisor/tháng = advisee ÷ số tháng của kỳ ÷ số advisor cùng ngành. Meeting = buổi advisor không huỷ (không tính tư vấn miễn phí/khoá học). Mức giảm chỉ xét khi kỳ trước ≥ 2.</div></div>';
+  // Phễu
+  var f = insightFunnel_(D, range);
+  var steps = [['Lead mới', f.lead], ['Đã liên hệ', f.contacted], ['Chốt lịch tư vấn', f.scheduled], ['Đã tư vấn', f.consulted], ['Đăng ký gói', f.registered]];
+  var worst = -1, worstDrop = -1;
+  for (var i = 1; i < steps.length; i++) { if (steps[i - 1][1] > 0) { var dr = 1 - steps[i][1] / steps[i - 1][1]; if (dr > worstDrop) { worstDrop = dr; worst = i; } } }
+  var fh = '<div style="display:flex;flex-direction:column;gap:10px">';
+  steps.forEach(function(s, i){
+    var pct = f.lead > 0 ? Math.round(s[1] / f.lead * 100) : 0;
+    var note = i > 0 && steps[i - 1][1] > 0 ? ' · giữ ' + Math.round(s[1] / steps[i - 1][1] * 100) + '% so với bước trước' : '';
+    fh += '<div><div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px"><span>' + s[0] + (i === worst ? ' <b style="color:#B91C1C">← rơi nhiều nhất</b>' : '') + '</span><span style="color:var(--muted)">' + s[1] + ' (' + pct + '%)' + note + '</span></div><div style="height:10px;background:var(--bg);border-radius:100px;overflow:hidden"><div style="height:100%;width:' + pct + '%;background:' + (i === worst ? '#DC2626' : 'var(--brand)') + '"></div></div></div>';
+  });
+  fh += '</div>';
+  var ops = opsAggregate(D.bookings, D.sessions, range);
+  fh += '<div style="margin-top:14px;font-size:13px;color:var(--muted)">Sau mua trong kỳ: ' + ops.bookings + ' booking · ' + ops.done + '/' + ops.scheduled + ' buổi hoàn thành · mua lại ' + ops.renewed + '/' + ops.expired + ' gói hết hạn</div>';
+  // Lý do mất
+  var lost = {}, lostN = 0, noReason = 0;
+  D.leads.forEach(function(l){
+    if (!inRange(l.created_at, range) || isRegisteredResult(l.result) || String(l.status || '').trim() === LEAD_CONVERTED_STATUS) return;
+    var closed = SLA_TERMINAL.indexOf(String(l.status || '').trim()) > -1;
+    var rs = String(l.result || '').trim();
+    if (!closed && !rs) return;
+    var k = rs || 'Chưa ghi lý do'; if (!rs) noReason++;
+    lost[k] = (lost[k] || 0) + 1; lostN++;
+  });
+  h += '<div class="two-col"><div class="card"><div class="card-header"><div class="card-header-left">Phễu chuyển đổi (lead tạo trong kỳ)</div></div><div style="padding:8px 24px 24px">' + fh + '</div></div>';
+  h += '<div class="card"><div class="card-header"><div class="card-header-left">Lý do mất khách (' + lostN + ')</div></div><div style="padding:8px 24px 24px">' + svgBarList(lost, { color: '#6D28D9' }) + '</div></div></div>';
+  // Chất lượng dữ liệu
+  var inL = D.leads.filter(function(l){ return inRange(l.created_at, range); });
+  var unk = inL.filter(function(l){ return insDeptOf_(l) === 'Không rõ'; }).length;
+  var warns = [];
+  if (inL.length && unk / inL.length > 0.2) warns.push(Math.round(unk / inL.length * 100) + '% lead chưa có ngành quan tâm → phân tích ngành thiếu chính xác');
+  if (lostN && noReason / lostN > 0.2) warns.push(Math.round(noReason / lostN * 100) + '% lead mất chưa ghi lý do (cột Kết quả)');
+  if (warns.length) h += '<div class="today-warn">⚠ Chất lượng dữ liệu: ' + warns.map(escHtml).join(' · ') + '</div>';
+  h += '</div>';
+  return h;
+}
+
+function insightFunnel_(D, range) {
+  var f = { lead: 0, contacted: 0, scheduled: 0, consulted: 0, registered: 0 }, now = new Date();
+  D.leads.forEach(function(l){
+    if (!inRange(l.created_at, range)) return;
+    var st = String(l.status || '').trim();
+    var reg = isRegisteredResult(l.result) || st === LEAD_CONVERTED_STATUS;
+    var meetDate = parseSheetDate(l.date);
+    var consulted = reg || (meetDate && meetDate <= now) || /^đã tư vấn/i.test(st);
+    var scheduled = consulted || !!meetDate || /chốt lịch|đã hẹn/i.test(st);
+    var contacted = scheduled || !!l.contacted_date || (st && st !== 'Chưa liên hệ');
+    f.lead++; if (contacted) f.contacted++; if (scheduled) f.scheduled++; if (consulted) f.consulted++; if (reg) f.registered++;
+  });
+  return f;
+}
+
+// ── 0b. GIAI ĐOẠN 2–3: Kênh & Công suất · Tổng quan điều hành ──
+var INSIGHT2_DEFAULTS = { capSessions: 20, idleSessions: 2 };
+function ins2Cfg_() {
+  var c = {}; try { c = JSON.parse(localStorage.getItem('lj_ins2_cfg') || '{}') || {}; } catch (e) { c = {}; }
+  var o = {}; Object.keys(INSIGHT2_DEFAULTS).forEach(function(k){ var v = Number(c[k]); o[k] = (c[k] != null && c[k] !== '' && isFinite(v) && v >= 0) ? v : INSIGHT2_DEFAULTS[k]; });
+  return o;
+}
+function ins2Store_(key, obj) { try { localStorage.setItem(key, JSON.stringify(obj)); } catch (e) {} }
+function ins2Load_(key) { try { return JSON.parse(localStorage.getItem(key) || '{}') || {}; } catch (e) { return {}; } }
+function saveIns2Cfg() {
+  var c = {}; Object.keys(INSIGHT2_DEFAULTS).forEach(function(k){ var el = document.getElementById('ins2-cfg-' + k); if (el) c[k] = el.value; });
+  ins2Store_('lj_ins2_cfg', c); reportRerender();
+}
+// Chi phí kênh & mục tiêu: lưu theo từng kỳ (khoá "YYYY-MM" hoặc "YYYY-Qn") trong trình duyệt
+function ins2PeriodKey_(range) {
+  return _reportPeriod.mode === 'month' ? (range.start.getFullYear() + '-' + pad(range.start.getMonth() + 1)) : (range.start.getFullYear() + '-Q' + (Math.floor(range.start.getMonth() / 3) + 1));
+}
+function saveChannelCost(ch, el) {
+  var all = ins2Load_('lj_channel_cost'), k = ins2PeriodKey_(reportPeriodRange());
+  all[k] = all[k] || {}; all[k][ch] = Number(String(el.value).replace(/\D/g, '')) || 0;
+  ins2Store_('lj_channel_cost', all); reportRerender();
+}
+function saveTargets() {
+  var t = {}; ['leads', 'bookings', 'revenue'].forEach(function(k){ var el = document.getElementById('ins2-tg-' + k); t[k] = el ? (Number(String(el.value).replace(/\D/g, '')) || 0) : 0; });
+  ins2Store_('lj_targets_month', t); reportRerender();
+}
+
+function insLoadPage_(navId, title, renderFn) {
+  var mc = document.getElementById('main-content');
+  mc.innerHTML = pageHeader(title, 'Đang tải...') + skeletonRows(4);
+  Promise.all([
+    apiGet('getLeads', {}).catch(function(){ return null; }),
+    apiGet('getBookings', {}).catch(function(){ return null; }),
+    apiGet('getSessions', {}).catch(function(){ return null; }),
+    loadAdvisorsFromSheet(null, false).catch(function(){ return null; })
+  ]).then(function(r){
+    if (activeNavId !== navId) return;
+    _insData = { leads: (r[0] && r[0].data) || [], bookings: (r[1] && r[1].data) || [], sessions: (r[2] && r[2].data) || [], partial: !r[0] || !r[1] || !r[2] };
+    _reportRerender = function(){ document.getElementById('main-content').innerHTML = renderFn(); };
+    mc.innerHTML = renderFn();
+  }).catch(function(err){
+    if (activeNavId !== navId) return;
+    mc.innerHTML = pageHeader(title, '') + '<div class="card"><div class="empty-state"><div class="icon">⚠</div>Không tải được dữ liệu.<br><small style="color:var(--muted)">' + escHtml(err.message) + '</small></div></div>';
+  });
+}
+function insD_() { return { leads: _insData.leads, bookings: _insData.bookings, sessions: _insData.sessions, advisors: (typeof sheetData !== 'undefined' && sheetData.advisors) || [] }; }
+
+// Booking → lead (email/sđt) để biết kênh nguồn
+function insLeadIndex_(leads) {
+  var e = {}, p = {};
+  leads.slice().sort(function(a, b){ return String(a.created_at) > String(b.created_at) ? 1 : -1; }).forEach(function(l){
+    var ek = insEmailKey_(l.email), pk = insPhoneKey_(l.phone); if (ek) e[ek] = l; if (pk) p[pk] = l;
+  });
+  return function(b){ return e[insEmailKey_(b.advisee_email)] || p[insPhoneKey_(b.advisee_phone)] || null; };
+}
+function insMoneyIn_(n) { return n ? n.toLocaleString('vi-VN') : ''; }
+
+function insightChannels_(D, range) {
+  var find = insLeadIndex_(D.leads), m = {};
+  var get = function(c){ return m[c] || (m[c] = { ch: c, leads: 0, registered: 0, bookings: 0, revenue: 0 }); };
+  D.leads.forEach(function(l){
+    if (!inRange(l.created_at, range)) return;
+    var x = get(String(l.source_channel || l.source || '').trim() || 'Không rõ'); x.leads++;
+    if (isRegisteredResult(l.result) || String(l.status || '').trim() === LEAD_CONVERTED_STATUS) x.registered++;
+  });
+  D.bookings.filter(bookingCounts).forEach(function(b){
+    if (!inRange(b.created_at, range)) return;
+    var l = find(b), x = get(l ? (String(l.source_channel || l.source || '').trim() || 'Không rõ') : 'Không rõ');
+    x.bookings++; x.revenue += Number(b.package_price) || 0;
+  });
+  var cost = (ins2Load_('lj_channel_cost')[ins2PeriodKey_(range)]) || {};
+  return Object.keys(m).map(function(k){
+    var x = m[k]; x.cost = Number(cost[k]) || 0;
+    x.conv = x.leads ? Math.round(x.registered / x.leads * 100) : null;
+    x.cac = x.cost && x.bookings ? Math.round(x.cost / x.bookings) : null;
+    x.roas = x.cost ? x.revenue / x.cost : null;
+    return x;
+  }).sort(function(a, b){ return b.leads - a.leads; });
+}
+
+function insightAdvisors_(D, range, cfg, cfg2) {
+  var mo = Math.max(1, Math.round((range.end - range.start) / (30.44 * 864e5)));
+  var today = new Date(), in14 = new Date(today.getTime() + 14 * 864e5), m = {};
+  D.advisors.forEach(function(a){ m[a.name] = { name: a.name, tags: (a.tags || []).join(', '), sessions: 0, done: 0, advisees: {}, upcoming: 0 }; });
+  D.sessions.forEach(function(s){
+    var st = String(s.status || '').toLowerCase();
+    if (st === 'cancelled' || st === 'canceled' || s.advisor_name === STAFF_SLOT_IDENTITY || s.session_type === 'consult' || s.session_type === 'course') return;
+    var x = m[s.advisor_name]; if (!x) return;
+    if (inRange(s.scheduled_date, range)) { x.sessions++; if (st === 'completed') x.done++; if (s.booking_id) x.advisees[s.booking_id] = 1; }
+    var d = parseSheetDate(s.scheduled_date);
+    if (d && d >= new Date(today.getFullYear(), today.getMonth(), today.getDate()) && d <= in14 && st !== 'completed') x.upcoming++;
+  });
+  return Object.keys(m).map(function(k){
+    var x = m[k]; x.adviseeN = Object.keys(x.advisees).length; x.perMonth = x.adviseeN / mo; x.sessPerMonth = x.sessions / mo;
+    x.flag = x.perMonth > cfg.overload || x.sessPerMonth > cfg2.capSessions ? 'over' : (x.sessPerMonth < cfg2.idleSessions ? 'idle' : 'ok');
+    return x;
+  }).sort(function(a, b){ return b.sessions - a.sessions; });
+}
+
+function insTable_(head, rowsHtml) {
+  return '<div style="overflow-x:auto"><table class="bookings-table"><thead><tr>' + head.map(function(c){ return '<th>' + c + '</th>'; }).join('') + '</tr></thead><tbody>' + rowsHtml + '</tbody></table></div>';
+}
+function insPill_(txt, lv) {
+  var c = { red: '#FEE2E2;color:#B91C1C', amber: '#FEF3C7;color:#B45309', blue: '#DBEAFE;color:#1D4ED8', green: '#D1FAE5;color:#047857' }[lv];
+  return '<span style="display:inline-block;padding:3px 8px;border-radius:6px;font-size:12px;background:' + c + '">' + escHtml(txt) + '</span>';
+}
+
+function loadCapacityPageAsync() { insLoadPage_('lj-capacity', 'Kênh & Công suất', renderCapacityPage); }
+function renderCapacityPage() {
+  var range = reportPeriodRange(), cfg = insightCfg(), cfg2 = ins2Cfg_(), D = insD_();
+  var h = pageHeader('Kênh & Công suất', 'Kênh nào mang khách chất lượng, advisor nào quá tải hoặc rảnh, và đang đạt bao nhiêu % mục tiêu');
+  h += renderPeriodBar();
+  if (_insData.partial) h += '<div class="today-warn">Một phần dữ liệu không tải được, số liệu có thể chưa đầy đủ.</div>';
+  h += '<div id="report-printable">' + reportPrintTitle('Kênh & Công suất', range);
+
+  // Mục tiêu tháng
+  var tg = ins2Load_('lj_targets_month'), mult = _reportPeriod.mode === 'quarter' ? 3 : 1;
+  var cur = { leads: 0, bookings: 0, revenue: 0 };
+  D.leads.forEach(function(l){ if (inRange(l.created_at, range)) cur.leads++; });
+  D.bookings.filter(bookingCounts).forEach(function(b){ if (inRange(b.created_at, range)) { cur.bookings++; cur.revenue += Number(b.package_price) || 0; } });
+  var now = new Date(), total = range.end - range.start, el = Math.min(Math.max(now - range.start, 0), total), pace = total > 0 && el > 0 && el < total ? el / total : (el >= total ? 1 : 0);
+  var names = { leads: 'Lead', bookings: 'Booking', revenue: 'Doanh thu' };
+  h += '<div class="card" style="padding:16px 24px;margin-bottom:16px"><div style="font-weight:600;margin-bottom:10px">Mục tiêu (nhập theo THÁNG, quý tự nhân 3)</div><div style="display:flex;flex-wrap:wrap;gap:16px;align-items:flex-end;margin-bottom:14px">';
+  ['leads', 'bookings', 'revenue'].forEach(function(k){ h += '<label style="font-size:12px;color:var(--muted);display:flex;flex-direction:column;gap:4px">' + names[k] + '/tháng<input id="ins2-tg-' + k + '" value="' + insMoneyIn_(Number(tg[k]) || 0) + '" style="width:130px;padding:6px 8px;border:1px solid var(--border);border-radius:6px"></label>'; });
+  h += '<button class="update-btn no-print" onclick="saveTargets()">Lưu mục tiêu</button></div><div style="display:flex;flex-direction:column;gap:12px">';
+  var anyT = false;
+  ['leads', 'bookings', 'revenue'].forEach(function(k){
+    var t = (Number(tg[k]) || 0) * mult; if (!t) return; anyT = true;
+    var pct = Math.round(cur[k] / t * 100), proj = pace > 0 && pace < 1 ? Math.round(cur[k] / pace) : cur[k], projPct = Math.round(proj / t * 100);
+    var lv = projPct >= 100 ? '#10B981' : (projPct >= 80 ? '#F59E0B' : '#DC2626'), fmt = function(n){ return k === 'revenue' ? fmtMoneyShort(n) : n; };
+    h += '<div><div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px"><span>' + names[k] + ': <b>' + fmt(cur[k]) + '</b> / ' + fmt(t) + ' (' + pct + '%)</span><span style="color:' + lv + '">' + (pace > 0 && pace < 1 ? 'Dự kiến cuối kỳ ' + fmt(proj) + ' (' + projPct + '%)' : (pct >= 100 ? 'Đạt' : 'Chưa đạt')) + '</span></div><div style="height:8px;background:var(--bg);border-radius:100px;overflow:hidden"><div style="height:100%;width:' + Math.min(pct, 100) + '%;background:' + lv + '"></div></div></div>';
+  });
+  if (!anyT) h += '<div style="color:var(--muted);font-size:13px">Nhập mục tiêu để xem tiến độ và dự báo cuối kỳ.</div>';
+  h += '</div></div>';
+
+  // Kênh
+  var ch = insightChannels_(D, range), costs = (ins2Load_('lj_channel_cost')[ins2PeriodKey_(range)]) || {};
+  var rows = ch.map(function(x){
+    return '<tr><td><b>' + escHtml(x.ch) + '</b></td><td>' + x.leads + '</td><td>' + (x.conv == null ? '—' : x.conv + '%') + '</td><td>' + x.bookings + '</td><td>' + fmtMoneyShort(x.revenue) + '</td><td>' + (x.leads ? fmtMoneyShort(Math.round(x.revenue / x.leads)) : '—') +
+      '</td><td class="no-print"><input value="' + insMoneyIn_(Number(costs[x.ch]) || 0) + '" onchange="saveChannelCost(\'' + escHtml(x.ch).replace(/'/g, '') + '\', this)" placeholder="nhập chi phí" style="width:110px;padding:5px 7px;border:1px solid var(--border);border-radius:6px"></td><td>' +
+      (x.cac ? fmtMoneyShort(x.cac) : '—') + '</td><td>' + (x.roas == null ? '—' : x.roas.toFixed(1) + 'x') + '</td></tr>';
+  }).join('') || '<tr><td colspan="9" style="text-align:center;color:var(--muted);padding:20px">Không có dữ liệu trong kỳ.</td></tr>';
+  h += '<div class="card"><div class="card-header"><div class="card-header-left">Chất lượng kênh</div></div>' + insTable_(['KÊNH', 'LEAD', '% ĐĂNG KÝ', 'BOOKING', 'DOANH THU', 'DOANH THU/LEAD', 'CHI PHÍ KỲ NÀY', 'CAC/BOOKING', 'ROAS'], rows) +
+    '<div style="padding:12px 24px;font-size:12px;color:var(--muted)">Booking gán kênh qua lead cùng email/sđt. Chi phí do bạn nhập tay (chưa có trong dữ liệu) và lưu trong trình duyệt này. CAC = chi phí ÷ booking; ROAS = doanh thu ÷ chi phí.</div></div>';
+
+  // Advisor
+  var adv = insightAdvisors_(D, range, cfg, cfg2);
+  var ar = adv.map(function(x){
+    var f = x.flag === 'over' ? insPill_('Quá tải → tạm ngừng nhận thêm / tuyển bổ sung', 'red') : (x.flag === 'idle' ? insPill_('Ít việc → ưu tiên matching, giới thiệu', 'amber') : insPill_('Ổn', 'green'));
+    return '<tr><td><b>' + escHtml(x.name) + '</b></td><td style="font-size:12px">' + escHtml(x.tags || '—') + '</td><td>' + x.sessions + '</td><td>' + x.done + '</td><td>' + x.adviseeN + '</td><td>' + x.perMonth.toFixed(1) + '</td><td>' + x.upcoming + '</td><td>' + f + '</td></tr>';
+  }).join('') || '<tr><td colspan="8" style="text-align:center;color:var(--muted);padding:20px">Chưa có advisor.</td></tr>';
+  h += '<div class="card" style="margin-top:16px"><div class="card-header"><div class="card-header-left">Công suất Advisor</div></div><div style="padding:12px 24px;display:flex;flex-wrap:wrap;gap:16px;align-items:flex-end" class="no-print">' +
+    '<label style="font-size:12px;color:var(--muted)">Quá tải khi buổi/tháng ><br><input id="ins2-cfg-capSessions" type="number" min="0" value="' + cfg2.capSessions + '" style="width:70px;padding:6px 8px;border:1px solid var(--border);border-radius:6px"></label>' +
+    '<label style="font-size:12px;color:var(--muted)">Ít việc khi buổi/tháng &lt;<br><input id="ins2-cfg-idleSessions" type="number" min="0" value="' + cfg2.idleSessions + '" style="width:70px;padding:6px 8px;border:1px solid var(--border);border-radius:6px"></label>' +
+    '<button class="update-btn" onclick="saveIns2Cfg()">Áp dụng</button><span style="font-size:12px;color:var(--muted)">Ngưỡng advisee/tháng dùng chung với trang Cung – Cầu (' + cfg.overload + ')</span></div>' +
+    insTable_(['ADVISOR', 'NGÀNH', 'BUỔI TRONG KỲ', 'ĐÃ HOÀN THÀNH', 'ADVISEE', 'ADVISEE/THÁNG', 'BUỔI 14 NGÀY TỚI', 'CẢNH BÁO'], ar) + '</div>';
+  h += '</div>';
+  return h;
+}
+
+// ── Tổng quan điều hành: tóm tắt tự động theo luật, chủ đề webinar ──
+function insightExec_(D, range, prev) {
+  var cfg = insightCfg(), cfg2 = ins2Cfg_();
+  var rows = insightCompute(D, range, prev, cfg), items = [];
+  rows.forEach(function(r){ r.actions.forEach(function(a){ if (a.type !== 'ok') items.push({ pri: a.level === 'red' ? 0 : (a.level === 'amber' ? 1 : 2), type: a.type, dept: r.dept, text: a.text, vol: r.cur.leads + r.cur.advisees }); }); });
+  insightAdvisors_(D, range, cfg, cfg2).forEach(function(x){ if (x.flag === 'over') items.push({ pri: 0, type: 'hire', dept: x.name, text: 'Advisor ' + x.name + ' đang quá tải (' + x.sessions + ' buổi, ' + x.perMonth.toFixed(1) + ' advisee/tháng)', vol: x.sessions }); });
+  var f = insightFunnel_(D, range), steps = [['Lead mới', f.lead], ['Đã liên hệ', f.contacted], ['Chốt lịch', f.scheduled], ['Đã tư vấn', f.consulted], ['Đăng ký', f.registered]], worst = null, wd = 0;
+  for (var i = 1; i < steps.length; i++) if (steps[i - 1][1] >= 5) { var d = 1 - steps[i][1] / steps[i - 1][1]; if (d > wd) { wd = d; worst = steps[i - 1][0] + ' → ' + steps[i][0] + ' (rơi ' + Math.round(d * 100) + '%)'; } }
+  if (worst) items.push({ pri: 1, type: 'sale', dept: 'Phễu', text: 'Điểm rơi lớn nhất của phễu: ' + worst, vol: f.lead });
+  var tg = ins2Load_('lj_targets_month'), mult = _reportPeriod.mode === 'quarter' ? 3 : 1, cur = { leads: f.lead, bookings: 0, revenue: 0 };
+  D.bookings.filter(bookingCounts).forEach(function(b){ if (inRange(b.created_at, range)) { cur.bookings++; cur.revenue += Number(b.package_price) || 0; } });
+  var now = new Date(), total = range.end - range.start, pace = now > range.start && now < range.end ? (now - range.start) / total : (now >= range.end ? 1 : 0);
+  ['leads', 'bookings', 'revenue'].forEach(function(k){
+    var t = (Number(tg[k]) || 0) * mult; if (!t || pace <= 0) return;
+    if (cur[k] / pace < t * 0.8) items.push({ pri: 0, type: 'target', dept: 'Mục tiêu', text: { leads: 'Lead', bookings: 'Booking', revenue: 'Doanh thu' }[k] + ' đang chậm: dự kiến ' + Math.round(cur[k] / pace / t * 100) + '% mục tiêu', vol: 0 });
+  });
+  items.sort(function(a, b){ return a.pri - b.pri || b.vol - a.vol; });
+  // chủ đề
+  var topics = {};
+  rows.forEach(function(r){ Object.keys(r.cur.topics).forEach(function(t){ var x = topics[t] || (topics[t] = { n: 0, by: {} }); x.n += r.cur.topics[t]; x.by[r.dept] = r.cur.topics[t]; }); });
+  return { rows: rows, items: items, topics: topics, funnel: f, cur: cur };
+}
+
+function loadExecPageAsync() { insLoadPage_('lj-exec', 'Tổng quan điều hành', renderExecPage); }
+function renderExecPage() {
+  var range = reportPeriodRange(), prev = reportPrevPeriodRange(), D = insD_(), E = insightExec_(D, range, prev);
+  var pv = { leads: 0, bookings: 0, revenue: 0 };
+  D.leads.forEach(function(l){ if (inRange(l.created_at, prev)) pv.leads++; });
+  D.bookings.filter(bookingCounts).forEach(function(b){ if (inRange(b.created_at, prev)) { pv.bookings++; pv.revenue += Number(b.package_price) || 0; } });
+  var h = pageHeader('Tổng quan điều hành', 'Việc nên làm ngay trong kỳ, gom từ các báo cáo');
+  h += renderPeriodBar();
+  if (_insData.partial) h += '<div class="today-warn">Một phần dữ liệu không tải được, số liệu có thể chưa đầy đủ.</div>';
+  h += '<div id="report-printable">' + reportPrintTitle('Tổng quan điều hành', range);
+  var conv = E.funnel.lead ? Math.round(E.funnel.registered / E.funnel.lead * 100) : null;
+  h += '<div class="stats-row cols-4">' +
+    '<div class="stat-cell"><div class="stat-num">' + E.cur.leads + '</div><div class="stat-label">Lead mới</div><div class="stat-detail">' + reportDeltaLabel(E.cur.leads, pv.leads) + '</div></div>' +
+    '<div class="stat-cell"><div class="stat-num">' + (conv == null ? '—' : conv + '%') + '</div><div class="stat-label">Lead → Đăng ký</div><div class="stat-detail">' + E.funnel.registered + '/' + E.funnel.lead + ' lead</div></div>' +
+    '<div class="stat-cell"><div class="stat-num">' + E.cur.bookings + '</div><div class="stat-label">Booking</div><div class="stat-detail">' + reportDeltaLabel(E.cur.bookings, pv.bookings) + '</div></div>' +
+    '<div class="stat-cell"><div class="stat-num">' + fmtMoneyShort(E.cur.revenue) + '</div><div class="stat-label">Doanh thu</div><div class="stat-detail">' + reportDeltaLabel(E.cur.revenue, pv.revenue) + '</div></div></div>';
+  var lab = { hire: 'Tuyển / giảm tải', content: 'Marketing', event: 'Webinar / khoá học', sale: 'Sale', target: 'Mục tiêu', data: 'Dữ liệu' }, lvl = { 0: 'red', 1: 'amber', 2: 'blue' };
+  var il = E.items.slice(0, 10).map(function(it, i){ return '<tr><td>' + (i + 1) + '</td><td>' + insPill_(lab[it.type] || it.type, lvl[it.pri]) + '</td><td><b>' + escHtml(it.dept) + '</b></td><td>' + escHtml(it.text) + '</td></tr>'; }).join('') || '<tr><td colspan="4" style="text-align:center;color:var(--muted);padding:20px">Chưa có cảnh báo nào, mọi thứ đang ổn định.</td></tr>';
+  h += '<div class="card"><div class="card-header"><div class="card-header-left">Top việc ưu tiên (tự động theo luật, tối đa 10)</div></div>' + insTable_(['#', 'LOẠI', 'ĐỐI TƯỢNG', 'NỘI DUNG'], il) + '</div>';
+  var tk = Object.keys(E.topics).sort(function(a, b){ return E.topics[b].n - E.topics[a].n; });
+  var tr = tk.map(function(t){
+    var x = E.topics[t], top = Object.keys(x.by).sort(function(a, b){ return x.by[b] - x.by[a]; }).slice(0, 2);
+    return '<tr><td><b>' + escHtml(t) + '</b></td><td>' + x.n + '</td><td>' + top.map(function(d){ return escHtml(d) + ' (' + x.by[d] + ')'; }).join(', ') + '</td><td>' + (x.n >= 3 ? 'Webinar “' + escHtml(t) + '” cho ' + escHtml(top[0]) : '<span style="color:var(--muted)">Chưa đủ dữ liệu</span>') + '</td></tr>';
+  }).join('') || '<tr><td colspan="4" style="text-align:center;color:var(--muted);padding:20px">Chưa nhận diện được chủ đề từ câu hỏi lead trong kỳ.</td></tr>';
+  h += '<div class="card" style="margin-top:16px"><div class="card-header"><div class="card-header-left">Chủ đề khách hay hỏi → ý tưởng webinar</div></div>' + insTable_(['CHỦ ĐỀ', 'SỐ LẦN', 'NGÀNH HỎI NHIỀU', 'GỢI Ý'], tr) +
+    '<div style="padding:12px 24px;font-size:12px;color:var(--muted)">Chủ đề nhận diện bằng từ khoá trong câu hỏi khách điền khi đăng ký tư vấn. Gợi ý là luật cố định, không phải mô hình AI.</div></div></div>';
+  return h;
 }
 
 // ── 3. HIỆU SUẤT SALE (trước đây menu trỏ tới hàm chưa tồn tại; gộp luôn "So sánh KPI") ──
