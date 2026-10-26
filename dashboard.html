@@ -1203,11 +1203,9 @@ const SIDEBAR_DEF = {
     ]},
     { id: 'rep', icon: '📊', label: 'Báo cáo', children: [
       { id: 'lj-exec',          label: 'Tổng quan điều hành' },
-      { id: 'lj-insights',      label: 'Cung – Cầu & Phễu' },
-      { id: 'lj-capacity',      label: 'Kênh & Công suất' },
-      { id: 'lj-revenue',       label: 'Doanh thu' },
-      { id: 'lj-report',        label: 'Vận hành' },
-      { id: 'lj-market-report', label: 'Marketing' },
+      { id: 'lj-insights',      label: 'Cung – Cầu & Advisor' },
+      { id: 'lj-revenue',       label: 'Doanh thu & Vận hành' },
+      { id: 'lj-market-report', label: 'Marketing & Kênh' },
       { id: 'lj-sales-perf',    label: 'Hiệu suất Sale' },
     ]},
     { id: 'adm', icon: '🛠️', label: 'Quản trị', children: [
@@ -1245,9 +1243,7 @@ const ROUTE_MAP = {
   'lj-newreg':     { fn: function(){ renderStaff('lj-newreg'); } },
   'lj-revenue':    { fn: function(){ loadRevenuePageAsync(); } },
   'lj-insights':   { fn: function(){ loadInsightsPageAsync(); } },
-  'lj-capacity':   { fn: function(){ loadCapacityPageAsync(); } },
   'lj-exec':       { fn: function(){ loadExecPageAsync(); } },
-  'lj-report':     { fn: function(){ loadOperationsReportAsync(); } },
   'lj-market-report': { fn: function(){ loadMarketingReportPageAsync(); } },
   'lj-sales-perf': { fn: function(){ loadSalesPerformancePageAsync(); } },
   'lj-meetings':   { fn: function(){ loadMeetingCalendarAsync(); } },
@@ -2484,9 +2480,7 @@ function renderStaff(tab) {
   if      (tab === 'lj-newreg')         loadNewRegistrationsPage();
   else if (tab === 'lj-revenue')        loadRevenuePageAsync();
   else if (tab === 'lj-insights')     loadInsightsPageAsync();
-  else if (tab === 'lj-capacity')     loadCapacityPageAsync();
   else if (tab === 'lj-exec')         loadExecPageAsync();
-  else if (tab === 'lj-report')         loadOperationsReportAsync();
   else if (tab === 'lj-sales-perf')     loadSalesPerformancePageAsync();
   else if (tab === 'linkajob-calendar' || tab === 'lj-meetings') loadMeetingCalendarAsync();
   else if (tab === 'lj-products')       loadProductsPageAsync();
@@ -3538,10 +3532,10 @@ function renderConsultationDetail(cid) {
   html += '<div><div class="form-label">Bạn hiện là</div><select class="form-select" id="cv-customertype" onchange="cvToggleCustomerTypeFields()"><option value="">-- Chọn --</option><option value="Sinh viên"' + (p.customerType==='Sinh viên'?' selected':'') + '>Sinh viên</option><option value="Đã đi làm"' + (p.customerType==='Đã đi làm'?' selected':'') + '>Đã đi làm</option></select></div>';
   html += '<div id="cv-studentyear-wrap" style="display:' + (p.customerType==='Sinh viên'?'block':'none') + '"><div class="form-label">Sinh viên năm mấy</div><select class="form-select" id="cv-studentyear"><option value="">-- Chọn --</option>' + ['Năm 1','Năm 2','Năm 3','Năm 4','Đã tốt nghiệp'].map(function(y){ return '<option' + (p.studentYear===y?' selected':'') + '>' + y + '</option>'; }).join('') + '</select></div>';
   html += '<div id="cv-expyears-wrap" style="display:' + (p.customerType==='Đã đi làm'?'block':'none') + '"><div class="form-label">Kinh nghiệm bao lâu</div><select class="form-select" id="cv-expyears"><option value="">-- Chọn --</option>' + ['Dưới 1 năm','1-2 năm','2-5 năm','5-10 năm','Trên 10 năm'].map(function(y){ return '<option' + (p.experienceYears===y?' selected':'') + '>' + y + '</option>'; }).join('') + '</select></div>';
-  html += '<div><div class="form-label">Phòng ban / vị trí quan tâm</div><select class="form-select" id="cv-interesteddept"><option value="">-- Chọn --</option>' + ['Marketing','Sales/Kinh doanh','Tài chính/Kế toán','Chuỗi cung ứng/Logistics','Nhân sự','Data/Công nghệ','Vận hành','Tư vấn/Consulting','Khác'].map(function(d){ return '<option' + (p.interestedDept===d?' selected':'') + '>' + d + '</option>'; }).join('') + '</select></div>';
+  html += '<div class="full"><div class="form-label">Phòng ban / vị trí quan tâm <span style="color:var(--muted);font-weight:400">(chọn được nhiều)</span></div>' + cvFieldPicker(p.interestedDept) + '</div>';
   html += '<div><div class="form-label">Level quan tâm</div><select class="form-select" id="cv-interestedlevel"><option value="">-- Chọn --</option>' + ['Intern','Fresh Graduate','Junior','Senior','Manager trở lên'].map(function(l){ return '<option' + (p.interestedLevel===l?' selected':'') + '>' + l + '</option>'; }).join('') + '</select></div>';
   html += '<div><div class="form-label">Khu vực</div><select class="form-select" id="cv-region"><option value="">-- Chọn --</option>' + ['Miền Bắc','Miền Trung','Miền Nam'].map(function(r){ return '<option' + (p.region===r?' selected':'') + '>' + r + '</option>'; }).join('') + '</select></div>';
-  html += '<div><div class="form-label">Biết đến LinkaJob qua đâu</div><select class="form-select" id="cv-source"><option value="">-- Chọn --</option>' + ['Facebook','Instagram','Threads','TikTok','Được giới thiệu','Khác'].map(function(s){ return '<option' + (p.sourceChannel===s?' selected':'') + '>' + s + '</option>'; }).join('') + '</select></div>';
+  html += '<div><div class="form-label">Biết đến LinkaJob qua đâu</div>' + cvOtherSelect('cv-source', ['Facebook','Instagram','Threads','TikTok','Được giới thiệu','Khác'], p.sourceChannel) + '</div>';
   html += '<div class="full"><div class="form-label">Câu hỏi muốn tư vấn</div><textarea class="form-textarea" id="cv-question" rows="2">' + (p.question||'') + '</textarea></div>';
   html += '<div class="full"><div class="form-label">CV</div><div style="display:flex;gap:8px"><input class="form-input" id="cv-cvlink" placeholder="Link CV khách gửi..." value="' + String(leadCvForInput(c)).replace(/"/g,'&quot;') + '" style="flex:1">' + (safeHttpUrl(leadCvForInput(c)) ? '<a href="' + safeHttpUrl(leadCvForInput(c)) + '" target="_blank" rel="noopener" class="update-btn" style="flex-shrink:0;white-space:nowrap">🔗 Mở CV</a>' : '') + '</div></div>';
   html += '</div>';
@@ -4547,7 +4541,7 @@ function reportAggregate(leads, bookings, range) {
     agg.byRegion[rg] = (agg.byRegion[rg]||0) + 1;
     var ct = r.customer_type || 'Không rõ';
     agg.byCustomerType[ct] = (agg.byCustomerType[ct]||0) + 1;
-    var dp = r.interested_dept || 'Không rõ';
+    var dp = deptPrimary_(r.interested_dept);
     agg.byDept[dp] = (agg.byDept[dp]||0) + 1;
     var lv = r.interested_level || 'Không rõ';
     agg.byLevel[lv] = (agg.byLevel[lv]||0) + 1;
@@ -9735,7 +9729,7 @@ function targetsProg(range, cur){
   return out;
 }
 function progHtml(list){
-  if (!list.length) return '<div class="rp-prog" style="color:var(--muted);font-size:13px">Chưa đặt mục tiêu. Nhập Lead / Booking / Doanh thu mỗi tháng ở trang “Kênh & Công suất” để thấy tiến độ và dự báo cuối kỳ.</div>';
+  if (!list.length) return '<div class="rp-prog" style="color:var(--muted);font-size:13px">Chưa đặt mục tiêu. Nhập Lead / Booking / Doanh thu mỗi tháng ở khung “Nhập mục tiêu tháng” bên dưới để thấy tiến độ và dự báo cuối kỳ.</div>';
   var col = { green: '#16A34A', amber: '#F59E0B', red: '#DC2626' }, f = function(x, k){ return k === 'revenue' ? fmtMoneyShort(x) : x; };
   return '<div class="rp-prog">' + list.map(function(g){
     return '<div class="rp-prog-r"><div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap"><span>' + g.name + ': <b>' + f(g.cur, g.k) + '</b> / ' + f(g.t, g.k) + ' (' + g.pct + '%)</span><span style="color:' + col[g.lv] + ';font-weight:700">' + (g.fin ? (g.pp >= 100 ? 'Đạt mục tiêu' : 'Chưa đạt') : 'Dự kiến cuối kỳ ' + g.pp + '%') + '</span></div><div class="rp-prog-b"><i style="width:' + Math.min(100, g.pct) + '%;background:' + col[g.lv] + '"></i></div></div>';
@@ -9761,131 +9755,114 @@ window.renderExecPage = function(){
   h += '<div class="rp-sec">Tiến độ so với mục tiêu</div><div class="rp-card">' + progHtml(tp) + '</div>';
   h += '<div class="rp-sec">Phễu khách hàng</div><div class="rp-card">' + funnel(E.funnel) + '</div>';
   var tk = Object.keys(E.topics).sort(function(a, b){ return E.topics[b].n - E.topics[a].n; });
+  h += targetsDet(tp);
   if (tk.length) h += det('Chủ đề khách hay hỏi (gợi ý webinar)', tbl(['CHỦ ĐỀ', 'SỐ LẦN', 'NGÀNH HỎI NHIỀU'], tk.map(function(t){ var x = E.topics[t], top = Object.keys(x.by).sort(function(a, b){ return x.by[b] - x.by[a]; }).slice(0, 2); return '<tr><td><b>' + escHtml(t) + '</b></td><td>' + x.n + '</td><td>' + top.map(function(d){ return escHtml(d) + ' (' + x.by[d] + ')'; }).join(', ') + '</td></tr>'; }).join(''), []));
   return h + '</div>';
 };
 
-// ── 2. CUNG – CẦU & PHỄU ──
+// ── Khung nhập mục tiêu (đặt ở Tổng quan) ──
+function targetsDet(tp){
+  var tg = ins2Load_('lj_targets_month'), inp = function(id, v){ return '<input id="' + id + '" value="' + v + '" class="rp-in">'; };
+  var x = det('Nhập mục tiêu tháng', '<div style="display:flex;flex-wrap:wrap;gap:16px;align-items:flex-end;padding-top:4px">' + [['leads', 'Lead/tháng'], ['bookings', 'Booking/tháng'], ['revenue', 'Doanh thu/tháng']].map(function(p){ return '<label style="font-size:12px;color:var(--muted);display:flex;flex-direction:column;gap:4px">' + p[1] + inp('ins2-tg-' + p[0], insMoneyIn_(Number(tg[p[0]]) || 0)) + '</label>'; }).join('') + '<button class="update-btn no-print" onclick="saveTargets()">Lưu mục tiêu</button></div><div style="font-size:12px;color:var(--muted);margin-top:8px">Quý tự nhân 3.</div>');
+  return tp.length ? x : x.replace('<details', '<details open');
+}
+function lvRank(l){ return l === 'red' ? 0 : (l === 'amber' ? 1 : 2); }
+
+// ── 2. CUNG – CẦU & ADVISOR (gộp Cung–Cầu + Công suất advisor) ──
+window.loadInsightsPageAsync = function(){ insLoadPage_('lj-insights', 'Cung – Cầu & Advisor', renderInsightsPage); };
 window.renderInsightsPage = function(){
-  var range = reportPeriodRange(), prev = reportPrevPeriodRange(), cfg = insightCfg();
-  var D = { leads: _insData.leads, bookings: _insData.bookings, sessions: _insData.sessions, advisors: (typeof sheetData !== 'undefined' && sheetData.advisors) || [] };
-  var rows = insightCompute(D, range, prev, cfg), f = insightFunnel_(D, range), items = [];
+  var range = reportPeriodRange(), prev = reportPrevPeriodRange(), cfg = insightCfg(), cfg2 = ins2Cfg_(), D = insD_();
+  var rows = insightCompute(D, range, prev, cfg), adv = insightAdvisors_(D, range, cfg, cfg2), items = [];
   rows.forEach(function(r){ r.actions.forEach(function(a){ if (a.type !== 'ok') items.push({ lv: a.level === 'red' ? 'red' : (a.level === 'amber' ? 'amber' : 'blue'), title: escHtml(r.dept), text: escHtml(a.text), v: r.cur.leads + r.cur.advisees }); }); });
-  items.sort(function(a, b){ return (a.lv === 'red' ? 0 : a.lv === 'amber' ? 1 : 2) - (b.lv === 'red' ? 0 : b.lv === 'amber' ? 1 : 2) || b.v - a.v; });
-  var h = head('Cung – Cầu & Phễu', 'Ngành nào thiếu advisor, ngành nào cần đẩy content hoặc mở webinar', range, _insData.partial);
-  h += banner(items) + actions(items.slice(0, 8));
+  adv.forEach(function(x){
+    if (x.flag === 'over') items.push({ lv: 'red', title: 'Advisor ' + escHtml(x.name) + ' quá tải', text: x.sessions + ' buổi trong kỳ → tạm ngừng nhận thêm khách hoặc tuyển bổ sung.', v: x.sessions });
+    else if (x.flag === 'idle') items.push({ lv: 'amber', title: 'Advisor ' + escHtml(x.name) + ' ít việc', text: 'Chỉ ' + x.sessions + ' buổi trong kỳ → ưu tiên ghép khách, giới thiệu thêm.', v: 0 });
+  });
+  items.sort(function(a, b){ return lvRank(a.lv) - lvRank(b.lv) || (b.v || 0) - (a.v || 0); });
+  var h = head('Cung – Cầu & Advisor', 'Ngành nào thiếu advisor, advisor nào quá tải hoặc rảnh', range, _insData.partial);
+  h += banner(items) + actions(items.slice(0, 10));
   h += '<div class="rp-sec">Cung – cầu theo ngành</div><div class="rp-card">' + tbl(['NGÀNH', 'LEAD', 'ADVISEE MỚI', 'ADVISOR', 'TÌNH TRẠNG'], rows.map(function(r){
     var bad = r.actions.filter(function(a){ return a.type !== 'ok'; }), st = bad.length ? bad.map(function(a){ return pill({ hire: 'Thiếu advisor', content: 'Cầu giảm', event: 'Mở webinar', sale: 'Xem lại Sale', data: 'Thiếu dữ liệu' }[a.type] || a.type, a.level === 'red' ? 'red' : (a.level === 'amber' ? 'amber' : 'blue')); }).join(' ') : pill('Ổn định', 'green');
     return '<tr><td><b>' + escHtml(r.dept) + '</b></td><td class="num">' + r.cur.leads + '</td><td class="num">' + r.cur.advisees + '</td><td class="num">' + r.advisors + '</td><td>' + st + '</td></tr>';
   }).join('') || empty(5), [1, 2, 3]) + '</div>';
-  h += '<div class="rp-sec">Phễu khách hàng</div><div class="rp-card">' + funnel(f) + '</div>';
-  var fld = function(k, label){ return '<label style="font-size:12px;color:var(--muted);display:flex;flex-direction:column;gap:4px">' + label + '<input id="ins-cfg-' + k + '" type="number" min="0" value="' + cfg[k] + '" class="rp-in" style="width:90px"></label>'; };
-  h += det('Cài đặt ngưỡng cảnh báo', '<div style="display:flex;flex-wrap:wrap;gap:18px;align-items:flex-end;padding-top:4px">' + fld('overload', 'Quá tải khi > (advisee/advisor/tháng)') + fld('drop', 'Cầu giảm khi giảm > (%)') + fld('minLeads', 'Ổn định: lead/tháng ≥') + fld('lowConv', 'Chuyển đổi thấp khi < (%)') + '<button class="update-btn no-print" onclick="saveInsightCfg()">Áp dụng</button><button class="detail-btn no-print" onclick="resetInsightCfg()">Mặc định</button></div>');
+  h += '<div class="rp-sec">Công suất từng advisor</div><div class="rp-card">' + tbl(['ADVISOR', 'NGÀNH', 'ĐANG HỌC', 'BUỔI 14 NGÀY TỚI', 'TÌNH TRẠNG'], adv.map(function(x){
+    return '<tr><td><b>' + escHtml(x.name) + '</b></td><td style="font-size:12.5px;color:var(--muted)">' + escHtml(x.tags || '—') + '</td><td class="num">' + x.active + '</td><td class="num">' + x.upcoming + '</td><td>' + (x.flag === 'over' ? pill('Quá tải', 'red') : (x.flag === 'idle' ? pill('Ít việc', 'amber') : pill('Ổn', 'green'))) + '</td></tr>';
+  }).join('') || empty(5, 'Chưa có advisor.'), [2, 3]) + '</div>';
+  var fld = function(id, label, v, w){ return '<label style="font-size:12px;color:var(--muted);display:flex;flex-direction:column;gap:4px">' + label + '<input id="' + id + '" type="number" min="0" value="' + v + '" class="rp-in" style="width:' + (w || 90) + 'px"></label>'; };
+  h += det('Cài đặt ngưỡng cảnh báo', '<div style="display:flex;flex-wrap:wrap;gap:18px;align-items:flex-end;padding-top:4px">' + fld('ins-cfg-overload', 'Ngành quá tải khi > (advisee/advisor/tháng)', cfg.overload) + fld('ins-cfg-drop', 'Cầu giảm khi giảm > (%)', cfg.drop) + fld('ins-cfg-minLeads', 'Ổn định: lead/tháng ≥', cfg.minLeads) + fld('ins-cfg-lowConv', 'Chuyển đổi thấp khi < (%)', cfg.lowConv) + '<button class="update-btn no-print" onclick="saveInsightCfg()">Áp dụng</button><button class="detail-btn no-print" onclick="resetInsightCfg()">Mặc định</button></div>' +
+    '<div style="display:flex;flex-wrap:wrap;gap:18px;align-items:flex-end;padding-top:14px">' + fld('ins2-cfg-capSessions', 'Advisor quá tải khi buổi/tháng >', cfg2.capSessions, 80) + fld('ins2-cfg-idleSessions', 'Advisor ít việc khi buổi/tháng <', cfg2.idleSessions, 80) + '<button class="update-btn no-print" onclick="saveIns2Cfg()">Áp dụng</button></div>');
   return h + '</div>';
 };
 
-// ── 3. KÊNH & CÔNG SUẤT ──
-window.renderCapacityPage = function(){
-  var range = reportPeriodRange(), cfg = insightCfg(), cfg2 = ins2Cfg_(), D = insD_(), cur = curTotals(D, range), tp = targetsProg(range, cur), tg = ins2Load_('lj_targets_month');
-  var ch = insightChannels_(D, range), costs = (ins2Load_('lj_channel_cost')[ins2PeriodKey_(range)]) || {}, adv = insightAdvisors_(D, range, cfg, cfg2), items = [];
-  adv.forEach(function(x){
-    if (x.flag === 'over') items.push({ lv: 'red', title: 'Advisor ' + escHtml(x.name) + ' quá tải', text: x.sessions + ' buổi trong kỳ → tạm ngừng nhận thêm khách hoặc tuyển bổ sung.' });
-    else if (x.flag === 'idle') items.push({ lv: 'amber', title: 'Advisor ' + escHtml(x.name) + ' ít việc', text: 'Chỉ ' + x.sessions + ' buổi trong kỳ → ưu tiên ghép khách, giới thiệu thêm.' });
-  });
-  tp.forEach(function(g){ if (g.lv !== 'green') items.push({ lv: g.lv, title: g.name + ' chậm so với mục tiêu', text: 'Dự kiến cuối kỳ đạt ' + g.pp + '% mục tiêu.' }); });
-  ch.forEach(function(x){ if (x.leads >= 5 && x.conv != null && x.conv < cfg.lowConv) items.push({ lv: 'amber', title: 'Kênh ' + escHtml(x.ch) + ' nhiều lead nhưng ít đăng ký', text: x.leads + ' lead, chỉ ' + x.conv + '% đăng ký → xem lại chất lượng lead / cách tư vấn.' }); });
-  items.sort(function(a, b){ return (a.lv === 'red' ? 0 : 1) - (b.lv === 'red' ? 0 : 1); });
-  var h = head('Kênh & Công suất', 'Kênh nào hiệu quả, advisor nào quá tải hoặc rảnh, tiến độ mục tiêu', range, _insData.partial);
-  var pvT = curTotals(D, reportPrevPeriodRange());
-  h += banner(items) + kpis([
-    kpi('Lead / ' + (_reportPeriod.mode === 'quarter' ? 'quý' : 'tháng'), cur.leads, rpDelta(cur.leads, pvT.leads), stByDelta(cur.leads, pvT.leads), tg.leads ? 'Mục tiêu: ' + (Number(tg.leads) * (_reportPeriod.mode === 'quarter' ? 3 : 1)) : 'Chưa đặt mục tiêu'),
-    kpi('Booking', cur.bookings, rpDelta(cur.bookings, pvT.bookings), stByDelta(cur.bookings, pvT.bookings), tg.bookings ? 'Mục tiêu: ' + (Number(tg.bookings) * (_reportPeriod.mode === 'quarter' ? 3 : 1)) : 'Chưa đặt mục tiêu'),
-    kpi('Doanh thu', fmtMoneyShort(cur.revenue), rpDelta(cur.revenue, pvT.revenue), stByDelta(cur.revenue, pvT.revenue), tg.revenue ? 'Mục tiêu: ' + fmtMoneyShort(Number(tg.revenue) * (_reportPeriod.mode === 'quarter' ? 3 : 1)) : 'Chưa đặt mục tiêu'),
-    kpi('Lead → Booking', cur.leads ? Math.round(cur.bookings / cur.leads * 100) + '%' : '—', '<span class="rp-d-n">' + cur.bookings + ' / ' + cur.leads + '</span>', '')
-  ]) + actions(items);
-  h += '<div class="rp-sec">Tiến độ mục tiêu</div><div class="rp-card">' + progHtml(tp) + '</div>';
-  h += '<div class="rp-sec">Hiệu quả theo kênh</div><div class="rp-card">' + tbl(['KÊNH', 'LEAD', '% ĐĂNG KÝ', 'DOANH THU', 'ROAS'], ch.map(function(x){
-    var cv = x.conv == null ? '—' : x.conv + '%', cl = x.conv == null ? '' : (x.conv < cfg.lowConv ? 'rp-d-b' : '');
-    return '<tr><td><b>' + escHtml(x.ch) + '</b></td><td class="num">' + x.leads + '</td><td class="num"><span class="' + cl + '">' + cv + '</span></td><td class="num">' + fmtMoneyShort(x.revenue) + '</td><td class="num">' + (x.roas == null ? '—' : x.roas.toFixed(1) + 'x') + '</td></tr>';
-  }).join('') || empty(5), [1, 2, 3, 4]) + '</div>';
-  h += '<div class="rp-sec">Công suất Advisor</div><div class="rp-card">' + tbl(['ADVISOR', 'ĐANG HỌC', 'BUỔI 14 NGÀY TỚI', 'TÌNH TRẠNG'], adv.map(function(x){
-    return '<tr><td><b>' + escHtml(x.name) + '</b></td><td class="num">' + x.active + '</td><td class="num">' + x.upcoming + '</td><td>' + (x.flag === 'over' ? pill('Quá tải', 'red') : (x.flag === 'idle' ? pill('Ít việc', 'amber') : pill('Ổn', 'green'))) + '</td></tr>';
-  }).join('') || empty(4, 'Chưa có advisor.'), [1, 2]) + '</div>';
-  var inp = function(id, v){ return '<input id="' + id + '" value="' + v + '" class="rp-in">'; };
-  h += (function(x){ return tp.length ? x : x.replace('<details', '<details open'); })(det('Nhập mục tiêu tháng', '<div style="display:flex;flex-wrap:wrap;gap:16px;align-items:flex-end;padding-top:4px">' + [['leads', 'Lead/tháng'], ['bookings', 'Booking/tháng'], ['revenue', 'Doanh thu/tháng']].map(function(p){ return '<label style="font-size:12px;color:var(--muted);display:flex;flex-direction:column;gap:4px">' + p[1] + inp('ins2-tg-' + p[0], insMoneyIn_(Number(tg[p[0]]) || 0)) + '</label>'; }).join('') + '<button class="update-btn no-print" onclick="saveTargets()">Lưu mục tiêu</button></div><div style="font-size:12px;color:var(--muted);margin-top:8px">Quý tự nhân 3.</div>'));
-  h += det('Nhập chi phí kênh (để tính ROAS)', '<div style="display:flex;flex-wrap:wrap;gap:14px;padding-top:4px">' + (ch.map(function(x){ return '<label style="font-size:12px;color:var(--muted);display:flex;flex-direction:column;gap:4px">' + escHtml(x.ch) + '<input value="' + insMoneyIn_(Number(costs[x.ch]) || 0) + '" onchange="saveChannelCost(\'' + escHtml(x.ch).replace(/'/g, '') + '\', this)" class="rp-in"></label>'; }).join('') || 'Chưa có kênh.') + '</div>');
-  h += det('Cài đặt ngưỡng công suất', '<div style="display:flex;flex-wrap:wrap;gap:16px;align-items:flex-end;padding-top:4px"><label style="font-size:12px;color:var(--muted);display:flex;flex-direction:column;gap:4px">Quá tải khi buổi/tháng &gt;<input id="ins2-cfg-capSessions" type="number" min="0" value="' + cfg2.capSessions + '" class="rp-in" style="width:80px"></label><label style="font-size:12px;color:var(--muted);display:flex;flex-direction:column;gap:4px">Ít việc khi buổi/tháng &lt;<input id="ins2-cfg-idleSessions" type="number" min="0" value="' + cfg2.idleSessions + '" class="rp-in" style="width:80px"></label><button class="update-btn no-print" onclick="saveIns2Cfg()">Áp dụng</button></div>');
-  return h + '</div>';
-};
-
-// ── 4. DOANH THU ──
+// ── 3. DOANH THU & VẬN HÀNH (gộp 2 trang) ──
+window.loadRevenuePageAsync = function(){ insLoadPage_('lj-revenue', 'Doanh thu & Vận hành', renderRevenuePage); };
 window.renderRevenuePage = function(){
-  var range = reportPeriodRange(), prev = reportPrevPeriodRange(), all = (_revBookings || []).filter(bookingCounts);
+  var range = reportPeriodRange(), prev = reportPrevPeriodRange(), bk = _insData.bookings || [], ss = _insData.sessions || [], all = bk.filter(bookingCounts);
   var cur = all.filter(function(b){ return inRange(b.created_at, range); }), prv = all.filter(function(b){ return inRange(b.created_at, prev); });
   var sum = function(l){ return l.reduce(function(s, b){ return s + (Number(b.package_price) || 0); }, 0); }, total = sum(cur), pt = sum(prv), avg = cur.length ? Math.round(total / cur.length) : 0, pa = prv.length ? Math.round(pt / prv.length) : 0;
   var ytd = sum(all.filter(function(b){ return inRange(b.created_at, { start: new Date(range.start.getFullYear(), 0, 1), end: new Date(range.start.getFullYear() + 1, 0, 1) }); }));
+  var ops = opsAggregate(bk, ss, range), opsP = opsAggregate(bk, ss, prev), active = opsActiveAdvisees(bk, ss);
+  var comp = ops.scheduled ? Math.round(ops.done / ops.scheduled * 100) : null, renew = ops.expired ? Math.round(ops.renewed / ops.expired * 100) : null, newRate = ops.bookings ? Math.round(ops.newCount / ops.bookings * 100) : null;
   var items = [], d = pctDelta(total, pt), tg = Number((ins2Load_('lj_targets_month') || {}).revenue) || 0, tgt = tg * (_reportPeriod.mode === 'quarter' ? 3 : 1);
-  if (d !== null && d <= -10) items.push({ lv: d <= -25 ? 'red' : 'amber', title: 'Doanh thu giảm ' + Math.abs(d) + '% so với kỳ trước', text: 'Kiểm tra số lead vào và tỷ lệ chốt ở trang Tổng quan; ưu tiên chăm lại khách đã tư vấn nhưng chưa đăng ký.' });
+  if (d !== null && d <= -10) items.push({ lv: d <= -25 ? 'red' : 'amber', title: 'Doanh thu giảm ' + Math.abs(d) + '% so với kỳ trước', text: 'Kiểm tra lead vào và tỷ lệ chốt ở Tổng quan; ưu tiên chăm lại khách đã tư vấn nhưng chưa đăng ký.' });
   if (tgt && total < tgt * 0.8 && new Date() >= range.end) items.push({ lv: 'red', title: 'Chưa đạt mục tiêu doanh thu', text: 'Đạt ' + Math.round(total / tgt * 100) + '% mục tiêu (' + fmtMoneyShort(total) + ' / ' + fmtMoneyShort(tgt) + ').' });
   var pd = pctDelta(avg, pa); if (pd !== null && pd <= -15) items.push({ lv: 'amber', title: 'Giá trị trung bình mỗi đơn giảm ' + Math.abs(pd) + '%', text: 'Khách đang chọn gói nhỏ hơn → xem lại cách giới thiệu gói và ưu đãi.' });
   var byPkg = {}; cur.forEach(function(b){ var p = b.package_name || 'Không rõ'; (byPkg[p] = byPkg[p] || { n: 0, r: 0 }); byPkg[p].n++; byPkg[p].r += Number(b.package_price) || 0; });
   var pk = Object.keys(byPkg).sort(function(a, b){ return byPkg[b].r - byPkg[a].r; });
   if (pk.length && total && byPkg[pk[0]].r / total > 0.6 && cur.length >= 5) items.push({ lv: 'amber', title: 'Doanh thu phụ thuộc vào 1 gói', text: escHtml(pk[0]) + ' chiếm ' + Math.round(byPkg[pk[0]].r / total * 100) + '% doanh thu → cân nhắc đẩy thêm gói khác.' });
-  var h = head('Doanh thu', 'Tính từ booking đã xác nhận hoặc hoàn tất', range);
+  if (comp !== null && comp < 80) items.push({ lv: comp < 60 ? 'red' : 'amber', title: 'Nhiều buổi chưa hoàn thành (' + comp + '%)', text: 'Chỉ ' + ops.done + '/' + ops.scheduled + ' buổi đã diễn ra. Kiểm tra buổi bị huỷ/dời và nhắc advisor cập nhật trạng thái.' });
+  if (renew !== null && ops.expired >= 3 && renew < 30) items.push({ lv: renew < 15 ? 'red' : 'amber', title: 'Ít khách mua lại sau khi hết hạn (' + renew + '%)', text: ops.renewed + '/' + ops.expired + ' khách gia hạn → chăm sóc khách sắp hết hạn từ sớm, đề xuất gói tiếp theo.' });
+  if (newRate !== null && ops.bookings >= 5 && newRate > 90) items.push({ lv: 'amber', title: 'Gần như toàn khách mới (' + newRate + '%)', text: 'Khách cũ ít quay lại → cần chương trình chăm sóc, ưu đãi gia hạn.' });
+  items.sort(function(a, b){ return lvRank(a.lv) - lvRank(b.lv); });
+  var h = head('Doanh thu & Vận hành', 'Doanh thu, buổi hoàn thành và khách quay lại (tính từ booking đã xác nhận / hoàn tất)', range, _insData.partial);
   h += banner(items) + kpis([
-    kpi('Doanh thu ' + range.label, fmtMoneyShort(total), rpDelta(total, pt), stByDelta(total, pt), tgt ? 'Mục tiêu: ' + fmtMoneyShort(tgt) + ' (' + Math.round(total / tgt * 100) + '%)' : ''),
-    kpi('Số giao dịch', cur.length, rpDelta(cur.length, prv.length), stByDelta(cur.length, prv.length)),
+    kpi('Doanh thu ' + range.label, fmtMoneyShort(total), rpDelta(total, pt), stByDelta(total, pt), cur.length + ' đơn' + (tgt ? ' · Mục tiêu ' + fmtMoneyShort(tgt) + ' (' + Math.round(total / tgt * 100) + '%)' : '') + ' · Lũy kế năm ' + fmtMoneyShort(ytd)),
     kpi('Giá trị TB / đơn', fmtMoneyShort(avg), rpDelta(avg, pa), stByDelta(avg, pa)),
-    kpi('Lũy kế năm ' + range.start.getFullYear(), fmtMoneyShort(ytd), '<span class="rp-d-n">Từ 01/01</span>', '')
+    kpi('Buổi hoàn thành', ops.done, comp === null ? '<span class="rp-d-n">Chưa có buổi trong kỳ</span>' : '<span class="' + (comp < 60 ? 'rp-d-b' : comp < 80 ? '' : 'rp-d-g') + '">' + comp + '%</span> <span class="rp-d-n">(' + ops.done + '/' + ops.scheduled + ' buổi)</span>', comp === null ? '' : (comp < 60 ? 'red' : comp < 80 ? 'amber' : 'green')),
+    kpi('Mua lại sau hết hạn', renew === null ? '—' : renew + '%', '<span class="rp-d-n">' + (renew === null ? 'Không có gói hết hạn' : ops.renewed + '/' + ops.expired + ' gói') + '</span>', renew === null || ops.expired < 3 ? '' : (renew < 15 ? 'red' : renew < 30 ? 'amber' : 'green'), 'Advisee đang học: ' + active)
   ]) + actions(items);
   if (cur.length) {
     var its = [], byKey = {}; cur.forEach(function(b){ var k = _reportPeriod.mode === 'month' ? String(b.created_at).slice(8, 10) : String(b.created_at).slice(0, 7); byKey[k] = (byKey[k] || 0) + (Number(b.package_price) || 0); });
     if (_reportPeriod.mode === 'month') { var dd = new Date(range.start.getFullYear(), range.start.getMonth() + 1, 0).getDate(); for (var i = 1; i <= dd; i++) { var k = (i < 10 ? '0' : '') + i; its.push({ label: String(i), title: 'Ngày ' + i, value: byKey[k] || 0 }); } }
     else for (var m = 0; m < 3; m++) { var dt = new Date(range.start.getFullYear(), range.start.getMonth() + m, 1); its.push({ label: 'Tháng ' + (dt.getMonth() + 1), title: 'Tháng ' + (dt.getMonth() + 1), value: byKey[dt.getFullYear() + '-' + pad(dt.getMonth() + 1)] || 0 }); }
     h += '<div class="rp-sec">Doanh thu theo ' + (_reportPeriod.mode === 'month' ? 'ngày' : 'tháng') + '</div><div class="card" style="padding-bottom:8px">' + revBars(its, Math.max.apply(null, its.map(function(x){ return x.value; })) || 1) + '</div>';
-    h += '<div class="rp-sec">Theo gói</div><div class="rp-card">' + tbl(['GÓI', 'SỐ ĐƠN', 'DOANH THU', 'TỶ TRỌNG'], pk.map(function(p){ return '<tr><td><b>' + escHtml(p) + '</b></td><td class="num">' + byPkg[p].n + '</td><td class="num">' + fmtMoneyShort(byPkg[p].r) + '</td><td class="num">' + Math.round(byPkg[p].r / total * 100) + '%</td></tr>'; }).join(''), [1, 2, 3]) + '</div>';
+    h += '<div class="two-col"><div class="card"><div class="card-header"><div class="card-header-left">Theo gói</div></div><div style="padding:0 12px 12px;overflow-x:auto">' + tbl(['GÓI', 'ĐƠN', 'DOANH THU', '%'], pk.map(function(p){ return '<tr><td><b>' + escHtml(p) + '</b></td><td class="num">' + byPkg[p].n + '</td><td class="num">' + fmtMoneyShort(byPkg[p].r) + '</td><td class="num">' + Math.round(byPkg[p].r / total * 100) + '%</td></tr>'; }).join(''), [1, 2, 3]) + '</div></div>' +
+      '<div class="card"><div class="card-header"><div class="card-header-left">Buổi hoàn thành theo Advisor</div></div><div style="padding:8px 24px 24px">' + svgBarList(ops.byAdvisor, { color: '#fc5229' }) + '</div></div></div>';
     h += det('Danh sách giao dịch (' + cur.length + ')', tbl(['ADVISEE', 'GÓI', 'GIÁ TRỊ', 'NGÀY'], cur.slice().sort(function(a, b){ return String(b.created_at) > String(a.created_at) ? 1 : -1; }).map(function(b){ return '<tr><td><b>' + escHtml(b.advisee_name || '—') + '</b></td><td>' + escHtml(b.package_name || '—') + '</td><td class="num">' + fmtMoney(Number(b.package_price) || 0) + '</td><td>' + fmtDMY(String(b.created_at).slice(0, 10)) + '</td></tr>'; }).join(''), [2]));
   } else h += '<div class="rp-card"><div class="today-empty" style="padding:24px">Chưa có doanh thu trong ' + range.label.toLowerCase() + '.</div></div>';
   return h + '</div>';
 };
 
-// ── 5. VẬN HÀNH ──
-window.renderReportPage = function(partial){
-  var range = reportPeriodRange(), prev = reportPrevPeriodRange(), bk = _opsBookings || [], ss = _opsSessions || [], cur = opsAggregate(bk, ss, range), prv = opsAggregate(bk, ss, prev), active = opsActiveAdvisees(bk, ss);
-  var newRate = cur.bookings ? Math.round(cur.newCount / cur.bookings * 100) : null, renew = cur.expired ? Math.round(cur.renewed / cur.expired * 100) : null, comp = cur.scheduled ? Math.round(cur.done / cur.scheduled * 100) : null, items = [];
-  if (comp !== null && comp < 80) items.push({ lv: comp < 60 ? 'red' : 'amber', title: 'Nhiều buổi chưa hoàn thành (' + comp + '%)', text: 'Chỉ ' + cur.done + '/' + cur.scheduled + ' buổi đã diễn ra. Kiểm tra buổi bị huỷ/dời và nhắc advisor cập nhật trạng thái.' });
-  if (renew !== null && cur.expired >= 3 && renew < 30) items.push({ lv: renew < 15 ? 'red' : 'amber', title: 'Ít khách mua lại sau khi hết hạn (' + renew + '%)', text: cur.renewed + '/' + cur.expired + ' khách gia hạn → chăm sóc khách sắp hết hạn từ sớm, đề xuất gói tiếp theo.' });
-  var bd = pctDelta(cur.bookings, prv.bookings); if (bd !== null && bd <= -15) items.push({ lv: bd <= -30 ? 'red' : 'amber', title: 'Booking giảm ' + Math.abs(bd) + '%', text: 'Xem trang Cung – Cầu & Phễu để biết ngành nào đang giảm.' });
-  if (newRate !== null && cur.bookings >= 5 && newRate > 90) items.push({ lv: 'amber', title: 'Gần như toàn khách mới (' + newRate + '%)', text: 'Khách cũ ít quay lại → cần chương trình chăm sóc, ưu đãi gia hạn.' });
-  var h = head('Vận hành', 'Booking, buổi hoàn thành và khách quay lại', range, partial);
-  h += banner(items) + kpis([
-    kpi('Booking', cur.bookings, rpDelta(cur.bookings, prv.bookings), stByDelta(cur.bookings, prv.bookings)),
-    kpi('Buổi hoàn thành', cur.done, comp === null ? '<span class="rp-d-n">Chưa có buổi trong kỳ</span>' : '<span class="' + (comp < 60 ? 'rp-d-b' : comp < 80 ? '' : 'rp-d-g') + '">' + comp + '%</span> <span class="rp-d-n">(' + cur.done + '/' + cur.scheduled + ' buổi)</span>', comp === null ? '' : (comp < 60 ? 'red' : comp < 80 ? 'amber' : 'green')),
-    kpi('Mua lại sau hết hạn', renew === null ? '—' : renew + '%', '<span class="rp-d-n">' + (renew === null ? 'Không có gói hết hạn' : cur.renewed + '/' + cur.expired + ' gói') + '</span>', renew === null || cur.expired < 3 ? '' : (renew < 15 ? 'red' : renew < 30 ? 'amber' : 'green')),
-    kpi('Advisee đang học', active, '<span class="rp-d-n">Còn buổi, chưa hết hạn</span>', '', newRate === null ? '' : 'Khách mới: ' + newRate + '% booking trong kỳ')
-  ]) + actions(items);
-  var pd = {}; Object.keys(cur.byPkg).forEach(function(p){ pd[p + ' · ' + fmtMoneyShort(cur.revByPkg[p])] = cur.byPkg[p]; });
-  h += '<div class="two-col"><div class="card"><div class="card-header"><div class="card-header-left">Buổi hoàn thành theo Advisor</div></div><div style="padding:8px 24px 24px">' + svgBarList(cur.byAdvisor, { color: '#fc5229' }) + '</div></div><div class="card"><div class="card-header"><div class="card-header-left">Gói được mua</div></div><div style="padding:8px 24px 24px">' + svgBarList(pd, { color: '#6D28D9' }) + '</div></div></div>';
-  return h + '</div>';
-};
-
-// ── 6. MARKETING ──
+// ── 4. MARKETING & KÊNH (gộp Marketing + chất lượng kênh) ──
+window.loadMarketingReportPageAsync = function(){ insLoadPage_('lj-market-report', 'Marketing & Kênh', renderMarketingReportPage); };
 window.renderMarketingReportPage = function(){
-  var leads = _reportLeadsCache || [], bookings = _reportBookingsCache || [], range = reportPeriodRange(), agg = reportAggregate(leads, bookings, range), pa = reportAggregate(leads, bookings, reportPrevPeriodRange());
-  var conv = agg.totalLeads ? Math.round(agg.converted / agg.totalLeads * 100) : null, pconv = pa.totalLeads ? Math.round(pa.converted / pa.totalLeads * 100) : null, top = reportTopEntry(agg.byChannel), items = [];
+  var D = insD_(), range = reportPeriodRange(), prevR = reportPrevPeriodRange(), cfg = insightCfg(), agg = reportAggregate(D.leads, D.bookings, range), pa = reportAggregate(D.leads, D.bookings, prevR);
+  var ch = insightChannels_(D, range), costs = (ins2Load_('lj_channel_cost')[ins2PeriodKey_(range)]) || {}, items = [];
+  var conv = agg.totalLeads ? Math.round(agg.converted / agg.totalLeads * 100) : null, pconv = pa.totalLeads ? Math.round(pa.converted / pa.totalLeads * 100) : null, top = reportTopEntry(agg.byChannel);
+  var bestRev = ch.slice().sort(function(a, b){ return b.revenue - a.revenue; })[0];
   var ld = pctDelta(agg.totalLeads, pa.totalLeads); if (ld !== null && ld <= -15) items.push({ lv: ld <= -30 ? 'red' : 'amber', title: 'Lead giảm ' + Math.abs(ld) + '%', text: 'Kiểm tra lại quảng cáo / nội dung đang chạy ở các kênh chính.' });
   if (conv !== null && agg.totalLeads >= 10 && conv < 10) items.push({ lv: 'amber', title: 'Tỷ lệ đăng ký thấp (' + conv + '%)', text: 'Nhiều lead nhưng ít chốt → xem lại chất lượng lead và cách Sale tư vấn.' });
   if (top && agg.totalLeads >= 10 && Math.round(top.value / agg.totalLeads * 100) > 60) items.push({ lv: 'amber', title: 'Lead phụ thuộc vào kênh ' + escHtml(top.label), text: Math.round(top.value / agg.totalLeads * 100) + '% lead đến từ một kênh → thử thêm kênh thứ hai để giảm rủi ro.' });
-  var h = head('Marketing', 'Lead đến từ đâu, kênh nào đáng đầu tư', range);
+  ch.forEach(function(x){
+    if (x.roas != null && x.roas < 1) items.push({ lv: 'red', title: 'Kênh ' + escHtml(x.ch) + ' đang lỗ', text: 'ROAS ' + x.roas.toFixed(1) + 'x (chi ' + fmtMoneyShort(Number(costs[x.ch]) || 0) + ', thu về ' + fmtMoneyShort(x.revenue) + ') → giảm ngân sách hoặc đổi nội dung.' });
+    else if (x.leads >= 5 && x.conv != null && x.conv < cfg.lowConv) items.push({ lv: 'amber', title: 'Kênh ' + escHtml(x.ch) + ' nhiều lead nhưng ít đăng ký', text: x.leads + ' lead, chỉ ' + x.conv + '% đăng ký → xem lại chất lượng lead / cách tư vấn.' });
+  });
+  items.sort(function(a, b){ return lvRank(a.lv) - lvRank(b.lv); });
+  var h = head('Marketing & Kênh', 'Lead đến từ đâu, kênh nào đáng đầu tư', range, _insData.partial);
   h += banner(items) + kpis([
     kpi('Tổng lead', agg.totalLeads, rpDelta(agg.totalLeads, pa.totalLeads), stByDelta(agg.totalLeads, pa.totalLeads)),
     kpi('Đã đăng ký', agg.converted, '<span class="rp-d-n">Tỷ lệ ' + (conv === null ? '—' : conv + '%') + (pconv === null ? '' : ' (kỳ trước ' + pconv + '%)') + '</span>', conv === null ? '' : (conv < 10 ? 'amber' : 'green')),
-    kpi('Doanh thu ước tính', fmtMoneyShort(agg.revenue), rpDelta(agg.revenue, pa.revenue), stByDelta(agg.revenue, pa.revenue)),
-    kpi('Kênh nhiều lead nhất', top ? escHtml(top.label) : '—', '<span class="rp-d-n">' + (top ? top.value + ' lead' : 'Chưa có dữ liệu') + '</span>', '')
+    kpi('Kênh nhiều lead nhất', top ? escHtml(top.label) : '—', '<span class="rp-d-n">' + (top ? top.value + ' lead' : 'Chưa có dữ liệu') + '</span>', ''),
+    kpi('Kênh doanh thu cao nhất', bestRev && bestRev.revenue ? escHtml(bestRev.ch) : '—', '<span class="rp-d-n">' + (bestRev && bestRev.revenue ? fmtMoneyShort(bestRev.revenue) : 'Chưa có doanh thu') + '</span>', '')
   ]) + actions(items);
+  h += '<div class="rp-sec">Hiệu quả theo kênh</div><div class="rp-card">' + tbl(['KÊNH', 'LEAD', '% ĐĂNG KÝ', 'BOOKING', 'DOANH THU', 'CHI PHÍ', 'ROAS'], ch.map(function(x){
+    var cl = x.conv != null && x.conv < cfg.lowConv ? 'rp-d-b' : '', c = Number(costs[x.ch]) || 0;
+    return '<tr><td><b>' + escHtml(x.ch) + '</b></td><td class="num">' + x.leads + '</td><td class="num"><span class="' + cl + '">' + (x.conv == null ? '—' : x.conv + '%') + '</span></td><td class="num">' + x.bookings + '</td><td class="num">' + fmtMoneyShort(x.revenue) + '</td><td class="num">' + (c ? fmtMoneyShort(c) : '—') + '</td><td class="num">' + (x.roas == null ? '—' : x.roas.toFixed(1) + 'x') + '</td></tr>';
+  }).join('') || empty(7), [1, 2, 3, 4, 5, 6]) + '</div>';
   var tips = generateReportInsights(agg, pa);
   if (tips.length) h += '<div class="rp-sec">Gợi ý thêm</div><div class="rp-act">' + tips.slice(0, 3).map(function(t){ return '<div class="rp-act-i"><span class="rp-dot blue"></span><div class="rp-act-x">' + t + '</div></div>'; }).join('') + '</div>';
   h += '<div class="two-col"><div class="card"><div class="card-header"><div class="card-header-left">Lead theo kênh</div></div><div style="padding:12px 24px 24px">' + svgDonut(agg.byChannel) + '</div></div><div class="card"><div class="card-header"><div class="card-header-left">Ngành quan tâm</div></div><div style="padding:8px 24px 24px">' + svgBarList(agg.byDept, { color: '#F4451A' }) + '</div></div></div>';
+  h += det('Nhập chi phí kênh (để tính ROAS)', '<div style="display:flex;flex-wrap:wrap;gap:14px;padding-top:4px">' + (ch.map(function(x){ return '<label style="font-size:12px;color:var(--muted);display:flex;flex-direction:column;gap:4px">' + escHtml(x.ch) + '<input value="' + insMoneyIn_(Number(costs[x.ch]) || 0) + '" onchange="saveChannelCost(\'' + escHtml(x.ch).replace(/'/g, '') + '\', this)" class="rp-in"></label>'; }).join('') || 'Chưa có kênh.') + '</div><div style="font-size:12px;color:var(--muted);margin-top:8px">Chi phí lưu theo kỳ trong trình duyệt này. ROAS = doanh thu ÷ chi phí.</div>');
   h += det('Khu vực, level, sinh viên/đã đi làm', '<div class="two-col" style="margin-top:8px"><div><b>Khu vực</b>' + svgBarList(agg.byRegion, { color: '#0EA5E9' }) + '</div><div><b>Level</b>' + svgBarList(agg.byLevel, { color: '#6D28D9' }) + '</div></div>' + svgDonut(agg.byCustomerType));
   return h + '</div>';
 };
@@ -9918,6 +9895,82 @@ window.renderSalesPerformancePage = function(partial){
   return h + '</div>';
 };
 })();
+</script>
+
+<style>
+.cvf-g{margin:8px 0 2px;font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
+.cvf-w{display:flex;flex-wrap:wrap;gap:6px}
+.cvf-chip{padding:6px 12px;border:1.5px solid var(--border);background:#fff;border-radius:100px;font-size:13px;cursor:pointer;font-family:inherit;color:var(--text)}
+.cvf-chip:hover{border-color:var(--brand)}
+.cvf-chip.on{background:var(--brand);border-color:var(--brand);color:#fff;font-weight:600}
+.cvf-sel{margin-top:8px;font-size:12.5px;color:var(--muted)}
+</style>
+<script>
+// ═══ Lĩnh vực quan tâm của advisee: dùng chung bộ nhãn với tag của Advisor để ghép cung-cầu chính xác ═══
+var LJ_FIELD_GROUPS = [
+  ['Ngành', ['FMCG','Logistic & Supply Chain','Global Agency','Retail','E-commerce','Tech','HR','Bank','Insurance','Education','Design']],
+  ['Marketing & Truyền thông', ['Brand Management','Brand Marketing','Digital Marketing','Trade Marketing','Communication','PR','Strategic Planning','Account']],
+  ['Sales & Kênh phân phối', ['Sales','Business Development','Channel Management','General Trade','Modern Trade','Commercial','Shopper']],
+  ['Logistics & Chuỗi cung ứng', ['Logistics Operation','E-Logistics','Sales Logistics','Freight Forwarding','Warehouse','Procurement','Demand Planning','Product Planning']],
+  ['Tài chính & Tư vấn', ['Audit','Accounting','Finance','Consultant']],
+  ['Nhân sự', ['Talent Acquisition','Learning & Development','Recruitment']],
+  ['Công nghệ & Dữ liệu', ['IT','AI','Software Engineer','Data Analysis']],
+  ['Thiết kế', ['Visual Merchandiser']]
+];
+function deptPrimary_(s) { s = String(s || '').trim(); if (s.indexOf(' / ') > -1) s = s.split(' / ')[0].trim(); return s || 'Không rõ'; }
+function cvFieldPicker(cur) {
+  var toks = String(cur || '').split(' / ').map(function(t){ return t.trim(); }).filter(function(t){ return t && t !== 'Khác'; });
+  var all = []; LJ_FIELD_GROUPS.forEach(function(g){ all = all.concat(g[1]); });
+  var other = toks.filter(function(t){ return all.indexOf(t) === -1; }).join(', ');
+  var h = '<div class="cvf"><input type="hidden" id="cv-interesteddept" value="' + escHtml(String(cur || '')) + '">';
+  LJ_FIELD_GROUPS.forEach(function(g){
+    h += '<div class="cvf-g">' + g[0] + '</div><div class="cvf-w">' + g[1].map(function(o){
+      return '<button type="button" class="cvf-chip' + (toks.indexOf(o) > -1 ? ' on' : '') + '" data-v="' + escHtml(o) + '" onclick="cvFieldToggle(this)">' + escHtml(o) + '</button>';
+    }).join('') + '</div>';
+  });
+  h += '<div class="cvf-g">Khác</div><div class="cvf-w"><button type="button" class="cvf-chip cvf-other' + (other ? ' on' : '') + '" onclick="cvFieldToggle(this)">Khác (tự nhập)</button></div>' +
+    '<input class="form-input cvf-other-in" placeholder="Nhập ngành / vị trí khác, cách nhau bằng dấu phẩy" value="' + escHtml(other) + '" oninput="cvFieldSync(this)" style="margin-top:8px;display:' + (other ? 'block' : 'none') + '">' +
+    '<div class="cvf-sel"></div></div>';
+  return h;
+}
+function cvFieldToggle(btn) {
+  btn.classList.toggle('on');
+  var root = btn.closest('.cvf');
+  if (btn.classList.contains('cvf-other')) {
+    var inp = root.querySelector('.cvf-other-in'); inp.style.display = btn.classList.contains('on') ? 'block' : 'none';
+    if (btn.classList.contains('on')) inp.focus();
+  }
+  cvFieldSync(btn);
+}
+function cvFieldSync(el) {
+  var root = el.closest('.cvf'), vals = [];
+  root.querySelectorAll('.cvf-chip.on:not(.cvf-other)').forEach(function(b){ vals.push(b.getAttribute('data-v')); });
+  var ob = root.querySelector('.cvf-other');
+  if (ob.classList.contains('on')) root.querySelector('.cvf-other-in').value.split(',').forEach(function(t){ t = t.replace(/\//g, '-').trim(); if (t) vals.push(t); });
+  root.querySelector('#cv-interesteddept').value = vals.join(' / ');
+  root.querySelector('.cvf-sel').textContent = vals.length ? 'Đã chọn: ' + vals.join(', ') : '';
+}
+function cvOtherSelect(id, opts, cur) {
+  cur = cur || ''; var isOther = cur && opts.indexOf(cur) === -1, sv = isOther ? 'Khác' : cur;
+  return '<select class="form-select" id="' + id + '-sel" onchange="cvOtherSync(\'' + id + '\')"><option value="">-- Chọn --</option>' +
+    opts.map(function(o){ return '<option' + (o === sv ? ' selected' : '') + '>' + escHtml(o) + '</option>'; }).join('') + '</select>' +
+    '<input class="form-input" id="' + id + '-other" placeholder="Nhập nội dung khác..." value="' + escHtml(isOther ? cur : '') + '" oninput="cvOtherSync(\'' + id + '\')" style="margin-top:6px;display:' + (sv === 'Khác' ? 'block' : 'none') + '">' +
+    '<input type="hidden" id="' + id + '" value="' + escHtml(cur) + '">';
+}
+function cvOtherSync(id) {
+  var sel = document.getElementById(id + '-sel').value, inp = document.getElementById(id + '-other');
+  inp.style.display = sel === 'Khác' ? 'block' : 'none';
+  document.getElementById(id).value = sel === 'Khác' ? (inp.value.trim() || 'Khác') : sel;
+}
+// Chuẩn hoá lỗi chính tả / cách viết khác nhau giữa tag advisor và lựa chọn advisee
+function deptCanon_(n) {
+  n = String(n || '').trim();
+  return n.replace(/\bmarekting\b/g, 'marketing').replace(/\becomerce\b|\be commerce\b/g, 'ecommerce').replace(/\bmonder\b/g, 'modern')
+    .replace(/\bretailer\b/g, 'retail').replace(/^edu$/, 'education').replace(/^logistics supply chain$/, 'logistic supply chain');
+}
+deptAliases_ = function(dept) { return String(dept || '').split(/\s\/\s|\//).map(function(p){ return deptCanon_(insNorm_(p)); }).filter(Boolean); };
+advisorMatchesDept_ = function(adv, dept) { var al = deptAliases_(dept); if (!al.length) return false; return (adv.tags || []).some(function(t){ return al.indexOf(deptCanon_(insNorm_(t))) > -1; }); };
+insDeptOf_ = function(lead) { return deptPrimary_(lead && lead.interested_dept); };
 </script>
 
 </body>
