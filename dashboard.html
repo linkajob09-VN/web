@@ -8613,7 +8613,12 @@ function insightCompute(D, range, prev, cfg) {
   });
   var bkDept = {};
   bookings.forEach(function(b){
-    bkDept[b.booking_id] = byEmail[insEmailKey_(b.advisee_email)] || byPhone[insPhoneKey_(b.advisee_phone)] || 'Không rõ';
+    bkDept[b.booking_id] = byEmail[insEmailKey_(b.advisee_email)] || byPhone[insPhoneKey_(b.advisee_phone)] || null;
+    if (!bkDept[b.booking_id]) {
+      // Không ghép được lead → lấy ngành đầu tiên của advisor được gán cho booking
+      var ad = advisors.filter(function(a){ return a.name === b.advisor_name; })[0];
+      bkDept[b.booking_id] = (ad && ad.tags && ad.tags[0]) ? String(ad.tags[0]).trim() : 'Không rõ';
+    }
   });
   var months = function(r){ return Math.max(1, Math.round((r.end.getTime() - r.start.getTime()) / (30.44 * 864e5))); };
   function period(r) {
@@ -8862,21 +8867,49 @@ function insightChannels_(D, range) {
 
 function insightAdvisors_(D, range, cfg, cfg2) {
   var mo = Math.max(1, Math.round((range.end - range.start) / (30.44 * 864e5)));
-  var today = new Date(), in14 = new Date(today.getTime() + 14 * 864e5), m = {};
-  D.advisors.forEach(function(a){ m[a.name] = { name: a.name, tags: (a.tags || []).join(', '), sessions: 0, done: 0, advisees: {}, upcoming: 0 }; });
+  var today = new Date(), todayStr = ymd(today), in14 = new Date(today.getTime() + 14 * 864e5), m = {};
+  var live = function(n){ return n && n !== STAFF_SLOT_IDENTITY; };
+  var get = function(n){ return m[n] || (m[n] = { name: n, tags: '', sessions: 0, done: 0, newAdvisees: 0, active: 0, upcoming: 0 }); };
+  D.advisors.forEach(function(a){ get(a.name).tags = (a.tags || []).join(', '); });
+  var doneBy = {};
   D.sessions.forEach(function(s){
     var st = String(s.status || '').toLowerCase();
+    if (st === 'completed' && s.booking_id) doneBy[s.booking_id] = (doneBy[s.booking_id] || 0) + 1;
     if (st === 'cancelled' || st === 'canceled' || s.advisor_name === STAFF_SLOT_IDENTITY || s.session_type === 'consult' || s.session_type === 'course') return;
-    var x = m[s.advisor_name]; if (!x) return;
-    if (inRange(s.scheduled_date, range)) { x.sessions++; if (st === 'completed') x.done++; if (s.booking_id) x.advisees[s.booking_id] = 1; }
+    if (!live(s.advisor_name) || !m[s.advisor_name]) return;
+    var x = m[s.advisor_name];
+    if (inRange(s.scheduled_date, range)) { x.sessions++; if (st === 'completed') x.done++; }
     var d = parseSheetDate(s.scheduled_date);
     if (d && d >= new Date(today.getFullYear(), today.getMonth(), today.getDate()) && d <= in14 && st !== 'completed') x.upcoming++;
   });
+  // Advisee do advisor phụ trách = cột advisor_name của Booking
+  D.bookings.filter(bookingCounts).forEach(function(b){
+    if (!live(b.advisor_name)) return;
+    var x = get(b.advisor_name);
+    if (inRange(b.created_at, range)) x.newAdvisees++;
+    var exp = String(b.expiry_date || '').slice(0, 10);
+    if ((doneBy[b.booking_id] || 0) < (Number(b.sessions_total) || 0) && (!exp || exp >= todayStr)) x.active++;
+  });
   return Object.keys(m).map(function(k){
-    var x = m[k]; x.adviseeN = Object.keys(x.advisees).length; x.perMonth = x.adviseeN / mo; x.sessPerMonth = x.sessions / mo;
-    x.flag = x.perMonth > cfg.overload || x.sessPerMonth > cfg2.capSessions ? 'over' : (x.sessPerMonth < cfg2.idleSessions ? 'idle' : 'ok');
+    var x = m[k]; x.perMonth = x.newAdvisees / mo; x.sessPerMonth = x.sessions / mo;
+    x.flag = x.perMonth > cfg.overload || x.sessPerMonth > cfg2.capSessions ? 'over' : (x.sessPerMonth < cfg2.idleSessions && x.newAdvisees === 0 ? 'idle' : 'ok');
     return x;
-  }).sort(function(a, b){ return b.sessions - a.sessions; });
+  }).sort(function(a, b){ return b.active - a.active || b.sessions - a.sessions; });
+}
+
+// Khối lượng Sale: khách được giao (booking.sale_name) và lead nhận (lead.staff)
+function insightSales_(D, range) {
+  var m = {}, get = function(n){ return m[n] || (m[n] = { name: n, leads: 0, registered: 0, bookings: 0, revenue: 0 }); };
+  D.leads.forEach(function(l){
+    if (!inRange(l.created_at, range)) return;
+    var n = String(l.staff || '').trim() || 'Chưa giao'; var x = get(n); x.leads++;
+    if (isRegisteredResult(l.result) || String(l.status || '').trim() === LEAD_CONVERTED_STATUS) x.registered++;
+  });
+  D.bookings.filter(bookingCounts).forEach(function(b){
+    if (!inRange(b.created_at, range)) return;
+    var x = get(String(b.sale_name || '').trim() || 'Chưa giao'); x.bookings++; x.revenue += Number(b.package_price) || 0;
+  });
+  return Object.keys(m).map(function(k){ m[k].conv = m[k].leads ? Math.round(m[k].registered / m[k].leads * 100) : null; return m[k]; }).sort(function(a, b){ return b.revenue - a.revenue; });
 }
 
 function insTable_(head, rowsHtml) {
@@ -8929,13 +8962,17 @@ function renderCapacityPage() {
   var adv = insightAdvisors_(D, range, cfg, cfg2);
   var ar = adv.map(function(x){
     var f = x.flag === 'over' ? insPill_('Quá tải → tạm ngừng nhận thêm / tuyển bổ sung', 'red') : (x.flag === 'idle' ? insPill_('Ít việc → ưu tiên matching, giới thiệu', 'amber') : insPill_('Ổn', 'green'));
-    return '<tr><td><b>' + escHtml(x.name) + '</b></td><td style="font-size:12px">' + escHtml(x.tags || '—') + '</td><td>' + x.sessions + '</td><td>' + x.done + '</td><td>' + x.adviseeN + '</td><td>' + x.perMonth.toFixed(1) + '</td><td>' + x.upcoming + '</td><td>' + f + '</td></tr>';
-  }).join('') || '<tr><td colspan="8" style="text-align:center;color:var(--muted);padding:20px">Chưa có advisor.</td></tr>';
+    return '<tr><td><b>' + escHtml(x.name) + '</b></td><td style="font-size:12px">' + escHtml(x.tags || '—') + '</td><td>' + x.sessions + '</td><td>' + x.done + '</td><td>' + x.active + '</td><td>' + x.newAdvisees + '</td><td>' + x.perMonth.toFixed(1) + '</td><td>' + x.upcoming + '</td><td>' + f + '</td></tr>';
+  }).join('') || '<tr><td colspan="9" style="text-align:center;color:var(--muted);padding:20px">Chưa có advisor.</td></tr>';
   h += '<div class="card" style="margin-top:16px"><div class="card-header"><div class="card-header-left">Công suất Advisor</div></div><div style="padding:12px 24px;display:flex;flex-wrap:wrap;gap:16px;align-items:flex-end" class="no-print">' +
     '<label style="font-size:12px;color:var(--muted)">Quá tải khi buổi/tháng ><br><input id="ins2-cfg-capSessions" type="number" min="0" value="' + cfg2.capSessions + '" style="width:70px;padding:6px 8px;border:1px solid var(--border);border-radius:6px"></label>' +
     '<label style="font-size:12px;color:var(--muted)">Ít việc khi buổi/tháng &lt;<br><input id="ins2-cfg-idleSessions" type="number" min="0" value="' + cfg2.idleSessions + '" style="width:70px;padding:6px 8px;border:1px solid var(--border);border-radius:6px"></label>' +
     '<button class="update-btn" onclick="saveIns2Cfg()">Áp dụng</button><span style="font-size:12px;color:var(--muted)">Ngưỡng advisee/tháng dùng chung với trang Cung – Cầu (' + cfg.overload + ')</span></div>' +
-    insTable_(['ADVISOR', 'NGÀNH', 'BUỔI TRONG KỲ', 'ĐÃ HOÀN THÀNH', 'ADVISEE', 'ADVISEE/THÁNG', 'BUỔI 14 NGÀY TỚI', 'CẢNH BÁO'], ar) + '</div>';
+    insTable_(['ADVISOR', 'NGÀNH', 'BUỔI TRONG KỲ', 'ĐÃ HOÀN THÀNH', 'ADVISEE ĐANG HỌC', 'ADVISEE MỚI TRONG KỲ', 'ADVISEE MỚI/THÁNG', 'BUỔI 14 NGÀY TỚI', 'CẢNH BÁO'], ar) + '</div>';
+  var sl = insightSales_(D, range).map(function(x){
+    return '<tr><td><b>' + escHtml(x.name) + '</b></td><td>' + x.leads + '</td><td>' + (x.conv == null ? '—' : x.conv + '%') + '</td><td>' + x.bookings + '</td><td>' + fmtMoneyShort(x.revenue) + '</td></tr>';
+  }).join('') || '<tr><td colspan="5" style="text-align:center;color:var(--muted);padding:20px">Không có dữ liệu trong kỳ.</td></tr>';
+  h += '<div class="card" style="margin-top:16px"><div class="card-header"><div class="card-header-left">Khối lượng Sale (lead nhận · khách được giao)</div></div>' + insTable_(['SALE', 'LEAD NHẬN', '% ĐĂNG KÝ', 'BOOKING PHỤ TRÁCH', 'DOANH THU'], sl) + '</div>';
   h += '</div>';
   return h;
 }
@@ -8945,7 +8982,7 @@ function insightExec_(D, range, prev) {
   var cfg = insightCfg(), cfg2 = ins2Cfg_();
   var rows = insightCompute(D, range, prev, cfg), items = [];
   rows.forEach(function(r){ r.actions.forEach(function(a){ if (a.type !== 'ok') items.push({ pri: a.level === 'red' ? 0 : (a.level === 'amber' ? 1 : 2), type: a.type, dept: r.dept, text: a.text, vol: r.cur.leads + r.cur.advisees }); }); });
-  insightAdvisors_(D, range, cfg, cfg2).forEach(function(x){ if (x.flag === 'over') items.push({ pri: 0, type: 'hire', dept: x.name, text: 'Advisor ' + x.name + ' đang quá tải (' + x.sessions + ' buổi, ' + x.perMonth.toFixed(1) + ' advisee/tháng)', vol: x.sessions }); });
+  insightAdvisors_(D, range, cfg, cfg2).forEach(function(x){ if (x.flag === 'over') items.push({ pri: 0, type: 'hire', dept: x.name, text: 'Advisor ' + x.name + ' đang quá tải (' + x.sessions + ' buổi, ' + x.perMonth.toFixed(1) + ' advisee mới/tháng)', vol: x.sessions }); });
   var f = insightFunnel_(D, range), steps = [['Lead mới', f.lead], ['Đã liên hệ', f.contacted], ['Chốt lịch', f.scheduled], ['Đã tư vấn', f.consulted], ['Đăng ký', f.registered]], worst = null, wd = 0;
   for (var i = 1; i < steps.length; i++) if (steps[i - 1][1] >= 5) { var d = 1 - steps[i][1] / steps[i - 1][1]; if (d > wd) { wd = d; worst = steps[i - 1][0] + ' → ' + steps[i][0] + ' (rơi ' + Math.round(d * 100) + '%)'; } }
   if (worst) items.push({ pri: 1, type: 'sale', dept: 'Phễu', text: 'Điểm rơi lớn nhất của phễu: ' + worst, vol: f.lead });
