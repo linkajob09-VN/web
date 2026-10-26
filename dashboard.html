@@ -9632,5 +9632,293 @@ function renderSaleMeetings(s) {
   return html;
 }
 </script>
+<!-- ═══ REPORT REDESIGN: gọn, dễ đọc, có cảnh báo & việc cần làm. Chỉ ghi đè phần hiển thị 7 trang báo cáo; cách tính dữ liệu giữ nguyên ═══ -->
+<style>
+.rp-banner{display:flex;align-items:center;gap:14px;padding:16px 22px;border-radius:14px;margin-bottom:16px;font-size:15px}
+.rp-banner b{font-size:17px}.rp-banner .rp-ic{font-size:26px;line-height:1}
+.rp-banner.red{background:#FEE2E2;color:#991B1B}.rp-banner.amber{background:#FEF3C7;color:#92400E}.rp-banner.green{background:#DCFCE7;color:#166534}
+.rp-kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px}
+.rp-kpi{background:#fff;border-radius:14px;box-shadow:var(--shadow);padding:18px 20px;border-top:4px solid #D8D5D0}
+.rp-kpi.red{border-top-color:#DC2626}.rp-kpi.amber{border-top-color:#F59E0B}.rp-kpi.green{border-top-color:#16A34A}
+.rp-kpi .l{font-size:13px;color:var(--muted);margin-bottom:8px}.rp-kpi .v{font-size:32px;font-weight:800;line-height:1.05;margin-bottom:8px}
+.rp-kpi .d{font-size:12.5px;line-height:1.5}.rp-kpi .n{font-size:12px;color:var(--muted);margin-top:4px}
+.rp-d-g{color:#16A34A;font-weight:700}.rp-d-b{color:#DC2626;font-weight:700}.rp-d-n{color:var(--muted)}
+.rp-sec{font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);margin:22px 4px 10px}
+.rp-act{background:#fff;border-radius:14px;box-shadow:var(--shadow);overflow:hidden;margin-bottom:16px}
+.rp-act-i{display:flex;gap:14px;padding:14px 20px;border-bottom:1px solid #EEECE8;align-items:flex-start}
+.rp-act-i:last-child{border-bottom:none}
+.rp-dot{flex:none;width:12px;height:12px;border-radius:50%;margin-top:5px;background:#9CA3AF}
+.rp-dot.red{background:#DC2626}.rp-dot.amber{background:#F59E0B}.rp-dot.green{background:#16A34A}.rp-dot.blue{background:#2563EB}
+.rp-act-t{font-weight:700;font-size:14.5px;margin-bottom:2px}.rp-act-x{font-size:13.5px;color:#374151;line-height:1.55}
+.rp-ok{padding:16px 20px;color:#166534;font-size:14px}
+.rp-pill{display:inline-block;padding:3px 10px;border-radius:100px;font-size:12px;font-weight:700;white-space:nowrap}
+.rp-pill.red{background:#FEE2E2;color:#B91C1C}.rp-pill.amber{background:#FEF3C7;color:#B45309}.rp-pill.green{background:#DCFCE7;color:#166534}.rp-pill.blue{background:#DBEAFE;color:#1D4ED8}
+.rp-det{background:#fff;border-radius:14px;box-shadow:var(--shadow);margin-bottom:12px}
+.rp-det>summary{cursor:pointer;padding:14px 20px;font-size:14px;font-weight:600;color:var(--muted);list-style:none}
+.rp-det>summary::before{content:'▸ ';}.rp-det[open]>summary::before{content:'▾ ';}
+.rp-det>.rp-det-b{padding:0 20px 18px;overflow-x:auto}
+.rp-tbl{width:100%;border-collapse:collapse;font-size:14px}
+.rp-tbl th{text-align:left;font-size:12px;color:var(--muted);font-weight:600;padding:10px 12px;border-bottom:1px solid var(--border);white-space:nowrap}
+.rp-tbl td{padding:12px;border-bottom:1px solid #F0EEEA;vertical-align:middle}
+.rp-tbl tr:last-child td{border-bottom:none}.rp-tbl td.num,.rp-tbl th.num{text-align:right}
+.rp-card{background:#fff;border-radius:14px;box-shadow:var(--shadow);padding:6px 8px;margin-bottom:16px;overflow-x:auto}
+.rp-card-h{padding:14px 14px 4px;font-size:15px;font-weight:700}
+.rp-fun{padding:10px 20px 18px}.rp-fun-r{display:grid;grid-template-columns:110px 1fr 90px;gap:12px;align-items:center;margin:8px 0;font-size:13.5px}
+.rp-fun-b{height:22px;background:#F3F1ED;border-radius:6px;overflow:hidden}.rp-fun-b i{display:block;height:100%;background:#F4451A;border-radius:6px}
+.rp-prog{padding:6px 20px 16px}.rp-prog-r{margin:12px 0;font-size:13.5px}.rp-prog-b{height:10px;background:#F3F1ED;border-radius:6px;overflow:hidden;margin-top:6px}.rp-prog-b i{display:block;height:100%}
+.rp-in{padding:6px 8px;border:1px solid var(--border);border-radius:6px;width:120px}
+@media(max-width:900px){.rp-kpis{grid-template-columns:repeat(2,1fr)}.rp-fun-r{grid-template-columns:90px 1fr 70px}}
+</style>
+<script>
+(function(){
+var LV = {red:'red',amber:'amber',green:'green',blue:'blue'};
+function nextWord(){ return _reportPeriod.mode === 'quarter' ? 'quý tới' : 'tháng tới'; }
+function pctDelta(c, p){ return p ? Math.round((c - p) / p * 100) : null; }
+function rpDelta(c, p, goodUp){
+  var d = pctDelta(c, p);
+  if (d === null) return '<span class="rp-d-n">Chưa có kỳ trước để so</span>';
+  if (d === 0) return '<span class="rp-d-n">Không đổi so với kỳ trước</span>';
+  var good = (d > 0) === (goodUp !== false);
+  return '<span class="' + (good ? 'rp-d-g' : 'rp-d-b') + '">' + (d > 0 ? '▲ +' : '▼ ') + d + '%</span> <span class="rp-d-n">so kỳ trước</span>';
+}
+// trạng thái theo biến động: giảm >25% đỏ, >10% vàng
+function stByDelta(c, p, goodUp){
+  var d = pctDelta(c, p); if (d === null) return '';
+  var bad = goodUp === false ? d : -d;
+  return bad > 25 ? 'red' : (bad > 10 ? 'amber' : 'green');
+}
+function kpi(label, val, delta, st, note){
+  return '<div class="rp-kpi ' + (st || '') + '"><div class="l">' + label + '</div><div class="v">' + val + '</div><div class="d">' + delta + '</div>' + (note ? '<div class="n">' + note + '</div>' : '') + '</div>';
+}
+function kpis(arr){ return '<div class="rp-kpis">' + arr.join('') + '</div>'; }
+function banner(items){
+  var r = items.filter(function(i){ return i.lv === 'red'; }).length, a = items.filter(function(i){ return i.lv === 'amber'; }).length;
+  if (r) return '<div class="rp-banner red"><span class="rp-ic">⚠️</span><div><b>Cần xử lý: ' + r + ' vấn đề nghiêm trọng' + (a ? ', ' + a + ' cần theo dõi' : '') + '</b></div></div>';
+  if (a) return '<div class="rp-banner amber"><span class="rp-ic">👀</span><div><b>Cần theo dõi: ' + a + ' điểm</b></div></div>';
+  return '<div class="rp-banner green"><span class="rp-ic">✅</span><div><b>Ổn định</b> — chưa có cảnh báo trong kỳ này</div></div>';
+}
+function actions(items, title){
+  var h = '<div class="rp-sec">' + (title || 'Việc cần làm cho ' + nextWord()) + '</div><div class="rp-act">';
+  var list = items.filter(function(i){ return i.lv !== 'green'; });
+  if (!list.length) return h + '<div class="rp-ok">✅ Không có việc phát sinh. Duy trì nhịp hiện tại.</div></div>';
+  list.forEach(function(i){ h += '<div class="rp-act-i"><span class="rp-dot ' + (LV[i.lv] || '') + '"></span><div><div class="rp-act-t">' + i.title + '</div><div class="rp-act-x">' + i.text + '</div></div></div>'; });
+  return h + '</div>';
+}
+function det(sum, body){ return '<details class="rp-det"><summary>' + sum + '</summary><div class="rp-det-b">' + body + '</div></details>'; }
+function tbl(head, rows, numCols){
+  numCols = numCols || [];
+  return '<table class="rp-tbl"><thead><tr>' + head.map(function(x, i){ return '<th' + (numCols.indexOf(i) > -1 ? ' class="num"' : '') + '>' + x + '</th>'; }).join('') + '</tr></thead><tbody>' + rows + '</tbody></table>';
+}
+function empty(cols, t){ return '<tr><td colspan="' + cols + '" style="text-align:center;color:var(--muted);padding:20px">' + (t || 'Không có dữ liệu trong kỳ.') + '</td></tr>'; }
+function pill(t, lv){ return '<span class="rp-pill ' + lv + '">' + t + '</span>'; }
+function head(title, sub, range, partial){
+  var h = pageHeader(title, sub) + renderPeriodBar();
+  if (partial) h += '<div class="today-warn">Một phần dữ liệu không tải được, số liệu có thể chưa đầy đủ.</div>';
+  return h + '<div id="report-printable">' + reportPrintTitle(title, range);
+}
+function funnel(f){
+  var steps = [['Lead mới', f.lead], ['Đã liên hệ', f.contacted], ['Chốt lịch', f.scheduled], ['Đã tư vấn', f.consulted], ['Đăng ký', f.registered]], top = f.lead || 1, h = '<div class="rp-fun">';
+  steps.forEach(function(s, i){
+    var drop = i > 0 && steps[i - 1][1] ? Math.round((1 - s[1] / steps[i - 1][1]) * 100) : null;
+    h += '<div class="rp-fun-r"><span>' + s[0] + '</span><div class="rp-fun-b"><i style="width:' + Math.max(2, Math.round(s[1] / top * 100)) + '%"></i></div><span><b>' + s[1] + '</b>' + (drop !== null && steps[i - 1][1] >= 5 ? ' <span class="' + (drop >= 50 ? 'rp-d-b' : 'rp-d-n') + '">−' + drop + '%</span>' : '') + '</span></div>';
+  });
+  return h + '</div>';
+}
+function targetsProg(range, cur){
+  var tg = ins2Load_('lj_targets_month'), mult = _reportPeriod.mode === 'quarter' ? 3 : 1, names = { leads: 'Lead', bookings: 'Booking', revenue: 'Doanh thu' }, out = [], now = new Date(), total = range.end - range.start;
+  var pace = now > range.start && now < range.end ? (now - range.start) / total : (now >= range.end ? 1 : 0);
+  ['leads', 'bookings', 'revenue'].forEach(function(k){
+    var t = (Number(tg[k]) || 0) * mult; if (!t) return;
+    var proj = pace > 0 && pace < 1 ? cur[k] / pace : cur[k], pp = Math.round(proj / t * 100), lv = pp >= 100 ? 'green' : (pp >= 80 ? 'amber' : 'red');
+    out.push({ k: k, name: names[k], cur: cur[k], t: t, pct: Math.round(cur[k] / t * 100), proj: Math.round(proj), pp: pp, lv: lv, fin: pace >= 1 });
+  });
+  return out;
+}
+function progHtml(list){
+  if (!list.length) return '<div class="rp-prog" style="color:var(--muted);font-size:13px">Chưa đặt mục tiêu. Nhập Lead / Booking / Doanh thu mỗi tháng ở trang “Kênh & Công suất” để thấy tiến độ và dự báo cuối kỳ.</div>';
+  var col = { green: '#16A34A', amber: '#F59E0B', red: '#DC2626' }, f = function(x, k){ return k === 'revenue' ? fmtMoneyShort(x) : x; };
+  return '<div class="rp-prog">' + list.map(function(g){
+    return '<div class="rp-prog-r"><div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap"><span>' + g.name + ': <b>' + f(g.cur, g.k) + '</b> / ' + f(g.t, g.k) + ' (' + g.pct + '%)</span><span style="color:' + col[g.lv] + ';font-weight:700">' + (g.fin ? (g.pp >= 100 ? 'Đạt mục tiêu' : 'Chưa đạt') : 'Dự kiến cuối kỳ ' + g.pp + '%') + '</span></div><div class="rp-prog-b"><i style="width:' + Math.min(100, g.pct) + '%;background:' + col[g.lv] + '"></i></div></div>';
+  }).join('') + '</div>';
+}
+function curTotals(D, range){ var c = { leads: 0, bookings: 0, revenue: 0 }; D.leads.forEach(function(l){ if (inRange(l.created_at, range)) c.leads++; }); D.bookings.filter(bookingCounts).forEach(function(b){ if (inRange(b.created_at, range)) { c.bookings++; c.revenue += Number(b.package_price) || 0; } }); return c; }
+
+// ── 1. TỔNG QUAN ĐIỀU HÀNH ──
+window.renderExecPage = function(){
+  var range = reportPeriodRange(), prev = reportPrevPeriodRange(), D = insD_(), E = insightExec_(D, range, prev), pv = curTotals(D, prev), c = E.cur;
+  var tp = targetsProg(range, c), conv = E.funnel.lead ? Math.round(E.funnel.registered / E.funnel.lead * 100) : null;
+  var lab = { hire: 'Tuyển / giảm tải', content: 'Marketing', event: 'Webinar / khoá học', sale: 'Sale', target: 'Mục tiêu', data: 'Dữ liệu' }, lv = { 0: 'red', 1: 'amber', 2: 'blue' };
+  var items = E.items.slice(0, 6).map(function(it){ return { lv: lv[it.pri], title: (lab[it.type] || it.type) + ' · ' + escHtml(it.dept), text: escHtml(it.text) }; });
+  var h = head('Tổng quan điều hành', 'Tình hình chung và việc cần làm', range, _insData.partial);
+  h += banner(items);
+  h += kpis([
+    kpi('Doanh thu', fmtMoneyShort(c.revenue), rpDelta(c.revenue, pv.revenue), stByDelta(c.revenue, pv.revenue)),
+    kpi('Booking', c.bookings, rpDelta(c.bookings, pv.bookings), stByDelta(c.bookings, pv.bookings)),
+    kpi('Lead mới', c.leads, rpDelta(c.leads, pv.leads), stByDelta(c.leads, pv.leads)),
+    kpi('Lead → Đăng ký', conv == null ? '—' : conv + '%', '<span class="rp-d-n">' + E.funnel.registered + ' / ' + E.funnel.lead + ' lead</span>', conv == null ? '' : (conv < 10 ? 'red' : (conv < 20 ? 'amber' : 'green')))
+  ]);
+  h += actions(items);
+  h += '<div class="rp-sec">Tiến độ so với mục tiêu</div><div class="rp-card">' + progHtml(tp) + '</div>';
+  h += '<div class="rp-sec">Phễu khách hàng</div><div class="rp-card">' + funnel(E.funnel) + '</div>';
+  var tk = Object.keys(E.topics).sort(function(a, b){ return E.topics[b].n - E.topics[a].n; });
+  if (tk.length) h += det('Chủ đề khách hay hỏi (gợi ý webinar)', tbl(['CHỦ ĐỀ', 'SỐ LẦN', 'NGÀNH HỎI NHIỀU'], tk.map(function(t){ var x = E.topics[t], top = Object.keys(x.by).sort(function(a, b){ return x.by[b] - x.by[a]; }).slice(0, 2); return '<tr><td><b>' + escHtml(t) + '</b></td><td>' + x.n + '</td><td>' + top.map(function(d){ return escHtml(d) + ' (' + x.by[d] + ')'; }).join(', ') + '</td></tr>'; }).join(''), []));
+  return h + '</div>';
+};
+
+// ── 2. CUNG – CẦU & PHỄU ──
+window.renderInsightsPage = function(){
+  var range = reportPeriodRange(), prev = reportPrevPeriodRange(), cfg = insightCfg();
+  var D = { leads: _insData.leads, bookings: _insData.bookings, sessions: _insData.sessions, advisors: (typeof sheetData !== 'undefined' && sheetData.advisors) || [] };
+  var rows = insightCompute(D, range, prev, cfg), f = insightFunnel_(D, range), items = [];
+  rows.forEach(function(r){ r.actions.forEach(function(a){ if (a.type !== 'ok') items.push({ lv: a.level === 'red' ? 'red' : (a.level === 'amber' ? 'amber' : 'blue'), title: escHtml(r.dept), text: escHtml(a.text), v: r.cur.leads + r.cur.advisees }); }); });
+  items.sort(function(a, b){ return (a.lv === 'red' ? 0 : a.lv === 'amber' ? 1 : 2) - (b.lv === 'red' ? 0 : b.lv === 'amber' ? 1 : 2) || b.v - a.v; });
+  var h = head('Cung – Cầu & Phễu', 'Ngành nào thiếu advisor, ngành nào cần đẩy content hoặc mở webinar', range, _insData.partial);
+  h += banner(items) + actions(items.slice(0, 8));
+  h += '<div class="rp-sec">Cung – cầu theo ngành</div><div class="rp-card">' + tbl(['NGÀNH', 'LEAD', 'ADVISEE MỚI', 'ADVISOR', 'TÌNH TRẠNG'], rows.map(function(r){
+    var bad = r.actions.filter(function(a){ return a.type !== 'ok'; }), st = bad.length ? bad.map(function(a){ return pill({ hire: 'Thiếu advisor', content: 'Cầu giảm', event: 'Mở webinar', sale: 'Xem lại Sale', data: 'Thiếu dữ liệu' }[a.type] || a.type, a.level === 'red' ? 'red' : (a.level === 'amber' ? 'amber' : 'blue')); }).join(' ') : pill('Ổn định', 'green');
+    return '<tr><td><b>' + escHtml(r.dept) + '</b></td><td class="num">' + r.cur.leads + '</td><td class="num">' + r.cur.advisees + '</td><td class="num">' + r.advisors + '</td><td>' + st + '</td></tr>';
+  }).join('') || empty(5), [1, 2, 3]) + '</div>';
+  h += '<div class="rp-sec">Phễu khách hàng</div><div class="rp-card">' + funnel(f) + '</div>';
+  var fld = function(k, label){ return '<label style="font-size:12px;color:var(--muted);display:flex;flex-direction:column;gap:4px">' + label + '<input id="ins-cfg-' + k + '" type="number" min="0" value="' + cfg[k] + '" class="rp-in" style="width:90px"></label>'; };
+  h += det('Cài đặt ngưỡng cảnh báo', '<div style="display:flex;flex-wrap:wrap;gap:18px;align-items:flex-end;padding-top:4px">' + fld('overload', 'Quá tải khi > (advisee/advisor/tháng)') + fld('drop', 'Cầu giảm khi giảm > (%)') + fld('minLeads', 'Ổn định: lead/tháng ≥') + fld('lowConv', 'Chuyển đổi thấp khi < (%)') + '<button class="update-btn no-print" onclick="saveInsightCfg()">Áp dụng</button><button class="detail-btn no-print" onclick="resetInsightCfg()">Mặc định</button></div>');
+  return h + '</div>';
+};
+
+// ── 3. KÊNH & CÔNG SUẤT ──
+window.renderCapacityPage = function(){
+  var range = reportPeriodRange(), cfg = insightCfg(), cfg2 = ins2Cfg_(), D = insD_(), cur = curTotals(D, range), tp = targetsProg(range, cur), tg = ins2Load_('lj_targets_month');
+  var ch = insightChannels_(D, range), costs = (ins2Load_('lj_channel_cost')[ins2PeriodKey_(range)]) || {}, adv = insightAdvisors_(D, range, cfg, cfg2), items = [];
+  adv.forEach(function(x){
+    if (x.flag === 'over') items.push({ lv: 'red', title: 'Advisor ' + escHtml(x.name) + ' quá tải', text: x.sessions + ' buổi trong kỳ → tạm ngừng nhận thêm khách hoặc tuyển bổ sung.' });
+    else if (x.flag === 'idle') items.push({ lv: 'amber', title: 'Advisor ' + escHtml(x.name) + ' ít việc', text: 'Chỉ ' + x.sessions + ' buổi trong kỳ → ưu tiên ghép khách, giới thiệu thêm.' });
+  });
+  tp.forEach(function(g){ if (g.lv !== 'green') items.push({ lv: g.lv, title: g.name + ' chậm so với mục tiêu', text: 'Dự kiến cuối kỳ đạt ' + g.pp + '% mục tiêu.' }); });
+  ch.forEach(function(x){ if (x.leads >= 5 && x.conv != null && x.conv < cfg.lowConv) items.push({ lv: 'amber', title: 'Kênh ' + escHtml(x.ch) + ' nhiều lead nhưng ít đăng ký', text: x.leads + ' lead, chỉ ' + x.conv + '% đăng ký → xem lại chất lượng lead / cách tư vấn.' }); });
+  items.sort(function(a, b){ return (a.lv === 'red' ? 0 : 1) - (b.lv === 'red' ? 0 : 1); });
+  var h = head('Kênh & Công suất', 'Kênh nào hiệu quả, advisor nào quá tải hoặc rảnh, tiến độ mục tiêu', range, _insData.partial);
+  var pvT = curTotals(D, reportPrevPeriodRange());
+  h += banner(items) + kpis([
+    kpi('Lead / ' + (_reportPeriod.mode === 'quarter' ? 'quý' : 'tháng'), cur.leads, rpDelta(cur.leads, pvT.leads), stByDelta(cur.leads, pvT.leads), tg.leads ? 'Mục tiêu: ' + (Number(tg.leads) * (_reportPeriod.mode === 'quarter' ? 3 : 1)) : 'Chưa đặt mục tiêu'),
+    kpi('Booking', cur.bookings, rpDelta(cur.bookings, pvT.bookings), stByDelta(cur.bookings, pvT.bookings), tg.bookings ? 'Mục tiêu: ' + (Number(tg.bookings) * (_reportPeriod.mode === 'quarter' ? 3 : 1)) : 'Chưa đặt mục tiêu'),
+    kpi('Doanh thu', fmtMoneyShort(cur.revenue), rpDelta(cur.revenue, pvT.revenue), stByDelta(cur.revenue, pvT.revenue), tg.revenue ? 'Mục tiêu: ' + fmtMoneyShort(Number(tg.revenue) * (_reportPeriod.mode === 'quarter' ? 3 : 1)) : 'Chưa đặt mục tiêu'),
+    kpi('Lead → Booking', cur.leads ? Math.round(cur.bookings / cur.leads * 100) + '%' : '—', '<span class="rp-d-n">' + cur.bookings + ' / ' + cur.leads + '</span>', '')
+  ]) + actions(items);
+  h += '<div class="rp-sec">Tiến độ mục tiêu</div><div class="rp-card">' + progHtml(tp) + '</div>';
+  h += '<div class="rp-sec">Hiệu quả theo kênh</div><div class="rp-card">' + tbl(['KÊNH', 'LEAD', '% ĐĂNG KÝ', 'DOANH THU', 'ROAS'], ch.map(function(x){
+    var cv = x.conv == null ? '—' : x.conv + '%', cl = x.conv == null ? '' : (x.conv < cfg.lowConv ? 'rp-d-b' : '');
+    return '<tr><td><b>' + escHtml(x.ch) + '</b></td><td class="num">' + x.leads + '</td><td class="num"><span class="' + cl + '">' + cv + '</span></td><td class="num">' + fmtMoneyShort(x.revenue) + '</td><td class="num">' + (x.roas == null ? '—' : x.roas.toFixed(1) + 'x') + '</td></tr>';
+  }).join('') || empty(5), [1, 2, 3, 4]) + '</div>';
+  h += '<div class="rp-sec">Công suất Advisor</div><div class="rp-card">' + tbl(['ADVISOR', 'ĐANG HỌC', 'BUỔI 14 NGÀY TỚI', 'TÌNH TRẠNG'], adv.map(function(x){
+    return '<tr><td><b>' + escHtml(x.name) + '</b></td><td class="num">' + x.active + '</td><td class="num">' + x.upcoming + '</td><td>' + (x.flag === 'over' ? pill('Quá tải', 'red') : (x.flag === 'idle' ? pill('Ít việc', 'amber') : pill('Ổn', 'green'))) + '</td></tr>';
+  }).join('') || empty(4, 'Chưa có advisor.'), [1, 2]) + '</div>';
+  var inp = function(id, v){ return '<input id="' + id + '" value="' + v + '" class="rp-in">'; };
+  h += (function(x){ return tp.length ? x : x.replace('<details', '<details open'); })(det('Nhập mục tiêu tháng', '<div style="display:flex;flex-wrap:wrap;gap:16px;align-items:flex-end;padding-top:4px">' + [['leads', 'Lead/tháng'], ['bookings', 'Booking/tháng'], ['revenue', 'Doanh thu/tháng']].map(function(p){ return '<label style="font-size:12px;color:var(--muted);display:flex;flex-direction:column;gap:4px">' + p[1] + inp('ins2-tg-' + p[0], insMoneyIn_(Number(tg[p[0]]) || 0)) + '</label>'; }).join('') + '<button class="update-btn no-print" onclick="saveTargets()">Lưu mục tiêu</button></div><div style="font-size:12px;color:var(--muted);margin-top:8px">Quý tự nhân 3.</div>'));
+  h += det('Nhập chi phí kênh (để tính ROAS)', '<div style="display:flex;flex-wrap:wrap;gap:14px;padding-top:4px">' + (ch.map(function(x){ return '<label style="font-size:12px;color:var(--muted);display:flex;flex-direction:column;gap:4px">' + escHtml(x.ch) + '<input value="' + insMoneyIn_(Number(costs[x.ch]) || 0) + '" onchange="saveChannelCost(\'' + escHtml(x.ch).replace(/'/g, '') + '\', this)" class="rp-in"></label>'; }).join('') || 'Chưa có kênh.') + '</div>');
+  h += det('Cài đặt ngưỡng công suất', '<div style="display:flex;flex-wrap:wrap;gap:16px;align-items:flex-end;padding-top:4px"><label style="font-size:12px;color:var(--muted);display:flex;flex-direction:column;gap:4px">Quá tải khi buổi/tháng &gt;<input id="ins2-cfg-capSessions" type="number" min="0" value="' + cfg2.capSessions + '" class="rp-in" style="width:80px"></label><label style="font-size:12px;color:var(--muted);display:flex;flex-direction:column;gap:4px">Ít việc khi buổi/tháng &lt;<input id="ins2-cfg-idleSessions" type="number" min="0" value="' + cfg2.idleSessions + '" class="rp-in" style="width:80px"></label><button class="update-btn no-print" onclick="saveIns2Cfg()">Áp dụng</button></div>');
+  return h + '</div>';
+};
+
+// ── 4. DOANH THU ──
+window.renderRevenuePage = function(){
+  var range = reportPeriodRange(), prev = reportPrevPeriodRange(), all = (_revBookings || []).filter(bookingCounts);
+  var cur = all.filter(function(b){ return inRange(b.created_at, range); }), prv = all.filter(function(b){ return inRange(b.created_at, prev); });
+  var sum = function(l){ return l.reduce(function(s, b){ return s + (Number(b.package_price) || 0); }, 0); }, total = sum(cur), pt = sum(prv), avg = cur.length ? Math.round(total / cur.length) : 0, pa = prv.length ? Math.round(pt / prv.length) : 0;
+  var ytd = sum(all.filter(function(b){ return inRange(b.created_at, { start: new Date(range.start.getFullYear(), 0, 1), end: new Date(range.start.getFullYear() + 1, 0, 1) }); }));
+  var items = [], d = pctDelta(total, pt), tg = Number((ins2Load_('lj_targets_month') || {}).revenue) || 0, tgt = tg * (_reportPeriod.mode === 'quarter' ? 3 : 1);
+  if (d !== null && d <= -10) items.push({ lv: d <= -25 ? 'red' : 'amber', title: 'Doanh thu giảm ' + Math.abs(d) + '% so với kỳ trước', text: 'Kiểm tra số lead vào và tỷ lệ chốt ở trang Tổng quan; ưu tiên chăm lại khách đã tư vấn nhưng chưa đăng ký.' });
+  if (tgt && total < tgt * 0.8 && new Date() >= range.end) items.push({ lv: 'red', title: 'Chưa đạt mục tiêu doanh thu', text: 'Đạt ' + Math.round(total / tgt * 100) + '% mục tiêu (' + fmtMoneyShort(total) + ' / ' + fmtMoneyShort(tgt) + ').' });
+  var pd = pctDelta(avg, pa); if (pd !== null && pd <= -15) items.push({ lv: 'amber', title: 'Giá trị trung bình mỗi đơn giảm ' + Math.abs(pd) + '%', text: 'Khách đang chọn gói nhỏ hơn → xem lại cách giới thiệu gói và ưu đãi.' });
+  var byPkg = {}; cur.forEach(function(b){ var p = b.package_name || 'Không rõ'; (byPkg[p] = byPkg[p] || { n: 0, r: 0 }); byPkg[p].n++; byPkg[p].r += Number(b.package_price) || 0; });
+  var pk = Object.keys(byPkg).sort(function(a, b){ return byPkg[b].r - byPkg[a].r; });
+  if (pk.length && total && byPkg[pk[0]].r / total > 0.6 && cur.length >= 5) items.push({ lv: 'amber', title: 'Doanh thu phụ thuộc vào 1 gói', text: escHtml(pk[0]) + ' chiếm ' + Math.round(byPkg[pk[0]].r / total * 100) + '% doanh thu → cân nhắc đẩy thêm gói khác.' });
+  var h = head('Doanh thu', 'Tính từ booking đã xác nhận hoặc hoàn tất', range);
+  h += banner(items) + kpis([
+    kpi('Doanh thu ' + range.label, fmtMoneyShort(total), rpDelta(total, pt), stByDelta(total, pt), tgt ? 'Mục tiêu: ' + fmtMoneyShort(tgt) + ' (' + Math.round(total / tgt * 100) + '%)' : ''),
+    kpi('Số giao dịch', cur.length, rpDelta(cur.length, prv.length), stByDelta(cur.length, prv.length)),
+    kpi('Giá trị TB / đơn', fmtMoneyShort(avg), rpDelta(avg, pa), stByDelta(avg, pa)),
+    kpi('Lũy kế năm ' + range.start.getFullYear(), fmtMoneyShort(ytd), '<span class="rp-d-n">Từ 01/01</span>', '')
+  ]) + actions(items);
+  if (cur.length) {
+    var its = [], byKey = {}; cur.forEach(function(b){ var k = _reportPeriod.mode === 'month' ? String(b.created_at).slice(8, 10) : String(b.created_at).slice(0, 7); byKey[k] = (byKey[k] || 0) + (Number(b.package_price) || 0); });
+    if (_reportPeriod.mode === 'month') { var dd = new Date(range.start.getFullYear(), range.start.getMonth() + 1, 0).getDate(); for (var i = 1; i <= dd; i++) { var k = (i < 10 ? '0' : '') + i; its.push({ label: String(i), title: 'Ngày ' + i, value: byKey[k] || 0 }); } }
+    else for (var m = 0; m < 3; m++) { var dt = new Date(range.start.getFullYear(), range.start.getMonth() + m, 1); its.push({ label: 'Tháng ' + (dt.getMonth() + 1), title: 'Tháng ' + (dt.getMonth() + 1), value: byKey[dt.getFullYear() + '-' + pad(dt.getMonth() + 1)] || 0 }); }
+    h += '<div class="rp-sec">Doanh thu theo ' + (_reportPeriod.mode === 'month' ? 'ngày' : 'tháng') + '</div><div class="card" style="padding-bottom:8px">' + revBars(its, Math.max.apply(null, its.map(function(x){ return x.value; })) || 1) + '</div>';
+    h += '<div class="rp-sec">Theo gói</div><div class="rp-card">' + tbl(['GÓI', 'SỐ ĐƠN', 'DOANH THU', 'TỶ TRỌNG'], pk.map(function(p){ return '<tr><td><b>' + escHtml(p) + '</b></td><td class="num">' + byPkg[p].n + '</td><td class="num">' + fmtMoneyShort(byPkg[p].r) + '</td><td class="num">' + Math.round(byPkg[p].r / total * 100) + '%</td></tr>'; }).join(''), [1, 2, 3]) + '</div>';
+    h += det('Danh sách giao dịch (' + cur.length + ')', tbl(['ADVISEE', 'GÓI', 'GIÁ TRỊ', 'NGÀY'], cur.slice().sort(function(a, b){ return String(b.created_at) > String(a.created_at) ? 1 : -1; }).map(function(b){ return '<tr><td><b>' + escHtml(b.advisee_name || '—') + '</b></td><td>' + escHtml(b.package_name || '—') + '</td><td class="num">' + fmtMoney(Number(b.package_price) || 0) + '</td><td>' + fmtDMY(String(b.created_at).slice(0, 10)) + '</td></tr>'; }).join(''), [2]));
+  } else h += '<div class="rp-card"><div class="today-empty" style="padding:24px">Chưa có doanh thu trong ' + range.label.toLowerCase() + '.</div></div>';
+  return h + '</div>';
+};
+
+// ── 5. VẬN HÀNH ──
+window.renderReportPage = function(partial){
+  var range = reportPeriodRange(), prev = reportPrevPeriodRange(), bk = _opsBookings || [], ss = _opsSessions || [], cur = opsAggregate(bk, ss, range), prv = opsAggregate(bk, ss, prev), active = opsActiveAdvisees(bk, ss);
+  var newRate = cur.bookings ? Math.round(cur.newCount / cur.bookings * 100) : null, renew = cur.expired ? Math.round(cur.renewed / cur.expired * 100) : null, comp = cur.scheduled ? Math.round(cur.done / cur.scheduled * 100) : null, items = [];
+  if (comp !== null && comp < 80) items.push({ lv: comp < 60 ? 'red' : 'amber', title: 'Nhiều buổi chưa hoàn thành (' + comp + '%)', text: 'Chỉ ' + cur.done + '/' + cur.scheduled + ' buổi đã diễn ra. Kiểm tra buổi bị huỷ/dời và nhắc advisor cập nhật trạng thái.' });
+  if (renew !== null && cur.expired >= 3 && renew < 30) items.push({ lv: renew < 15 ? 'red' : 'amber', title: 'Ít khách mua lại sau khi hết hạn (' + renew + '%)', text: cur.renewed + '/' + cur.expired + ' khách gia hạn → chăm sóc khách sắp hết hạn từ sớm, đề xuất gói tiếp theo.' });
+  var bd = pctDelta(cur.bookings, prv.bookings); if (bd !== null && bd <= -15) items.push({ lv: bd <= -30 ? 'red' : 'amber', title: 'Booking giảm ' + Math.abs(bd) + '%', text: 'Xem trang Cung – Cầu & Phễu để biết ngành nào đang giảm.' });
+  if (newRate !== null && cur.bookings >= 5 && newRate > 90) items.push({ lv: 'amber', title: 'Gần như toàn khách mới (' + newRate + '%)', text: 'Khách cũ ít quay lại → cần chương trình chăm sóc, ưu đãi gia hạn.' });
+  var h = head('Vận hành', 'Booking, buổi hoàn thành và khách quay lại', range, partial);
+  h += banner(items) + kpis([
+    kpi('Booking', cur.bookings, rpDelta(cur.bookings, prv.bookings), stByDelta(cur.bookings, prv.bookings)),
+    kpi('Buổi hoàn thành', cur.done, comp === null ? '<span class="rp-d-n">Chưa có buổi trong kỳ</span>' : '<span class="' + (comp < 60 ? 'rp-d-b' : comp < 80 ? '' : 'rp-d-g') + '">' + comp + '%</span> <span class="rp-d-n">(' + cur.done + '/' + cur.scheduled + ' buổi)</span>', comp === null ? '' : (comp < 60 ? 'red' : comp < 80 ? 'amber' : 'green')),
+    kpi('Mua lại sau hết hạn', renew === null ? '—' : renew + '%', '<span class="rp-d-n">' + (renew === null ? 'Không có gói hết hạn' : cur.renewed + '/' + cur.expired + ' gói') + '</span>', renew === null || cur.expired < 3 ? '' : (renew < 15 ? 'red' : renew < 30 ? 'amber' : 'green')),
+    kpi('Advisee đang học', active, '<span class="rp-d-n">Còn buổi, chưa hết hạn</span>', '', newRate === null ? '' : 'Khách mới: ' + newRate + '% booking trong kỳ')
+  ]) + actions(items);
+  var pd = {}; Object.keys(cur.byPkg).forEach(function(p){ pd[p + ' · ' + fmtMoneyShort(cur.revByPkg[p])] = cur.byPkg[p]; });
+  h += '<div class="two-col"><div class="card"><div class="card-header"><div class="card-header-left">Buổi hoàn thành theo Advisor</div></div><div style="padding:8px 24px 24px">' + svgBarList(cur.byAdvisor, { color: '#fc5229' }) + '</div></div><div class="card"><div class="card-header"><div class="card-header-left">Gói được mua</div></div><div style="padding:8px 24px 24px">' + svgBarList(pd, { color: '#6D28D9' }) + '</div></div></div>';
+  return h + '</div>';
+};
+
+// ── 6. MARKETING ──
+window.renderMarketingReportPage = function(){
+  var leads = _reportLeadsCache || [], bookings = _reportBookingsCache || [], range = reportPeriodRange(), agg = reportAggregate(leads, bookings, range), pa = reportAggregate(leads, bookings, reportPrevPeriodRange());
+  var conv = agg.totalLeads ? Math.round(agg.converted / agg.totalLeads * 100) : null, pconv = pa.totalLeads ? Math.round(pa.converted / pa.totalLeads * 100) : null, top = reportTopEntry(agg.byChannel), items = [];
+  var ld = pctDelta(agg.totalLeads, pa.totalLeads); if (ld !== null && ld <= -15) items.push({ lv: ld <= -30 ? 'red' : 'amber', title: 'Lead giảm ' + Math.abs(ld) + '%', text: 'Kiểm tra lại quảng cáo / nội dung đang chạy ở các kênh chính.' });
+  if (conv !== null && agg.totalLeads >= 10 && conv < 10) items.push({ lv: 'amber', title: 'Tỷ lệ đăng ký thấp (' + conv + '%)', text: 'Nhiều lead nhưng ít chốt → xem lại chất lượng lead và cách Sale tư vấn.' });
+  if (top && agg.totalLeads >= 10 && Math.round(top.value / agg.totalLeads * 100) > 60) items.push({ lv: 'amber', title: 'Lead phụ thuộc vào kênh ' + escHtml(top.label), text: Math.round(top.value / agg.totalLeads * 100) + '% lead đến từ một kênh → thử thêm kênh thứ hai để giảm rủi ro.' });
+  var h = head('Marketing', 'Lead đến từ đâu, kênh nào đáng đầu tư', range);
+  h += banner(items) + kpis([
+    kpi('Tổng lead', agg.totalLeads, rpDelta(agg.totalLeads, pa.totalLeads), stByDelta(agg.totalLeads, pa.totalLeads)),
+    kpi('Đã đăng ký', agg.converted, '<span class="rp-d-n">Tỷ lệ ' + (conv === null ? '—' : conv + '%') + (pconv === null ? '' : ' (kỳ trước ' + pconv + '%)') + '</span>', conv === null ? '' : (conv < 10 ? 'amber' : 'green')),
+    kpi('Doanh thu ước tính', fmtMoneyShort(agg.revenue), rpDelta(agg.revenue, pa.revenue), stByDelta(agg.revenue, pa.revenue)),
+    kpi('Kênh nhiều lead nhất', top ? escHtml(top.label) : '—', '<span class="rp-d-n">' + (top ? top.value + ' lead' : 'Chưa có dữ liệu') + '</span>', '')
+  ]) + actions(items);
+  var tips = generateReportInsights(agg, pa);
+  if (tips.length) h += '<div class="rp-sec">Gợi ý thêm</div><div class="rp-act">' + tips.slice(0, 3).map(function(t){ return '<div class="rp-act-i"><span class="rp-dot blue"></span><div class="rp-act-x">' + t + '</div></div>'; }).join('') + '</div>';
+  h += '<div class="two-col"><div class="card"><div class="card-header"><div class="card-header-left">Lead theo kênh</div></div><div style="padding:12px 24px 24px">' + svgDonut(agg.byChannel) + '</div></div><div class="card"><div class="card-header"><div class="card-header-left">Ngành quan tâm</div></div><div style="padding:8px 24px 24px">' + svgBarList(agg.byDept, { color: '#F4451A' }) + '</div></div></div>';
+  h += det('Khu vực, level, sinh viên/đã đi làm', '<div class="two-col" style="margin-top:8px"><div><b>Khu vực</b>' + svgBarList(agg.byRegion, { color: '#0EA5E9' }) + '</div><div><b>Level</b>' + svgBarList(agg.byLevel, { color: '#6D28D9' }) + '</div></div>' + svgDonut(agg.byCustomerType));
+  return h + '</div>';
+};
+
+// ── 7. HIỆU SUẤT SALE ──
+window.renderSalesPerformancePage = function(partial){
+  var range = reportPeriodRange(), prev = reportPrevPeriodRange(), rows = perfRows(range), prevRows = perfRows(prev);
+  var h = head('Hiệu suất Sale', 'Lead nhận và kết quả theo từng nhân viên', range, partial);
+  if (!rows.length) return h + '<div class="card"><div class="empty-state"><div class="icon">📭</div>Chưa có nhân viên Sale nào trong SalesConfig.</div></div></div>';
+  var tot = function(l, k){ return l.reduce(function(s, r){ return s + r[k]; }, 0); }, tl = tot(rows, 'leads'), tc = tot(rows, 'converted'), pl = tot(prevRows, 'leads'), pc = tot(prevRows, 'converted'), avgRate = tl ? Math.round(tc / tl * 100) : null, mult = _reportPeriod.mode === 'quarter' ? 3 : 1, items = [];
+  rows.forEach(function(r){
+    var q = (r.staff.leadLimit || 0) * mult, n = escHtml(r.staff.name);
+    if (r.overdue > 0) items.push({ lv: r.overdue >= 3 ? 'red' : 'amber', title: n + ': ' + r.overdue + ' lead quá hạn chăm sóc', text: 'Liên hệ lại các lead này trước, rồi mới nhận thêm lead mới.' });
+    if (avgRate !== null && r.leads >= 5 && r.rate !== null && r.rate < avgRate / 2) items.push({ lv: 'amber', title: n + ': tỷ lệ chốt thấp (' + r.rate + '% so với TB ' + avgRate + '%)', text: 'Nên nghe lại một vài cuộc tư vấn / kèm cặp.' });
+    if (q && r.leads >= q) items.push({ lv: 'amber', title: n + ' đã đủ hạn mức lead (' + r.leads + '/' + q + ')', text: 'Chia lead mới cho người khác hoặc nâng hạn mức nếu còn sức.' });
+    if (q && r.leads < q * 0.3 && r.load === 0) items.push({ lv: 'amber', title: n + ' đang ít việc (' + r.leads + '/' + q + ' lead)', text: 'Có thể giao thêm lead.' });
+  });
+  items.sort(function(a, b){ return (a.lv === 'red' ? 0 : 1) - (b.lv === 'red' ? 0 : 1); });
+  h += banner(items) + kpis([
+    kpi('Lead đã phân công', tl, rpDelta(tl, pl), stByDelta(tl, pl)),
+    kpi('Đã chốt lịch', tot(rows, 'booked'), '<span class="rp-d-n">' + (tl ? Math.round(tot(rows, 'booked') / tl * 100) + '% số lead' : 'Chưa có lead') + '</span>', ''),
+    kpi('Đã đăng ký', tc, rpDelta(tc, pc), stByDelta(tc, pc)),
+    kpi('Tỷ lệ chốt chung', avgRate === null ? '—' : avgRate + '%', '<span class="rp-d-n">Đăng ký / lead</span>', avgRate === null ? '' : (avgRate < 10 ? 'amber' : 'green'))
+  ]) + actions(items);
+  var sorted = rows.slice().sort(function(a, b){ return (b.rate === null ? -1 : b.rate) - (a.rate === null ? -1 : a.rate) || b.converted - a.converted; });
+  h += '<div class="rp-sec">Theo nhân viên</div><div class="rp-card">' + tbl(['NHÂN VIÊN', 'LEAD / HẠN MỨC', 'CHỐT LỊCH', 'ĐĂNG KÝ', 'TỶ LỆ CHỐT', 'ĐANG MỞ', 'QUÁ HẠN'], sorted.map(function(r){
+    var q = (r.staff.leadLimit || 0) * mult;
+    return '<tr><td><div style="display:flex;align-items:center;gap:10px">' + avatarCircle(r.staff.name, 30) + '<b>' + escHtml(r.staff.name) + '</b></div></td><td class="num">' + r.leads + (q ? '<span style="color:var(--muted)"> / ' + q + '</span>' : '') + '</td><td class="num">' + r.booked + '</td><td class="num">' + r.converted + '</td><td class="num">' + (r.rate === null ? '—' : '<b>' + r.rate + '%</b>') + '</td><td class="num">' + r.load + '</td><td class="num">' + (r.overdue > 0 ? pill(r.overdue, 'red') : '0') + '</td></tr>';
+  }).join(''), [1, 2, 3, 4, 5, 6]) + '</div>';
+  return h + '</div>';
+};
+})();
+</script>
+
 </body>
 </html>
