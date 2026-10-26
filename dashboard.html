@@ -3445,7 +3445,7 @@ function updateLeadNoteInline(cid, field, value) {
 // TRẠNG THÁI = Sale đang ở bước nào với khách (theo thứ tự quy trình).
 // Giá trị cũ 'Tạm đóng' / 'Không phù hợp' không còn trong danh sách chọn (lý do nằm ở cột Kết quả),
 // nhưng dữ liệu cũ vẫn hiển thị đúng nhờ extraStatusOption() và vẫn tính là đã đóng (SLA_TERMINAL).
-const CONSULT_STATUS = ['Chưa liên hệ','Đang liên hệ','Đã chốt lịch','Đã tư vấn xong','Đang follow-up','Đã đóng'];
+const CONSULT_STATUS = ['Chưa liên hệ','Đang liên hệ','Gọi điện','Đã chốt lịch','Đã tư vấn xong','Đang follow-up','Đã đóng'];
 // Trạng thái ngoài danh sách chọn tay (vd 'Đã chuyển đổi thành khách hàng') vẫn phải hiển thị đúng
 function extraStatusOption(cur) {
   var v = String(cur || '').trim();
@@ -6240,7 +6240,7 @@ function openAdvisorSelfEditModal() {
 //  MODULE 3: ADVISEE
 // ════════════════════════════════════════════════════════════
 function renderAdviseeModule() {
-  var html = pageHeader('Advisee', 'Danh sách advisee, tiến độ buổi học và yêu cầu đổi lịch',
+  var html = pageHeader('Advisee', 'Lọc theo trạng thái, theo dõi tiến độ buổi học và yêu cầu đổi lịch',
     (currentUser && (currentUser.role === 'Admin' || (currentUser.role === 'Staff' && currentUser.subRole === 'Admin')))
       ? '<button class="login-btn" style="width:auto;padding:9px 16px;font-size:13px" onclick="openLegacyImport()">⬆ Nhập khách từ web cũ</button>'
       : '');
@@ -6253,7 +6253,7 @@ function renderAdviseeModule() {
   var totalRevenue = MOCK.advisees.reduce(function(s,ae){ return s + ae.paid; }, 0);
   html += '<div class="stat-cell clickable" onclick="navTo(\'aee-reschedule\')"><div class="stat-num" style="' + (pendingReschedules.length?'color:var(--brand)':'') + '">' + pendingReschedules.length + '</div><div class="stat-label">🔔 Yêu cầu đổi lịch</div></div>';
   var urgentCount = MOCK.advisees.filter(function(ae){ return expiryAlert_(ae).red; }).length;
-  html += '<div class="stat-cell clickable" onclick="toggleAeUrgent()"><div class="stat-num" style="' + (urgentCount ? 'color:#B91C1C' : '') + '">' + urgentCount + '</div><div class="stat-label">⏰ Sắp hết hạn · cần nhắc/upsell' + (_aeUrgentOnly ? ' (đang lọc — bấm để bỏ)' : '') + '</div></div>';
+  html += '<div class="stat-cell clickable" onclick="toggleAeUrgent()"><div class="stat-num" style="' + (urgentCount ? 'color:#B91C1C' : '') + '">' + urgentCount + '</div><div class="stat-label">⏰ Sắp hết hạn · cần nhắc/upsell' + (_aeFilter === 'soon' ? ' (đang lọc — bấm để bỏ)' : '') + '</div></div>';
   html += '<div class="stat-cell"><div class="stat-num">' + fmtMoney(totalRevenue) + '</div><div class="stat-label">Tổng doanh thu</div></div>';
   html += '</div>';
 
@@ -6261,10 +6261,12 @@ function renderAdviseeModule() {
   if (MOCK.advisees.length === 0) {
     html += '<div class="empty-state"><div class="icon">🙋</div>Chưa có advisee nào</div>';
   } else {
+    html += '<div style="padding:0 20px" id="advisee-filter-bar">' + aeFilterBarHtml_() + '</div>';
     html += '<div style="padding:0 20px">' + searchSortHtml_('advisee-list-tbody', 'Tìm theo tên, email, advisor...', 'ae') + '</div>';
     html += '<table class="bookings-table"><thead><tr><th>ADVISEE</th><th>GÓI · ADVISOR</th><th>TIẾN ĐỘ</th><th>HẠN DÙNG</th><th>TRẠNG THÁI</th><th></th></tr></thead><tbody id="advisee-list-tbody">';
     var _aeList = sortList_('ae', MOCK.advisees);
-    if (_aeUrgentOnly) _aeList = _aeList.filter(function(a){ return expiryAlert_(a).red; });
+    if (_aeFilter !== 'all') _aeList = _aeList.filter(function(a){ return aeStatusOf_(a) === _aeFilter; });
+    if (_aeList.length === 0) html += '<tr><td colspan="6"><div class="empty-state"><div class="icon">🔍</div>Không có advisee nào ở trạng thái này.<br><a href="#" onclick="setAeFilter(\'all\');return false" style="color:var(--brand);font-weight:600">Xem tất cả</a></div></td></tr>';
     _aeList.forEach(function(ae) {
       var exA = expiryAlert_(ae);
       var pct = pctOf(ae.sessionsDone, ae.sessionsTotal);
@@ -6279,6 +6281,7 @@ function renderAdviseeModule() {
             ? '<span style="background:var(--green-bg);color:var(--green);font-size:11px;font-weight:700;padding:3px 10px;border-radius:100px">Hoàn thành</span>'
             : '<span style="background:#EDE9FE;color:#6D28D9;font-size:11px;font-weight:700;padding:3px 10px;border-radius:100px">Đang học</span>';
       if (exA.state === 'expired' && exA.remaining > 0) statusTag = '<span style="background:#F3F4F6;color:var(--muted);font-size:11px;font-weight:700;padding:3px 10px;border-radius:100px">Đã hết hạn</span>';
+      if (aeStatusOf_(ae) === 'new') statusTag = '<span style="background:#DBEAFE;color:#1D4ED8;font-size:11px;font-weight:700;padding:3px 10px;border-radius:100px">🆕 Mới đăng ký</span> ' + statusTag;
       if (hasReschedule) statusTag += ' <span style="background:var(--brand-light);color:var(--brand);font-size:11px;font-weight:700;padding:3px 10px;border-radius:100px">🔔 Yêu cầu đổi lịch</span>';
       var searchKey = (ae.name + ' ' + ae.email + ' ' + ae.advisor + ' ' + ae.pkg).toLowerCase().replace(/"/g,'');
       html += '<tr data-search="' + searchKey + '"' + skAttrs_('ae', ae) + (exA.red ? ' style="background:#FEF2F2;box-shadow:inset 3px 0 0 #DC2626"' : (exA.group === 3 ? ' style="opacity:.72"' : '')) + '>';
@@ -6350,11 +6353,53 @@ function expiryCompare_(a, b) {
   return ea.rank - eb.rank;
 }
 
-var _aeUrgentOnly = false;
-function toggleAeUrgent() {
-  _aeUrgentOnly = !_aeUrgentOnly;
-  document.getElementById('main-content').innerHTML = renderAdviseeModule();
+// ── Bộ lọc TRẠNG THÁI advisee (mỗi khách thuộc đúng 1 trạng thái, xét theo thứ tự bên dưới) ──
+//   completed  Hoàn thành gói : đã meet đủ số buổi của gói
+//   expired    Hết hạn        : quá ngày hết hạn mà vẫn còn buổi chưa dùng
+//   soon       Sắp hết hạn    : còn hiệu lực, hết hạn trong EXPIRY_WARN_DAYS ngày, còn buổi chưa dùng
+//   new        Mới đăng ký    : đăng ký trong AE_NEW_DAYS ngày gần đây và chưa meet buổi nào
+//   active     Đang dùng gói  : các khách còn lại đang trong hạn dùng
+var AE_NEW_DAYS = 7;
+var _aeFilter = 'all';
+function aeStatusOf_(ae) {
+  var total = Number(ae.sessionsTotal) || 0, done = Number(ae.sessionsDone) || 0;
+  if (total > 0 && done >= total) return 'completed';
+  var ex = expiryAlert_(ae);
+  if (ex.state === 'expired') return 'expired';
+  if (ex.red) return 'soon';
+  var created = tsOf_(ae.createdAtRaw) || tsOf_(ae.registeredAt);
+  if (done === 0 && created && (Date.now() - created) <= AE_NEW_DAYS * 86400000) return 'new';
+  return 'active';
 }
+var AE_STATUS_CHIPS = [
+  ['all', 'Tất cả', 'Mọi advisee'],
+  ['new', '🆕 Mới đăng ký', 'Đăng ký trong ' + AE_NEW_DAYS + ' ngày gần đây, chưa meet buổi nào'],
+  ['active', 'Đang dùng gói', 'Đang trong hạn dùng, còn buổi chưa dùng, chưa sắp hết hạn'],
+  ['soon', '⏰ Sắp hết hạn', 'Hết hạn trong ' + EXPIRY_WARN_DAYS + ' ngày tới — cần nhắc / upsell'],
+  ['completed', 'Hoàn thành gói', 'Đã meet đủ số buổi của gói'],
+  ['expired', 'Hết hạn', 'Quá hạn dùng nhưng vẫn còn buổi chưa dùng'],
+];
+function aeStatusCounts_() {
+  var n = { all: MOCK.advisees.length, new: 0, active: 0, soon: 0, completed: 0, expired: 0 };
+  MOCK.advisees.forEach(function(a){ n[aeStatusOf_(a)]++; });
+  return n;
+}
+function aeFilterBarHtml_() {
+  var n = aeStatusCounts_();
+  return '<div class="chip-row">' + AE_STATUS_CHIPS.map(function(c){
+    return '<button class="chip' + (_aeFilter === c[0] ? ' active' : '') + (c[0] === 'soon' && n.soon > 0 ? ' chip-danger' : '') + '" title="' + escHtml(c[2]) + '" onclick="setAeFilter(\'' + c[0] + '\')">' +
+      escHtml(c[1]) + ' <span class="chip-n">' + n[c[0]] + '</span></button>';
+  }).join('') + '</div>';
+}
+function setAeFilter(key) {
+  var inp = document.querySelector('input[oninput*="advisee-list-tbody"]');
+  var q = inp ? inp.value : '';
+  _aeFilter = key;
+  document.getElementById('main-content').innerHTML = renderAdviseeModule();
+  var inp2 = document.querySelector('input[oninput*="advisee-list-tbody"]');
+  if (inp2 && q) { inp2.value = q; filterRowsBySearch(inp2, 'advisee-list-tbody'); }
+}
+function toggleAeUrgent() { setAeFilter(_aeFilter === 'soon' ? 'all' : 'soon'); }
 
 function navToStaffAdviseeDetail(aeId, fromAdvisorId) {
   var c = document.getElementById('main-content');
