@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Khoá học FMCG Land Your Dream Job – Chiến lược ứng tuyển 5W giúp bạn biến CV tay trắng thành ứng viên tiềm năng và nhận lời mời phỏng vấn vào các công ty FMCG trong vòng 45 ngày.">
 <title>Land Your Dream Job · LinkaJob</title>
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap');
@@ -353,6 +353,10 @@ button:focus-visible, a:focus-visible, .lj-nav-btn-plain:focus-visible, .fbtn:fo
 @media(max-width:780px){
   .process-cols{ grid-template-columns:1fr; gap:26px;}
 }
+/* lưới 4 ô */
+.cols-4{ grid-template-columns:repeat(4,1fr);}
+@media(max-width:1000px){ .cols-4{ grid-template-columns:repeat(2,1fr);} }
+@media(max-width:560px){ .cols-4{ grid-template-columns:1fr;} }
 </style>
 <link rel="stylesheet" href="nav.css">
 <link rel="stylesheet" href="đăng-ký-tư-vấn.css">
@@ -366,7 +370,7 @@ button:focus-visible, a:focus-visible, .lj-nav-btn-plain:focus-visible, .fbtn:fo
     <div class="hero-text">
       <span class="eyebrow on-dark"><span class="eyebrow-dot"></span>Khoá học FMCG · LinkaJob</span>
       <h1>Land Your <em>Dream Job</em></h1>
-      <p class="sub">Chiến lược ứng tuyển 5W, biến CV "tay trắng" thành ứng viên FMCG được săn đón, nhận lời mời phỏng vấn tại các tập đoàn đa quốc gia trong vòng 45 ngày.</p>
+      <p class="sub">Chiến lược ứng tuyển 5W giúp bạn biết cách biến CV "tay trắng" thành ứng viên tiềm năng và nhận lời mời phỏng vấn vào các công ty FMCG trong vòng 45 ngày.</p>
       <div class="hero-cta">
         <button class="btn btn-orange" onclick="openConsultWidget()">Đăng ký tư vấn miễn phí</button>
         <a href="#lotrinh" class="btn btn-ghost-dark">Xem lộ trình học</a>
@@ -375,7 +379,7 @@ button:focus-visible, a:focus-visible, .lj-nav-btn-plain:focus-visible, .fbtn:fo
         <div class="hstat"><div class="hstat-num">90%</div><div class="hstat-lbl">Nhận offer tại MNC</div></div>
         <div class="hstat"><div class="hstat-num">5</div><div class="hstat-lbl">Học viên/lớp</div></div>
         <div class="hstat"><div class="hstat-num">3</div><div class="hstat-lbl">Giảng viên</div></div>
-        <div class="hstat"><div class="hstat-num">1:1</div><div class="hstat-lbl">Buổi cố vấn</div></div>
+        <div class="hstat"><div class="hstat-num">1:1</div><div class="hstat-lbl">Đồng hành cố vấn</div></div>
       </div>
     </div>
     <div class="hero-photo-col">
@@ -401,9 +405,9 @@ button:focus-visible, a:focus-visible, .lj-nav-btn-plain:focus-visible, .fbtn:fo
           <div class="avatar-fallback" id="heroSlideshowFallback" style="display:none; flex-direction:column; gap:8px; font-size:14px; font-weight:600; text-align:center; padding:20px;"><i class="ti ti-photo" style="font-size:32px;" aria-hidden="true"></i>Chèn ảnh đi field tại đây</div>
           <div class="hero-slide-dots" id="heroSlideDots"></div>
         </div>
-        <div class="hero-exp-badge"><b>5+</b><span>mùa<br>đi field</span></div>
+        <div class="hero-exp-badge"><b>05</b><span>suất học<br>mỗi khoá</span></div>
         <div class="hero-advisor-card">
-          <div><strong>Buổi đi field tại kênh MT</strong><span>Cùng học viên Land Your Dream Job</span></div>
+          <div><strong>Buổi đi field tại kênh siêu thị</strong><span>Dẫn dắt bởi giảng viên từ Unilever</span></div>
         </div>
       </div>
     </div>
@@ -448,10 +452,10 @@ button:focus-visible, a:focus-visible, .lj-nav-btn-plain:focus-visible, .fbtn:fo
   <div class="wrap">
     <span class="eyebrow on-dark"><span class="eyebrow-dot"></span>Giải pháp</span>
     <h2 style="margin-top:16px;">Nâng cao tư duy ngành, kỹ năng ứng tuyển và trải nghiệm thực chiến.</h2>
-    <p class="lead">1 lộ trình duy nhất, 3 giảng viên, 3 business case, 7 học phần, 1 buổi đi field thực tế, gồm 7 buổi học, mỗi buổi 2 tiếng.</p>
+    <p class="lead">1 lộ trình duy nhất, 3 giảng viên, 5 buổi học (4 buổi online + 1 buổi đi field), 3 business case và 2 buổi meeting 1-1 để sửa CV, luyện phỏng vấn.</p>
     <div class="pill-row">
-      <span class="pill">Đi field thực tế tại kênh MT</span>
-      <span class="pill">Lớp học nhóm nhỏ, 5 học viên</span>
+      <span class="pill">Đi field thực tế tại kênh siêu thị</span>
+      <span class="pill">Lớp học nhóm nhỏ, chỉ 5 học viên</span>
       <span class="pill">3 business case thực chiến</span>
     </div>
   </div>
@@ -488,8 +492,8 @@ button:focus-visible, a:focus-visible, .lj-nav-btn-plain:focus-visible, .fbtn:fo
   <div class="wrap">
     <div class="section-head">
       <span class="eyebrow"><span class="eyebrow-dot"></span>Lộ trình học</span>
-      <h2>7 học phần chuyên môn · 3 business case · 1 buổi đi field</h2>
-      <p>Mỗi học phần đều có một kết quả cụ thể bạn mang theo vào hồ sơ ứng tuyển. Bấm vào từng học phần để xem chi tiết.</p>
+      <h2>5 buổi học chuyên môn · 3 business case · 1 buổi đi field kênh siêu thị</h2>
+      <p>Mỗi buổi học đều có một kết quả cụ thể bạn mang theo vào hồ sơ ứng tuyển. Bấm vào từng buổi để xem chi tiết.</p>
     </div>
 
     <div id="module-list">
@@ -497,78 +501,56 @@ button:focus-visible, a:focus-visible, .lj-nav-btn-plain:focus-visible, .fbtn:fo
         <div class="module-q">
           <div class="module-num">01</div>
           <div class="module-head">
-            <h3>FMCG Industry & Career Foundations</h3>
+            <h3>Buổi 1: FMCG Foundations &amp; Brand Marketing Strategy</h3>
             <div class="module-outcome"><span class="module-outcome-dot"></span>Hiểu ngành – Hiểu vai trò – Chọn đúng hướng đi</div>
           </div>
           <span class="module-plus">+</span>
         </div>
-        <div class="module-a"><div class="lesson"><h4>1. FMCG Business Landscape</h4><ul><li>Tổng quan về ngành FMCG và các nhóm ngành hàng phổ biến.</li><li>Hiểu mô hình kinh doanh và cách FMCG tạo ra tăng trưởng.</li><li>Làm quen với những thuật ngữ và business metrics quan trọng trong FMCG.</li></ul></div><div class="lesson"><h4>2. FMCG Organization & Functions</h4><ul><li>FMCG có những phòng ban nào và mỗi function đóng vai trò gì?</li><li>Hiểu mối liên kết giữa Brand Marketing, Trade Marketing và Sales.</li><li>Hình dung quy trình từ chiến lược thương hiệu đến khi sản phẩm đến tay người tiêu dùng.</li></ul></div><div class="lesson"><h4>3. FMCG Recruitment & Talent Profile</h4><ul><li>Nhà tuyển dụng FMCG thực sự tìm kiếm điều gì ở ứng viên?</li><li>Những năng lực và kinh nghiệm thường được đánh giá trong quá trình tuyển dụng.</li><li>Hiểu sự khác biệt về yêu cầu giữa Intern, Fresh Graduate và Management Trainee.</li></ul></div><div class="lesson"><h4>4. Building Your FMCG Career Profile</h4><ul><li>Xác định function phù hợp với background và career direction.</li><li>Cách xây dựng CV phù hợp với các vị trí FMCG.</li><li>Cách biến dự án học thuật, internship và hoạt động ngoại khoá thành kinh nghiệm liên quan.</li></ul></div></div>
+        <div class="module-a"><div class="lesson"><h4>1. FMCG Landscape &amp; Organization</h4><ul><li>Tổng quan ngành, các nhóm ngành hàng, mô hình tăng trưởng.</li><li>Thuật ngữ và business metrics quan trọng.</li><li>Các phòng ban, mối liên kết Brand – Trade – Sales, quy trình từ chiến lược đến tay người tiêu dùng.</li></ul></div><div class="lesson"><h4>2. Recruitment &amp; Career Profile</h4><ul><li>Nhà tuyển dụng tìm gì ở ứng viên; khác biệt giữa Intern, Fresh và MT.</li><li>Chọn function phù hợp với background.</li><li>Cách biến dự án, internship, ngoại khoá thành kinh nghiệm liên quan.</li></ul></div><div class="lesson"><h4>3. Brand Marketing &amp; Marketing Plan</h4><ul><li>Vai trò của Brand Marketing, mối liên kết Consumer – Brand – Business.</li><li>Cấu trúc Marketing Plan: Business Objective, Marketing Objective, Key Initiatives.</li><li>Tiêu chí đánh giá một plan có logic và khả thi.</li></ul></div><div class="lesson"><h4>4. KPIs &amp; Budget Allocation</h4><ul><li>KPI chính của Marketing, Sales, Trade Marketing (Sales, Market Share, Brand Health, Distribution).</li><li>Kết nối KPI với Business Objective.</li><li>Tư duy phân bổ ngân sách và ra quyết định dựa trên mục tiêu kinh doanh.</li></ul></div></div>
       </div>
       <div class="module">
         <div class="module-q">
           <div class="module-num">02</div>
           <div class="module-head">
-            <h3>Brand Marketing Strategy & Planning</h3>
-            <div class="module-outcome"><span class="module-outcome-dot"></span>Từ Business Objective đến Marketing Plan</div>
+            <h3>Buổi 2: Trade Marketing, Channel &amp; Execution</h3>
+            <div class="module-outcome"><span class="module-outcome-dot"></span>Từ Brand Strategy đến Shopper, Channel và Execution tại điểm bán</div>
           </div>
           <span class="module-plus">+</span>
         </div>
-        <div class="module-a"><div class="lesson"><h4>1. Understanding Brand Marketing</h4><ul><li>Brand Marketing đóng vai trò gì trong FMCG business?</li><li>Brand team làm gì để xây dựng thương hiệu và thúc đẩy business growth?</li><li>Hiểu mối liên kết giữa Consumer - Brand - Business.</li></ul></div><div class="lesson"><h4>2. Building a Marketing Plan</h4><ul><li>Một Marketing Plan trong FMCG gồm những thành phần nào?</li><li>Cách xác định Business Objective, Marketing Objective và Key Initiatives.</li><li>Các tiêu chí để đánh giá một Marketing Plan có logic và khả thi.</li></ul></div><div class="lesson"><h4>3. FMCG Business KPIs</h4><ul><li>Những KPI quan trọng trong Marketing, Sales và Trade Marketing.</li><li>Hiểu cách đọc các chỉ số như Sales, Market Share, Brand Health và Distribution.</li><li>Cách kết nối KPI với Business Objective và đánh giá hiệu quả chiến lược.</li></ul></div><div class="lesson"><h4>4. Marketing Budget & Resource Allocation</h4><ul><li>Budget đóng vai trò gì trong việc triển khai Marketing Plan?</li><li>Thực hành tư duy phân bổ ngân sách cho các Marketing Activities.</li><li>Ra quyết định dựa trên Business Objective thay vì chỉ tập trung vào ý tưởng hay.</li></ul></div></div>
+        <div class="module-a"><div class="lesson"><h4>1. Role, KPIs &amp; Team Structure của Trade Marketing</h4><ul><li>Vị trí của Trade Marketing và khác biệt so với Brand, Sales.</li><li>Nhiệm vụ, KPI chính và cách team vận hành, phối hợp.</li></ul></div><div class="lesson"><h4>2. Channel &amp; Shopper Strategy, From Brand to Trade</h4><ul><li>Đặc điểm các channel; phân biệt Consumer và Shopper.</li><li>Chuyển Brand Strategy thành Trade Strategy: Brand Objective – Channel Objective – Shopper Need.</li></ul></div><div class="lesson"><h4>3. Winning at POS &amp; Trade Activation</h4><ul><li>Visibility, assortment, placement, availability.</li><li>Promotion, Merchandising, POSM, In-store Activation; triển khai từ planning đến execution.</li></ul></div><div class="lesson"><h4>4. Category Management &amp; Trade Execution Case</h4><ul><li>Hiểu vai trò của Category Management trong FMCG và cách làm việc với Buyer để đạt mục tiêu kinh doanh chung.</li><li>Thực hành giải một Trade Execution Case, đi từ problem → strategy → execution, và nhận feedback trực tiếp từ Advisor để hoàn thiện cách tiếp cận.</li></ul></div></div>
       </div>
       <div class="module">
         <div class="module-q">
           <div class="module-num">03</div>
           <div class="module-head">
-            <h3>Trade Marketing & Channel Strategy</h3>
-            <div class="module-outcome"><span class="module-outcome-dot"></span>Từ Brand Strategy đến Shopper & Channel</div>
+            <h3>Buổi 3: FMCG Field Immersion</h3>
+            <div class="module-outcome"><span class="module-outcome-dot"></span>From Strategy to Shelf – Học FMCG từ thực tế điểm bán</div>
           </div>
           <span class="module-plus">+</span>
         </div>
-        <div class="module-a"><div class="lesson"><h4>1. The Role of Trade Marketing</h4><ul><li>Trade Marketing nằm ở đâu trong bức tranh tổng thể của FMCG?</li><li>Trade Marketing khác gì với Brand Marketing và Sales?</li><li>Hiểu cách Trade Marketing góp phần thúc đẩy business growth.</li></ul></div><div class="lesson"><h4>2. Trade Marketing KPIs & Team Structure</h4><ul><li>Các nhiệm vụ và KPI chính của Trade Marketing.</li><li>Hiểu cách một Trade Marketing team được tổ chức và vận hành.</li><li>Cách Trade Marketing phối hợp với Brand và Sales để đạt business objectives.</li></ul></div><div class="lesson"><h4>3. Channel & Shopper Strategy</h4><ul><li>Hiểu đặc điểm và vai trò của các channel trong FMCG.</li><li>Phân biệt Consumer và Shopper trong quá trình ra quyết định mua hàng.</li><li>Cách lựa chọn channel và xây dựng chiến lược phù hợp với từng shopper.</li></ul></div><div class="lesson"><h4>4. From Brand to Trade</h4><ul><li>Brand Strategy được chuyển hóa thành Trade Strategy như thế nào?</li><li>Cách kết nối Brand Objective - Channel Objective - Shopper Need.</li><li>Thực hành phân tích một Trade Marketing case.</li></ul></div></div>
+        <div class="module-a"><div class="lesson"><h4>1. Modern Trade Immersion</h4><ul><li>Trải nghiệm thực tế tại một trong những channel quan trọng nhất của FMCG.</li><li>Quan sát cách Sales, Trade Marketing và Brand hoạt động trong môi trường Modern Trade.</li><li>Hiểu sự khác biệt giữa kiến thức trên lớp và cách business vận hành thực tế.</li></ul></div><div class="lesson"><h4>2. Shopper &amp; In-store Analysis</h4><ul><li>Quan sát shopper journey và hành vi mua hàng tại điểm bán.</li><li>Phân tích shelf placement, assortment, merchandising và promotion.</li><li>Tìm hiểu cách thương hiệu tạo visibility và tác động đến purchase decision.</li></ul></div><div class="lesson"><h4>3. Sales - Trade - Brand in Action</h4><ul><li>Quan sát cách các function phối hợp để thúc đẩy sales.</li><li>Hiểu mối liên kết giữa Brand Strategy, Trade Execution và Sales Performance.</li><li>Nhìn FMCG từ góc độ business thay vì chỉ nhìn từng phòng ban riêng lẻ.</li></ul></div><div class="lesson"><h4>4. Advisor Field Sharing</h4><ul><li>Trực tiếp trao đổi và đặt câu hỏi với FMCG Advisor.</li><li>Giải đáp những thắc mắc về channel, shopper và trade execution.</li><li>Học cách một người trong ngành phân tích business tại điểm bán.</li></ul></div></div>
       </div>
       <div class="module">
         <div class="module-q">
           <div class="module-num">04</div>
           <div class="module-head">
-            <h3>Trade Execution & Point of Sale</h3>
-            <div class="module-outcome"><span class="module-outcome-dot"></span>Biến Strategy thành Execution tại điểm bán</div>
+            <h3>Buổi 4: FMCG Case Challenge</h3>
+            <div class="module-outcome"><span class="module-outcome-dot"></span>Mock Assessment Center – Solve Like an FMCG Candidate</div>
           </div>
           <span class="module-plus">+</span>
         </div>
-        <div class="module-a"><div class="lesson"><h4>1. Winning at Point of Sale</h4><ul><li>Những yếu tố quyết định khả năng win tại điểm bán.</li><li>Hiểu vai trò của visibility, assortment, placement và availability.</li><li>Phân tích cách các thương hiệu cạnh tranh để giành spotlight trên kệ hàng.</li></ul></div><div class="lesson"><h4>2. Trade Activation & Execution</h4><ul><li>Vai trò của Promotion, Merchandising, POSM và In-store Activation.</li><li>Cách triển khai một Trade Activity từ planning đến execution.</li><li>Những yếu tố cần kiểm soát để đảm bảo execution hiệu quả.</li></ul></div><div class="lesson"><h4>3. Category & Business Management</h4><ul><li>Category Management là gì và tại sao quan trọng trong FMCG?</li><li>Hiểu cách sử dụng shopper và channel insights để đưa ra business recommendations.</li><li>Làm quen với cách xây dựng Business Plan và làm việc với Buyer.</li></ul></div><div class="lesson"><h4>4. Trade Execution Case</h4><ul><li>Ứng dụng kiến thức để giải quyết một business challenge tại điểm bán.</li><li>Xây dựng recommendation từ problem → strategy → execution.</li><li>Nhận feedback và hoàn thiện cách tiếp cận case như một Trade Marketer thực tế.</li></ul></div></div>
+        <div class="module-a"><div class="lesson"><h4>1. Understand the Business Challenge</h4><ul><li>Phân tích business context và xác định vấn đề cốt lõi.</li><li>Phân biệt symptom và root cause trong một business case.</li><li>Xác định key objective cần giải quyết.</li></ul></div><div class="lesson"><h4>2. Build Your Strategic Recommendation</h4><ul><li>Ứng dụng tư duy Brand, Trade và Sales để xây dựng recommendation.</li><li>Kết nối Business Objective – Consumer/Shopper Insight – Strategy.</li><li>Đề xuất giải pháp có tính khả thi và đo lường được.</li></ul></div><div class="lesson"><h4>3. FMCG Mock Assessment Center</h4><ul><li>Mô phỏng format Assessment Center thường gặp trong các chương trình Fresh Graduate &amp; Management Trainee.</li><li>Làm việc nhóm dưới giới hạn về thời gian.</li><li>Phân chia vai trò, thống nhất recommendation và chuẩn bị presentation.</li></ul></div><div class="lesson"><h4>4. Storytelling &amp; Strategic Communication</h4><ul><li>Cách biến data, insight và recommendation thành một câu chuyện logic.</li><li>Trình bày chiến lược ngắn gọn, rõ ràng và có sức thuyết phục.</li><li>Rèn luyện khả năng truyền tải business thinking trước nhà tuyển dụng.</li></ul></div></div>
       </div>
       <div class="module">
         <div class="module-q">
           <div class="module-num">05</div>
           <div class="module-head">
-            <h3>FMCG Field Immersion</h3>
-            <div class="module-outcome"><span class="module-outcome-dot"></span>From Strategy to Shelf – Học FMCG từ thực tế điểm bán</div>
-          </div>
-          <span class="module-plus">+</span>
-        </div>
-        <div class="module-a"><div class="lesson"><h4>1. Modern Trade Immersion</h4><ul><li>Trải nghiệm thực tế tại một trong những channel quan trọng nhất của FMCG.</li><li>Quan sát cách Sales, Trade Marketing và Brand hoạt động trong môi trường Modern Trade.</li><li>Hiểu sự khác biệt giữa kiến thức trên lớp và cách business vận hành thực tế.</li></ul></div><div class="lesson"><h4>2. Shopper & In-store Analysis</h4><ul><li>Quan sát shopper journey và hành vi mua hàng tại điểm bán.</li><li>Phân tích shelf placement, assortment, merchandising và promotion.</li><li>Tìm hiểu cách thương hiệu tạo visibility và tác động đến purchase decision.</li></ul></div><div class="lesson"><h4>3. Sales - Trade - Brand in Action</h4><ul><li>Quan sát cách các function phối hợp để thúc đẩy sales.</li><li>Hiểu mối liên kết giữa Brand Strategy, Trade Execution và Sales Performance.</li><li>Nhìn FMCG từ góc độ business thay vì chỉ nhìn từng phòng ban riêng lẻ.</li></ul></div><div class="lesson"><h4>4. Advisor Field Sharing</h4><ul><li>Trực tiếp trao đổi và đặt câu hỏi với FMCG Advisor.</li><li>Giải đáp những thắc mắc về channel, shopper và trade execution.</li><li>Học cách một người trong ngành phân tích business tại điểm bán.</li></ul></div></div>
-      </div>
-      <div class="module">
-        <div class="module-q">
-          <div class="module-num">06</div>
-          <div class="module-head">
-            <h3>FMCG Case Challenge</h3>
-            <div class="module-outcome"><span class="module-outcome-dot"></span>Mock Assessment Center - Solve Like an FMCG Candidate</div>
-          </div>
-          <span class="module-plus">+</span>
-        </div>
-        <div class="module-a"><div class="lesson"><h4>1. Understand the Business Challenge</h4><ul><li>Phân tích business context và xác định vấn đề cốt lõi.</li><li>Phân biệt symptom và root cause trong một business case.</li><li>Xác định key objective cần giải quyết.</li></ul></div><div class="lesson"><h4>2. Build Your Strategic Recommendation</h4><ul><li>Ứng dụng tư duy Brand, Trade và Sales để xây dựng recommendation.</li><li>Kết nối Business Objective – Consumer/Shopper Insight – Strategy.</li><li>Đề xuất giải pháp có tính khả thi và đo lường được.</li></ul></div><div class="lesson"><h4>3. FMCG Mock Assessment Center</h4><ul><li>Mô phỏng format Assessment Center thường gặp trong các chương trình Fresh Graduate & Management Trainee.</li><li>Làm việc nhóm dưới giới hạn về thời gian.</li><li>Phân chia vai trò, thống nhất recommendation và chuẩn bị presentation.</li></ul></div><div class="lesson"><h4>4. Storytelling & Strategic Communication</h4><ul><li>Cách biến data, insight và recommendation thành một câu chuyện logic.</li><li>Trình bày chiến lược ngắn gọn, rõ ràng và có sức thuyết phục.</li><li>Rèn luyện khả năng truyền tải business thinking trước nhà tuyển dụng.</li></ul></div></div>
-      </div>
-      <div class="module">
-        <div class="module-q">
-          <div class="module-num">07</div>
-          <div class="module-head">
-            <h3>Case Presentation & Strategic Defense</h3>
+            <h3>Buổi 5: Case Presentation &amp; Strategic Defense</h3>
             <div class="module-outcome"><span class="module-outcome-dot"></span>Pitch Your Strategy. Defend Your Thinking.</div>
           </div>
           <span class="module-plus">+</span>
         </div>
-        <div class="module-a"><div class="lesson"><h4>1. Strategic Pitching</h4><ul><li>Trình bày business recommendation trước FMCG Advisor.</li><li>Cấu trúc một presentation theo logic của một business pitch.</li><li>Học cách đi từ Problem → Insight → Strategy → Execution → Impact.</li></ul></div><div class="lesson"><h4>2. Q&A & Critical Thinking</h4><ul><li>Xử lý câu hỏi và phản biện trực tiếp từ Advisor.</li><li>Bảo vệ recommendation bằng business rationale thay vì cảm tính.</li><li>Học cách suy nghĩ và phản hồi khi không có sẵn câu trả lời.</li></ul></div><div class="lesson"><h4>3. Storytelling & Strategic Defense</h4><ul><li>Biến data, insight và strategy thành một câu chuyện mạch lạc.</li><li>Rèn luyện khả năng thuyết phục stakeholder bằng logic và evidence.</li><li>Thực hành bảo vệ chiến lược như trong một business review thực tế.</li></ul></div><div class="lesson"><h4>4. Expert Feedback & Improvement</h4><ul><li>Nhận feedback trực tiếp từ Advisor có kinh nghiệm trong FMCG.</li><li>Xác định điểm mạnh, blind spots và những tư duy cần cải thiện.</li><li>Hoàn thiện cách tiếp cận case và transferable skills cho các vòng tuyển dụng FMCG.</li></ul></div></div>
+        <div class="module-a"><div class="lesson"><h4>1. Strategic Pitching</h4><ul><li>Trình bày business recommendation trước FMCG Advisor.</li><li>Cấu trúc một presentation theo logic của một business pitch.</li><li>Học cách đi từ Problem → Insight → Strategy → Execution → Impact.</li></ul></div><div class="lesson"><h4>2. Q&amp;A &amp; Critical Thinking</h4><ul><li>Xử lý câu hỏi và phản biện trực tiếp từ Advisor.</li><li>Bảo vệ recommendation bằng business rationale thay vì cảm tính.</li><li>Học cách suy nghĩ và phản hồi khi không có sẵn câu trả lời.</li></ul></div><div class="lesson"><h4>3. Storytelling &amp; Strategic Defense</h4><ul><li>Biến data, insight và strategy thành một câu chuyện mạch lạc.</li><li>Rèn luyện khả năng thuyết phục stakeholder bằng logic và evidence.</li><li>Thực hành bảo vệ chiến lược như trong một business review thực tế.</li></ul></div><div class="lesson"><h4>4. Advisor Feedback &amp; Improvement</h4><ul><li>Nhận feedback trực tiếp từ Advisor có kinh nghiệm trong FMCG.</li><li>Xác định điểm mạnh, blind spots và những tư duy cần cải thiện.</li><li>Hoàn thiện cách tiếp cận case và transferable skills cho các vòng tuyển dụng FMCG.</li></ul></div></div>
       </div>
     </div>
   </div>
@@ -580,7 +562,7 @@ button:focus-visible, a:focus-visible, .lj-nav-btn-plain:focus-visible, .fbtn:fo
       <span class="eyebrow"><span class="eyebrow-dot"></span>Đối tượng</span>
       <h2>Khoá học này dành cho ai</h2>
     </div>
-    <div class="audience-grid">
+    <div class="audience-grid cols-4">
       <div class="audience-card">
         <span class="eyebrow"><span class="eyebrow-dot"></span>Người trẻ FMCG</span>
         <p>Muốn ứng tuyển phòng ban Marketing, Sales, Trade Marketing tại các công ty FMCG đa quốc gia.</p>
@@ -593,6 +575,10 @@ button:focus-visible, a:focus-visible, .lj-nav-btn-plain:focus-visible, .fbtn:fo
         <span class="eyebrow"><span class="eyebrow-dot"></span>Từng apply chưa đạt</span>
         <p>Đã thử apply FMCG nhưng chưa có kết quả, cần kiến thức thực tế và người chỉ đường.</p>
       </div>
+      <div class="audience-card">
+        <span class="eyebrow"><span class="eyebrow-dot"></span>Fresh graduate 0–2 năm</span>
+        <p>Mới tốt nghiệp, muốn apply vào các tập đoàn FMCG/MNC như Unilever, P&amp;G, Mondelez, Heineken, Nestlé, Vinamilk.</p>
+      </div>
     </div>
   </div>
 </section>
@@ -601,13 +587,13 @@ button:focus-visible, a:focus-visible, .lj-nav-btn-plain:focus-visible, .fbtn:fo
   <div class="wrap">
     <div class="section-head">
       <span class="eyebrow on-dark"><span class="eyebrow-dot"></span>Giảng viên</span>
-      <h2>3 Advisor trực tiếp đứng lớp, đến từ Lactalis, Fine Today Vietnam và Nestlé</h2>
-      <p>Lớp học chỉ 5 học viên, giảng dạy trực tiếp bởi 3 Advisor dưới đây. Riêng buổi meeting 1:1, bạn có thể chọn bất kỳ Advisor nào trong mạng lưới LinkaJob — không giới hạn ở 3 giảng viên đứng lớp.</p>
+      <h2>Đội ngũ giảng viên</h2>
+      <p>Hiện đang làm việc tại các tập đoàn đa quốc gia – Advisors tại LinkaJob. Lớp học nhỏ chỉ 5 học viên, được dẫn dắt trực tiếp bởi 3 Advisor dưới đây.</p>
     </div>
     <div class="instructor-grid three">
       <div class="instructor-card">
         <div class="instructor-photo">
-          <img src="https://linkajob.vn/wp-content/uploads/2025/04/Duong-Thi-Hoang-Oanh.png" alt="Advisor Hoàng Oanh" loading="lazy" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+          <img src="https://linkajob.vn/wp-content/uploads/2025/09/hoang-oanh.webp" alt="Advisor Hoàng Oanh" loading="lazy" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
           <div class="avatar-fallback" style="display:none;">HO</div>
           <span class="photo-verified"><i class="ti ti-check"></i></span>
         </div>
@@ -615,31 +601,15 @@ button:focus-visible, a:focus-visible, .lj-nav-btn-plain:focus-visible, .fbtn:fo
           <h3>Advisor Hoàng Oanh</h3>
           <div class="role">Regional Marketing Manager @ Lactalis</div>
           <ul>
-            <li>10+ năm kinh nghiệm Brand Growth trong FMCG</li>
+            <li>10+ năm kinh nghiệm làm Brand Growth in FMCG</li>
             <li>Từng là Marketing Management Trainee tại Nestlé</li>
-            <li>Chuyên môn: Brand Marketing, MT Program, Brand Management, Marketing Strategy</li>
+            <li>Chuyên môn advise: Brand Marketing, Management Trainee Program, Brand Management, Marketing Strategy,…</li>
           </ul>
         </div>
       </div>
       <div class="instructor-card">
         <div class="instructor-photo">
-          <img src="https://lh3.googleusercontent.com/d/1uab9uM24UTSrGURiwL-OIWMTtf8qAy8b" alt="Advisor Hùng Cường" loading="lazy" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-          <div class="avatar-fallback" style="display:none;">QC</div>
-          <span class="photo-verified"><i class="ti ti-check"></i></span>
-        </div>
-        <div>
-          <h3>Advisor Hùng Cường</h3>
-          <div class="role">Channel Manager @ Fine Today Vietnam</div>
-          <ul>
-            <li>9+ năm kinh nghiệm Channel Manager trong FMCG</li>
-            <li>Từng là Key Account Manager tại Shiseido, Masan Consumer, Beiersdorf</li>
-            <li>Chuyên môn advise: Modern Trade Channel Management, Key Account Negotiation, Trade Promotion, Category Planning</li>
-          </ul>
-        </div>
-      </div>
-      <div class="instructor-card">
-        <div class="instructor-photo">
-          <img src="https://lh3.googleusercontent.com/d/1wbpjytWBGckwNvRGuR8rfe741d733Ywr" alt="Advisor Hải Triều" loading="lazy" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+          <img src="https://linkajob.vn/wp-content/uploads/2026/10/2aOboR3maCmLuIxBqFc5pm1ThkitBcf9sDFZq1Ca.webp" alt="Advisor Hải Triều" loading="lazy" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
           <div class="avatar-fallback" style="display:none;">HT</div>
           <span class="photo-verified"><i class="ti ti-check"></i></span>
         </div>
@@ -647,9 +617,25 @@ button:focus-visible, a:focus-visible, .lj-nav-btn-plain:focus-visible, .fbtn:fo
           <h3>Advisor Hải Triều</h3>
           <div class="role">Former Trade Marketing Manager @ Nestlé Waters &amp; Premium Beverage</div>
           <ul>
-            <li>9 năm kinh nghiệm làm việc trong Trade Marketing in FMCG</li>
-            <li>Từng là Assistant Trade Marketing Manager tại Unilever Việt Nam</li>
+            <li>9 năm kinh nghiệm trong Trade Marketing in FMCG</li>
+            <li>Từng là Assistant Trade Marketing Manager tại Unilever</li>
             <li>Chuyên môn advise: Trade Marketing, Channel Development Management, FMCG Business Fundamentals, Brand - Trade - Sales Collaboration,…</li>
+          </ul>
+        </div>
+      </div>
+      <div class="instructor-card">
+        <div class="instructor-photo">
+          <img src="https://linkajob.vn/wp-content/uploads/2026/09/Advisor-Quoc-Cuong.webp" alt="Advisor Hùng Cường" loading="lazy" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+          <div class="avatar-fallback" style="display:none;">HC</div>
+          <span class="photo-verified"><i class="ti ti-check"></i></span>
+        </div>
+        <div>
+          <h3>Advisor Hùng Cường</h3>
+          <div class="role">Channel Manager @ Fine Today Vietnam</div>
+          <ul>
+            <li>9+ năm kinh nghiệm Channel Manager in FMCG</li>
+            <li>Từng là Key Account Manager tại Shiseido, Masan Consumer, Beiersdorf</li>
+            <li>Chuyên môn advise: Modern Trade Channel Management, Key Account Negotiation, Trade Promotion, Category Planning,…</li>
           </ul>
         </div>
       </div>
@@ -660,28 +646,105 @@ button:focus-visible, a:focus-visible, .lj-nav-btn-plain:focus-visible, .fbtn:fo
 <section>
   <div class="wrap">
     <div class="section-head">
-      <span class="eyebrow"><span class="eyebrow-dot"></span>Quyền lợi học viên</span>
-      <h2>Bạn nhận được gì khi tham gia LYDJ</h2>
+      <span class="eyebrow"><span class="eyebrow-dot"></span>Kết quả đạt được</span>
+      <h2>Bạn nhận được gì sau khoá học</h2>
     </div>
     <div class="gift-grid">
       <div class="gift-card">
-        <div class="gift-top"><div class="gift-icon">3M</div><span class="gift-value">1.000.000đ</span></div>
-        <h3>3 tháng đồng hành cùng team LinkaJob</h3>
-        <p>Team LinkaJob đồng hành review và chỉnh sửa CV, chuẩn bị phỏng vấn cho bạn trong suốt 3 tháng.</p>
+        <div class="gift-top"><div class="gift-icon">01</div></div>
+        <h3>Tư duy về FMCG</h3>
+        <p>Hiểu cách doanh nghiệp đo lường các chỉ số và xây dựng kế hoạch thực chiến ở môi trường FMCG.</p>
       </div>
       <div class="gift-card">
-        <div class="gift-top"><div class="gift-icon">DOC</div><span class="gift-value">3.000.000đ</span></div>
-        <h3>Trọn bộ tài liệu ứng tuyển</h3>
-        <p>Gồm CV, aptitude test, business case và tài liệu luyện phỏng vấn chuẩn MNC, dùng lại cho mọi lần apply sau này.</p>
+        <div class="gift-top"><div class="gift-icon">02</div></div>
+        <h3>Phân tích ngành hàng</h3>
+        <p>Biết phân tích và nhận ra cơ hội tăng trưởng, kỹ năng bắt buộc với bất kỳ ứng viên nào muốn bước chân vào FMCG.</p>
       </div>
       <div class="gift-card">
-        <div class="gift-top"><div class="gift-icon">1:1</div><span class="gift-value">419.000đ</span></div>
-        <h3>1 buổi meeting 1:1 với Advisor bất kỳ</h3>
-        <p>Chọn Advisor phù hợp trong mạng lưới LinkaJob để sửa CV hoặc luyện phỏng vấn riêng cho bạn.</p>
+        <div class="gift-top"><div class="gift-icon">03</div></div>
+        <h3>Đồng hành 1-1</h3>
+        <p>Phát triển tư duy chiến lược và nhận góp ý trực tiếp từ Advisor có hơn 10 năm kinh nghiệm trong ngành FMCG.</p>
+      </div>
+      <div class="gift-card">
+        <div class="gift-top"><div class="gift-icon">04</div></div>
+        <h3>Giải business case</h3>
+        <p>Thực hành xây dựng kế hoạch tăng trưởng cho thương hiệu lớn, trình bày và phản biện cùng giảng viên của LinkaJob.</p>
+      </div>
+      <div class="gift-card">
+        <div class="gift-top"><div class="gift-icon">05</div></div>
+        <h3>Quan sát thị trường thực tế</h3>
+        <p>Trải nghiệm đi field cùng Advisor: hiểu cách làm việc tại từng điểm bán, điều mà sách vở lý thuyết không dạy.</p>
+      </div>
+      <div class="gift-card">
+        <div class="gift-top"><div class="gift-icon">06</div></div>
+        <h3>Tham gia cộng đồng</h3>
+        <p>Mở rộng network với cộng đồng LinkaJob, nơi cập nhật job từ các đối tác của LinkaJob.</p>
       </div>
     </div>
-    <p class="gift-note">Tất cả quyền lợi không quy đổi thành tiền hay sản phẩm có giá trị tương đương. Học viên cần hoàn thành đầy đủ bài tập và tham gia đủ các buổi học để nhận trọn vẹn quyền lợi.</p>
-  
+    <div style="text-align:center;margin-top:36px;">
+      <button class="btn btn-orange" onclick="openConsultWidget()">Đăng ký học ngay</button>
+    </div>
+  </div>
+</section>
+
+<section style="background:var(--paper-2)">
+  <div class="wrap">
+    <div class="section-head">
+      <span class="eyebrow"><span class="eyebrow-dot"></span>Quà tặng</span>
+      <h2>Quà tặng khi tham gia Land Your Dream Job</h2>
+      <p><b>FMCG Fast Track Kit</b> — bộ công cụ tổng hợp từ LinkaJob giúp bạn rút ngắn 6–12 tháng thử và sai, tiến thẳng đến cơ hội trúng tuyển tại các công ty FMCG.</p>
+    </div>
+    <div class="gift-grid cols-4">
+      <div class="gift-card">
+        <div class="gift-top"><div class="gift-icon">CV</div></div>
+        <h3>Gói CV tăng tốc</h3>
+        <p>Rút ngắn thời gian ứng tuyển nhanh gấp 3 lần.</p>
+      </div>
+      <div class="gift-card">
+        <div class="gift-top"><div class="gift-icon">INT</div></div>
+        <h3>Gói Phỏng Vấn Độc Quyền LinkaJob</h3>
+        <p>Bộ tài liệu và công cụ luyện phỏng vấn dành riêng cho học viên LinkaJob.</p>
+      </div>
+      <div class="gift-card">
+        <div class="gift-top"><div class="gift-icon">MIND</div></div>
+        <h3>Mindset FMCG</h3>
+        <p>Bộ công cụ tư duy đúng ngay từ đầu.</p>
+      </div>
+      <div class="gift-card">
+        <div class="gift-top"><div class="gift-icon">1:1</div></div>
+        <h3>2 buổi meeting 1-1 tặng kèm</h3>
+        <p>1 buổi sửa CV và 1 buổi phỏng vấn thử với Advisor của LinkaJob, bạn được chọn Advisor tuỳ ý.</p>
+      </div>
+    </div>
+    <p class="gift-note">Bạn nhận được MIỄN PHÍ khi tham gia khoá học Land Your Dream Job. Nếu bạn thật sự nghiêm túc muốn ứng tuyển tại các công ty đa quốc gia, đây chính là điểm khởi đầu tốt nhất.</p>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <div class="section-head">
+      <span class="eyebrow"><span class="eyebrow-dot"></span>Lớp học nhóm nhỏ</span>
+      <h2>Tuyển sinh duy nhất 05 bạn</h2>
+      <p>LinkaJob chỉ nhận tối đa 5 học viên cho khoá này để đảm bảo chất lượng đào tạo và sự tương tác cá nhân hoá.</p>
+    </div>
+    <div class="audience-grid cols-4">
+      <div class="audience-card">
+        <span class="eyebrow"><span class="eyebrow-dot"></span>Đồng hành 1-1</span>
+        <p>Đồng hành 1-1 từ Advisor và team LinkaJob trong quá trình học và ứng tuyển công việc tại các công ty đa quốc gia.</p>
+      </div>
+      <div class="audience-card">
+        <span class="eyebrow"><span class="eyebrow-dot"></span>Mở rộng network</span>
+        <p>Mở rộng network nhờ tham gia cộng đồng sinh viên của LinkaJob.</p>
+      </div>
+      <div class="audience-card">
+        <span class="eyebrow"><span class="eyebrow-dot"></span>Cơ hội việc làm</span>
+        <p>Được giới thiệu cơ hội việc làm từ các đối tác của LinkaJob.</p>
+      </div>
+      <div class="audience-card">
+        <span class="eyebrow"><span class="eyebrow-dot"></span>Record &amp; nhóm riêng</span>
+        <p>Record đầy đủ các buổi học và nhóm học viên riêng để hỏi – đáp, kết nối networking.</p>
+      </div>
+    </div>
   </div>
 </section>
 
@@ -735,38 +798,24 @@ button:focus-visible, a:focus-visible, .lj-nav-btn-plain:focus-visible, .fbtn:fo
   <div class="wrap">
     <span class="eyebrow on-dark"><span class="eyebrow-dot"></span>Học phí</span>
     <h2 style="color:var(--text-dark); font-size:28px; margin:16px 0 36px; letter-spacing:-0.8px;">Đầu tư cho bước ngoặt sự nghiệp FMCG</h2>
-    <div class="price-grid">
-      <div class="price-box">
-        <span class="eyebrow" style="display:inline-flex;">Học viên mới</span>
-        <div class="price-old">Giá trị thực tế ~12.000.000đ</div>
-        <div class="price-new">7.000.000đ</div>
-        <div class="price-note">Gồm: 7 buổi học (2 tiếng/buổi, có 1 buổi field) + 1 buổi 1:1 + 3 tháng đồng hành cùng LinkaJob</div>
+    <div class="price-grid" style="grid-template-columns:1fr; max-width:460px;">
+      <div class="price-box advisee">
+        <span class="eyebrow" style="display:inline-flex;">Khoá học FMCG · Land Your Dream Job</span>
+        <div class="price-new">6.000.000đ</div>
+        <div class="price-note">Học phí trọn gói, lớp nhóm nhỏ chỉ 05 học viên</div>
         <div class="perf on-dark"></div>
         <ul class="price-list">
-          <li>7 học phần chuyên môn, 7 buổi học, mỗi buổi 2 tiếng</li>
-          <li>1 buổi đi field kênh siêu thị cùng Advisor Fine Today Vietnam</li>
-          <li>1 buổi meeting 1:1 với Advisor bất kỳ: sửa CV hoặc phỏng vấn thử</li>
-          <li>Trọn bộ tài liệu ứng tuyển: CV, aptitude test, business case, tài liệu luyện phỏng vấn chuẩn MNC</li>
-          <li>3 tháng đồng hành cùng team LinkaJob review và chỉnh sửa CV, phỏng vấn (trị giá 1.000.000đ) + record đầy đủ buổi học</li>
+          <li>5 buổi học: 4 buổi online qua Zoom (2 tiếng/buổi) + 1 buổi đi field tại kênh siêu thị</li>
+          <li>3 business case thực chiến cùng giảng viên đang làm việc tại các tập đoàn đa quốc gia</li>
+          <li>2 buổi meeting 1-1 với Advisor tự chọn: sửa CV và phỏng vấn thử</li>
+          <li>FMCG Fast Track Kit: Gói CV tăng tốc, Gói Phỏng Vấn Độc Quyền, Mindset FMCG</li>
+          <li>Record đầy đủ các buổi học + nhóm học viên riêng để hỏi – đáp và networking</li>
+          <li>Tham gia cộng đồng LinkaJob và được giới thiệu cơ hội việc làm từ đối tác</li>
         </ul>
         <a href="#dangky" class="btn btn-orange" style="width:100%">Đăng ký tư vấn ngay</a>
       </div>
-      <div class="price-box advisee">
-        <span class="eyebrow" style="display:inline-flex;">Advisee cũ · Giảm 10%</span>
-        <div class="price-old">Giá gốc 12.000.000đ</div>
-        <div class="price-new">6.300.000đ</div>
-        <div class="price-note">Dành riêng cho Advisee đã từng đặt lịch 1:1 với LinkaJob</div>
-        <div class="perf on-dark"></div>
-        <ul class="price-list">
-          <li>Toàn bộ quyền lợi như gói Học viên mới</li>
-          <li>Giảm thẳng 700.000đ trên học phí</li>
-          <li>Ưu tiên xác nhận suất học do chỉ nhận 5 học viên/khoá</li>
-        </ul>
-        <a href="#dangky" class="btn btn-orange" style="width:100%">Đăng ký với ưu đãi Advisee</a>
-      </div>
     </div>
-    <p class="gift-note" style="color:var(--muted-dark-2)">Tất cả quyền lợi không quy đổi thành tiền hay sản phẩm có giá trị tương đương. Học viên cần hoàn thành đầy đủ bài tập và tham gia đủ các buổi học để nhận trọn vẹn quyền lợi.</p>
-    <div class="scarcity">⚠ Chỉ nhận 5 học viên / khoá để đảm bảo chất lượng đào tạo</div>
+    <div class="scarcity">⚠ Chỉ nhận tối đa 5 học viên / khoá để đảm bảo chất lượng đào tạo</div>
   </div>
 </section>
 
@@ -823,40 +872,47 @@ button:focus-visible, a:focus-visible, .lj-nav-btn-plain:focus-visible, .fbtn:fo
     <div id="faq-list">
       <div class="faq-item">
         <div class="faq-q"><h4>Khoá học này phù hợp với ai?</h4><span class="plus">+</span></div>
-        <div class="faq-a"><p>Dành cho sinh viên năm 3–4 và fresh graduate (0–2 năm kinh nghiệm) muốn apply vào các tập đoàn FMCG/MNC như Unilever, P&G, Mondelez, Heineken, Nestlé, Vinamilk. Nếu chưa có kinh nghiệm, bạn sẽ học tư duy nền tảng; nếu đã apply nhưng chưa đậu, bạn sẽ được kèm 1:1 để chỉnh CV và luyện phỏng vấn.</p></div>
+        <div class="faq-a"><p>Dành cho sinh viên năm 3, năm 4 và fresh graduate (0–2 năm kinh nghiệm), đặc biệt là những bạn muốn apply vào các tập đoàn FMCG/MNC như Unilever, P&amp;G, Mondelez, Heineken, Nestlé, Vinamilk… Nếu chưa từng có kinh nghiệm FMCG, bạn sẽ học tư duy nền tảng và được định hướng 1-1; nếu đã đi thực tập hoặc đang apply nhưng chưa đậu, bạn sẽ được kèm 1-1 để chỉnh CV, chiến lược apply và luyện phỏng vấn.</p></div>
       </div>
       <div class="faq-item">
-        <div class="faq-q"><h4>Mình chưa có kinh nghiệm FMCG thì học được không?</h4><span class="plus">+</span></div>
-        <div class="faq-a"><p>Có — hơn 70% học viên trước đây chưa từng làm FMCG. Khoá học thiết kế theo mô hình foundation + practice, xây dựng từ tư duy, kỹ năng ứng tuyển đến phỏng vấn, không cần background FMCG.</p></div>
+        <div class="faq-q"><h4>Mình chưa có kinh nghiệm trong FMCG thì có học được không?</h4><span class="plus">+</span></div>
+        <div class="faq-a"><p>Có! Hơn 70% học viên trước đây chưa từng làm FMCG trước khi tham gia. Khoá học được thiết kế theo hướng foundation + practice: xây dựng từ tư duy, kỹ năng ứng tuyển đến phỏng vấn với nhà tuyển dụng, không cần background FMCG.</p></div>
       </div>
       <div class="faq-item">
         <div class="faq-q"><h4>Nếu mình đã có internship rồi thì tham gia khoá có ích gì?</h4><span class="plus">+</span></div>
         <div class="faq-a"><ul>
           <li>Biết cách chuyển internship thành lợi thế cạnh tranh trong CV</li>
           <li>Được Advisor chỉ ra các "lỗ hổng" trong trải nghiệm để bù lại</li>
-          <li>Chuẩn bị apply lên Management Trainee hoặc vị trí full-time</li>
+          <li>Chuẩn bị để apply tiếp lên Management Trainee (MT) hoặc vị trí full-time trong các công ty đa quốc gia</li>
         </ul></div>
       </div>
       <div class="faq-item">
-        <div class="faq-q"><h4>Khác gì so với học trên mạng/YouTube?</h4><span class="plus">+</span></div>
-        <div class="faq-a"><p>Thông tin trên mạng thường rời rạc, chung chung. Ở đây bạn có lộ trình rõ ràng, lớp học nhóm nhỏ chỉ 5 người cùng 3 Advisor trực tiếp giảng dạy, và một buổi 1:1 riêng để sửa CV hoặc luyện phỏng vấn — không chỉ học kiến thức suông.</p></div>
+        <div class="faq-q"><h4>Khoá học này khác gì so với học trên mạng/YouTube?</h4><span class="plus">+</span></div>
+        <div class="faq-a"><ul>
+          <li>Trên mạng: thông tin rời rạc, chung chung, thiếu thực tế</li>
+          <li>Ở đây: lộ trình rõ ràng + công cụ + Advisor đồng hành 1-1</li>
+          <li>Không chỉ học kiến thức, bạn còn được 1-1 sửa CV, luyện phỏng vấn, tăng cơ hội có Offer tại các công ty FMCG ngay sau khoá học</li>
+        </ul></div>
       </div>
       <div class="faq-item">
         <div class="faq-q"><h4>Thời gian và hình thức học thế nào?</h4><span class="plus">+</span></div>
         <div class="faq-a"><ul>
-          <li>7 buổi học (7 học phần), mỗi buổi 2 tiếng, kết hợp training + case thực tế, dạy trực tiếp bởi 3 Advisor</li>
-          <li>Các buổi học online qua Zoom; học phần 5 là buổi đi field tại kênh siêu thị ở TP.HCM</li>
-          <li>Lớp học chỉ 5 học viên, record đầy đủ các buổi để xem lại và ôn tập</li>
-          <li>3 tháng đồng hành cùng team LinkaJob để review và chỉnh sửa CV, phỏng vấn</li>
+          <li>4 buổi học online (Zoom), mỗi buổi 2 tiếng, kết hợp training + case thực tế</li>
+          <li>1 buổi đi field thực tế tại kênh siêu thị ở TP.HCM (địa điểm cụ thể được thông báo sau khi tham gia khoá học)</li>
+          <li>Record đầy đủ tất cả các buổi để xem lại và ôn tập</li>
+          <li>Nhóm học viên riêng để hỏi – đáp và networking</li>
         </ul></div>
       </div>
       <div class="faq-item">
-        <div class="faq-q"><h4>Advisor trong buổi sửa CV, phỏng vấn thử là ai?</h4><span class="plus">+</span></div>
-        <div class="faq-a"><p>Bạn được tặng kèm 1 buổi meeting 1:1 (sửa CV hoặc phỏng vấn thử) với Advisor tự chọn — không giới hạn ở 3 Advisor đứng lớp mà có thể chọn bất kỳ ai trong mạng lưới LinkaJob, đang làm việc tại các tập đoàn đa quốc gia như Nestlé, Fonterra, Suntory PepsiCo — từng đi qua chính con đường bạn đang tìm kiếm.</p></div>
+        <div class="faq-q"><h4>Advisor được chọn trong các buổi sửa CV và phỏng vấn thử là ai?</h4><span class="plus">+</span></div>
+        <div class="faq-a"><p>Khi tham gia khoá học, bạn được tặng kèm 2 buổi meeting 1-1: 1 buổi sửa CV và 1 buổi phỏng vấn thử với Advisor của LinkaJob (bạn có thể chọn Advisor tuỳ ý). Tất cả Advisor đều đang làm việc tại các công ty đa quốc gia như Nestlé, Fonterra, Suntory PepsiCo… và từng đi qua chính con đường bạn đang tìm kiếm. Họ không chỉ dạy lý thuyết mà chia sẻ trải nghiệm thực tế, điều bạn không bao giờ tìm thấy trên Google.</p></div>
       </div>
       <div class="faq-item">
         <div class="faq-q"><h4>Mình muốn đăng ký thì làm thế nào?</h4><span class="plus">+</span></div>
-        <div class="faq-a"><p>Bước 1: Đăng ký tư vấn cùng LinkaJob để team hiểu background, mục tiêu của bạn. Bước 2: Hoàn tất đăng ký, thanh toán học phí và chính thức bắt đầu hành trình Land Your Dream Job.</p></div>
+        <div class="faq-a"><ul>
+          <li>Bước 1: Đăng ký tư vấn cùng LinkaJob. Team sẽ tìm hiểu background, mục tiêu và mong đợi của bạn để đảm bảo khoá học thật sự phù hợp.</li>
+          <li>Bước 2: Hoàn tất đăng ký, thanh toán học phí và chính thức bước vào khoá Land Your Dream Job, nơi bạn được giảng viên đồng hành 1-1 để chinh phục FMCG.</li>
+        </ul></div>
       </div>
     </div>
   </div>
@@ -1080,17 +1136,23 @@ button:focus-visible, a:focus-visible, .lj-nav-btn-plain:focus-visible, .fbtn:fo
     fetch(ljFbUrl() + '?action=getFeedbacks')
       .then(function(r){ return r.json(); })
       .then(function(res){
-        var all = ((res && res.success && res.data) ? res.data : []).filter(function(f){
-          return f && f.service === 'Khoá học' && String(f.quote || '').trim();
+        var data = (res && res.success && res.data) ? res.data : [];
+        // Chuẩn hoá để "Khoá học" / "Khóa học" / khác kiểu gõ dấu đều khớp
+        function norm(s){ return String(s == null ? '' : s).normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/đ/g,'d').replace(/Đ/g,'D').toLowerCase().trim(); }
+        // 1) Chỉ lấy đánh giá thuộc dịch vụ "Khoá học" (giống tab Khoá học ở feedback.html)
+        var all = data.filter(function(f){
+          return f && /^khoa\s*hoc/.test(norm(f.service)) && String(f.quote || '').trim();
         });
-        // Nếu trên Sheet có ghi rõ tên khoá "Land Your Dream Job" ở cột advisor → chỉ lấy đúng khoá này;
-        // nếu không ghi (hoặc chỉ có 1 khoá) → lấy toàn bộ đánh giá "Khoá học".
-        var mine = all.filter(function(f){ return /land\s*your\s*dream\s*job/i.test(String(f.advisor || '')); });
-        LIST = mine.length ? mine : all;
+        // 2) Ưu tiên dòng ghi rõ khoá "Land Your Dream Job" ở cột advisor/badge
+        function tag(f){ return norm(f.advisor) + ' ' + norm(f.badge); }
+        var mine = all.filter(function(f){ return /land\s*your\s*dream\s*job|lydj/.test(tag(f)); });
+        // 3) Nếu chưa dòng nào ghi rõ → lấy các đánh giá "Khoá học" nhưng loại các khoá khác (Supply Chain, Logistics)
+        var rest = all.filter(function(f){ return !/supply\s*chain|logistics/.test(tag(f)); });
+        LIST = mine.length ? mine : rest;
         if (!LIST.length) return; // chưa có đánh giá "Khoá học" → giữ nội dung cũ
         render();
       })
-      .catch(function(){ /* giữ nội dung cũ */ });
+      .catch(function(err){ if (window.console) console.warn('Không tải được đánh giá khoá học, giữ nội dung mẫu:', err); });
   }
   window.addEventListener('load', load);
 })();
