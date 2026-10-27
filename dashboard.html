@@ -1190,7 +1190,7 @@ const SIDEBAR_DEF = {
   Staff: [
     { id: 'today', icon: '🏠', label: 'Hôm nay' },
     { id: 'cus', icon: '👥', label: 'Khách hàng', children: [
-      { id: 'lj-newreg',      label: 'Khách đăng ký mới' },
+      { id: 'lj-newreg',      label: 'Leads tư vấn' },
       { id: 'aee-list',       label: 'Advisee' },
       { id: 'aee-reschedule', label: 'Yêu cầu đổi lịch' },
     ]},
@@ -1890,7 +1890,7 @@ function sendDayRanges() {
 // ════════════════════════════════════════════════════════════
 
 // Gộp 1 dòng lead từ Sheet vào cache MOCK.consultations (tạo mới hoặc cập nhật nếu đã có),
-// dùng chung cho cả trang "Khách đăng ký mới" và tab riêng của từng Sale.
+// dùng chung cho cả trang "Leads tư vấn" và tab riêng của từng Sale.
 function mergeLeadRow(r) {
   if (!r.lead_id) return null;
   var existing = MOCK.consultations.find(function(c){ return c.id === r.lead_id; });
@@ -1905,6 +1905,7 @@ function mergeLeadRow(r) {
   obj.meetLink = r.meet_link || '';
   obj.sessionId = r.session_id || obj.sessionId || '';
   obj.status = r.status || 'Chưa liên hệ';
+  autoBookedStatus_(obj);
   obj.result = r.result || '';
   obj.nextStep = r.next_step || '';
   obj.nextStepDeadline = r.next_step_deadline ? String(r.next_step_deadline).slice(0,10) : '';
@@ -1975,6 +1976,10 @@ function parseVNDateTime(str) {
 // Nhịp theo dõi Ngày 0-1-2-3 (mục 3.2 SOP) — trả về mốc hiện tại + có quá hạn không
 function getLeadSlaInfo(c) {
   if (SLA_TERMINAL.indexOf(c.status) > -1 || c.status === 'Đã tư vấn xong') return null;
+  if (c.status === 'Không tham gia tư vấn') {
+    var ns = c.date ? new Date(c.date + 'T' + (c.time || '00:00')) : (getLeadAnchor(c) || new Date()), nd = Math.max(0, Math.floor((new Date() - ns) / 86400000)), nov = nd > 3;
+    return { label: (nov ? '⚠ Quá hạn — ' : '') + 'Không tham gia: hẹn lại lịch / follow-up', overdue: nov, color: nov ? '#B91C1C' : '#92400E', bg: nov ? '#FEE2E2' : '#FEF3C7', days: nd };
+  }
   var now = new Date();
   var meetingDt = c.date ? new Date(c.date + 'T' + (c.time || '00:00')) : null;
   var phase, anchor;
@@ -3011,6 +3016,7 @@ function leadStaffIdByName_(name) {
 }
 
 function persistLead(c) {
+  autoBookedStatus_(c);
   var isNew = !c.id;
   var key = c.id || ('__new__' + (c._tmpKey || (c._tmpKey = Math.random())));
   var prevChain = _leadSaveChain[key] || Promise.resolve();
@@ -3448,7 +3454,10 @@ function updateLeadNoteInline(cid, field, value) {
 // TRẠNG THÁI = Sale đang ở bước nào với khách (theo thứ tự quy trình).
 // Giá trị cũ 'Tạm đóng' / 'Không phù hợp' không còn trong danh sách chọn (lý do nằm ở cột Kết quả),
 // nhưng dữ liệu cũ vẫn hiển thị đúng nhờ extraStatusOption() và vẫn tính là đã đóng (SLA_TERMINAL).
-const CONSULT_STATUS = ['Chưa liên hệ','Đang liên hệ','Gọi điện','Đã chốt lịch','Đã tư vấn xong','Đang follow-up','Đã đóng'];
+const CONSULT_STATUS = ['Chưa liên hệ','Đang liên hệ','Gọi điện','Đã chốt lịch','Không tham gia tư vấn','Đã tư vấn xong','Đang follow-up','Đã đóng'];
+// Lead đã có lịch meeting mà status còn ở giai đoạn liên hệ → tự chuyển sang 'Đã chốt lịch'
+const STATUS_AUTO_BOOKED_FROM = ['', 'Chưa liên hệ', 'Đang liên hệ', 'Gọi điện'];
+function autoBookedStatus_(c) { if (c && c.date && STATUS_AUTO_BOOKED_FROM.indexOf(String(c.status || '')) > -1) c.status = 'Đã chốt lịch'; return c; }
 // Trạng thái ngoài danh sách chọn tay (vd 'Đã chuyển đổi thành khách hàng') vẫn phải hiển thị đúng
 function extraStatusOption(cur) {
   var v = String(cur || '').trim();
@@ -7664,7 +7673,7 @@ function prepBadgeHtml_(date, time, prepRequired, hasPrep) {
 }
 
 // ════════════════════════════════════════════════════════════
-//  SẮP XẾP DANH SÁCH (dùng chung cho: Khách đăng ký mới, Lịch tư vấn, Chưa đặt lịch, Advisee, Khách đã mua)
+//  SẮP XẾP DANH SÁCH (dùng chung cho: Leads tư vấn, Lịch tư vấn, Chưa đặt lịch, Advisee, Khách đã mua)
 //  Mặc định: MỚI ĐĂNG KÝ NHẤT lên đầu. Mỗi người chọn cách xếp riêng; lựa chọn được nhớ trên trình duyệt đó.
 // ════════════════════════════════════════════════════════════
 var SORT_OPTS_ = {
@@ -7939,13 +7948,14 @@ function leadIsClosed(c) { return SLA_TERMINAL.indexOf(c.status) > -1 || isRegis
 function leadIsOverdue(c) { var s = getLeadSlaInfo(c); return !!(s && s.overdue); }
 function leadNeedsAction(c) {
   if (leadIsClosed(c)) return false;
-  if (c.status === 'Chưa liên hệ') return true;
+  if (c.status === 'Chưa liên hệ' || c.status === 'Không tham gia tư vấn') return true;
   if (!c.staff) return true;
   if (leadIsOverdue(c)) return true;
   if (c.status === 'Đã tư vấn xong' && !c.result) return true;
   return false;
 }
 function leadMatchesFilter(c, f) {
+  if (String(f).indexOf('st:') === 0) { var st = f.slice(3); return st === 'Đã đóng' ? SLA_TERMINAL.indexOf(c.status) > -1 : c.status === st; }
   if (f === 'todo') return leadNeedsAction(c);
   if (f === 'overdue') return !leadIsClosed(c) && leadIsOverdue(c);
   if (f === 'unassigned') return !leadIsClosed(c) && !c.staff;
@@ -7963,7 +7973,7 @@ function leadSearchKey(c) {
   return stripDiacritics(c.name + ' ' + raw + ' ' + raw.replace(/\D/g, '') + ' ' + fmtPhoneVN(raw).replace(/\s/g, '') + ' ' + c.email);
 }
 function leadRowVisible(c, q) {
-  if (!_leadShowClosed && leadIsClosed(c)) return false;
+  if (!_leadShowClosed && leadIsClosed(c) && String(_leadFilter).indexOf('st:') !== 0) return false;
   if (!leadMatchesFilter(c, _leadFilter)) return false;
   if (q === undefined) q = stripDiacritics(String(_leadSearch || '').trim());
   if (q && leadSearchKey(c).indexOf(q) === -1) return false;
@@ -7990,6 +8000,7 @@ function leadCounts() {
     overdue: open.filter(leadIsOverdue).length,
     unassigned: open.filter(function(c){ return !c.staff; }).length,
     nodate: open.filter(function(c){ return !c.date; }).length,
+    byStatus: CONSULT_STATUS.reduce(function(m, s){ m[s] = _leadObjs.filter(function(c){ return s === 'Đã đóng' ? SLA_TERMINAL.indexOf(c.status) > -1 : c.status === s; }).length; return m; }, {}),
   };
 }
 function updateLeadNavBadge() { setNavBadge('lj-newreg', leadCounts().todo); }
@@ -8009,7 +8020,7 @@ function leadSlaBadgeHtml(c) {
 function loadNewRegistrationsPage(keepState) {
   if (keepState === true && activeNavId !== 'lj-newreg') return;
   var c = document.getElementById('main-content');
-  c.innerHTML = pageHeader('Khách đăng ký mới', 'Đang tải danh sách lead...') + skeletonRows(3);
+  c.innerHTML = pageHeader('Leads tư vấn', 'Đang tải danh sách lead...') + skeletonRows(3);
 
   if (keepState !== true) {
     _leadFilter = _leadPresetFilter || 'open';
@@ -8027,7 +8038,7 @@ function loadNewRegistrationsPage(keepState) {
     c.innerHTML = renderNewRegistrationsList();
   }).catch(function(err){
     if (activeNavId !== 'lj-newreg') return;
-    c.innerHTML = pageHeader('Khách đăng ký mới', 'Lead từ website và các kênh') +
+    c.innerHTML = pageHeader('Leads tư vấn', 'Lead từ website và các kênh') +
       '<div class="card"><div class="empty-state"><div class="icon">⚠</div>Không kết nối được tới Sheet.<br><small style="color:var(--muted)">' + escHtml(err.message) + '</small></div></div>';
   });
 }
@@ -8041,10 +8052,10 @@ function leadFilterBarHtml() {
   var n = leadCounts();
   var h = '<div class="chip-row">';
   h += leadChip('open', _leadShowClosed ? 'Tất cả' : 'Đang mở', _leadShowClosed ? n.all : n.open, 'Tất cả lead chưa đóng');
-  h += leadChip('todo', 'Cần xử lý', n.todo, 'Lead đang mở mà: chưa liên hệ, chưa gán Sale, quá hạn SLA, hoặc đã tư vấn xong nhưng chưa có kết quả');
-  h += leadChip('overdue', 'Quá hạn', n.overdue, 'Quá 3 ngày theo nhịp SLA Ngày 0 đến 3');
-  h += leadChip('unassigned', 'Chưa gán', n.unassigned, 'Chưa có Sale phụ trách');
-  h += leadChip('nodate', 'Chưa chọn giờ', n.nodate, 'Khách chưa chọn giờ tư vấn');
+  h += leadChip('todo', '⚑ Cần xử lý', n.todo, 'Lead đang mở mà: chưa liên hệ, chưa gán Sale, quá hạn, không tham gia tư vấn, hoặc đã tư vấn xong nhưng chưa có kết quả');
+  CONSULT_STATUS.forEach(function(st){ h += leadChip('st:' + st, st, n.byStatus[st] || 0, 'Lọc theo trạng thái tư vấn: ' + st); });
+  var extra = { overdue: ['Quá hạn', n.overdue], unassigned: ['Chưa gán Sale', n.unassigned], nodate: ['Chưa chọn giờ', n.nodate] }[_leadFilter];
+  if (extra) h += leadChip(_leadFilter, extra[0], extra[1], 'Bộ lọc đang chọn');
   h += '<label class="chip-toggle" title="Lead đã đóng, tạm đóng, không phù hợp, đã đăng ký hoặc đã chuyển thành khách hàng"><input type="checkbox" ' + (_leadShowClosed ? 'checked' : '') + ' onchange="toggleLeadClosed(this.checked)"> Hiện cả lead đã đóng (' + n.closed + ')</label>';
   h += '</div>';
   return h;
@@ -8105,7 +8116,7 @@ function leadTableHtml() {
 function renderNewRegistrationsList() {
   var actions = '<button class="refresh-btn" onclick="loadNewRegistrationsPage(true)">↻ Làm mới</button>' +
     '<button class="submit-btn" style="padding:8px 16px;font-size:13px;width:auto" onclick="openCreateLeadModal()">+ Tạo đơn mới</button>';
-  var html = pageHeader('Khách đăng ký mới', 'Mặc định xếp mới đăng ký nhất lên đầu — đổi cách sắp xếp ở ô bên phải ô tìm kiếm', actions);
+  var html = pageHeader('Leads tư vấn', 'Lọc theo trạng thái tư vấn. Lead có lịch meeting sẽ tự chuyển sang “Đã chốt lịch”. Đổi cách sắp xếp ở ô bên phải ô tìm kiếm', actions);
   html += '<div class="card"><div class="card-header"><div class="card-header-left" id="lead-count">' + leadCountText() + '</div></div>';
   html += '<div style="padding:0 24px" id="lead-filter-bar">' + leadFilterBarHtml() + '</div>';
   html += '<div style="padding:0 24px;display:flex;gap:12px;align-items:flex-start;flex-wrap:wrap"><div style="flex:1;min-width:220px;margin-bottom:14px;position:relative">' +
