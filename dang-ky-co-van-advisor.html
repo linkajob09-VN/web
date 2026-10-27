@@ -536,6 +536,19 @@ function renderPricingJourney(packages, featuresByPkg) {
     };
   });
 
+  // Gói bên trái "lấy theo" gói bên phải về chữ và dấu tick trong các hàng quyền lợi
+  // (giá, thời gian, tổng số buổi vẫn giữ riêng). Muốn bỏ: xoá dòng tương ứng, hoặc
+  // nhập đủ quyền lợi cho gói đó trong dashboard.
+  var PC_MIRROR = { 'senior executive': 'đồng hành' };
+  function pcNorm(s) { return String(s || '').trim().toLowerCase().normalize('NFC'); }
+  cols.forEach(function(c){
+    var srcName = PC_MIRROR[pcNorm(c.p.name)];
+    if (!srcName) return;
+    var src = cols.find(function(x){ return pcNorm(x.p.name) === srcName; });
+    if (!src) return;
+    ['guide', 'cv', 'pv', 'cs', 'doc', 'course', 'refund', 'pct'].forEach(function(k){ c[k] = src[k]; });
+  });
+
   var refundPct = null;
   cols.forEach(function(c){ if (!refundPct && c.pct) refundPct = c.pct; });
   function cls(i) { return i === hiIdx ? ' class="pc-hi"' : ''; }
@@ -546,8 +559,8 @@ function renderPricingJourney(packages, featuresByPkg) {
   }
   var rows = [
     { label: 'Giá', get: function(c){ return '<span class="pc-price">' + pricingEscHtml(c.price) + '</span>'; } },
-    { label: 'Thời gian', get: function(c){ return c.duration ? pricingEscHtml(c.duration) : '<span class="pc-dot">·</span>'; } },
-    { label: 'Số buổi', get: function(c){ return pricingEscHtml(c.sessions); } },
+    { label: 'Tổng số buổi cố vấn', get: function(c){ return pricingEscHtml(c.sessions); } },
+    { label: 'Thời gian sử dụng', get: function(c){ return c.duration ? pricingEscHtml(c.duration) : '<span class="pc-dot">·</span>'; } },
     { label: 'Định hướng ngành/phòng ban/vị trí phù hợp', key: 'guide' },
     { label: 'Sửa CV', key: 'cv' },
     { label: 'Luyện phỏng vấn', key: 'pv' },
