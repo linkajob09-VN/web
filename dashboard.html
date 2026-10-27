@@ -4764,15 +4764,105 @@ function renderProductsPage() {
 //    nhất, lưu 1 lần cho cả 2 phần. Không truyền p (hoặc p=null) → form
 //    Thêm mới (chưa có nội dung hỗ trợ để tải). ──
 var _editingPackage = null;
-var _editingFeatures = [];
+var _editingFeatures = [];   // chỉ còn các dòng "Quyền lợi khác" (gõ tự do, hiện ở mục "Xem thêm" trên trang đăng ký)
+var _editingTable = {};      // trạng thái các hàng của bảng so sánh
+var _editingDraft = null;    // giữ lại các ô thông tin cơ bản khi form vẽ lại
+var _editingLegacy = false;  // true nếu gói đang sửa là dữ liệu cũ vừa được tự chuyển sang form mới
+
+// ── Các hàng của BẢNG SO SÁNH trên trang đăng ký cố vấn. Mỗi hàng lưu 1 dòng trong PackageFeatures:
+//    group_label = '_table', feature_label = fname (PHẢI khớp với trang đăng ký), value = giá trị ngắn
+//    hiện trong ô ('check' = dấu tick, 'Không giới hạn', '2 vị trí', '1 bài', 'Chọn 1 mục', '70%'). ──
+var TABLE_ROWS = [
+  { key: 'guide',  fname: 'Định hướng',        label: 'Định hướng ngành/phòng ban/vị trí phù hợp', type: 'toggle' },
+  { key: 'cv',     fname: 'Sửa CV',            label: 'Sửa CV',                 type: 'limit', unit: 'vị trí' },
+  { key: 'pv',     fname: 'Luyện phỏng vấn',   label: 'Luyện phỏng vấn',        type: 'limit', unit: 'vị trí' },
+  { key: 'cs',     fname: 'Case Study',        label: 'Case Study',             type: 'limit', unit: 'bài' },
+  { key: 'doc',    fname: 'Tài liệu ngành',    label: 'Tài liệu chuyên ngành',  type: 'toggle' },
+  { key: 'course', fname: 'Khoá học LinkaJob', label: 'Khoá học LinkaJob',      type: 'toggle' },
+  { key: 'refund', fname: 'Hoàn tiền',         label: 'Hoàn tiền nếu chưa có offer', type: 'refund' }
+];
+
+function _pkEsc(s) { return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;'); }
+
+function emptyTableState() {
+  var st = {};
+  TABLE_ROWS.forEach(function(r){
+    st[r.key] = r.type === 'limit' ? { mode: 'none', n: 1 } : r.type === 'refund' ? { on: false, pct: 70 } : { on: false };
+  });
+  return st;
+}
+
+// state -> value lưu vào Sheet. null = hàng không có, false = nhập sai.
+function encodeTableRow(r, st) {
+  if (r.type === 'toggle') return st.on ? 'check' : null;
+  if (r.type === 'refund') {
+    if (!st.on) return null;
+    var pct = Number(st.pct);
+    return (pct > 0 && pct <= 100) ? (Math.round(pct) + '%') : false;
+  }
+  if (st.mode === 'none') return null;
+  if (st.mode === 'pick') return 'Chọn 1 mục';
+  if (st.mode === 'yes') return 'check';
+  if (st.mode === 'unl') return 'Không giới hạn';
+  var n = Number(st.n);
+  return (n > 0) ? (Math.round(n) + ' ' + r.unit) : false;
+}
+
+// value trong Sheet -> state
+function decodeTableRow(r, value) {
+  var v = String(value || '').trim();
+  if (r.type === 'toggle') return { on: true };
+  if (r.type === 'refund') return { on: true, pct: parseInt(v, 10) || 70 };
+  if (v === 'check') return { mode: 'yes', n: 1 };
+  if (v === 'Chọn 1 mục') return { mode: 'pick', n: 1 };
+  if (v === 'Không giới hạn') return { mode: 'unl', n: 1 };
+  var m = v.match(/^(\d+)/);
+  return m ? { mode: 'n', n: Number(m[1]) } : { mode: 'yes', n: 1 };
+}
+
+function limitFromText(t) {
+  var s = String(t || '').normalize('NFC');
+  if (/^\s*hoặc\b/i.test(s)) return { mode: 'pick', n: 1 };
+  if (/không giới hạn/i.test(s)) return { mode: 'unl', n: 1 };
+  var m = s.match(/(\d+)\s*vị trí/i) || s.match(/(\d+)\s*(?:case study|bài)/i);
+  if (m) return { mode: 'n', n: Number(m[1]) };
+  return { mode: 'yes', n: 1 };
+}
+
+// Gói cũ (chỉ có các dòng gõ tự do) -> tự điền sẵn form mới để admin kiểm tra rồi bấm Lưu.
+// Dòng nào khớp 1 hàng của bảng thì được chuyển vào hàng đó; dòng nói về số Advisor bỏ đi vì đã có ô
+// "Không giới hạn Advisor"; các dòng còn lại giữ nguyên ở mục "Quyền lợi khác".
+function legacyToTable(list) {
+  var st = emptyTableState(), rest = [], seen = {};
+  function setLimit(key, t) {
+    var lim = limitFromText(t);
+    if (!seen[key] || (seen[key] === 'yes' && lim.mode !== 'yes')) { st[key] = lim; seen[key] = lim.mode; }
+  }
+  list.forEach(function(f){
+    var t = String(f.feature_label || '').normalize('NFC'), hit = false, m;
+    if (/\u0111\u1ecbnh h\u01b0\u1edbng ng\u00e0nh|ph\u00f2ng ban/i.test(t)) { st.guide.on = true; hit = true; }
+    if (/\bcv\b/i.test(t) && !/cover|portfolio|linkedin/i.test(t)) { setLimit('cv', t); hit = true; }
+    if (/ph\u1ecfng v\u1ea5n/i.test(t)) { setLimit('pv', t); hit = true; }
+    if (/case study/i.test(t)) { setLimit('cs', t); hit = true; }
+    if (/t\u00e0i li\u1ec7u chuy\u00ean ng\u00e0nh/i.test(t)) { st.doc.on = true; hit = true; }
+    if (/kho\u00e1\s*h\u1ecdc|kh\u00f3a\s*h\u1ecdc/i.test(t)) { st.course.on = true; hit = true; }
+    if ((m = t.match(/ho\u00e0n\s*(\d+)\s*%/i))) { st.refund = { on: true, pct: Number(m[1]) }; hit = true; }
+    if (/advisor/i.test(t) && /kh\u00f4ng gi\u1edbi h\u1ea1n|duy nh\u1ea5t|1 advisor|c\u1ed1 v\u1ea5n/i.test(t)) hit = true;
+    if (!hit) rest.push(f);
+  });
+  return { state: st, rest: rest };
+}
 
 function openPackageEditor(p) {
   _editingPackage = p || null;
+  _editingDraft = null;
+  _editingLegacy = false;
   var c = document.getElementById('main-content');
   c.className = 'content';
 
-  if (!p) { // Thêm gói mới — chưa có package_id nên chưa có feature để tải
+  if (!p) { // Thêm gói mới — form bảng so sánh nhập được ngay, lưu cùng lúc với gói
     _editingFeatures = [];
+    _editingTable = emptyTableState();
     c.innerHTML = renderPackageEditor();
     return;
   }
@@ -4780,99 +4870,172 @@ function openPackageEditor(p) {
   c.innerHTML = skeletonRows(3);
 
   apiGet('getPackageFeatures', {}).then(function(res){
-    var allFeatures = (res && res.data) ? res.data : [];
+    var all = (res && res.data) ? res.data : [];
+    var mine = all
+      .filter(function(f){ return String(f.package_id).trim() === p.package_id && f.value !== 'dash' && String(f.group_label || '').trim() !== '_meta'; })
+      .sort(function(a, b){ return (Number(a.sort_order) || 0) - (Number(b.sort_order) || 0); });
+    var tableRows = mine.filter(function(f){ return String(f.group_label || '').trim() === '_table'; });
+    var others = mine.filter(function(f){ return String(f.group_label || '').trim() !== '_table'; }).map(function(f){
+      var desc = String(f.feature_label || '').trim();
+      if (f.value && f.value !== 'check' && f.value !== 'dash') desc += (desc ? ' — ' : '') + String(f.value).trim();
+      return { group_label: 'Khác', feature_label: desc, sort_order: Number(f.sort_order) || 0 };
+    });
 
-    // ── Mô hình MỚI: mỗi gói có list benefit RIÊNG (không còn ma trận
-    //    check/dash chung giữa các gói). Chỉ lấy đúng dòng của gói này,
-    //    bỏ các dòng "dash" cũ (chỉ là placeholder "không có" ở model cũ,
-    //    không phải benefit thật). Gộp feature_label + value tuỳ chỉnh cũ
-    //    (VD "3 công ty") thành 1 câu mô tả đầy đủ, và quy nhóm tự do cũ
-    //    (CHỦ ĐỀ CV, CHỦ ĐỀ PHỎNG VẤN...) về đúng 1 trong 4 chủ đề cố định. ──
-    _editingFeatures = allFeatures
-      .filter(function(f){ return String(f.package_id).trim() === p.package_id && f.value !== 'dash'; })
-      .sort(function(a, b){ return (Number(a.sort_order) || 0) - (Number(b.sort_order) || 0); })
-      .map(function(f){
-        var desc = String(f.feature_label || '').trim();
-        if (f.value && f.value !== 'check' && f.value !== 'dash') desc += (desc ? ' — ' : '') + String(f.value).trim();
-        return { group_label: normalizeFeatureTheme(f.group_label), feature_label: desc, sort_order: Number(f.sort_order) || 0 };
+    if (tableRows.length) {
+      _editingTable = emptyTableState();
+      TABLE_ROWS.forEach(function(r){
+        var f = tableRows.find(function(x){ return String(x.feature_label || '').trim() === r.fname; });
+        if (f) _editingTable[r.key] = decodeTableRow(r, f.value);
       });
-
+      _editingFeatures = others;
+    } else {
+      var conv = legacyToTable(others);
+      _editingTable = conv.state;
+      _editingFeatures = conv.rest;
+      _editingLegacy = true;
+    }
+    _editingFeatures.forEach(function(f, i){ f.sort_order = (i + 1) * 10; });
     c.innerHTML = renderPackageEditor();
   }).catch(function(err){
     toast('Không tải được nội dung hỗ trợ: ' + err.message, 'error');
     _editingFeatures = [];
+    _editingTable = emptyTableState();
     c.innerHTML = renderPackageEditor();
   });
 }
 
+function captureEditorDraft() {
+  var g = function(id){ return document.getElementById(id); };
+  if (!g('pkg-name')) return;
+  _editingDraft = {
+    name: g('pkg-name').value, badge: g('pkg-badge').value, duration: g('pkg-duration').value,
+    advisorUnlimited: g('pkg-advisor-unlimited').checked, contact: g('pkg-contact-price').checked,
+    price: g('pkg-price').value, sessions: g('pkg-sessions').value,
+    sessionsUnlimited: g('pkg-sessions-unlimited').checked, durationLabel: g('pkg-duration-label').value
+  };
+}
+function rerenderPackageEditor() {
+  captureEditorDraft();
+  document.getElementById('main-content').innerHTML = renderPackageEditor();
+}
+
+function tablePreview(r, st) {
+  var dot = '<span style="color:var(--muted)">·</span>', tick = '<span style="color:var(--brand);font-weight:700">✓</span>';
+  if (r.type === 'toggle') return st.on ? tick : dot;
+  if (r.type === 'refund') return st.on ? (tick + ' <span style="font-size:11.5px;color:var(--muted)">Hoàn ' + (Number(st.pct) || '?') + '%</span>') : dot;
+  if (st.mode === 'none') return dot;
+  if (st.mode === 'pick') return 'Chọn 1 mục';
+  if (st.mode === 'yes') return tick;
+  if (st.mode === 'unl') return 'Không giới hạn';
+  return (Number(st.n) > 0 ? Number(st.n) : '?') + ' ' + r.unit;
+}
+
+function renderTableRows() {
+  var inp = 'class="form-input" style="padding:6px 8px;font-size:12.5px;';
+  var html = '<div style="display:grid;grid-template-columns:210px minmax(0,1fr) 150px;gap:0;padding:8px 24px;background:var(--bg,#f7f7f5);font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em"><span>Hàng trên bảng</span><span>Giá trị của gói này</span><span style="text-align:center">Hiển thị trên trang</span></div>';
+  TABLE_ROWS.forEach(function(r){
+    var st = _editingTable[r.key], ctrl = '';
+    if (r.type === 'toggle') {
+      ctrl = '<select ' + inp + 'width:150px" onchange="tblSet(\'' + r.key + '\',\'on\',this.value===\'1\')"><option value="1"' + (st.on ? ' selected' : '') + '>Có</option><option value="0"' + (!st.on ? ' selected' : '') + '>Không</option></select>';
+    } else if (r.type === 'refund') {
+      ctrl = '<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><select ' + inp + 'width:150px" onchange="tblSet(\'refund\',\'on\',this.value===\'1\')"><option value="1"' + (st.on ? ' selected' : '') + '>Có hoàn tiền</option><option value="0"' + (!st.on ? ' selected' : '') + '>Không</option></select>' +
+        (st.on ? '<input type="number" min="1" max="100" ' + inp + 'width:70px" value="' + _pkEsc(st.pct) + '" onchange="tblSet(\'refund\',\'pct\',this.value)"><span style="font-size:12.5px;color:var(--muted)">% giá trị gói</span>' : '') + '</div>';
+    } else {
+      var opts = [['none', 'Không có'], ['pick', 'Chọn 1 mục'], ['yes', 'Có (không nêu số)'], ['n', 'Giới hạn số lượng'], ['unl', 'Không giới hạn']];
+      ctrl = '<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><select ' + inp + 'width:170px" onchange="tblSet(\'' + r.key + '\',\'mode\',this.value)">' +
+        opts.map(function(o){ return '<option value="' + o[0] + '"' + (st.mode === o[0] ? ' selected' : '') + '>' + o[1] + '</option>'; }).join('') + '</select>' +
+        (st.mode === 'n' ? '<input type="number" min="1" ' + inp + 'width:70px" value="' + _pkEsc(st.n) + '" onchange="tblSet(\'' + r.key + '\',\'n\',this.value)"><span style="font-size:12.5px;color:var(--muted)">' + r.unit + '</span>' : '') + '</div>';
+    }
+    html += '<div style="display:grid;grid-template-columns:210px minmax(0,1fr) 150px;gap:0;align-items:center;padding:10px 24px;border-top:1px solid var(--border)">' +
+      '<span style="font-size:13px;padding-right:10px">' + r.label + '</span><div>' + ctrl + '</div>' +
+      '<div style="text-align:center;font-size:13px;font-weight:600">' + tablePreview(r, st) + '</div></div>';
+  });
+  return html;
+}
+
+function tblSet(key, field, value) {
+  if (!_editingTable[key]) return;
+  _editingTable[key][field] = value;
+  var el = document.getElementById('pkg-table-body');
+  if (el) el.innerHTML = renderTableRows();
+}
+
 function renderPackageEditor() {
   var p = _editingPackage;
+  var D = _editingDraft;
   var isEdit = !!(p && p.package_id);
-  var isContactPrice = isEdit && p.price_mode === 'contact';
-  var isSessionsUnlimited = isEdit && (p.sessions_unlimited === true || p.sessions_unlimited === 'TRUE' || p.sessions_unlimited === 'true');
-  var isAdvisorUnlimited = isEdit && (p.advisor_unlimited === true || p.advisor_unlimited === 'TRUE' || p.advisor_unlimited === 'true');
+  function T(x) { return x === true || x === 'TRUE' || x === 'true'; }
+  var isContactPrice = D ? D.contact : (isEdit && p.price_mode === 'contact');
+  var isSessionsUnlimited = D ? D.sessionsUnlimited : (isEdit && T(p.sessions_unlimited));
+  var isAdvisorUnlimited = D ? D.advisorUnlimited : (isEdit && T(p.advisor_unlimited));
+  var vName = D ? D.name : (isEdit ? p.name : '');
+  var vBadge = D ? D.badge : (isEdit ? (p.badge_label || '') : '');
+  var vDuration = D ? D.duration : (isEdit ? (Number(p.duration_minutes) || 60) : 60);
+  var vPrice = D ? D.price : (isEdit ? (isContactPrice ? '' : (p.price || '')) : '');
+  var vSessions = D ? D.sessions : (isEdit ? (Number(p.sessions) || '') : '');
+  var vDurLabel = D ? D.durationLabel : (isEdit ? (p.duration_label || '') : '');
 
   var html = '<div style="margin-bottom:14px"><button class="detail-btn" onclick="loadProductsPageAsync()">← Quay lại Sản phẩm</button></div>';
-  html += pageHeader(isEdit ? ('Sửa gói — ' + p.name) : 'Thêm gói meeting mới', 'Giá, số buổi, hạn dùng, thời lượng mỗi buổi, và nội dung hỗ trợ hiển thị trên landing page');
+  html += pageHeader(isEdit ? ('Sửa gói — ' + p.name) : 'Thêm gói meeting mới', 'Giá, số buổi, hạn dùng và nội dung hiển thị trong bảng so sánh trên trang đăng ký cố vấn');
+
+  if (_editingLegacy) {
+    html += '<div style="margin-bottom:14px;padding:12px 16px;border-radius:10px;background:#FFF7E6;border:1px solid #F5D9A0;font-size:12.5px;color:#7A5200">⚠️ Gói này đang dùng dữ liệu kiểu cũ. Hệ thống đã tự điền sẵn form bên dưới từ dữ liệu cũ. Bạn kiểm tra lại từng hàng, rồi bấm <b>Lưu tất cả thay đổi</b> để chuyển sang kiểu mới.</div>';
+  }
 
   // ── Thông tin cơ bản ──
   html += '<div class="card"><div class="card-header"><div class="card-header-left">Thông tin cơ bản</div></div>';
   html += '<div style="padding:16px 24px;display:grid;grid-template-columns:1fr 1fr;gap:14px">';
-  html += '<div><div class="form-label">Tên gói</div><input class="form-input" id="pkg-name" value="' + (isEdit ? p.name : '') + '" placeholder="VD: Trial" style="margin-top:6px"></div>';
-  html += '<div><div class="form-label">Nhãn nổi bật (để trống nếu không có)</div><input class="form-input" id="pkg-badge" value="' + (isEdit ? (p.badge_label || '') : '') + '" placeholder="VD: PHỔ BIẾN NHẤT" style="margin-top:6px"></div>';
-  html += '<div><div class="form-label">Thời lượng mỗi buổi (phút)</div><input class="form-input" type="number" id="pkg-duration" value="' + (isEdit ? (Number(p.duration_minutes) || 60) : 60) + '" placeholder="VD: 45" style="margin-top:6px"></div>';
+  html += '<div><div class="form-label">Tên gói</div><input class="form-input" id="pkg-name" value="' + _pkEsc(vName) + '" placeholder="VD: Trial" style="margin-top:6px"></div>';
+  html += '<div><div class="form-label">Nhãn nổi bật (để trống nếu không có)</div><input class="form-input" id="pkg-badge" value="' + _pkEsc(vBadge) + '" placeholder="VD: OFFER CÔNG VIỆC" style="margin-top:6px"><div style="font-size:11.5px;color:var(--muted);margin-top:4px">Chỉ nên điền cho 1 gói. Gói có nhãn sẽ được tô nổi bật trong bảng.</div></div>';
+  html += '<div><div class="form-label">Thời lượng mỗi buổi (phút)</div><input class="form-input" type="number" id="pkg-duration" value="' + _pkEsc(vDuration) + '" placeholder="VD: 45" style="margin-top:6px"></div>';
 
   html += '<div style="grid-column:1 / -1"><label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer">' +
     '<input type="checkbox" id="pkg-advisor-unlimited" ' + (isAdvisorUnlimited ? 'checked' : '') + '> Không giới hạn Advisor (khách được đổi Advisor tự do trong gói này)' +
-    '</label></div>';
+    '</label><div style="font-size:11.5px;color:var(--muted);margin:4px 0 0 22px">Hiện ở hàng "Advisor cố vấn" của bảng: tick = "Không giới hạn", không tick = "1 Advisor".</div></div>';
   html += '</div></div>';
 
-  // ── Nội dung hỗ trợ ──
-  html += '<div class="card"><div class="card-header"><div class="card-header-left">Nội dung hỗ trợ (' + _editingFeatures.length + ')</div>' +
-    '<button class="update-btn" onclick="addFeatureRow()">+ Thêm dòng</button></div>';
-
-  html += '<div style="padding:16px 24px;display:grid;grid-template-columns:1fr 1fr;gap:14px;border-bottom:1px solid var(--border)">';
+  // ── Giá / số buổi / hạn dùng ──
+  html += '<div class="card"><div class="card-header"><div class="card-header-left">Giá, tổng số buổi cố vấn, thời gian sử dụng</div></div>';
+  html += '<div style="padding:16px 24px;display:grid;grid-template-columns:1fr 1fr;gap:14px">';
   html += '<div><div class="form-label">Giá (VNĐ)</div>' +
-    '<input class="form-input" type="text" id="pkg-price" value="' + (isEdit ? (isContactPrice ? '' : (p.price || '')) : '') + '" placeholder="VD: 799000 (hoặc nhập chữ, VD: Theo thoả thuận)" style="margin-top:6px" ' + (isContactPrice ? 'disabled' : '') + '>' +
+    '<input class="form-input" type="text" id="pkg-price" value="' + _pkEsc(vPrice) + '" placeholder="VD: 799000 (hoặc nhập chữ, VD: Theo thoả thuận)" style="margin-top:6px" ' + (isContactPrice ? 'disabled' : '') + '>' +
     '<label style="display:flex;align-items:center;gap:6px;margin-top:6px;font-size:12px;color:var(--muted);cursor:pointer">' +
     '<input type="checkbox" id="pkg-contact-price" ' + (isContactPrice ? 'checked' : '') + ' onchange="onPkgContactPriceToggle(this.checked)"> Hiện "Liên hệ" thay vì giá cụ thể' +
     '</label></div>';
 
-  html += '<div><div class="form-label">Số buổi</div>' +
-    '<input class="form-input" type="number" id="pkg-sessions" value="' + (isEdit ? Number(p.sessions) || '' : '') + '" placeholder="VD: 2" style="margin-top:6px" ' + (isSessionsUnlimited ? 'disabled' : '') + '>' +
+  html += '<div><div class="form-label">Tổng số buổi cố vấn</div>' +
+    '<input class="form-input" type="number" id="pkg-sessions" value="' + _pkEsc(vSessions) + '" placeholder="VD: 2" style="margin-top:6px" ' + (isSessionsUnlimited ? 'disabled' : '') + '>' +
     '<label style="display:flex;align-items:center;gap:6px;margin-top:6px;font-size:12px;color:var(--muted);cursor:pointer">' +
     '<input type="checkbox" id="pkg-sessions-unlimited" ' + (isSessionsUnlimited ? 'checked' : '') + ' onchange="onPkgSessionsUnlimitedToggle(this.checked)"> Không giới hạn số buổi' +
     '</label></div>';
 
-  html += '<div><div class="form-label">Hạn dùng</div><input class="form-input" type="text" id="pkg-duration-label" value="' + (isEdit ? (p.duration_label || '') : '') + '" placeholder="VD: 3 ngày, 1 tháng, Đến khi có Offer" style="margin-top:6px"></div>';
+  html += '<div><div class="form-label">Thời gian sử dụng</div><input class="form-input" type="text" id="pkg-duration-label" value="' + _pkEsc(vDurLabel) + '" placeholder="VD: 3 ngày, 1 tháng, 4 tháng" style="margin-top:6px"></div>';
+  html += '</div></div>';
+
+  // ── Nội dung bảng so sánh (có cấu trúc) ──
+  html += '<div class="card"><div class="card-header"><div class="card-header-left">Nội dung bảng so sánh</div></div>';
+  html += '<div style="padding:12px 24px 4px;font-size:12px;color:var(--muted)">Mỗi dòng là một hàng của bảng trên trang đăng ký. Cột bên phải cho thấy ô của gói này sẽ hiển thị thế nào.</div>';
+  html += '<div id="pkg-table-body">' + renderTableRows() + '</div>';
+  html += '<div style="padding:12px 24px;font-size:11.5px;color:var(--muted);border-top:1px solid var(--border)">💡 Chọn "Không có" nghĩa là gói này không có quyền lợi đó (ô hiện dấu chấm). Hàng nào không gói nào có thì tự ẩn khỏi bảng.</div>';
   html += '</div>';
 
-  if (!isEdit) {
-    html += '<div style="padding:12px 24px;font-size:12px;color:var(--muted)">Lưu gói trước, sau đó mở lại để thêm nội dung hỗ trợ.</div>';
-  } else {
-    html += '<table class="bookings-table"><thead><tr><th style="width:22%">CHỦ ĐỀ</th><th style="width:58%">NỘI DUNG CHI TIẾT</th><th></th></tr></thead><tbody>';
-    if (_editingFeatures.length === 0) {
-      html += '<tr><td colspan="3" style="text-align:center;color:var(--muted);padding:24px 0">Chưa có dòng nào — bấm "+ Thêm dòng" để bắt đầu.</td></tr>';
-    }
-    _editingFeatures.forEach(function(f, idx){
-      html += '<tr>';
-      html += '<td><select class="form-input" style="padding:6px 8px;font-size:12.5px" onchange="updateFeatureField(' + idx + ',\'group_label\',this.value)">' +
-        FEATURE_THEMES.map(function(t){ return '<option value="' + t + '"' + (f.group_label === t ? ' selected' : '') + '>' + t + '</option>'; }).join('') +
-        '</select></td>';
-      html += '<td><input class="form-input" style="padding:6px 8px;font-size:12.5px" value="' + (f.feature_label||'').replace(/"/g,'&quot;') + '" placeholder="VD: Đánh giá và chỉnh sửa CV theo từng vị trí ứng tuyển" onchange="updateFeatureField(' + idx + ',\'feature_label\',this.value)"></td>';
-      var isFirst = idx === 0;
-      var isLast = idx === _editingFeatures.length - 1;
-      html += '<td style="white-space:nowrap">' +
-        '<button class="detail-btn" style="padding:4px 8px" ' + (isFirst ? 'disabled' : '') + ' title="Chuyển lên" onclick="moveFeatureRow(' + idx + ',-1)">↑</button> ' +
-        '<button class="detail-btn" style="padding:4px 8px" ' + (isLast ? 'disabled' : '') + ' title="Chuyển xuống" onclick="moveFeatureRow(' + idx + ',1)">↓</button> ' +
-        '<button class="detail-btn" onclick="removeFeatureRow(' + idx + ')">Xoá</button>' +
-        '</td>';
-      html += '</tr>';
-    });
-    html += '</tbody></table>';
-    html += '<div style="padding:14px 24px;font-size:11.5px;color:var(--muted)">💡 Mỗi dòng = 1 benefit gói này CÓ. Chọn đúng 1 trong 4 chủ đề, viết nội dung chi tiết đầy đủ ở ô bên cạnh (không cần tick hay ghi tách rời như trước) — hiện lên landing page theo đúng thứ tự trên xuống dưới.</div>';
+  // ── Quyền lợi khác (gõ tự do) ──
+  html += '<div class="card"><div class="card-header"><div class="card-header-left">Quyền lợi khác (' + _editingFeatures.length + ')</div>' +
+    '<button class="update-btn" onclick="addFeatureRow()">+ Thêm dòng</button></div>';
+  html += '<div style="padding:12px 24px 4px;font-size:12px;color:var(--muted)">Các quyền lợi không thuộc bảng trên (VD: Tài liệu Aptitude Test, Chiến lược phát triển nghề nghiệp...). Hiện trong mục "Xem thêm quyền lợi khác" dưới bảng.</div>';
+  html += '<table class="bookings-table"><thead><tr><th style="width:80%">NỘI DUNG</th><th></th></tr></thead><tbody>';
+  if (_editingFeatures.length === 0) {
+    html += '<tr><td colspan="2" style="text-align:center;color:var(--muted);padding:20px 0">Chưa có dòng nào. Bấm "+ Thêm dòng" nếu cần.</td></tr>';
   }
-  html += '</div>';
+  _editingFeatures.forEach(function(f, idx){
+    var isFirst = idx === 0, isLast = idx === _editingFeatures.length - 1;
+    html += '<tr><td><input class="form-input" style="padding:6px 8px;font-size:12.5px" value="' + _pkEsc(f.feature_label) + '" placeholder="VD: Tài liệu Aptitude Test nâng cao" onchange="updateFeatureField(' + idx + ',\'feature_label\',this.value)"></td>' +
+      '<td style="white-space:nowrap">' +
+      '<button class="detail-btn" style="padding:4px 8px" ' + (isFirst ? 'disabled' : '') + ' title="Chuyển lên" onclick="moveFeatureRow(' + idx + ',-1)">↑</button> ' +
+      '<button class="detail-btn" style="padding:4px 8px" ' + (isLast ? 'disabled' : '') + ' title="Chuyển xuống" onclick="moveFeatureRow(' + idx + ',1)">↓</button> ' +
+      '<button class="detail-btn" onclick="removeFeatureRow(' + idx + ')">Xoá</button></td></tr>';
+  });
+  html += '</tbody></table></div>';
 
   html += '<div style="padding:0 0 20px"><button class="login-btn" style="width:auto;padding:10px 24px" onclick="savePackageEditor(' + (isEdit ? "'" + p.package_id + "'" : 'null') + ')">' + (isEdit ? 'Lưu tất cả thay đổi' : 'Thêm gói') + '</button></div>';
   return html;
@@ -4880,8 +5043,7 @@ function renderPackageEditor() {
 
 function updateFeatureField(idx, field, value) {
   if (!_editingFeatures[idx]) return;
-  _editingFeatures[idx][field] = value;
-  document.getElementById('main-content').innerHTML = renderPackageEditor();
+  _editingFeatures[idx][field] = value;   // không vẽ lại form, tránh mất ô đang nhập
 }
 
 function moveFeatureRow(idx, dir) {
@@ -4891,19 +5053,18 @@ function moveFeatureRow(idx, dir) {
   _editingFeatures[idx] = _editingFeatures[newIdx];
   _editingFeatures[newIdx] = tmp;
   _editingFeatures.forEach(function(f, i){ f.sort_order = (i + 1) * 10; });
-  document.getElementById('main-content').innerHTML = renderPackageEditor();
+  rerenderPackageEditor();
 }
-  
 
 function addFeatureRow() {
   var maxSort = _editingFeatures.reduce(function(m,f){ return Math.max(m, Number(f.sort_order)||0); }, 0);
-  _editingFeatures.push({ group_label: FEATURE_THEMES[0], feature_label: '', sort_order: maxSort + 10 });
-  document.getElementById('main-content').innerHTML = renderPackageEditor();
+  _editingFeatures.push({ group_label: 'Khác', feature_label: '', sort_order: maxSort + 10 });
+  rerenderPackageEditor();
 }
 
 function removeFeatureRow(idx) {
   _editingFeatures.splice(idx, 1);
-  document.getElementById('main-content').innerHTML = renderPackageEditor();
+  rerenderPackageEditor();
 }
 
 function onPkgContactPriceToggle(checked) {
@@ -4937,8 +5098,18 @@ function savePackageEditor(packageId) {
   if (!isSessionsUnlimited && (!sessions || sessions <= 0)) { toast('Số buổi không hợp lệ (hoặc tick "Không giới hạn")', 'error'); return; }
   if (!durationLabel) { toast('Vui lòng nhập Hạn dùng (VD: 3 ngày, 1 tháng...)', 'error'); return; }
 
-  var invalidFeature = _editingFeatures.some(function(f){ return !f.feature_label.trim(); });
-  if (invalidFeature) { toast('Mỗi dòng nội dung hỗ trợ cần có "Nội dung chi tiết" — điền hoặc xoá dòng trống', 'error'); return; }
+  var tableErr = null, allFeatures = [];
+  TABLE_ROWS.forEach(function(r, i){
+    var val = encodeTableRow(r, _editingTable[r.key]);
+    if (val === false) { tableErr = tableErr || ('Hàng "' + r.label + '": nhập số hợp lệ'); }
+    else if (val) allFeatures.push({ group_label: '_table', feature_label: r.fname, value: val, sort_order: i + 1 });
+  });
+  if (tableErr) { toast(tableErr, 'error'); return; }
+  var invalidFeature = _editingFeatures.some(function(f){ return !String(f.feature_label || '').trim(); });
+  if (invalidFeature) { toast('Mỗi dòng "Quyền lợi khác" cần có nội dung — điền hoặc xoá dòng trống', 'error'); return; }
+  _editingFeatures.forEach(function(f, i){
+    allFeatures.push({ group_label: 'Khác', feature_label: String(f.feature_label).trim(), value: 'check', sort_order: 100 + (i + 1) * 10 });
+  });
 
   var existing = packageId ? PACKAGES_RAW.find(function(x){ return x.package_id === packageId; }) : null;
   var payload = {
@@ -4961,13 +5132,12 @@ function savePackageEditor(packageId) {
       return;
     }
     var savedPackageId = res.package_id || packageId;
-    // value:'check' gửi cố định cho mỗi dòng — chỉ để tương thích cột cũ
-    // trên Sheet (nếu còn), UI admin không còn khái niệm tick/dash nữa vì
-    // mỗi dòng benefit giờ nghĩa là "gói này CÓ", không cần đánh dấu thêm.
+    // Các hàng của bảng so sánh lưu với group_label '_table' và value ngắn (vd '2 vị trí');
+    // "Quyền lợi khác" lưu group 'Khác' với value 'check'.
     apiPost({
       action: 'savePackageFeaturesForPackage',
       package_id: savedPackageId,
-      features: _editingFeatures.map(function(f){ return { group_label: f.group_label, feature_label: f.feature_label, value: 'check', sort_order: f.sort_order }; }),
+      features: allFeatures,
     }).then(function(res2){
       toast(packageId ? 'Đã cập nhật gói "' + name + '" ✅' : 'Đã thêm gói "' + name + '" ✅', 'success');
       loadProductsPageAsync();
