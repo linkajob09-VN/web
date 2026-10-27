@@ -237,6 +237,18 @@ table.pc tr.pc-last .pc-hi{border-bottom:1.5px solid rgba(252,82,41,.5);border-r
 .sp-lb{position:fixed;inset:0;background:rgba(0,0,0,.82);z-index:900;display:none;align-items:center;justify-content:center;padding:24px;cursor:zoom-out;}
 .sp-lb.open{display:flex;}
 .sp-lb img{max-width:100%;max-height:100%;border-radius:12px;}
+
+.pc-moretd{padding:10px 12px !important;}
+.pc-morebtn{display:inline-flex;align-items:center;gap:6px;background:none;border:none;color:#ff7a57;font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:13px;cursor:pointer;padding:6px 10px;border-radius:100px;}
+.pc-morebtn:hover{background:rgba(255,255,255,.07);}
+.pc-morebtn:focus-visible{outline:2px solid #fc5229;outline-offset:2px;}
+.pc-morebtn i{transition:transform .2s;}
+table.pc.pc-open .pc-morebtn i{transform:rotate(180deg);}
+table.pc:not(.pc-open) tr.pc-extra{display:none;}
+.pc-xlist{list-style:none;display:flex;flex-direction:column;gap:9px;text-align:left;font-size:13px;line-height:1.5;color:rgba(255,255,255,.86);}
+.pc-xlist li{display:flex;gap:8px;align-items:flex-start;}
+.pc-xlist li i{color:#ff7a57;font-size:14px;margin-top:2px;flex-shrink:0;}
+table.pc td.pc-xtd{vertical-align:top;}
 </style>
 <link rel="stylesheet" href="nav.css">
 </head>
@@ -495,6 +507,12 @@ function pcShortLimit(t) {
   if (m) return m[1] + ' bài';
   return null; // có, nhưng không nêu số lượng -> dấu tick
 }
+function pcToggleExtra(btn) {
+  var table = btn.closest('table');
+  var open = table.classList.toggle('pc-open');
+  btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+  btn.querySelector('span').textContent = open ? 'Ẩn quyền lợi khác' : 'Xem thêm quyền lợi khác';
+}
 function renderPricingJourney(packages, featuresByPkg) {
   var wrapEl = document.getElementById('pj-wrap');
   if (!wrapEl) return;
@@ -503,14 +521,21 @@ function renderPricingJourney(packages, featuresByPkg) {
   var cols = packages.map(function(p){
     var feats = featuresByPkg[p.package_id] || [];
     var meta = pcMetaFor(p, feats);
-    var items = [];
+    var items = [], canon = {}, hasCanon = false;
     feats.forEach(function(f){
-      if (String(f.group_label || '').trim() === '_meta') return;
+      var grp = String(f.group_label || '').trim();
+      if (grp === '_meta') return;
       var label = String(f.feature_label || '').trim();
       var val = f.value == null ? '' : String(f.value).trim();
       if (!label || !val || val === 'dash') return;
+      if (grp === '_table') { canon[label.normalize('NFC')] = val; hasCanon = true; return; }   // dữ liệu nhập theo form mới của dashboard
       items.push((label + (val !== 'check' ? ' ' + val : '')).normalize('NFC'));
     });
+    function fromCanon(label) {
+      var v = canon[label];
+      if (v == null) return { t: 'none' };
+      return v === 'check' ? { t: 'ok' } : { t: 'text', v: v };
+    }
     function find(re, not) { return items.filter(function(t){ return re.test(t) && !(not && not.test(t)); }); }
     function cell(list) {
       if (!list.length) return { t: 'none' };
@@ -520,20 +545,34 @@ function renderPricingJourney(packages, featuresByPkg) {
     function has(re) { return find(re).length ? { t: 'ok' } : { t: 'none' }; }
     var refund = find(/ho\u00e0n\s*(\d+)\s*%/i);
     var pct = refund.length ? (refund[0].match(/ho\u00e0n\s*(\d+)\s*%/i) || [])[1] : null;
-    return {
-      p: p,
+    // Advisor: ô "Không giới hạn Advisor" trong dashboard; gói cũ chưa tick thì đọc thêm từ các dòng chữ cũ
+    var advLines = find(/advisor/i);
+    var advField = p.advisor_unlimited;
+    var advUnl = advField === true || String(advField).toUpperCase() === 'TRUE' || advLines.some(function(t){ return /kh\u00f4ng gi\u1edbi h\u1ea1n/i.test(t); });
+    var adv = advUnl ? 'Không giới hạn' : ((advField !== undefined || advLines.length) ? '1 Advisor' : null);
+    var out = {
+      p: p, hasCanon: hasCanon,
       price: meta.price_label ? meta.price_label : pricingFmtPriceK(p),
       duration: String(meta.duration_label || pricingFmtDuration(p.days) || '').replace(/\s*s\u1eed d\u1ee5ng\s*$/i, ''),
       sessions: String(meta.sessions_label || pricingFmtSessions(p)).replace(/\s*bu\u1ed5i\s*$/i, ''),
-      guide: has(/\u0111\u1ecbnh h\u01b0\u1edbng ng\u00e0nh|ph\u00f2ng ban/i),
-      cv: cell(find(/\bcv\b/i, /cover|portfolio|linkedin/i)),
-      pv: cell(find(/ph\u1ecfng v\u1ea5n/i)),
-      cs: cell(find(/case study/i)),
-      doc: has(/t\u00e0i li\u1ec7u chuy\u00ean ng\u00e0nh/i),
-      course: has(/kho\u00e1\s*h\u1ecdc|kh\u00f3a\s*h\u1ecdc/i),
-      refund: refund.length ? { t: 'ok' } : { t: 'none' },
-      pct: pct
+      adv: adv, extras: []
     };
+    if (hasCanon) {
+      out.guide = fromCanon('Định hướng'); out.cv = fromCanon('Sửa CV'); out.pv = fromCanon('Luyện phỏng vấn');
+      out.cs = fromCanon('Case Study'); out.doc = fromCanon('Tài liệu ngành'); out.course = fromCanon('Khoá học LinkaJob');
+      out.refund = canon['Hoàn tiền'] ? { t: 'ok' } : { t: 'none' }; out.pct = canon['Hoàn tiền'] ? (parseInt(canon['Hoàn tiền'], 10) || null) : null;
+      out.extras = items.filter(function(t){ return !/advisor/i.test(t) || !/kh\u00f4ng gi\u1edbi h\u1ea1n|duy nh\u1ea5t|1 advisor/i.test(t); });
+    } else {
+      out.guide = has(/\u0111\u1ecbnh h\u01b0\u1edbng ng\u00e0nh|ph\u00f2ng ban/i);
+      out.cv = cell(find(/\bcv\b/i, /cover|portfolio|linkedin/i));
+      out.pv = cell(find(/ph\u1ecfng v\u1ea5n/i));
+      out.cs = cell(find(/case study/i));
+      out.doc = has(/t\u00e0i li\u1ec7u chuy\u00ean ng\u00e0nh/i);
+      out.course = has(/kho\u00e1\s*h\u1ecdc|kh\u00f3a\s*h\u1ecdc/i);
+      out.refund = refund.length ? { t: 'ok' } : { t: 'none' };
+      out.pct = pct;
+    }
+    return out;
   });
 
   // Gói bên trái "lấy theo" gói bên phải về chữ và dấu tick trong các hàng quyền lợi
@@ -542,6 +581,7 @@ function renderPricingJourney(packages, featuresByPkg) {
   var PC_MIRROR = { 'senior executive': 'đồng hành' };
   function pcNorm(s) { return String(s || '').trim().toLowerCase().normalize('NFC'); }
   cols.forEach(function(c){
+    if (c.hasCanon) return;   // gói đã nhập theo form mới thì dùng dữ liệu riêng, không lấy theo gói khác
     var srcName = PC_MIRROR[pcNorm(c.p.name)];
     if (!srcName) return;
     var src = cols.find(function(x){ return pcNorm(x.p.name) === srcName; });
@@ -561,6 +601,7 @@ function renderPricingJourney(packages, featuresByPkg) {
     { label: 'Giá', get: function(c){ return '<span class="pc-price">' + pricingEscHtml(c.price) + '</span>'; } },
     { label: 'Tổng số buổi cố vấn', get: function(c){ return pricingEscHtml(c.sessions); } },
     { label: 'Thời gian sử dụng', get: function(c){ return c.duration ? pricingEscHtml(c.duration) : '<span class="pc-dot">·</span>'; } },
+    { label: 'Advisor cố vấn', get: function(c){ return c.adv ? pricingEscHtml(c.adv) : '<span class="pc-dot">·</span>'; }, show: cols.some(function(c){ return c.adv; }) },
     { label: 'Định hướng ngành/phòng ban/vị trí phù hợp', key: 'guide' },
     { label: 'Sửa CV', key: 'cv' },
     { label: 'Luyện phỏng vấn', key: 'pv' },
@@ -568,7 +609,8 @@ function renderPricingJourney(packages, featuresByPkg) {
     { label: 'Tài liệu ngành', key: 'doc' },
     { label: 'Khoá học LinkaJob', key: 'course' },
     { label: refundPct ? 'Hoàn ' + refundPct + '% nếu chưa có offer' : 'Hoàn tiền nếu chưa có offer', key: 'refund' }
-  ].filter(function(r){ return !r.key || cols.some(function(c){ return c[r.key].t !== 'none'; }); });
+  ].filter(function(r){ return r.key ? cols.some(function(c){ return c[r.key].t !== 'none'; }) : (r.show !== false); });
+  var hasExtras = cols.some(function(c){ return c.extras && c.extras.length; });
 
   var html = '<div class="pc-scroll" tabindex="0" role="region" aria-label="Bảng so sánh các gói, vuốt ngang để xem thêm">' +
     '<table class="pc"><colgroup><col class="pc-c0">' + cols.map(function(){ return '<col>'; }).join('') + '</colgroup>';
@@ -583,6 +625,16 @@ function renderPricingJourney(packages, featuresByPkg) {
     cols.forEach(function(c, i){ html += '<td' + cls(i) + '>' + (r.get ? r.get(c) : show(c[r.key])) + '</td>'; });
     html += '</tr>';
   });
+  if (hasExtras) {
+    html += '<tr class="pc-more"><th class="pc-rowhead" scope="row"></th><td class="pc-moretd" colspan="' + cols.length + '" style="text-align:center"><button type="button" class="pc-morebtn" aria-expanded="false" onclick="pcToggleExtra(this)"><span>Xem thêm quyền lợi khác</span><i class="ti ti-chevron-down" aria-hidden="true"></i></button></td></tr>';
+    html += '<tr class="pc-extra"><th class="pc-rowhead" scope="row">Quyền lợi khác</th>';
+    cols.forEach(function(c, i){
+      html += '<td class="pc-xtd' + (i === hiIdx ? ' pc-hi' : '') + '">' + ((c.extras && c.extras.length) ?
+        '<ul class="pc-xlist">' + c.extras.map(function(t){ return '<li><i class="ti ti-check" aria-hidden="true"></i><span>' + pricingEscHtml(t) + '</span></li>'; }).join('') + '</ul>' :
+        '<span class="pc-dot">·</span>') + '</td>';
+    });
+    html += '</tr>';
+  }
   html += '<tr class="pc-last"><th class="pc-rowhead" scope="row"></th>';
   cols.forEach(function(c, i){
     html += '<td' + cls(i) + '><button type="button" class="pc-btn' + (i === hiIdx ? ' main' : '') + '" onclick="location.href=\'doi-ngu-advisor.html?package=' + pricingSlugify(c.p.name) + '\'">Chọn ' + pricingEscHtml(c.p.name) + '</button></td>';
