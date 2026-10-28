@@ -47,6 +47,13 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
 .login-btn:disabled { opacity: .55; cursor: not-allowed; }
 .login-error { color: var(--brand); font-size: 13px; margin-top: 10px; text-align: center; display: none; }
 
+/* Ô mật khẩu có nút con mắt hiện/ẩn */
+.pw-wrap { position: relative; }
+.pw-wrap .field-input, .pw-wrap .form-input { padding-right: 46px; }
+.pw-eye { position: absolute; right: 6px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; padding: 8px; color: var(--muted); display: flex; align-items: center; justify-content: center; border-radius: 8px; transition: color .15s; }
+.pw-eye:hover { color: var(--brand); }
+.pw-eye svg { width: 20px; height: 20px; }
+
 #dashboard-page { display: none; min-height: 100vh; flex-direction: column; }
 
 /* ── TOPBAR (slim) ── */
@@ -478,7 +485,10 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
     </div>
     <div class="field-group">
       <div class="field-label">Mật khẩu</div>
-      <input class="field-input" type="password" id="login-password" placeholder="Mật khẩu" autocomplete="current-password">
+      <div class="pw-wrap">
+        <input class="field-input" type="password" id="login-password" placeholder="Mật khẩu" autocomplete="current-password">
+        <button type="button" class="pw-eye" tabindex="-1" aria-label="Hiện/ẩn mật khẩu" onclick="togglePw('login-password', this)"></button>
+      </div>
     </div>
     <div class="field-group">
       <div class="field-label">Vai trò</div>
@@ -623,6 +633,17 @@ function loadAdvisorsFromSheet(callback) {
   });
 }
   
+var EYE_ON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>';
+var EYE_OFF = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>';
+function togglePw(id, btn) {
+  var inp = document.getElementById(id);
+  if (!inp) return;
+  var show = inp.type === 'password';
+  inp.type = show ? 'text' : 'password';
+  btn.innerHTML = show ? EYE_OFF : EYE_ON;
+}
+document.querySelectorAll('.pw-eye').forEach(function(b){ if (!b.innerHTML.trim()) b.innerHTML = EYE_ON; });
+
 function toast(msg, type) {
   type = type || '';
   const el = document.getElementById('toast');
@@ -761,11 +782,11 @@ function openChangePasswordModal() {
   document.getElementById('modal-title').textContent = '🔑 Đổi mật khẩu';
   document.getElementById('modal-body').innerHTML =
     '<div class="modal-field"><div class="form-label">Mật khẩu hiện tại <span style="color:var(--brand)">*</span></div>' +
-    '<input class="form-input" type="password" id="cp-old" placeholder="Nhập mật khẩu hiện tại" style="margin-top:6px"></div>' +
+    '<div class="pw-wrap" style="margin-top:6px"><input class="form-input" type="password" id="cp-old" placeholder="Nhập mật khẩu hiện tại"><button type="button" class="pw-eye" tabindex="-1" aria-label="Hiện/ẩn mật khẩu" onclick="togglePw(\'cp-old\', this)">' + EYE_ON + '</button></div></div>' +
     '<div class="modal-field"><div class="form-label">Mật khẩu mới <span style="color:var(--brand)">*</span></div>' +
-    '<input class="form-input" type="password" id="cp-new" placeholder="Tối thiểu 6 ký tự" style="margin-top:6px"></div>' +
+    '<div class="pw-wrap" style="margin-top:6px"><input class="form-input" type="password" id="cp-new" placeholder="Tối thiểu 6 ký tự"><button type="button" class="pw-eye" tabindex="-1" aria-label="Hiện/ẩn mật khẩu" onclick="togglePw(\'cp-new\', this)">' + EYE_ON + '</button></div></div>' +
     '<div class="modal-field"><div class="form-label">Xác nhận mật khẩu mới <span style="color:var(--brand)">*</span></div>' +
-    '<input class="form-input" type="password" id="cp-confirm" placeholder="Nhập lại mật khẩu mới" style="margin-top:6px"></div>' +
+    '<div class="pw-wrap" style="margin-top:6px"><input class="form-input" type="password" id="cp-confirm" placeholder="Nhập lại mật khẩu mới"><button type="button" class="pw-eye" tabindex="-1" aria-label="Hiện/ẩn mật khẩu" onclick="togglePw(\'cp-confirm\', this)">' + EYE_ON + '</button></div></div>' +
     '<div id="cp-error" style="color:var(--brand);font-size:12.5px;margin-top:4px;display:none"></div>';
   document.getElementById('modal-actions').innerHTML =
     '<button class="btn-secondary" onclick="closeModal()" style="width:auto;padding:10px 20px">Huỷ</button>' +
@@ -911,8 +932,10 @@ function buildSidebar(role) {
   const firstGroup = defs[0];
   if (firstGroup) {
     if (firstGroup.children && firstGroup.children.length > 0) {
-      openNavGroup(firstGroup.id);
-      navTo(firstGroup.children[0].id);
+      if (!(isStaffRouted() && applyStaffRoute())) {
+        openNavGroup(firstGroup.id);
+        navTo(firstGroup.children[0].id, { replace: true });
+      }
     } else {
       navTo(firstGroup.id);
     }
@@ -945,7 +968,10 @@ function closeNavGroup(groupId) {
   if (sub) sub.classList.remove('open');
 }
 
-function navTo(id) {
+function navTo(id, opts) {
+  opts = opts || {};
+  // Ghi # lên URL để nút Back/Forward của trình duyệt hoạt động (Staff/Admin)
+  if (!opts.noRoute) commitStaffRoute(id, '', opts.replace);
   // Bỏ active item cũ
   if (activeNavId) {
     const old = document.getElementById('ni-' + activeNavId);
@@ -957,6 +983,7 @@ function navTo(id) {
   activeNavId = id;
   _staffDetailId = null; // rời khỏi trang chi tiết nhân viên
 
+  if (opts.noRender) return;
   // Render content
   const route = ROUTE_MAP[id];
   if (!route) return;
@@ -2590,6 +2617,7 @@ var _staffDetailTab = 'consult';
 var _staffDetailSelfView = false;
 
 function navToStaffMemberDetail(staffId, tab) {
+  commitStaffRoute(activeNavId || 'stf-list', 'staff:' + staffId);
   _staffDetailId = staffId;
   _staffDetailTab = tab || 'consult';
   _staffDetailSelfView = false;
@@ -4067,6 +4095,7 @@ function renderAdvisorModule() {
 }
 
 function navToStaffAdvisorDetail(advisorId) {
+  commitStaffRoute(activeNavId || 'adv-list', 'advisor:' + advisorId);
   var c = document.getElementById('main-content');
   c.innerHTML = renderStaffAdvisorDetail(advisorId);
 }
@@ -4528,6 +4557,7 @@ function renderAdviseeModule() {
 }
 
 function navToStaffAdviseeDetail(aeId, fromAdvisorId) {
+  commitStaffRoute(activeNavId || 'aee-list', 'advisee:' + aeId + ':' + (fromAdvisorId || ''));
   var c = document.getElementById('main-content');
   c.innerHTML = renderStaffAdviseeDetail(aeId, fromAdvisorId);
 }
@@ -5797,6 +5827,54 @@ function mkInitials(name) { return name.split(' ').filter(Boolean).map(function(
 // ════════════════════════════════════════════════════════════
 var _route = null, _baseRoute = null, _modalPushed = false, _routeLock = 0, _routeSeq = 0, _clearTimer = null;
 
+// ── Router # cho Staff (Admin có sidebar): #nav=<id>[&v=advisor:<id>|advisee:<id>:<from>|staff:<id>] ──
+var _staffRouteLock = 0;
+function isStaffRouted() { return !!currentUser && currentUser.role === 'Staff' && currentUser.subRole === 'Admin'; }
+function commitStaffRoute(nav, view, replace) {
+  if (!isStaffRouted() || _staffRouteLock) return;
+  var p = new URLSearchParams();
+  if (nav) p.set('nav', nav);
+  if (view) p.set('v', view);
+  var h = '#' + p.toString();
+  if (location.hash === h) return;
+  if (replace) history.replaceState(null, '', h); else history.pushState(null, '', h);
+}
+function groupOfNav(id) {
+  var defs = SIDEBAR_DEF.Staff || [];
+  for (var i = 0; i < defs.length; i++) {
+    if ((defs[i].children || []).some(function(c){ return c.id === id; })) return defs[i].id;
+  }
+  return null;
+}
+// Đọc # và dựng lại đúng trang. Trả về false nếu # trống/không hợp lệ.
+function applyStaffRoute() {
+  var p = new URLSearchParams(location.hash.replace(/^#\/?/, ''));
+  var nav = p.get('nav'), view = p.get('v') || '';
+  if (!nav || !ROUTE_MAP[nav]) return false;
+  var g = groupOfNav(nav);
+  if (g && openGroupId !== g) { if (openGroupId) closeNavGroup(openGroupId); openNavGroup(g); }
+  var parts = view.split(':'), kind = parts[0], id = parts[1] || '';
+  _staffRouteLock++;
+  try {
+    if (!kind || !id) { navTo(nav, { noRoute: true }); return true; }
+    navTo(nav, { noRoute: true, noRender: true });
+  } finally { _staffRouteLock--; }
+
+  function lockRun(fn) { _staffRouteLock++; try { fn(); } finally { _staffRouteLock--; } }
+  if (kind === 'staff') {
+    lockRun(function(){ navToStaffMemberDetail(id); });
+  } else if (kind === 'advisor') {
+    loadAdvisorsFromSheet(function(){ lockRun(function(){ navToStaffAdvisorDetail(id); }); });
+  } else if (kind === 'advisee') {
+    var from = parts[2] && parts[2] !== 'staffcare' ? parts[2] : '';
+    if (from) loadAdvisorsFromSheet(function(){ lockRun(function(){ navToStaffAdviseeDetail(id, from); }); });
+    else lockRun(function(){ navToStaffAdviseeDetail(id, null); });
+  } else {
+    lockRun(function(){ navTo(nav, { noRoute: true }); });
+  }
+  return true;
+}
+
 function isRoutedRole() { return !!currentUser && (currentUser.role === 'Advisor' || currentUser.role === 'Advisee'); }
 function withRouteLock(fn) { _routeLock++; try { fn(); } finally { _routeLock--; } }
 
@@ -5915,7 +5993,10 @@ function openRouteSession(r) {
   });
 }
 
-window.addEventListener('popstate', function(){ applyRoute(false); });
+window.addEventListener('popstate', function(){
+  if (isStaffRouted()) { if (!applyStaffRoute()) navTo('lj-newreg', { replace: true }); return; }
+  applyRoute(false);
+});
 
 document.getElementById('login-password').addEventListener('keydown', function(e){ if (e.key === 'Enter') doLogin(); });
 
