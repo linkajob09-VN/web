@@ -99,13 +99,28 @@ body{font-family:'Montserrat',sans-serif;background:#F5F4F1;color:#1C1C1C;overfl
 /* ═══════════════════════════════════════
    DETAIL DRAWER (slides in from right)
    ═══════════════════════════════════════ */
-.drawer-overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);backdrop-filter:blur(6px);z-index:800;opacity:0;pointer-events:none;transition:opacity .25s;}
+/* Trang chi tiết Advisor: hiện full page (phủ toàn màn hình), nội dung căn giữa */
+.drawer-overlay{position:fixed;inset:0;background:#111;z-index:800;opacity:0;pointer-events:none;transition:opacity .2s;}
 .drawer-overlay.open{opacity:1;pointer-events:auto;}
-.drawer{position:fixed;top:0;right:0;bottom:0;width:640px;max-width:94vw;background:#111;border-left:.5px solid rgba(255,255,255,.09);z-index:801;transform:translateX(100%);transition:transform .28s cubic-bezier(.22,1,.36,1);overflow-y:auto;display:flex;flex-direction:column;}
-.drawer-overlay.open .drawer{transform:translateX(0);}
+.drawer{position:absolute;inset:0;width:100%;background:#111;z-index:801;transform:translateY(12px);transition:transform .28s cubic-bezier(.22,1,.36,1);overflow-y:auto;-webkit-overflow-scrolling:touch;display:flex;flex-direction:column;}
+.drawer-overlay.open .drawer{transform:translateY(0);}
+.d-body{width:100%;max-width:880px;margin:0 auto;padding-bottom:24px;}
+.dh-back{display:inline-flex;align-items:center;gap:8px;background:none;border:none;color:rgba(240,240,240,.55);font-family:'Montserrat',sans-serif;font-size:12px;font-weight:600;letter-spacing:.02em;cursor:pointer;padding:0;transition:color .15s;}
+.dh-back:hover{color:#fc5229;}
+@media (min-width:900px){
+  .d-ava{width:96px;height:96px;font-size:28px;}
+  .d-name{font-size:28px;}
+  .d-role{font-size:15px;}
+  .d-co{font-size:13.5px;}
+  .d-exp-bullets li{font-size:14px;}
+  .d-message{font-size:14.5px;}
+  .d-sup-title{font-size:14px;}
+  .d-sup-desc{font-size:12.5px;}
+  .d-fb-text{font-size:13.5px;}
+}
  
 /* drawer header */
-.dh{padding:20px 24px;border-bottom:.5px solid rgba(255,255,255,.07);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:#111;z-index:2;}
+.dh{padding:16px max(24px, calc((100% - 880px) / 2));border-bottom:.5px solid rgba(255,255,255,.07);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:#111;z-index:2;}
 .dh-label{font-size:11px;color:rgba(240,240,240,.28);font-family:'Montserrat',sans-serif;letter-spacing:.08em;text-transform:uppercase;}
 .dclose{width:30px;height:30px;border-radius:50%;background:rgba(255,255,255,.06);border:none;color:rgba(240,240,240,.4);font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .15s;}
 .dclose:hover{background:rgba(255,255,255,.12);color:#F0F0F0;}
@@ -164,6 +179,33 @@ body{font-family:'Montserrat',sans-serif;background:#F5F4F1;color:#1C1C1C;overfl
 .d-btn-pkg{padding:12px 18px;background:transparent;border:.5px solid rgba(255,255,255,.1);border-radius:100px;font-family:'Montserrat',sans-serif;font-weight:500;font-size:13px;color:rgba(240,240,240,.5);cursor:pointer;transition:all .2s;}
 .d-btn-pkg:hover{border-color:rgba(252,82,41,.35);color:#fc5229;}
  
+/* ── Giao diện SÁNG cho trang chi tiết Advisor ── */
+.drawer-overlay,.drawer{background:#F5F4F1;}
+.dh{background:rgba(245,244,241,.92);backdrop-filter:blur(8px);border-bottom:.5px solid rgba(28,28,28,.1);}
+.dh-back{color:rgba(28,28,28,.6);}
+.dh-label{color:rgba(28,28,28,.4);}
+.dclose{background:rgba(28,28,28,.06);color:rgba(28,28,28,.55);}
+.dclose:hover{background:rgba(28,28,28,.12);color:#1C1C1C;}
+.d-ava{background:linear-gradient(135deg,#FFFFFF,#ECE8E1);border:.5px solid rgba(252,82,41,.28);box-shadow:0 4px 18px rgba(28,28,28,.08);}
+.d-verified{border:2.5px solid #F5F4F1;}
+.d-name{color:#1C1C1C;}
+.d-role{color:rgba(28,28,28,.62);}
+.d-co{color:rgba(28,28,28,.5);}
+.d-exp-bullets{background:#FFFFFF;border:.5px solid rgba(28,28,28,.08);box-shadow:0 1px 3px rgba(28,28,28,.04);}
+.atag-prog{background:rgba(28,28,28,.05);color:rgba(28,28,28,.6);border:.5px solid rgba(28,28,28,.1);}
+.d-message{background:#FFFFFF;border:.5px solid rgba(28,28,28,.08);color:rgba(28,28,28,.72);box-shadow:0 1px 3px rgba(28,28,28,.04);}
+.d-message::before{color:rgba(252,82,41,.35);}
+.d-sup{background:#FFFFFF;border:.5px solid rgba(28,28,28,.08);box-shadow:0 1px 3px rgba(28,28,28,.04);}
+.d-fb{background:#FFFFFF;border:.5px solid rgba(28,28,28,.08);box-shadow:0 1px 3px rgba(28,28,28,.04);}
+.d-fb-text{color:rgba(28,28,28,.68);}
+.d-fb-text strong{color:#1C1C1C;}
+.d-fb-author{border-top:.5px solid rgba(28,28,28,.08);}
+.d-fb-ava{background:#F1EEE8;}
+.d-fb-name{color:#1C1C1C;}
+.d-fb-school{color:rgba(28,28,28,.45);}
+.d-btn-pkg{border:.5px solid rgba(28,28,28,.18);color:rgba(28,28,28,.65);}
+.d-btn-pkg:hover{border-color:rgba(252,82,41,.5);color:#fc5229;}
+
 /* ═══════════════════════════════════
    CHECKOUT MODAL (Flow 2)
    ═══════════════════════════════════ */
@@ -339,7 +381,7 @@ body{font-family:'Montserrat',sans-serif;background:#F5F4F1;color:#1C1C1C;overfl
 
   .footer{padding:18px 14px;}
 
-  .drawer{width:100%;}
+  .dh{padding:14px 16px;}
 }
 @media (max-width:380px){
   .adv-grid{gap:6px;}
@@ -427,10 +469,11 @@ body{font-family:'Montserrat',sans-serif;background:#F5F4F1;color:#1C1C1C;overfl
   <div class="drawer" id="drawer">
  
     <div class="dh">
-      <div class="dh-label">Thông tin Advisor</div>
-      <button class="dclose" onclick="closeDrawer()"><i class="ti ti-x"></i></button>
+      <button class="dh-back" type="button" onclick="closeDrawer()"><i class="ti ti-arrow-left"></i>Danh sách Advisor</button>
+      <button class="dclose" type="button" aria-label="Đóng" onclick="closeDrawer()"><i class="ti ti-x"></i></button>
     </div>
  
+    <div class="d-body">
     <!-- identity -->
     <div class="d-identity">
       <div class="d-ava" id="dAva">?<div class="d-verified"><i class="ti ti-check"></i></div></div>
@@ -472,6 +515,7 @@ body{font-family:'Montserrat',sans-serif;background:#F5F4F1;color:#1C1C1C;overfl
       <button class="d-btn-book" id="dBtnBook" onclick="bookFromDrawer()">Kết nối với Advisor này →</button>
       <button class="d-btn-pkg" onclick="window.location.href='dang-ky-co-van-advisor.html'">Xem bảng giá</button>
     </div>
+    </div><!-- /d-body -->
  
   </div>
 </div>
@@ -931,8 +975,9 @@ document.addEventListener('DOMContentLoaded', function(){
     renderAdvisorGrid(); // vẽ ngay — không chờ reviews nữa
     // Mở sẵn đúng advisor nếu link có kèm mã, ví dụ:
     // đội-ngũ-advisor.html?advisor=ADV003
-    var presetAdvisorId = urlParams.get('advisor');
-    if (presetAdvisorId && findAdvisorById(presetAdvisorId)) openDrawer(presetAdvisorId);
+    // Hỗ trợ cả link mới (#advisor=ADV003) và link cũ (?advisor=ADV003)
+    var presetAdvisorId = hashAdvisorId() || urlParams.get('advisor');
+    if (presetAdvisorId && findAdvisorById(presetAdvisorId)) openDrawer(presetAdvisorId, 'replace');
     // Feedback thật tải song song, không chặn UI — tự vẽ lại khi có
     fetchAllReviewsGrouped().then(applyGroupedReviewsToAdvisors);
   });
@@ -978,9 +1023,24 @@ function findAdvisorById(id){
   return ADVISORS.find(function(x){ return String(x.id) === String(id); });
 }
 
-function openDrawer(id){
+/* Router # : #advisor=<id> mở trang chi tiết; nút Back của trình duyệt đóng lại */
+var _drawerPushed = false;
+function hashAdvisorId(){
+  var m = /^#\/?advisor=([^&]+)/.exec(location.hash);
+  return m ? decodeURIComponent(m[1]) : '';
+}
+function baseUrl(){
+  var p = new URLSearchParams(window.location.search);
+  p.delete('advisor');
+  var q = p.toString();
+  return window.location.pathname + (q ? '?' + q : '');
+}
+function isDrawerOpen(){ return document.getElementById('drawerOv').classList.contains('open'); }
+
+function openDrawer(id, mode){
   var a = findAdvisorById(id);
   if(!a) return;
+  var wasOpen = isDrawerOpen();
   currentAdvisorId = id;
   document.getElementById('dAva').innerHTML = avaInner(a.photo, a.initials) + '<div class="d-verified"><i class="ti ti-check"></i></div>';
   document.getElementById('dName').textContent = a.name;
@@ -1023,29 +1083,49 @@ function openDrawer(id){
   /* feedbacks */
   var fbHtml = '';
   a.feedbacks.forEach(function(f){
-    var starsHtml = f.rating ? '<span style="color:#F59E0B;font-size:12px;margin-left:6px">' + '★'.repeat(f.rating) + '<span style="color:rgba(240,240,240,.2)">' + '★'.repeat(5-f.rating) + '</span></span>' : '';
+    var starsHtml = f.rating ? '<span style="color:#F59E0B;font-size:12px;margin-left:6px">' + '★'.repeat(f.rating) + '<span style="color:rgba(28,28,28,.18)">' + '★'.repeat(5-f.rating) + '</span></span>' : '';
     fbHtml += '<div class="d-fb"><div class="d-fb-badge">'+f.badge+starsHtml+'</div><div class="d-fb-text">'+f.text+'</div><div class="d-fb-author"><div class="d-fb-ava">'+f.initials+'</div><div><div class="d-fb-name">'+f.name+'</div><div class="d-fb-school">'+f.school+'</div></div></div></div>';
   });
   document.getElementById('dFeedbacks').innerHTML = fbHtml;
  
   document.getElementById('drawerOv').classList.add('open');
+  document.getElementById('drawer').scrollTop = 0;
   document.body.style.overflow = 'hidden';
 
-  // Tự cập nhật thanh địa chỉ theo advisor đang mở — bạn chỉ cần bấm vào
-  // thanh địa chỉ rồi copy, không cần thêm nút riêng nữa.
-  try {
-    var newUrl = window.location.pathname + '?advisor=' + encodeURIComponent(a.id);
-    history.replaceState(null, '', newUrl);
-  } catch(e){}
+  // Ghi #advisor=<id> lên thanh địa chỉ: copy link mở thẳng advisor này,
+  // và nút Back của trình duyệt quay về danh sách.
+  if (mode !== 'pop') {
+    try {
+      var newUrl = baseUrl() + '#advisor=' + encodeURIComponent(a.id);
+      if (mode === 'replace' || wasOpen) history.replaceState(null, '', newUrl);
+      else { history.pushState(null, '', newUrl); _drawerPushed = true; }
+    } catch(e){}
+  }
 }
- 
-function closeDrawer(){
+
+function hideDrawerUI(){
   document.getElementById('drawerOv').classList.remove('open');
   document.body.style.overflow = '';
-
-  // Đóng khung thì trả thanh địa chỉ về link gốc, không còn dính ?advisor=...
-  try { history.replaceState(null, '', window.location.pathname); } catch(e){}
 }
+
+function closeDrawer(){
+  if (!isDrawerOpen()) return;
+  hideDrawerUI();
+  try {
+    if (_drawerPushed) { _drawerPushed = false; history.back(); }
+    else history.replaceState(null, '', baseUrl());
+  } catch(e){}
+}
+
+// Nút Back/Forward của trình duyệt (hoặc sửa tay phần #)
+window.addEventListener('popstate', function(){
+  var id = hashAdvisorId();
+  if (id && findAdvisorById(id)) { _drawerPushed = false; openDrawer(id, 'pop'); }
+  else if (isDrawerOpen()) { _drawerPushed = false; hideDrawerUI(); }
+});
+document.addEventListener('keydown', function(e){
+  if (e.key === 'Escape' && isDrawerOpen() && !document.getElementById('mOverlay').classList.contains('open')) closeDrawer();
+});
  
 function handleDrawerBg(e){
   if(e.target === document.getElementById('drawerOv')) closeDrawer();
