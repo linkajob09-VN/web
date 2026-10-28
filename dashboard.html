@@ -2211,6 +2211,14 @@ function loadMeetingCalendarAsync() {
         session_id: s.session_id,
         status: s.status,
         course_code: s.course_code || '',
+        session_no: s.session_number || '',
+        booking_id: s.booking_id || '',
+        duration: s.duration_minutes || '',
+        notes: s.notes || '',
+        prep_cv: s.prep_cv_link || '', prep_question: s.prep_question || '', prep_other: s.prep_other_links || '', prep_at: s.prep_submitted_at || '',
+        note_summary: s.advisor_note_summary || '', note_feedback: s.advisor_note_feedback || '', note_actions: s.advisor_note_action_items || '', note_at: s.advisor_note_created_at || '',
+        fb_rating: (s.feedback_rating === undefined || s.feedback_rating === null) ? '' : s.feedback_rating, fb_text: s.feedback_text || '', fb_at: s.feedback_created_at || '',
+        date: d,
       });
     });
 
@@ -2226,6 +2234,8 @@ function loadMeetingCalendarAsync() {
         meet_link: r.meet_link || '',
         session_id: 'lead-' + r.lead_id,
         status: r.status || '',
+        date: d,
+        lead_phone: r.phone || '', lead_email: r.email || '', prep_question: r.question || '', prep_cv: r.cv_link || '', lead_about: r.consult_about || '',
       });
     });
 
@@ -2300,7 +2310,13 @@ function openStaffDayModal(dateStr) {
         '<div style="font-size:12px;color:var(--muted)">' + (m.time||'') + '</div></div>';
       if (m.meet_link) html += '<a href="' + m.meet_link + '" target="_blank" class="detail-btn" style="margin-right:6px">🎥 Meet</a>';
       var _st = String(m.status || '').toLowerCase();
-      if (m.type !== 'Khoá học' && _st !== 'completed' && _st !== 'cancelled' && _st !== 'canceled') html += '<button class="detail-btn" onclick="openDayReschedule(' + mi + ')">📅 Đổi giờ</button>';
+      var _isCx = (_st === 'cancelled' || _st === 'canceled');
+      if (_isCx) html += '<span style="font-size:11px;font-weight:700;color:#B91C1C;background:#FEE2E2;border-radius:100px;padding:3px 10px;margin-right:6px">Đã huỷ</span>';
+      html += '<button class="detail-btn" style="margin-right:6px" onclick="openMeetingDetail(' + mi + ')">📋 Chi tiết</button>';
+      if (m.type !== 'Khoá học' && _st !== 'completed' && !_isCx) {
+        html += '<button class="detail-btn" style="margin-right:6px" onclick="openDayReschedule(' + mi + ')">📅 Đổi giờ</button>';
+        html += '<button class="detail-btn" style="color:#B91C1C" onclick="openCancelMeeting(' + mi + ')">✕ Huỷ</button>';
+      }
       html += '</div>';
     });
   }
@@ -2319,6 +2335,105 @@ function openDayReschedule(idx) {
     sessionId: isLead ? '' : (m.session_id || ''), leadId: isLead ? String(m.session_id).slice(5) : '',
     who: m.advisee || '', kind: m.type, date: day, time: m.time || ''
   }, function(){ loadMeetingCalendarAsync(); });
+}
+
+// ── Chi tiết 1 buổi trong lịch: chuẩn bị của advisee + nhận xét advisor + feedback advisee ──
+function _mdBlock(label, valHtml, empty) {
+  return '<div style="margin-bottom:12px"><div style="font-size:10.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:4px">' + label + '</div>' +
+    (valHtml ? '<div style="font-size:13.5px;line-height:1.6;white-space:pre-wrap;word-break:break-word">' + valHtml + '</div>'
+             : '<div style="font-size:13px;color:var(--muted);font-style:italic">' + (empty || 'Chưa có') + '</div>') + '</div>';
+}
+function _mdLinks(t) {
+  var x = escHtml(String(t || ''));
+  return x.replace(/(https?:\/\/[^\s<]+)/g, '<a href="$1" target="_blank" rel="noopener">$1</a>');
+}
+function _mdSection(title, inner) {
+  return '<div style="border:1.5px solid var(--border);border-radius:12px;padding:14px 16px;margin-top:12px"><div style="font-weight:700;font-size:13.5px;margin-bottom:10px">' + title + '</div>' + inner + '</div>';
+}
+function openMeetingDetail(idx) {
+  var m = window._dayList && window._dayList[idx];
+  if (!m) return;
+  var st = String(m.status || '').toLowerCase();
+  var cx = (st === 'cancelled' || st === 'canceled'), done = (st === 'completed');
+  var isLead = String(m.session_id || '').indexOf('lead-') === 0;
+  var stLabel = cx ? '<span style="color:#B91C1C;font-weight:700">Đã huỷ</span>' : done ? '<span style="color:var(--green);font-weight:700">Đã hoàn thành</span>' : (isLead ? escHtml(m.status || '—') : '<span style="color:#1D4ED8;font-weight:700">Sắp tới / đang chờ</span>');
+  document.getElementById('modal-title').textContent = 'Chi tiết — ' + (m.advisee || 'buổi meeting');
+  var h = '<div style="display:grid;grid-template-columns:110px 1fr;gap:6px 12px;font-size:13.5px">' +
+    '<div style="color:var(--muted)">Loại</div><div>' + escHtml(m.type) + (m.session_no ? ' · buổi ' + escHtml(m.session_no) : '') + '</div>' +
+    '<div style="color:var(--muted)">Advisor</div><div>' + escHtml(m.advisor || '—') + '</div>' +
+    '<div style="color:var(--muted)">Advisee</div><div>' + escHtml(m.advisee || '—') + '</div>' +
+    '<div style="color:var(--muted)">Thời gian</div><div>' + escHtml(m.date || '') + ' · ' + escHtml(m.time || '') + (m.duration ? ' (' + escHtml(m.duration) + ' phút)' : '') + '</div>' +
+    '<div style="color:var(--muted)">Trạng thái</div><div>' + stLabel + '</div>' +
+    '<div style="color:var(--muted)">Meet</div><div>' + (m.meet_link ? '<a href="' + escHtml(m.meet_link) + '" target="_blank">' + escHtml(m.meet_link) + '</a>' : '—') + '</div>';
+  if (isLead) {
+    if (m.lead_phone) h += '<div style="color:var(--muted)">SĐT</div><div>' + escHtml(m.lead_phone) + '</div>';
+    if (m.lead_email) h += '<div style="color:var(--muted)">Email</div><div>' + escHtml(m.lead_email) + '</div>';
+    if (m.lead_about) h += '<div style="color:var(--muted)">Cần tư vấn</div><div>' + escHtml(m.lead_about) + '</div>';
+  }
+  h += '</div>';
+  var prep = _mdBlock('Câu hỏi', _mdLinks(m.prep_question), 'Advisee chưa gửi câu hỏi') +
+             _mdBlock('Link CV', _mdLinks(m.prep_cv), 'Chưa có') +
+             (isLead ? '' : _mdBlock('Link khác', _mdLinks(m.prep_other), 'Chưa có')) +
+             (m.prep_at ? '<div style="font-size:11.5px;color:var(--muted)">Gửi lúc ' + escHtml(m.prep_at) + '</div>' : '');
+  h += _mdSection('📝 Advisee chuẩn bị', prep);
+  if (!isLead && m.type !== 'Khoá học') {
+    var hasNote = m.note_summary || m.note_feedback || m.note_actions;
+    h += _mdSection('🧑‍🏫 Nhận xét của Advisor', hasNote
+      ? _mdBlock('Nội dung đã trao đổi', _mdLinks(m.note_summary)) + _mdBlock('Nhận xét', _mdLinks(m.note_feedback)) + _mdBlock('Việc cần làm', _mdLinks(m.note_actions)) +
+        (m.note_at ? '<div style="font-size:11.5px;color:var(--muted)">Gửi lúc ' + escHtml(m.note_at) + '</div>' : '')
+      : _mdBlock('', '', done ? 'Advisor chưa gửi nhận xét' : 'Chưa tới lúc (sẽ có sau khi buổi hoàn thành)'));
+    var stars = (m.fb_rating !== '' && !isNaN(Number(m.fb_rating))) ? '★'.repeat(Math.max(0, Math.min(5, Number(m.fb_rating)))) + '☆'.repeat(5 - Math.max(0, Math.min(5, Number(m.fb_rating)))) + ' (' + Number(m.fb_rating) + '/5)' : '';
+    var hasFb = stars || m.fb_text;
+    h += _mdSection('💬 Feedback của Advisee', hasFb
+      ? (stars ? '<div style="color:#F59E0B;font-size:16px;margin-bottom:6px">' + stars + '</div>' : '') + _mdBlock('Nội dung', _mdLinks(m.fb_text), 'Không có lời nhận xét') +
+        (m.fb_at ? '<div style="font-size:11.5px;color:var(--muted)">Gửi lúc ' + escHtml(m.fb_at) + '</div>' : '')
+      : _mdBlock('', '', done ? 'Advisee chưa gửi feedback' : 'Chưa tới lúc (sẽ có sau khi buổi hoàn thành)'));
+  }
+  if (m.notes) h += _mdSection('🗒 Ghi chú / lịch sử', '<div style="font-size:12.5px;line-height:1.6;white-space:pre-wrap;word-break:break-word">' + escHtml(String(m.notes).split(' | ').join('\n')) + '</div>');
+  document.getElementById('modal-body').innerHTML = h;
+  var act = '';
+  if (m.type !== 'Khoá học' && !done && !cx) {
+    act += '<button class="btn-secondary" style="width:auto;padding:10px 18px;color:#B91C1C" onclick="openCancelMeeting(' + idx + ')">✕ Huỷ buổi</button>';
+    act += '<button class="btn-secondary" style="width:auto;padding:10px 18px" onclick="openDayReschedule(' + idx + ')">📅 Đổi giờ</button>';
+  }
+  act += '<button class="login-btn" onclick="openStaffDayModal(\'' + (window._dayListDate || '') + '\')" style="width:auto;padding:10px 24px">← Danh sách ngày</button>';
+  document.getElementById('modal-actions').innerHTML = act;
+  document.getElementById('modal-overlay').classList.add('open');
+}
+function openCancelMeeting(idx) {
+  var m = window._dayList && window._dayList[idx];
+  if (!m) return;
+  window._cancelCtx = m;
+  var isLead = String(m.session_id || '').indexOf('lead-') === 0;
+  document.getElementById('modal-title').textContent = 'Huỷ buổi — ' + (m.advisee || '');
+  document.getElementById('modal-body').innerHTML =
+    '<div style="font-size:13px;color:var(--muted);margin-bottom:12px">' + escHtml(m.type) + ' · <b>' + escHtml(m.date || '') + ' ' + escHtml(m.time || '') + '</b> · Advisor: ' + escHtml(m.advisor || '—') + '</div>' +
+    '<div class="form-label" style="margin-bottom:6px">Lý do huỷ (bắt buộc)</div>' +
+    '<textarea class="form-input" id="cx-reason" rows="3" placeholder="VD: Advisor bận đột xuất, advisee xin huỷ..."></textarea>' +
+    '<label style="display:flex;gap:8px;align-items:center;font-size:13px;margin-top:12px"><input type="checkbox" id="cx-notify" checked> Gửi email báo advisee &amp; advisor (kèm lý do)</label>' +
+    '<div style="font-size:12px;color:var(--muted);margin-top:8px">' + (isLead
+      ? 'Ngày/giờ đã chốt của khách sẽ được xoá — khách quay lại danh sách "chưa đặt lịch".'
+      : 'Buổi sẽ chuyển sang "Đã huỷ", slot của Advisor được mở lại, sự kiện Google Calendar bị xoá. Buổi này <b>không bị trừ</b> khỏi gói của advisee.') + '</div>';
+  document.getElementById('modal-actions').innerHTML =
+    '<button class="btn-secondary" onclick="closeModal()" style="width:auto;padding:10px 20px">Không huỷ</button>' +
+    '<button class="login-btn" id="cx-save" onclick="saveCancelMeeting_()" style="width:auto;padding:10px 24px;background:#B91C1C">Xác nhận huỷ buổi</button>';
+  document.getElementById('modal-overlay').classList.add('open');
+}
+function saveCancelMeeting_() {
+  var m = window._cancelCtx; if (!m) return;
+  var reason = document.getElementById('cx-reason').value.trim();
+  if (!reason) { toast('Vui lòng nhập lý do huỷ', 'error'); return; }
+  var isLead = String(m.session_id || '').indexOf('lead-') === 0;
+  var btn = document.getElementById('cx-save'); btn.disabled = true; btn.textContent = 'Đang huỷ...';
+  apiPost({ action: 'cancelMeeting', session_id: isLead ? '' : m.session_id, lead_id: isLead ? String(m.session_id).slice(5) : '',
+            reason: reason, notify: document.getElementById('cx-notify').checked, changed_by: currentUser.email }).then(function(res){
+    if (!res || !res.success) { toast((res && res.error) || 'Không huỷ được buổi', 'error'); btn.disabled = false; btn.textContent = 'Xác nhận huỷ buổi'; return; }
+    var extra = res.emails_sent ? ' Đã gửi email cho ' + res.emails_sent + ' người.' : '';
+    if (res.calendar && String(res.calendar).indexOf('error') > -1) extra += ' (Chưa xoá được sự kiện Calendar.)';
+    toast('Đã huỷ buổi ✅' + extra, 'success');
+    closeModal();
+    loadMeetingCalendarAsync();
+  }).catch(function(e){ toast('Lỗi: ' + e.message, 'error'); btn.disabled = false; btn.textContent = 'Xác nhận huỷ buổi'; });
 }
 
 function renderBookedSessions() {
@@ -10124,10 +10239,6 @@ insDeptOf_ = function(lead) { return deptPrimary_(lead && lead.interested_dept);
   window._ljRestoring = false;
 
   function baseOf_(h) { return String(h || '').replace(/\/m$/, ''); }
-  function updateBackBtn_() {
-    var b = document.getElementById('lj-back-btn');
-    if (b) b.style.display = (_pos > 0 && currentUser) ? 'inline-flex' : 'none';
-  }
 
   // Đẩy 1 mục mới vào lịch sử trình duyệt, vd ljPushHash('/aee-list')
   window.ljPushHash = function (path) {
@@ -10139,7 +10250,6 @@ insDeptOf_ = function(lead) { return deptPrimary_(lead && lead.interested_dept);
     _lastHash = t;
     _hist = _hist.slice(0, _pos + 1); _hist.push(t); _pos = _hist.length - 1;
     try { location.hash = t; } catch (e) {}
-    updateBackBtn_();
   };
 
   function ensureAdvisees_(cb) { if (adviseesLoaded) cb(); else loadAdviseesFromSheet(cb); }
@@ -10211,7 +10321,6 @@ insDeptOf_ = function(lead) { return deptPrimary_(lead && lead.interested_dept);
     _lastHash = h;
     var i = _hist.lastIndexOf(h);
     if (i > -1) _pos = i; else { _hist.push(h); _pos = _hist.length - 1; }
-    updateBackBtn_();
 
     var overlay = document.getElementById('modal-overlay');
     var modalOpen = overlay && overlay.classList.contains('open');
@@ -10249,7 +10358,6 @@ insDeptOf_ = function(lead) { return deptPrimary_(lead && lead.interested_dept);
         _lastHash = baseOf_(location.hash);
         if (_pos > 0) _pos--;
         try { history.back(); } catch (e) {}
-        updateBackBtn_();
       }
     }).observe(overlayEl, { attributes: true, attributeFilter: ['class'] });
   })();
@@ -10290,24 +10398,10 @@ insDeptOf_ = function(lead) { return deptPrimary_(lead && lead.interested_dept);
       var r = _lo0.apply(this, arguments);
       _hist = []; _pos = -1; _lastHash = ''; _initialHash = '';
       try { history.replaceState(null, '', location.pathname + location.search); } catch (e) {}
-      updateBackBtn_();
       return r;
     };
   }
 
-  // Nút "← Quay lại" trên thanh trên cùng
-  (function addBackBtn() {
-    var tl = document.querySelector('.topbar-left');
-    if (!tl || document.getElementById('lj-back-btn')) return;
-    var b = document.createElement('button');
-    b.id = 'lj-back-btn';
-    b.type = 'button';
-    b.textContent = '← Quay lại';
-    b.title = 'Quay lại màn hình trước (nút Back của trình duyệt cũng dùng được)';
-    b.style.cssText = 'display:none;align-items:center;margin-left:8px;padding:5px 12px;border:1.5px solid var(--border);border-radius:100px;background:#fff;font-size:12.5px;font-weight:600;cursor:pointer;font-family:inherit;color:var(--text)';
-    b.onclick = function () { history.back(); };
-    tl.appendChild(b);
-  })();
 })();
 
 // ───────────────────────── tiện ích dùng chung ─────────────────────────
