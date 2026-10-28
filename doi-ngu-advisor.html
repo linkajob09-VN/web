@@ -389,6 +389,86 @@ body{font-family:'Montserrat',sans-serif;background:#F5F4F1;color:#1C1C1C;overfl
   .acard-name{font-size:10.5px;}
   .acard-bullets li{font-size:9.5px;}
 }
+/* ── Nhận diện Advisor nổi bật hơn ── */
+.d-identity{padding:32px 24px 0;gap:22px;align-items:center;}
+.d-ava{width:112px;height:112px;font-size:32px;border-width:1px;}
+.d-verified{width:26px;height:26px;bottom:3px;right:3px;}
+.d-verified i{font-size:12px;}
+.d-name{font-size:26px;letter-spacing:-.6px;margin-bottom:6px;}
+.d-role{font-size:15px;font-weight:500;color:rgba(28,28,28,.8);margin-bottom:6px;line-height:1.4;}
+.d-co{font-size:14px;font-weight:600;color:rgba(28,28,28,.62);}
+.d-co-dot{width:7px;height:7px;}
+.d-tags{padding-top:18px;}
+.atag{font-size:12px;padding:5px 13px;}
+@media (min-width:900px){
+  .d-identity{padding-top:40px;gap:30px;}
+  .d-ava{width:168px;height:168px;font-size:44px;}
+  .d-verified{width:34px;height:34px;bottom:6px;right:6px;border-width:3px;}
+  .d-verified i{font-size:15px;}
+  .d-name{font-size:38px;letter-spacing:-1px;margin-bottom:8px;}
+  .d-role{font-size:19px;margin-bottom:8px;}
+  .d-co{font-size:16px;}
+}
+@media (max-width:560px){
+  .d-identity{flex-direction:column;align-items:flex-start;gap:14px;}
+  .d-ava{width:120px;height:120px;}
+  .d-name{font-size:24px;}
+}
+
+/* ── Kinh nghiệm: bảng 3 cột Vị trí | Công ty | Thời gian ── */
+.d-exp-table{margin:0 24px;background:#FFFFFF;border:.5px solid rgba(28,28,28,.08);border-radius:14px;box-shadow:0 1px 3px rgba(28,28,28,.04);overflow:hidden;}
+.d-exp-row{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1.15fr) minmax(0,.9fr);gap:18px;padding:15px 20px;align-items:baseline;border-top:.5px solid rgba(28,28,28,.08);}
+.d-exp-row:first-child{border-top:none;}
+.d-exp-head{background:#FAF9F6;padding-top:11px;padding-bottom:11px;}
+.d-exp-head span{font-family:'Montserrat',sans-serif;font-size:10.5px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:rgba(28,28,28,.45);}
+.d-exp-pos{font-family:'Montserrat',sans-serif;font-size:14px;font-weight:700;color:#1C1C1C;line-height:1.4;}
+.d-exp-co{font-size:14px;font-weight:500;color:rgba(28,28,28,.78);line-height:1.4;}
+.d-exp-time{font-size:13px;color:rgba(28,28,28,.55);line-height:1.4;}
+.d-exp-row.is-current .d-exp-time{color:#fc5229;font-weight:600;}
+.d-exp-row .d-exp-full{grid-column:1 / -1;font-size:14px;color:#1C1C1C;}
+@media (max-width:640px){
+  .d-exp-head{display:none;}
+  .d-exp-row{grid-template-columns:1fr;gap:3px;padding:13px 16px;}
+}
+
+/* ── Nút cuối trang: "Tìm hiểu gói" bên trái, "Kết nối" bên phải ── */
+.d-cta{align-items:stretch;justify-content:space-between;gap:12px;}
+.d-btn-pkg{flex:0 0 auto;white-space:nowrap;padding:14px 24px;font-size:13.5px;}
+.d-btn-book{flex:1;padding:14px;font-size:14px;}
+@media (max-width:560px){ .d-cta{flex-direction:column;} .d-btn-pkg{white-space:normal;} }
+
+/* ── Widget đặt lịch: full page, cùng khổ với trang chi tiết Advisor ── */
+@media (min-width:561px){
+  .m-modal{top:0;left:0;right:0;width:100%;max-width:none;height:100%;border-left:none;transform:translateY(16px);}
+  .m-overlay.open .m-modal{transform:translateY(0);}
+  .mh,.msteps,.mctx,.mbody{width:100%;max-width:880px;margin-left:auto;margin-right:auto;}
+  .mh{padding:20px 24px 0;}
+  .mh-title{font-size:18px;}
+  .mh-sub{font-size:12px;}
+  .mxbtn{width:34px;height:34px;font-size:17px;}
+  .msteps{padding:18px 24px 0;}
+  .ms-c{width:28px;height:28px;font-size:11px;}
+  .ms-lbl{font-size:11.5px;}
+  .mbody{padding:20px 24px 40px;}
+  .mpt{font-size:24px;}
+  .mps{font-size:13.5px;}
+}
+
+/* ── Thẻ Advisor duy nhất của widget (thay cho 3 chỗ nhắc lặp lại) ── */
+.mctx{margin:16px 24px 0;padding:14px 18px;gap:16px;border-radius:14px;flex-wrap:wrap;}
+@media (min-width:561px){ .mctx{margin-left:auto;margin-right:auto;} }
+.mctx-ava{width:64px;height:64px;border-radius:50%;background:linear-gradient(135deg,#fff,#ECE8E1);border:.5px solid rgba(252,82,41,.28);display:flex;align-items:center;justify-content:center;font-family:'Montserrat',sans-serif;font-size:20px;font-weight:700;color:#fc5229;overflow:hidden;flex-shrink:0;}
+.mctx-ava img{width:100%;height:100%;object-fit:cover;border-radius:50%;}
+.mctx-who{flex:1;min-width:180px;}
+.mctx-badge{display:inline-block;font-size:9px;font-family:'Montserrat',sans-serif;font-weight:700;background:rgba(252,82,41,.12);color:#fc5229;padding:2px 8px;border-radius:4px;letter-spacing:.06em;text-transform:uppercase;margin-bottom:5px;}
+.mctx-main{font-size:18px;letter-spacing:-.3px;line-height:1.2;}
+.mctx-sub{font-size:12.5px;color:var(--muted);margin-top:3px;line-height:1.4;}
+.mctx-pkg{text-align:right;flex-shrink:0;}
+.mctx-pkg-name{font-family:'Montserrat',sans-serif;font-size:14px;font-weight:700;color:#fc5229;}
+.mctx-pkg-sub{font-size:11.5px;color:var(--muted);margin-top:2px;}
+.mctx-pkg.is-empty .mctx-pkg-name{color:var(--muted-2);font-weight:600;}
+@media (max-width:560px){ .mctx{margin:12px 16px 0;} .mctx-pkg{text-align:left;width:100%;} }
+
 </style>
 <link rel="stylesheet" href="đăng-ký-tư-vấn.css">
 </head>
@@ -489,7 +569,7 @@ body{font-family:'Montserrat',sans-serif;background:#F5F4F1;color:#1C1C1C;overfl
     <!-- kinh nghiệm trước đó -->
     <div class="d-section" id="dExpSection" style="display:none">
       <div class="d-sec-label">Kinh nghiệm trước đó</div>
-      <ul class="d-exp-bullets" id="dExp"></ul>
+      <div class="d-exp-table" id="dExp"></div>
     </div>
 
     <!-- message -->
@@ -512,8 +592,8 @@ body{font-family:'Montserrat',sans-serif;background:#F5F4F1;color:#1C1C1C;overfl
  
     <!-- CTA -->
     <div class="d-cta">
-      <button class="d-btn-book" id="dBtnBook" onclick="bookFromDrawer()">Kết nối với Advisor này →</button>
-      <button class="d-btn-pkg" onclick="window.location.href='dang-ky-co-van-advisor.html'">Xem bảng giá</button>
+      <button class="d-btn-pkg" type="button" onclick="window.location.href='dang-ky-co-van-advisor.html'">Tìm hiểu về gói cố vấn 1-1</button>
+      <button class="d-btn-book" id="dBtnBook" type="button" onclick="bookFromDrawer()">Kết nối với Advisor này →</button>
     </div>
     </div><!-- /d-body -->
  
@@ -532,8 +612,9 @@ body{font-family:'Montserrat',sans-serif;background:#F5F4F1;color:#1C1C1C;overfl
   </div>
   <div class="msteps" id="msteps"></div>
   <div class="mctx" id="mctx">
-    <div class="mctx-dot"></div>
-    <div><div class="mctx-main" id="mctxMain">—</div><div class="mctx-sub" id="mctxSub">—</div></div>
+    <div class="mctx-ava" id="mctxAva">LJ</div>
+    <div class="mctx-who"><div class="mctx-badge">Advisor đã chọn</div><div class="mctx-main" id="mctxMain">—</div><div class="mctx-sub" id="mctxSub">—</div></div>
+    <div class="mctx-pkg is-empty" id="mctxPkg"><div class="mctx-pkg-name" id="mctxPkgName">Chưa chọn gói</div><div class="mctx-pkg-sub" id="mctxPkgSub"></div></div>
   </div>
   <div class="mbody">
  
@@ -542,10 +623,6 @@ body{font-family:'Montserrat',sans-serif;background:#F5F4F1;color:#1C1C1C;overfl
       <div class="mpl">Bước 1 / 3</div>
       <div class="mpt">Chọn gói meeting</div>
       <div class="mps">Gói gắn với advisor trong suốt thời hạn sử dụng.</div>
-      <div class="apb" id="mApb">
-        <div class="apb-ava" id="mApbAva">LJ</div>
-        <div><div class="apb-badge">Advisor đã chọn</div><div class="apb-name" id="mApbName">LinkaJob sẽ match cho bạn</div><div class="apb-role" id="mApbRole">Tư vấn miễn phí trước khi chọn</div></div>
-      </div>
       <div class="pkglist" id="pkgList">
         <div style="padding:20px;text-align:center;color:rgba(240,240,240,.4);font-size:13px">Đang tải gói...</div>
       </div>
@@ -596,8 +673,6 @@ body{font-family:'Montserrat',sans-serif;background:#F5F4F1;color:#1C1C1C;overfl
       <div class="cbox">
         <div class="crow"><span class="cl">Gói</span><div><div class="cv o" id="cvPkg">—</div><div class="ce" onclick="goStep(1)">Đổi gói</div></div></div>
         <div class="crow"><span class="cl">Buổi</span><div class="cv" id="cvSess">—</div></div>
-        <div class="crow"><span class="cl">Advisor</span><div class="cv" id="cvAdv">—</div></div>
-        <div class="crow"><span class="cl">Vị trí</span><div class="cv" id="cvRole" style="font-weight:400;font-size:11px;color:var(--muted);">—</div></div>
         <div class="crow"><span class="cl">Họ tên</span><div><div class="cv" id="cvName">—</div><div class="ce" onclick="goStep(2)">Sửa</div></div></div>
         <div class="crow"><span class="cl">Email</span><div class="cv" id="cvEmail" style="font-weight:400;font-size:11px;">—</div></div>
         <div class="crow"><span class="cl">SĐT</span><div class="cv" id="cvPhone" style="font-weight:400;font-size:11px;">—</div></div>
@@ -1037,6 +1112,21 @@ function baseUrl(){
 }
 function isDrawerOpen(){ return document.getElementById('drawerOv').classList.contains('open'); }
 
+/* Tách mỗi dòng "Vị trí tại Công ty (Thời gian)" thành 3 cột; dòng không đúng mẫu thì hiện nguyên văn */
+function renderExpTable(list){
+  var html = '<div class="d-exp-row d-exp-head"><span>Vị trí</span><span>Công ty</span><span>Thời gian</span></div>';
+  list.forEach(function(t){
+    var m = /^(.*?)\s+tại\s+(.*?)\s*\(([^()]*)\)\s*$/.exec(String(t).trim());
+    if (m) {
+      var cur = /hiện tại|present|nay/i.test(m[3]);
+      html += '<div class="d-exp-row'+(cur?' is-current':'')+'"><div class="d-exp-pos">'+m[1]+'</div><div class="d-exp-co">'+m[2]+'</div><div class="d-exp-time">'+m[3]+'</div></div>';
+    } else {
+      html += '<div class="d-exp-row"><div class="d-exp-full">'+t+'</div></div>';
+    }
+  });
+  return html;
+}
+
 function openDrawer(id, mode){
   var a = findAdvisorById(id);
   if(!a) return;
@@ -1057,7 +1147,7 @@ function openDrawer(id, mode){
   /* kinh nghiệm trước đó — ẩn cả mục nếu chưa có dữ liệu */
   var expSection = document.getElementById('dExpSection');
   if (a.prog && a.prog.length) {
-    document.getElementById('dExp').innerHTML = a.prog.map(function(t){ return '<li>'+t+'</li>'; }).join('');
+    document.getElementById('dExp').innerHTML = renderExpTable(a.prog);
     expSection.style.display = '';
   } else {
     expSection.style.display = 'none';
@@ -1151,18 +1241,16 @@ function openCheckout(adv, role, co, initials, photo){
   document.querySelectorAll('.pkgitem').forEach(function(e){e.classList.remove('sel');});
   document.getElementById('mBtn1').disabled = true;
   resetForm();
-  document.getElementById('mApbAva').innerHTML = avaInner(photo, initials||'LJ');
-  document.getElementById('mApbName').textContent = adv||'LinkaJob sẽ match cho bạn';
-  document.getElementById('mApbRole').textContent = role ? role+' · '+co : 'Tư vấn miễn phí trước khi chọn';
-  document.getElementById('mhSub').textContent = adv ? 'Advisor: '+adv : 'LinkaJob · Career Consulting';
+  S.advPhoto = photo;
+  document.getElementById('mhSub').textContent = 'LinkaJob · Career Consulting';
  
   var n2=document.getElementById('mp2Consult'); if(n2) n2.style.display='none';
   if(presetPackage && applyPackageSelection(presetPackage)){
-    setCtx((adv||'LinkaJob')+' · Gói '+S.pkg, S.sess);
+    setCtx();
     if(n2) n2.style.display='block';   // flow chọn gói trước: bỏ qua Bước 1 nên hiện lưu ý ở Bước 2
     renderSteps(2); showPanel('mp2');
   } else {
-    setCtx(adv||'LinkaJob', role ? role+' · '+co : 'Chọn gói để bắt đầu');
+    setCtx();
     renderSteps(1); showPanel('mp1');
   }
  
@@ -1184,6 +1272,7 @@ function selPkg(el, pkg, sess, pl, pn){
   el.classList.add('sel');
   S.pkg=pkg; S.sess=sess; S.priceLabel=pl; S.priceNum=pn;
   document.getElementById('mBtn1').disabled=false;
+  setCtx();
 }
  
 function goStep(step){
@@ -1193,16 +1282,14 @@ function goStep(step){
     S.orderId = ck;
     document.getElementById('cvPkg').textContent = 'Gói '+S.pkg;
     document.getElementById('cvSess').textContent = S.sess;
-    document.getElementById('cvAdv').textContent = S.adv||'LinkaJob sẽ match';
-    document.getElementById('cvRole').textContent = S.advRole;
     document.getElementById('cvName').textContent = n;
     document.getElementById('cvEmail').textContent = document.getElementById('mEmail').value;
     document.getElementById('cvPhone').textContent = document.getElementById('mPhone').value;
     // priceLabel đã là chuỗi đầy đủ (VD "419.000đ" hoặc "Liên hệ") — không nối thêm đuôi nữa
     document.getElementById('cvTotal').textContent = S.priceLabel;
-    setCtx('Gói '+S.pkg+' · '+(S.adv||'LinkaJob'), 'Tổng: '+S.priceLabel);
+    setCtx(true);
   } else if(step===2){
-    setCtx((S.adv||'LinkaJob')+' · Gói '+S.pkg, S.sess);
+    setCtx();
   }
   renderSteps(step);
   showPanel('mp'+step);
@@ -1305,9 +1392,22 @@ function submitBooking(){
   });
 }
  
-function setCtx(main, sub){
-  document.getElementById('mctxMain').textContent = main;
-  document.getElementById('mctxSub').textContent = sub;
+/* Thẻ Advisor duy nhất của widget: tên/vị trí/công ty chỉ hiện 1 lần ở đây;
+   bên phải là gói đã chọn (kèm tổng tiền ở bước xác nhận). */
+function setCtx(showTotal){
+  document.getElementById('mctxAva').innerHTML = avaInner(S.advPhoto, S.advInitials||'LJ');
+  document.getElementById('mctxMain').textContent = S.adv || 'LinkaJob sẽ match cho bạn';
+  document.getElementById('mctxSub').textContent = S.adv ? (S.advRole + (S.advCo ? ' · ' + S.advCo : '')) : 'Tư vấn miễn phí trước khi chọn';
+  var pk = document.getElementById('mctxPkg');
+  if (S.pkg) {
+    pk.classList.remove('is-empty');
+    document.getElementById('mctxPkgName').textContent = 'Gói ' + S.pkg;
+    document.getElementById('mctxPkgSub').textContent = showTotal ? (S.sess + ' · Tổng: ' + S.priceLabel) : S.sess;
+  } else {
+    pk.classList.add('is-empty');
+    document.getElementById('mctxPkgName').textContent = 'Chưa chọn gói';
+    document.getElementById('mctxPkgSub').textContent = '';
+  }
 }
  
 function renderSteps(active){
