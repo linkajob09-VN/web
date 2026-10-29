@@ -868,6 +868,8 @@ function buildAdviseeFromBooking(b, allSessions) {
     pkg: b.package_name, bookingId: b.booking_id, advisorTitle: '',
     sessionsTotal: sessionsTotal, sessionsDone: sessionsDone, progress: sessionsDone + '/' + sessionsTotal,
     paid: Number(b.package_price) || 0,
+    payMode: String(b.pay_mode || '').toLowerCase(), instCount: Number(b.installment_count) || 0, instAmount: Number(b.installment_amount) || 0,
+    instDay: Number(b.installment_day) || 0, instFirstDue: String(b.installment_first_due || '').slice(0, 10), payNote: String(b.pay_note || ''),
     registeredAt: b.created_at ? String(b.created_at).slice(0,10) : '', createdAtRaw: b.created_at || '',
     expiry: b.expiry_date ? String(b.expiry_date).slice(0,10) : '',
     advisor: b.advisor_name, sessions: sessions,
@@ -2305,19 +2307,24 @@ function openStaffDayModal(dateStr) {
     window._dayList = list.slice().sort(function(a,b){ return (a.time||'').localeCompare(b.time||''); });
     window._dayListDate = dateStr;
     window._dayList.forEach(function(m, mi){
-      html += '<div class="day-meeting-item">' + avatarCircle(m.advisee, 34) +
-        '<div style="flex:1"><div style="font-weight:600;font-size:14px">' + (m.advisee||'—') + ' · ' + meetingClassLabel(m) + '</div>' +
-        '<div style="font-size:12px;color:var(--muted)">' + (m.time||'') + '</div></div>';
-      if (m.meet_link) html += '<a href="' + m.meet_link + '" target="_blank" class="detail-btn" style="margin-right:6px">🎥 Meet</a>';
       var _st = String(m.status || '').toLowerCase();
       var _isCx = (_st === 'cancelled' || _st === 'canceled');
-      if (_isCx) html += '<span style="font-size:11px;font-weight:700;color:#B91C1C;background:#FEE2E2;border-radius:100px;padding:3px 10px;margin-right:6px">Đã huỷ</span>';
-      html += '<button class="detail-btn" style="margin-right:6px" onclick="openMeetingDetail(' + mi + ')">📋 Chi tiết</button>';
+      var _bs = 'padding:6px 12px;font-size:12.5px;white-space:nowrap';
+      html += '<div class="day-meeting-item" style="display:block;padding:14px 0">' +
+        '<div style="display:flex;align-items:center;gap:12px">' + avatarCircle(m.advisee, 36) +
+        '<div style="flex:1;min-width:0">' +
+          '<div style="font-weight:700;font-size:14.5px;line-height:1.35">' + escHtml(m.advisee || '—') + (_isCx ? ' <span style="font-size:11px;font-weight:700;color:#B91C1C;background:#FEE2E2;border-radius:100px;padding:2px 9px;vertical-align:middle">Đã huỷ</span>' : '') + '</div>' +
+          '<div style="font-size:12.5px;color:var(--muted);line-height:1.5">' + escHtml(meetingClassLabel(m)) + '</div>' +
+        '</div>' +
+        '<div style="font-weight:700;font-size:14px;color:var(--text);flex-shrink:0">' + escHtml(m.time || '') + '</div></div>' +
+        '<div style="display:flex;flex-wrap:wrap;gap:6px;margin:10px 0 0 48px">';
+      if (m.meet_link) html += '<a href="' + escHtml(m.meet_link) + '" target="_blank" class="detail-btn" style="' + _bs + '">🎥 Meet</a>';
+      html += '<button class="detail-btn" style="' + _bs + '" onclick="openMeetingDetail(' + mi + ')">📋 Chi tiết</button>';
       if (m.type !== 'Khoá học' && _st !== 'completed' && !_isCx) {
-        html += '<button class="detail-btn" style="margin-right:6px" onclick="openDayReschedule(' + mi + ')">📅 Đổi giờ</button>';
-        html += '<button class="detail-btn" style="color:#B91C1C" onclick="openCancelMeeting(' + mi + ')">✕ Huỷ</button>';
+        html += '<button class="detail-btn" style="' + _bs + '" onclick="openDayReschedule(' + mi + ')">📅 Đổi giờ</button>';
+        html += '<button class="detail-btn" style="' + _bs + ';color:#B91C1C" onclick="openCancelMeeting(' + mi + ')">✕ Huỷ</button>';
       }
-      html += '</div>';
+      html += '</div></div>';
     });
   }
   document.getElementById('modal-body').innerHTML = html;
@@ -2339,7 +2346,7 @@ function openDayReschedule(idx) {
 
 // ── Chi tiết 1 buổi trong lịch: chuẩn bị của advisee + nhận xét advisor + feedback advisee ──
 function _mdBlock(label, valHtml, empty) {
-  return '<div style="margin-bottom:12px"><div style="font-size:10.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:4px">' + label + '</div>' +
+  return '<div style="margin-bottom:10px"><div style="font-size:10.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:4px">' + label + '</div>' +
     (valHtml ? '<div style="font-size:13.5px;line-height:1.6;white-space:pre-wrap;word-break:break-word">' + valHtml + '</div>'
              : '<div style="font-size:13px;color:var(--muted);font-style:italic">' + (empty || 'Chưa có') + '</div>') + '</div>';
 }
@@ -2393,10 +2400,10 @@ function openMeetingDetail(idx) {
   document.getElementById('modal-body').innerHTML = h;
   var act = '';
   if (m.type !== 'Khoá học' && !done && !cx) {
-    act += '<button class="btn-secondary" style="width:auto;padding:10px 18px;color:#B91C1C" onclick="openCancelMeeting(' + idx + ')">✕ Huỷ buổi</button>';
-    act += '<button class="btn-secondary" style="width:auto;padding:10px 18px" onclick="openDayReschedule(' + idx + ')">📅 Đổi giờ</button>';
+    act += '<button class="btn-secondary" style="width:auto;padding:10px 14px;white-space:nowrap;color:#B91C1C" onclick="openCancelMeeting(' + idx + ')">✕ Huỷ buổi</button>';
+    act += '<button class="btn-secondary" style="width:auto;padding:10px 14px;white-space:nowrap" onclick="openDayReschedule(' + idx + ')">📅 Đổi giờ</button>';
   }
-  act += '<button class="login-btn" onclick="openStaffDayModal(\'' + (window._dayListDate || '') + '\')" style="width:auto;padding:10px 24px">← Danh sách ngày</button>';
+  act += '<button class="login-btn" onclick="openStaffDayModal(\'' + (window._dayListDate || '') + '\')" style="width:auto;padding:10px 16px;white-space:nowrap">← Quay lại ngày</button>';
   document.getElementById('modal-actions').innerHTML = act;
   document.getElementById('modal-overlay').classList.add('open');
 }
@@ -6690,7 +6697,7 @@ function renderStaffAdviseeDetail(aeId, fromAdvisorId) {
   html += '</div></div>';
   html += '<div style="text-align:right;min-width:100px">';
   html += '<div style="font-size:22px;font-weight:800;color:var(--brand)">' + fmtMoney(ae.paid) + '</div>';
-  html += '<div style="font-size:11px;color:var(--muted)">đã thanh toán</div>';
+  html += '<div style="font-size:11px;color:var(--muted)">' + (ae.payMode === 'installment' ? 'giá trị gói (trả góp)' : 'đã thanh toán') + '</div>';
   html += '<div style="font-size:12px;color:var(--muted);margin-top:6px">Hết hạn ' + ae.expiry + '</div>';
   html += '</div></div>';
   // Extra info row
@@ -6702,6 +6709,8 @@ function renderStaffAdviseeDetail(aeId, fromAdvisorId) {
   html += '<div><span style="color:var(--muted)">Đăng ký: </span><b>' + ae.registeredAt + '</b></div>';
   html += '<div><span style="color:var(--muted)">Liên hệ: </span><b>' + ae.contact + '</b></div>';
   html += '</div></div></div>';
+
+  html += '<div id="sa-pay-card"></div>';
 
   // Session list — same compact format, same modal
   html += '<div class="card"><div class="card-header"><div class="card-header-left">Các buổi meeting</div></div>';
@@ -11043,6 +11052,247 @@ function ljCmSubmitCourse() {
   };
 })();
 
+
+// ───────────────────────── Trả góp học phí + thu tiền + doanh thu thực thu ─────────────────────────
+function ljAddMonths_(ymdStr, k, day) {
+  var p = String(ymdStr).split('-'); if (p.length < 3) return '';
+  var dt = new Date(+p[0], (+p[1] - 1) + k, 1);
+  var last = new Date(dt.getFullYear(), dt.getMonth() + 1, 0).getDate();
+  return dt.getFullYear() + '-' + pad(dt.getMonth() + 1) + '-' + pad(Math.min(day || +p[2], last));
+}
+function ljInstInfo_(b, pays) {
+  // b: dòng booking (package_price, installment_*); pays: các lần đã thu
+  var price = Number(b.package_price != null ? b.package_price : b.price) || 0;
+  var paid = (pays || []).reduce(function (s, x) { return s + (Number(x.amount) || 0); }, 0);
+  var count = Number(b.installment_count != null ? b.installment_count : b.instCount) || 0;
+  var amt = Number(b.installment_amount != null ? b.installment_amount : b.instAmount) || 0;
+  var day = Number(b.installment_day != null ? b.installment_day : b.instDay) || 0;
+  var first = String(b.installment_first_due || b.instFirstDue || '').slice(0, 10);
+  var remaining = Math.max(0, price - paid);
+  var paidCount = amt > 0 ? Math.min(count, Math.floor(paid / amt + 1e-9)) : 0;
+  var nextDue = (remaining > 0 && first && paidCount < count) ? ljAddMonths_(first, paidCount, day) : '';
+  var lastDue = (first && count) ? ljAddMonths_(first, count - 1, day) : '';
+  var today = ymd(new Date());
+  return { price: price, paid: paid, remaining: remaining, count: count, amount: amt, day: day, first: first,
+           paidCount: paidCount, nextDue: nextDue, lastDue: lastDue, overdue: !!(nextDue && nextDue < today),
+           pct: price > 0 ? Math.min(100, Math.round(paid / price * 100)) : 0 };
+}
+
+// ── Thẻ "Thanh toán" trong trang chi tiết Advisee ──
+function ljLoadPayCard(aeId) {
+  var host = document.getElementById('sa-pay-card');
+  var ae = MOCK.advisees.find(function (x) { return x.id === aeId; });
+  if (!host || !ae) return;
+  var btn = 'class="detail-btn" style="font-size:12px;padding:6px 12px"';
+  if (ae.payMode !== 'installment') {
+    host.innerHTML = '<div class="card" style="margin-bottom:16px"><div style="padding:16px 24px;display:flex;align-items:center;gap:14px;flex-wrap:wrap">' +
+      '<div style="flex:1;min-width:200px"><div style="font-weight:700;font-size:14px">💳 Thanh toán</div>' +
+      '<div style="font-size:13px;color:var(--muted);margin-top:3px">Đóng đủ · ' + fmtMoney(ae.paid) + (ae.payNote ? ' · ' + escHtml(ae.payNote) : '') + '</div></div>' +
+      '<button ' + btn + ' onclick="ljOpenPlanModal(\'' + ae.id + '\')">Thiết lập đóng góp / trả góp</button></div></div>';
+    return;
+  }
+  host.innerHTML = '<div class="card" style="margin-bottom:16px"><div style="padding:16px 24px;color:var(--muted);font-size:13px">Đang tải thông tin đóng góp…</div></div>';
+  apiGet('getRevenueExtras', { booking_id: ae.bookingId }).then(function (res) {
+    var pays = (res && res.data && res.data.payments) || [];
+    var I = ljInstInfo_({ package_price: ae.paid, installment_count: ae.instCount, installment_amount: ae.instAmount, installment_day: ae.instDay, installment_first_due: ae.instFirstDue }, pays);
+    var stCol = I.remaining <= 0 ? '#16A34A' : (I.overdue ? '#DC2626' : '#1D4ED8');
+    var stTxt = I.remaining <= 0 ? 'Đã góp đủ' : (I.overdue ? 'Quá hạn kỳ ' + (I.paidCount + 1) : 'Đang góp');
+    var h = '<div class="card" style="margin-bottom:16px"><div style="padding:18px 24px">' +
+      '<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px"><div style="font-weight:700;font-size:14px;flex:1">💳 Đóng góp học phí (trả góp)</div>' +
+      '<span style="font-size:12px;font-weight:700;color:' + stCol + ';background:#F3F4F6;border-radius:100px;padding:4px 12px">' + stTxt + '</span>' +
+      '<button ' + btn + ' onclick="ljOpenPlanModal(\'' + ae.id + '\')">✏️ Sửa kế hoạch</button>' +
+      (I.remaining > 0 ? '<button class="submit-btn" style="padding:6px 14px;font-size:12px;width:auto" onclick="ljOpenPayModal(\'' + ae.id + '\')">+ Ghi nhận đã thu</button>' : '') + '</div>' +
+      '<div style="height:8px;background:#EEECE8;border-radius:100px;overflow:hidden"><div style="height:100%;width:' + I.pct + '%;background:' + stCol + '"></div></div>' +
+      '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin:14px 0;font-size:13px">' +
+        '<div><div style="color:var(--muted);font-size:11.5px">Tổng học phí</div><b>' + fmtMoney(I.price) + '</b></div>' +
+        '<div><div style="color:var(--muted);font-size:11.5px">Đã góp (' + I.pct + '%)</div><b style="color:#16A34A">' + fmtMoney(I.paid) + '</b></div>' +
+        '<div><div style="color:var(--muted);font-size:11.5px">Còn lại</div><b style="color:' + (I.remaining > 0 ? '#DC2626' : '#16A34A') + '">' + fmtMoney(I.remaining) + '</b></div>' +
+        '<div><div style="color:var(--muted);font-size:11.5px">Mỗi kỳ</div><b>' + fmtMoney(I.amount) + '</b> <span style="color:var(--muted)">× ' + I.count + ' kỳ</span></div>' +
+        '<div><div style="color:var(--muted);font-size:11.5px">Hạn hằng tháng</div><b>Ngày ' + I.day + '</b></div>' +
+        '<div><div style="color:var(--muted);font-size:11.5px">Kỳ tiếp theo</div><b style="color:' + (I.overdue ? '#DC2626' : 'inherit') + '">' + (I.nextDue ? fmtDMY(I.nextDue) : '—') + '</b></div>' +
+        '<div><div style="color:var(--muted);font-size:11.5px">Dự kiến góp xong</div><b>' + (I.lastDue ? fmtDMY(I.lastDue) : '—') + '</b></div>' +
+      '</div>' +
+      (ae.payNote ? '<div style="font-size:13px;background:#FFFBEB;border-radius:8px;padding:10px 12px;margin-bottom:12px">📝 ' + escHtml(ae.payNote) + '</div>' : '');
+    h += '<div style="font-size:11.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:6px">Lịch sử thu (' + pays.length + ')</div>';
+    if (!pays.length) h += '<div style="font-size:13px;color:var(--muted);font-style:italic">Chưa ghi nhận khoản thu nào.</div>';
+    else h += '<div style="overflow-x:auto"><table class="bookings-table"><thead><tr><th>NGÀY THU</th><th>SỐ TIỀN</th><th>HÌNH THỨC</th><th>GHI CHÚ</th></tr></thead><tbody>' +
+      pays.slice().sort(function (a, b) { return String(b.paid_at) > String(a.paid_at) ? 1 : -1; }).map(function (x) {
+        return '<tr><td>' + fmtDMY(String(x.paid_at).slice(0, 10)) + '</td><td><b>' + fmtMoney(Number(x.amount)) + '</b></td><td>' + escHtml(x.method || '') + '</td><td>' + escHtml(x.note || '') + '</td></tr>';
+      }).join('') + '</tbody></table></div>';
+    host.innerHTML = h + '</div></div>';
+  }).catch(function (e) { host.innerHTML = '<div class="card" style="margin-bottom:16px"><div style="padding:16px 24px;color:#B91C1C;font-size:13px">Không tải được thông tin đóng góp: ' + escHtml(e.message) + '</div></div>'; });
+}
+(function () {
+  var f0 = window.navToStaffAdviseeDetail;
+  if (typeof f0 !== 'function') return;
+  window.navToStaffAdviseeDetail = function (aeId) { f0.apply(this, arguments); try { ljLoadPayCard(aeId); } catch (e) {} };
+})();
+
+function ljOpenPlanModal(aeId) {
+  var ae = MOCK.advisees.find(function (x) { return x.id === aeId; }); if (!ae) return;
+  var inst = ae.payMode === 'installment';
+  var inp = 'class="form-input" style="margin-top:6px"';
+  var h = '<div style="font-size:13px;color:var(--muted);margin-bottom:12px">' + escHtml(ae.name) + ' · Gói ' + escHtml(ae.pkg) + ' · Học phí <b>' + fmtMoney(ae.paid) + '</b></div>' +
+    '<div class="form-label">Hình thức đóng</div>' +
+    '<select id="pl-mode" ' + inp + ' onchange="ljPlanToggle_()"><option value="full"' + (inst ? '' : ' selected') + '>Đóng đủ một lần</option><option value="installment"' + (inst ? ' selected' : '') + '>Đóng góp (trả góp theo tháng)</option></select>' +
+    '<div id="pl-fields" style="display:' + (inst ? 'block' : 'none') + '">' +
+      '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px">' +
+        '<div><div class="form-label">Số kỳ góp</div><input ' + inp + ' type="number" min="2" id="pl-count" value="' + (ae.instCount || 3) + '" oninput="ljPlanAuto_(' + ae.paid + ')"></div>' +
+        '<div><div class="form-label">Số tiền mỗi kỳ (đ)</div><input ' + inp + ' type="number" min="0" id="pl-amount" value="' + (ae.instAmount || Math.ceil(ae.paid / 3 / 1000) * 1000) + '"></div>' +
+        '<div><div class="form-label">Ngày hạn hằng tháng</div><input ' + inp + ' type="number" min="1" max="31" id="pl-day" value="' + (ae.instDay || new Date().getDate()) + '"></div>' +
+        '<div><div class="form-label">Hạn kỳ đầu tiên</div><input ' + inp + ' type="date" id="pl-first" value="' + (ae.instFirstDue || ymd(new Date())) + '"></div>' +
+      '</div></div>' +
+    '<div class="form-label" style="margin-top:12px">Ghi chú đóng góp</div><textarea ' + inp + ' id="pl-note" rows="2" placeholder="VD: Khách xin chia 3 tháng, chuyển khoản vào ngày 5 hằng tháng...">' + escHtml(ae.payNote || '') + '</textarea>' +
+    '<div style="font-size:12px;color:var(--muted);margin-top:10px">Doanh thu của khách trả góp được tính theo <b>ngày thực thu</b> (mỗi lần bấm "Ghi nhận đã thu"), phần chưa thu nằm ở mục <b>Công nợ</b> trong báo cáo doanh thu.</div>';
+  document.getElementById('modal-title').textContent = 'Kế hoạch đóng tiền';
+  document.getElementById('modal-body').innerHTML = h;
+  document.getElementById('modal-actions').innerHTML = '<button class="btn-secondary" onclick="closeModal()" style="width:auto;padding:10px 20px">Huỷ</button>' +
+    '<button class="login-btn" id="pl-save" onclick="ljSavePlan_(\'' + ae.id + '\')" style="width:auto;padding:10px 24px">Lưu</button>';
+  document.getElementById('modal-overlay').classList.add('open');
+}
+function ljPlanToggle_() { document.getElementById('pl-fields').style.display = document.getElementById('pl-mode').value === 'installment' ? 'block' : 'none'; }
+function ljPlanAuto_(price) { var c = Number(document.getElementById('pl-count').value) || 0; if (c >= 2) document.getElementById('pl-amount').value = Math.ceil(price / c / 1000) * 1000; }
+function ljSavePlan_(aeId) {
+  var ae = MOCK.advisees.find(function (x) { return x.id === aeId; }); if (!ae) return;
+  var mode = document.getElementById('pl-mode').value;
+  var payload = { action: 'saveInstallmentPlan', booking_id: ae.bookingId, pay_mode: mode, pay_note: document.getElementById('pl-note').value.trim(), by: currentUser.email };
+  if (mode === 'installment') {
+    payload.installment_count = document.getElementById('pl-count').value; payload.installment_amount = document.getElementById('pl-amount').value;
+    payload.installment_day = document.getElementById('pl-day').value; payload.installment_first_due = document.getElementById('pl-first').value;
+  }
+  var b = document.getElementById('pl-save'); b.disabled = true; b.textContent = 'Đang lưu...';
+  apiPost(payload).then(function (r) {
+    if (!r || !r.success) { toast((r && r.error) || 'Không lưu được', 'error'); b.disabled = false; b.textContent = 'Lưu'; return; }
+    toast('Đã lưu kế hoạch đóng tiền ✅', 'success'); closeModal();
+    loadAdviseesFromSheet(function () { navToStaffAdviseeDetail(aeId, null); });
+  }).catch(function (e) { toast('Lỗi: ' + e.message, 'error'); b.disabled = false; b.textContent = 'Lưu'; });
+}
+function ljOpenPayModal(aeId) {
+  var ae = MOCK.advisees.find(function (x) { return x.id === aeId; }); if (!ae) return;
+  var inp = 'class="form-input" style="margin-top:6px"';
+  document.getElementById('modal-title').textContent = 'Ghi nhận khoản đã thu';
+  document.getElementById('modal-body').innerHTML = '<div style="font-size:13px;color:var(--muted);margin-bottom:12px">' + escHtml(ae.name) + '</div>' +
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">' +
+      '<div><div class="form-label">Số tiền thu (đ)</div><input ' + inp + ' type="number" min="0" id="pp-amount" value="' + (ae.instAmount || '') + '"></div>' +
+      '<div><div class="form-label">Ngày thu</div><input ' + inp + ' type="date" id="pp-date" value="' + ymd(new Date()) + '"></div></div>' +
+    '<div class="form-label" style="margin-top:12px">Hình thức</div><select id="pp-method" ' + inp + '><option>Chuyển khoản</option><option>Tiền mặt</option><option>Momo</option><option>Khác</option></select>' +
+    '<div class="form-label" style="margin-top:12px">Ghi chú</div><input ' + inp + ' id="pp-note" placeholder="VD: Kỳ 2/3">';
+  document.getElementById('modal-actions').innerHTML = '<button class="btn-secondary" onclick="closeModal()" style="width:auto;padding:10px 20px">Huỷ</button>' +
+    '<button class="login-btn" id="pp-save" onclick="ljSavePay_(\'' + ae.id + '\')" style="width:auto;padding:10px 24px">Ghi nhận</button>';
+  document.getElementById('modal-overlay').classList.add('open');
+}
+function ljSavePay_(aeId) {
+  var ae = MOCK.advisees.find(function (x) { return x.id === aeId; }); if (!ae) return;
+  var amt = Number(document.getElementById('pp-amount').value) || 0;
+  if (amt <= 0) { toast('Nhập số tiền đã thu', 'error'); return; }
+  var b = document.getElementById('pp-save'); b.disabled = true; b.textContent = 'Đang lưu...';
+  apiPost({ action: 'recordInstallmentPayment', booking_id: ae.bookingId, amount: amt, paid_date: document.getElementById('pp-date').value,
+            method: document.getElementById('pp-method').value, note: document.getElementById('pp-note').value.trim(), by: currentUser.email }).then(function (r) {
+    if (!r || !r.success) { toast((r && r.error) || 'Không ghi nhận được', 'error'); b.disabled = false; b.textContent = 'Ghi nhận'; return; }
+    toast('Đã ghi nhận ' + fmtMoney(amt) + ' ✅', 'success'); closeModal(); ljLoadPayCard(aeId);
+  }).catch(function (e) { toast('Lỗi: ' + e.message, 'error'); b.disabled = false; b.textContent = 'Ghi nhận'; });
+}
+
+// ── Báo cáo doanh thu: thêm thực thu / công nợ / khoá học / học viên ──
+var _revExtras = null, _revRendered = false;
+function ljRevMoney_(n) { return typeof fmtMoneyShort === 'function' ? fmtMoneyShort(n) : fmtMoney(n); }
+function ljRevCompute_(range) {
+  var X = _revExtras || { payments: [], enrollments: [], seasons: [], courses: [] };
+  var bks = ((_insData && _insData.bookings) || []).filter(bookingCounts);
+  var isInst = function (b) { return String(b.pay_mode || '').toLowerCase() === 'installment'; };
+  var seasonBy = {}, courseBy = {};
+  X.courses.forEach(function (c) { courseBy[c.course_id] = c; });
+  X.seasons.forEach(function (s) { seasonBy[s.season_id] = s; });
+  var seasonLabel = function (id) { var s = seasonBy[id] || {}, c = courseBy[s.course_id] || {}; return (c.name || s.name || 'Khoá học') + (s.season_no ? ' · Mùa ' + s.season_no : ''); };
+  var seasonPrice = function (id) { return Number((seasonBy[id] || {}).price_full) || 0; };
+  var instPays = X.payments.filter(function (p) { return p.type === 'installment'; });
+  var coursePays = X.payments.filter(function (p) { return p.type === 'course'; });
+  var sumA = function (l) { return l.reduce(function (s, x) { return s + (Number(x.amount) || 0); }, 0); };
+  var paidByEnroll = {}; coursePays.forEach(function (p) { paidByEnroll[p.ref_id] = (paidByEnroll[p.ref_id] || 0) + (Number(p.amount) || 0); });
+  var instPaysByBk = {}; instPays.forEach(function (p) { (instPaysByBk[p.ref_id] = instPaysByBk[p.ref_id] || []).push(p); });
+  function period(r) {
+    var full = bks.filter(function (b) { return !isInst(b) && inRange(b.created_at, r); });
+    var fullCash = full.reduce(function (s, b) { return s + (Number(b.package_price) || 0); }, 0);
+    var ip = instPays.filter(function (p) { return inRange(p.paid_at, r); });
+    var cp = coursePays.filter(function (p) { return inRange(p.paid_at, r); });
+    var accr = bks.filter(function (b) { return inRange(b.created_at, r); }).reduce(function (s, b) { return s + (Number(b.package_price) || 0); }, 0) +
+      X.enrollments.filter(function (en) { return inRange(en.enrolled_at, r); }).reduce(function (s, en) { return s + seasonPrice(en.season_id); }, 0);
+    return { fullCash: fullCash, instCash: sumA(ip), courseCash: sumA(cp), cash: fullCash + sumA(ip) + sumA(cp), accrual: accr, ip: ip, cp: cp };
+  }
+  var cur = period(range), prv = period(reportPrevPeriodRange());
+  var debts = [];
+  bks.filter(isInst).forEach(function (b) {
+    var I = ljInstInfo_(b, instPaysByBk[b.booking_id] || []);
+    if (I.remaining > 0) debts.push({ kind: 'Gói cố vấn', name: b.advisee_name, phone: b.advisee_phone, what: b.package_name, total: I.price, paid: I.paid, remaining: I.remaining, per: I.amount, nextDue: I.nextDue, overdue: I.overdue, note: b.pay_note || '' });
+  });
+  X.enrollments.forEach(function (en) {
+    var price = seasonPrice(en.season_id), paid = paidByEnroll[en.enrollment_id] || 0;
+    if (price > paid) debts.push({ kind: 'Khoá học', name: en.name, phone: en.phone, what: seasonLabel(en.season_id) + (en.plan ? ' (' + cmPlanLabel(en.plan) + ')' : ''), total: price, paid: paid, remaining: price - paid, per: 0, nextDue: '', overdue: false, note: '' });
+  });
+  debts.sort(function (a, b) { return (b.overdue ? 1 : 0) - (a.overdue ? 1 : 0) || (a.nextDue || '9999') .localeCompare(b.nextDue || '9999') || b.remaining - a.remaining; });
+  var enrollRows = X.enrollments.map(function (en) {
+    var price = seasonPrice(en.season_id), paid = paidByEnroll[en.enrollment_id] || 0;
+    return { name: en.name, email: en.email, phone: en.phone, what: seasonLabel(en.season_id), plan: en.plan, enrolled: String(en.enrolled_at || '').slice(0, 10), price: price, paid: paid, due: Math.max(0, price - paid), inPeriod: inRange(en.enrolled_at, range) };
+  });
+  return { cur: cur, prv: prv, debts: debts, enrollRows: enrollRows, seasonLabel: seasonLabel, courseBy: courseBy, seasonBy: seasonBy, X: X };
+}
+function ljRevDelta_(c, p) {
+  if (!p) return c ? '<span class="rp-d-n">Kỳ trước: 0</span>' : '';
+  var d = Math.round((c - p) / p * 100);
+  return '<span class="' + (d >= 0 ? 'rp-d-g' : 'rp-d-b') + '">' + (d >= 0 ? '▲ ' : '▼ ') + Math.abs(d) + '%</span> <span class="rp-d-n">so với kỳ trước</span>';
+}
+function ljInjectRevenue_(h) {
+  var range = reportPeriodRange();
+  var sec = function (t) { return '<div class="rp-sec">' + t + '</div>'; };
+  var tbl = function (heads, rows, empty) {
+    return '<div class="card" style="overflow-x:auto">' + (rows.length ? '<table class="bookings-table"><thead><tr>' + heads.map(function (x) { return '<th>' + x + '</th>'; }).join('') + '</tr></thead><tbody>' + rows.join('') + '</tbody></table>' : '<div class="today-empty" style="padding:20px">' + empty + '</div>') + '</div>';
+  };
+  var out = sec('Thu tiền thực tế · gồm gói cố vấn, trả góp và khoá học');
+  if (!_revExtras) out += '<div class="card"><div class="today-empty" style="padding:20px">Đang tải dữ liệu thu tiền (khoá học, trả góp)…</div></div>';
+  else {
+    var C = ljRevCompute_(range), cur = C.cur, prv = C.prv;
+    var debtTotal = C.debts.reduce(function (s, d) { return s + d.remaining; }, 0), overdue = C.debts.filter(function (d) { return d.overdue; });
+    var kpi = function (cls, l, v, d, n) { return '<div class="rp-kpi ' + cls + '"><div class="l">' + l + '</div><div class="v">' + v + '</div><div class="d">' + d + '</div>' + (n ? '<div class="n">' + n + '</div>' : '') + '</div>'; };
+    out += '<div class="rp-kpis">' +
+      kpi('green', 'Thực thu ' + range.label, ljRevMoney_(cur.cash), ljRevDelta_(cur.cash, prv.cash), 'Gói đóng đủ ' + ljRevMoney_(cur.fullCash) + ' · Trả góp ' + ljRevMoney_(cur.instCash) + ' · Khoá học ' + ljRevMoney_(cur.courseCash)) +
+      kpi('', 'Doanh thu ghi nhận', ljRevMoney_(cur.accrual), ljRevDelta_(cur.accrual, prv.accrual), 'Giá trị gói + học phí khoá học đăng ký trong kỳ (kể cả chưa thu đủ)') +
+      kpi(debtTotal ? 'amber' : 'green', 'Công nợ phải thu', ljRevMoney_(debtTotal), '<span class="rp-d-n">' + C.debts.length + ' khoản (trả góp + khoá học)</span>', 'Tính đến hôm nay, không phụ thuộc kỳ') +
+      kpi(overdue.length ? 'red' : 'green', 'Quá hạn góp', overdue.length, overdue.length ? '<span class="rp-d-b">' + ljRevMoney_(overdue.reduce(function (s, d) { return s + d.remaining; }, 0)) + ' cần nhắc</span>' : '<span class="rp-d-g">Không có</span>', 'Khách trả góp đã qua hạn kỳ kế tiếp') + '</div>';
+    out += '<div style="font-size:12.5px;color:var(--muted);margin:-6px 4px 14px;line-height:1.6">Cách tính: gói <b>đóng đủ</b> tính theo ngày đăng ký · gói <b>trả góp</b> và <b>khoá học</b> tính theo từng lần thu thực tế · các khoản thu khác (gia hạn, đổi advisor) chưa gộp vào.</div>';
+    out += sec('Công nợ & lịch thu (' + C.debts.length + ')') + tbl(['KHÁCH', 'LOẠI', 'TỔNG', 'ĐÃ THU', 'CÒN LẠI', 'MỖI KỲ', 'HẠN KẾ TIẾP', 'GHI CHÚ'], C.debts.map(function (d) {
+      return '<tr><td><b>' + escHtml(d.name || '—') + '</b><div style="font-size:11.5px;color:var(--muted)">' + escHtml(d.phone || '') + '</div></td><td>' + d.kind + '<div style="font-size:11.5px;color:var(--muted)">' + escHtml(d.what || '') + '</div></td><td>' + ljRevMoney_(d.total) + '</td><td>' + ljRevMoney_(d.paid) + '</td><td><b style="color:#DC2626">' + ljRevMoney_(d.remaining) + '</b></td><td>' + (d.per ? ljRevMoney_(d.per) : '—') + '</td><td>' +
+        (d.nextDue ? '<span style="' + (d.overdue ? 'color:#DC2626;font-weight:700' : '') + '">' + fmtDMY(d.nextDue) + (d.overdue ? ' · quá hạn' : '') + '</span>' : '—') + '</td><td style="font-size:12px;color:var(--muted)">' + escHtml(d.note) + '</td></tr>';
+    }), '✓ Không có công nợ.');
+    out += sec('Khoản đã thu trong kỳ (' + (cur.ip.length + cur.cp.length) + ')') + tbl(['NGÀY', 'KHÁCH', 'LOẠI', 'SỐ TIỀN', 'HÌNH THỨC', 'GHI CHÚ'], cur.ip.concat(cur.cp).sort(function (a, b) { return String(b.paid_at) > String(a.paid_at) ? 1 : -1; }).map(function (p) {
+      return '<tr><td>' + fmtDMY(String(p.paid_at).slice(0, 10)) + '</td><td><b>' + escHtml(p.advisee_name || '—') + '</b></td><td>' + (p.type === 'course' ? 'Khoá học' : 'Trả góp gói cố vấn') + '</td><td><b>' + fmtMoney(p.amount) + '</b></td><td>' + escHtml(p.method) + '</td><td style="font-size:12px;color:var(--muted)">' + escHtml(p.note) + '</td></tr>';
+    }), 'Chưa có khoản thu trả góp / khoá học trong kỳ.');
+    var rows = C.enrollRows.filter(function (r) { return r.inPeriod || r.due > 0; }).sort(function (a, b) { return b.due - a.due || String(b.enrolled).localeCompare(String(a.enrolled)); });
+    out += sec('Học viên khoá học · đăng ký trong kỳ hoặc còn nợ (' + rows.length + ')') + tbl(['HỌC VIÊN', 'LIÊN HỆ', 'KHOÁ / MÙA', 'GÓI ĐÓNG', 'NGÀY ĐK', 'HỌC PHÍ', 'ĐÃ ĐÓNG', 'CÒN NỢ'], rows.map(function (r) {
+      return '<tr><td><b>' + escHtml(r.name || '—') + '</b></td><td style="font-size:12px">' + escHtml(r.email || '') + '<br>' + escHtml(r.phone || '') + '</td><td>' + escHtml(r.what) + '</td><td>' + escHtml(typeof cmPlanLabel === 'function' ? cmPlanLabel(r.plan) : (r.plan || '')) + '</td><td>' + (r.enrolled ? fmtDMY(r.enrolled) : '—') + '</td><td>' + ljRevMoney_(r.price) + '</td><td>' + ljRevMoney_(r.paid) + '</td><td><b style="color:' + (r.due > 0 ? '#DC2626' : '#16A34A') + '">' + (r.due > 0 ? ljRevMoney_(r.due) : 'Đủ') + '</b></td></tr>';
+    }), 'Chưa có học viên khoá học.');
+  }
+  var i = h.indexOf('<div class="rp-sec">');
+  if (i > -1) return h.slice(0, i) + out + h.slice(i);
+  var j = h.lastIndexOf('</div>');
+  return j > -1 ? h.slice(0, j) + out + h.slice(j) : h + out;
+}
+(function () {
+  var oLoad = window.loadRevenuePageAsync, oRender = window.renderRevenuePage;
+  if (typeof oLoad !== 'function' || typeof oRender !== 'function') return;
+  window.loadRevenuePageAsync = function () {
+    _revRendered = false;
+    oLoad.apply(this, arguments);
+    apiGet('getRevenueExtras', {}).then(function (r) {
+      _revExtras = (r && r.data) || { payments: [], enrollments: [], seasons: [], courses: [] };
+      if (_revRendered && activeNavId === 'lj-revenue' && typeof _reportRerender === 'function') _reportRerender();
+    }).catch(function () { _revExtras = { payments: [], enrollments: [], seasons: [], courses: [] }; if (_revRendered && activeNavId === 'lj-revenue') _reportRerender(); });
+  };
+  window.renderRevenuePage = function () {
+    var h = oRender.apply(this, arguments);
+    _revRendered = true;
+    try { return ljInjectRevenue_(h); } catch (e) { console.error(e); return h; }
+  };
+})();
 
 // ───────────────────────── Nút con mắt hiện / ẩn mật khẩu ─────────────────────────
 (function () {
