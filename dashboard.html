@@ -1204,6 +1204,7 @@ const SIDEBAR_DEF = {
       { id: 'lj-products',  label: 'Sản phẩm' },
     ]},
     { id: 'rep', icon: '📊', label: 'Báo cáo', children: [
+      { id: 'lj-weekly',        label: 'Báo cáo tuần' },
       { id: 'lj-exec',          label: 'Tổng quan điều hành' },
       { id: 'lj-insights',      label: 'Cung – Cầu & Advisor' },
       { id: 'lj-revenue',       label: 'Doanh thu & Vận hành' },
@@ -1246,6 +1247,7 @@ const ROUTE_MAP = {
   'lj-revenue':    { fn: function(){ loadRevenuePageAsync(); } },
   'lj-insights':   { fn: function(){ loadInsightsPageAsync(); } },
   'lj-exec':       { fn: function(){ loadExecPageAsync(); } },
+  'lj-weekly':     { fn: function(){ loadWeeklyReportAsync(); } },
   'lj-market-report': { fn: function(){ loadMarketingReportPageAsync(); } },
   'lj-sales-perf': { fn: function(){ loadSalesPerformancePageAsync(); } },
   'lj-meetings':   { fn: function(){ loadMeetingCalendarAsync(); } },
@@ -1898,6 +1900,7 @@ function mergeLeadRow(r) {
   var existing = MOCK.consultations.find(function(c){ return c.id === r.lead_id; });
   var obj = existing || { id: r.lead_id, log: [] };
   obj.createdAt = r.created_at || obj.createdAt || '';
+  obj.updatedAt = r.updated_at || obj.updatedAt || '';
   obj.cvLink = r.cv_link || obj.cvLink || '';
   obj.staff = r.staff || '';
   obj.name = String(r.name || ''); obj.phone = String(r.phone || ''); obj.email = String(r.email || '');
@@ -2514,6 +2517,7 @@ function renderStaff(tab) {
   else if (tab === 'lj-revenue')        loadRevenuePageAsync();
   else if (tab === 'lj-insights')     loadInsightsPageAsync();
   else if (tab === 'lj-exec')         loadExecPageAsync();
+  else if (tab === 'lj-weekly')       loadWeeklyReportAsync();
   else if (tab === 'lj-sales-perf')     loadSalesPerformancePageAsync();
   else if (tab === 'linkajob-calendar' || tab === 'lj-meetings') loadMeetingCalendarAsync();
   else if (tab === 'lj-products')       loadProductsPageAsync();
@@ -2990,6 +2994,7 @@ function loadStaffLeadsAsync() {
       var existing = MOCK.consultations.find(function(c){ return c.id === r.lead_id; });
       var obj = existing || { id: r.lead_id, log: [] };
   obj.createdAt = r.created_at || obj.createdAt || '';
+  obj.updatedAt = r.updated_at || obj.updatedAt || '';
   obj.cvLink = r.cv_link || obj.cvLink || '';
       obj.staff = r.staff || s.name;
       obj.name = r.name || ''; obj.phone = r.phone || ''; obj.email = r.email || '';
@@ -8269,7 +8274,7 @@ function loadNewRegistrationsPage(keepState) {
   c.innerHTML = pageHeader('Leads tư vấn', 'Đang tải danh sách lead...') + skeletonRows(3);
 
   if (keepState !== true) {
-    _leadFilter = _leadPresetFilter || 'open';
+    _leadFilter = _leadPresetFilter || 'todo';
     _leadPresetFilter = null;
     _leadShowClosed = false;
     _leadSearch = '';
@@ -8362,7 +8367,7 @@ function leadTableHtml() {
 function renderNewRegistrationsList() {
   var actions = '<button class="refresh-btn" onclick="loadNewRegistrationsPage(true)">↻ Làm mới</button>' +
     '<button class="submit-btn" style="padding:8px 16px;font-size:13px;width:auto" onclick="openCreateLeadModal()">+ Tạo đơn mới</button>';
-  var html = pageHeader('Leads tư vấn', 'Lọc theo trạng thái tư vấn. Lead có lịch meeting sẽ tự chuyển sang “Đã chốt lịch”. Đổi cách sắp xếp ở ô bên phải ô tìm kiếm', actions);
+  var html = pageHeader('Leads tư vấn', 'Mặc định hiển thị việc cần xử lý. Chọn một nút để xem đúng nhóm lead bạn cần làm; lọc thêm theo người phụ trách, trạng thái, kết quả hoặc tuần tư vấn.', actions);
   html += '<div class="card"><div class="card-header"><div class="card-header-left" id="lead-count">' + leadCountText() + '</div></div>';
   html += '<div style="padding:0 24px" id="lead-filter-bar">' + leadFilterBarHtml() + '</div>';
   html += '<div style="padding:0 24px;display:flex;gap:12px;align-items:flex-start;flex-wrap:wrap"><div style="flex:1;min-width:220px;margin-bottom:14px;position:relative">' +
@@ -11293,6 +11298,389 @@ function ljInjectRevenue_(h) {
     try { return ljInjectRevenue_(h); } catch (e) { console.error(e); return h; }
   };
 })();
+
+// ═════════════════════════ BÁO CÁO TUẦN · FOLLOW-UP · BỘ LỌC LEAD ═════════════════════════
+var WK = { weeks: 2 };
+function wkParseDate_(s) { s = String(s || '').slice(0, 10); if (!/^\d{4}-\d{2}-\d{2}$/.test(s)) return null; var p = s.split('-'); return new Date(+p[0], +p[1] - 1, +p[2]); }
+function wkMonday_(d) { var x = new Date(d.getFullYear(), d.getMonth(), d.getDate()); x.setDate(x.getDate() - ((x.getDay() + 6) % 7)); return x; }
+function wkLbl_(d) { return d.getDate() + '/' + (d.getMonth() + 1); }
+function wkPct_(a, b) { return b > 0 ? Math.round(a / b * 100) : null; }
+var WK_PRE_STATUS = ['Chưa liên hệ', 'Đang liên hệ', 'Gọi điện', 'Đã chốt lịch', 'Không tham gia tư vấn'];
+
+// Chuẩn hoá 1 lead (dòng Sheet thô hoặc object MOCK.consultations) về cùng 1 dạng
+function wkNorm_(r) {
+  var raw = (r.lead_id !== undefined || r.created_at !== undefined);
+  var date = String(raw ? r.date : r.date || '').slice(0, 10); if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) date = '';
+  var time = typeof fmtHHMM === 'function' ? fmtHHMM(r.time) : String(r.time || '').slice(0, 5);
+  var res = String(r.result || '').trim(), st = String(r.status || '').trim() || 'Chưa liên hệ';
+  var meet = String(raw ? r.meet_link : r.meetLink || '').trim();
+  var when = date ? new Date(date + 'T' + (time && /^\d{1,2}:\d{2}$/.test(time) ? (time.length === 4 ? '0' + time : time) : '23:59') + ':00') : null;
+  var reg = isRegisteredResult(res) || st === LEAD_CONVERTED_STATUS;
+  var created = parseLeadCreated(raw ? r.created_at : r.createdAt), upd = parseLeadCreated(raw ? r.updated_at : r.updatedAt) || created;
+  return { id: raw ? r.lead_id : r.id, name: String(r.name || ''), staff: String(r.staff || '').trim(), phone: String(r.phone || ''), email: String(r.email || ''),
+    date: date, time: time, when: when, meet: meet, booked: !!(date && meet), status: st, result: res, registered: reg,
+    closed: SLA_TERMINAL.indexOf(st) > -1 || reg, created: created, updated: upd,
+    dept: String(raw ? r.interested_dept : (r.profile && r.profile.interestedDept) || '').trim(),
+    question: String(raw ? r.question : (r.profile && r.profile.question) || '').trim(),
+    deadline: String(raw ? r.next_step_deadline : r.nextStepDeadline || ''), contacted: String(raw ? r.contacted_date : r.contactedDate || '') };
+}
+function wkPast_(n) { return !!(n.when && n.when <= new Date()); }
+function wkNoResult_(n) { return !!(n.date && wkPast_(n) && !n.result && !n.registered); }
+// Nhóm việc follow-up (dùng cho trang Hôm nay, Báo cáo tuần và bộ lọc Leads)
+function wkGroups_(norms, bookings) {
+  var today = ymd(new Date()), now = Date.now(), g = { noresult: [], pastdue: [], follow: [], today: [], stale: [], unassigned: [], nobooking: [] };
+  var bkE = {}, bkP = {};
+  (bookings || []).forEach(function (b) { var e = typeof insEmailKey_ === 'function' ? insEmailKey_(b.advisee_email) : ''; var p = typeof insPhoneKey_ === 'function' ? insPhoneKey_(b.advisee_phone) : ''; if (e) bkE[e] = 1; if (p) bkP[p] = 1; });
+  norms.forEach(function (n) {
+    if (n.closed && !(n.registered && n.status !== LEAD_CONVERTED_STATUS)) return;
+    if (n.registered) {
+      if (bookings && bookings.length) { var e = typeof insEmailKey_ === 'function' ? insEmailKey_(n.email) : '', p = typeof insPhoneKey_ === 'function' ? insPhoneKey_(n.phone) : ''; if (!(e && bkE[e]) && !(p && bkP[p])) g.nobooking.push(n); }
+      return;
+    }
+    if (n.date === today) g.today.push(n);
+    if (wkNoResult_(n)) {
+      if (n.status === 'Đã tư vấn xong' || n.status === 'Đang follow-up') g.noresult.push(n);
+      else if (WK_PRE_STATUS.indexOf(n.status) > -1) g.pastdue.push(n);
+      else g.noresult.push(n);
+    } else if (n.status === 'Đang follow-up' || n.result === 'Cần thêm thời gian cân nhắc') g.follow.push(n);
+    if (!n.staff) g.unassigned.push(n);
+    if (n.updated && (now - n.updated.getTime()) > 48 * 3600000 && n.created && (now - n.created.getTime()) < 30 * 86400000 && !(n.when && n.when > new Date())) g.stale.push(n);
+  });
+  return g;
+}
+function wkSortOld_(a, b) { return String(a.date || '9999').localeCompare(String(b.date || '9999')); }
+
+// ── Thẻ follow-up dùng chung (Hôm nay Admin / Sale) ──
+function wkFollowCard_(g, opt) {
+  opt = opt || {};
+  var link = function (key) { return opt.sale ? '' : '<button class="card-link" onclick="openLeadsWith(\'' + key + '\')">Xem trong Leads</button>'; };
+  var rowsOf = function (list, extra) {
+    return list.slice().sort(wkSortOld_).slice(0, 6).map(function (n) {
+      return '<div class="today-row" onclick="navToConsultationDetail(\'' + escHtml(n.id) + '\')"><div style="min-width:0"><div class="today-row-title">' + escHtml(n.name || 'Khách hàng') + '</div>' +
+        '<div class="today-row-sub">' + (n.staff ? escHtml(n.staff) : '<span style="color:var(--brand);font-weight:600">Chưa gán</span>') + (n.date ? ' · tư vấn ' + fmtDMY(n.date) + (n.time ? ' ' + escHtml(n.time) : '') : '') + '</div>' +
+        (extra ? '<div class="today-row-sub">' + extra(n) + '</div>' : '') + '</div><div class="today-row-side"><span class="sla-badge" style="background:#FEF3C7;color:#92400E">Mở →</span></div></div>';
+    }).join('') + (list.length > 6 ? '<div class="today-empty" style="padding:8px 24px;font-size:12px">+' + (list.length - 6) + ' lead nữa' + (opt.sale ? '' : ' — bấm "Xem trong Leads"') + '</div>' : '');
+  };
+  var defs = [
+    ['noresult', '✍️ Đã tư vấn nhưng chưa ghi kết quả', 'Mở lead → chọn “Kết quả” (Đăng ký hoặc lý do chưa đăng ký) và ghi bước tiếp theo.', function (n) { return 'Trạng thái: ' + escHtml(n.status); }],
+    ['pastdue', '⏰ Đã qua giờ hẹn nhưng trạng thái chưa đổi', 'Cập nhật trạng thái: đã tư vấn xong, không tham gia hay hẹn lại.', function (n) { return 'Đang ở “' + escHtml(n.status) + '”'; }],
+    ['follow', '🔁 Đang follow-up, cần chốt', 'Liên hệ lại khách đang cân nhắc; ghi ngày hạn follow-up tiếp theo.', function (n) { return n.result ? escHtml(n.result) : 'Đang follow-up'; }],
+    ['today', '📅 Buổi tư vấn hôm nay', 'Nhắc khách trước giờ hẹn, sau buổi nhớ ghi kết quả.', null]
+  ];
+  if (!opt.sale) { defs.push(['stale', '🕓 Mở quá 48 giờ chưa được cập nhật', 'Lead mới (30 ngày) không có thay đổi nào trong 48 giờ.', function (n) { return 'Cập nhật lần cuối ' + (n.updated ? fmtDMY(ymd(n.updated)) : '—'); }]); defs.push(['unassigned', '👤 Chưa gán người phụ trách', 'Chia lead cho Sale.', null]); }
+  defs.push(['nobooking', '💰 Ghi “Đăng ký” nhưng chưa thấy booking', 'Kiểm tra khách đã thanh toán chưa / hỗ trợ thanh toán.', null]);
+  var total = 0, body = '';
+  defs.forEach(function (d) {
+    var list = g[d[0]] || []; if (!list.length) return; total += d[0] === 'today' ? 0 : list.length;
+    body += '<div style="padding:12px 24px 4px;display:flex;align-items:center;gap:10px"><div style="font-weight:700;font-size:13.5px;flex:1">' + d[1] + ' (' + list.length + ')</div>' + (['noresult', 'pastdue', 'follow', 'stale', 'unassigned', 'today'].indexOf(d[0]) > -1 ? link(d[0] === 'pastdue' ? 'noresult' : d[0]) : '') + '</div>' +
+      '<div style="padding:0 24px 4px;font-size:12px;color:var(--muted)">' + d[2] + '</div>' + rowsOf(list, d[3]);
+  });
+  return '<div class="card" id="' + (opt.sale ? 'sale-followup' : 'today-followup') + '"><div class="card-header"><div class="card-header-left">📌 Follow-up hôm nay (' + total + ' việc)</div></div>' +
+    (body || '<div class="today-empty">✓ Không còn lead nào cần cập nhật. Làm tốt lắm!</div>') + '</div>';
+}
+
+// ── Trang "Hôm nay" Admin: thêm follow-up + việc cập nhật hằng ngày ──
+var _todayBookings = null;
+function wkOpsIssues_(bookings, sessions) {
+  var today = new Date(); today.setHours(0, 0, 0, 0);
+  var ads = (bookings || []).filter(function (b) { return String(b.status || '').trim().toLowerCase() === 'confirmed'; }).map(function (b) { return buildAdviseeFromBooking(b, sessions || []); });
+  var out = [];
+  ads.forEach(function (ae) {
+    var remaining = Math.max(0, (Number(ae.sessionsTotal) || 0) - (Number(ae.sessionsDone) || 0));
+    if (remaining <= 0) return;
+    var exp = wkParseDate_(ae.expiry), days = exp ? Math.round((exp - today) / 86400000) : null;
+    var hasPlan = (ae.sessions || []).some(function (s) { return !!s.date; });
+    var reg = wkParseDate_(ae.registeredAt), age = reg ? Math.round((today - reg) / 86400000) : 0;
+    var kind = '', note = '';
+    if (days !== null && days < 0) { kind = 'expired'; note = 'Đã hết hạn'; }
+    else if (days !== null && days <= 10) { kind = 'soon'; note = days === 0 ? 'Hết hạn hôm nay' : 'Còn ' + days + ' ngày'; }
+    else if (!ae.sessionsDone && !hasPlan && age >= 7) { kind = 'nouse'; note = 'Mua từ ' + fmtDMY(ae.registeredAt) + ', chưa dùng và chưa có lịch'; }
+    if (kind) out.push({ ae: ae, kind: kind, note: note, days: days, remaining: remaining });
+  });
+  var rank = { expired: 0, soon: 1, nouse: 2 };
+  out.sort(function (a, b) { return rank[a.kind] - rank[b.kind] || (a.days === null ? 9e9 : a.days) - (b.days === null ? 9e9 : b.days); });
+  return out;
+}
+(function () {
+  var oLoad = window.loadTodayPageAsync, oRender = window.renderTodayPage;
+  if (typeof oLoad === 'function') window.loadTodayPageAsync = function () {
+    oLoad.apply(this, arguments);
+    apiGet('getBookings', {}).then(function (r) {
+      _todayBookings = (r && r.data) || [];
+      if (activeNavId === 'today' && _todayData) { var mc = document.getElementById('main-content'); if (mc && mc.querySelector('#today-meetings')) mc.innerHTML = renderTodayPage(); }
+    }).catch(function () { _todayBookings = []; });
+  };
+  if (typeof oRender === 'function') window.renderTodayPage = function () {
+    var h = oRender.apply(this, arguments);
+    try {
+      var d = _todayData || { leads: [], sessions: [] };
+      var norms = d.leads.map(wkNorm_), g = wkGroups_(norms, _todayBookings);
+      var ops = _todayBookings ? wkOpsIssues_(_todayBookings, d.sessions) : null;
+      var sum = '<div class="card"><div class="card-header"><div class="card-header-left">🧭 Cần cập nhật mỗi ngày</div><button class="card-link" onclick="navTo(\'lj-weekly\')">Mở Báo cáo tuần</button></div><div style="padding:6px 24px 16px">' +
+        [['Lead đã tư vấn chưa ghi kết quả', g.noresult.length + g.pastdue.length, 'noresult', 'Sale chọn “Kết quả” sau mỗi buổi — thiếu số này thì tỷ lệ chốt bị sai'],
+         ['Lead mở quá 48 giờ chưa cập nhật', g.stale.length, 'stale', 'Nhắc Sale liên hệ / đổi trạng thái'],
+         ['Lead chưa gán người phụ trách', g.unassigned.length, 'unassigned', 'Admin chia lead hằng ngày']].map(function (x) {
+          return '<div style="display:flex;align-items:center;gap:12px;padding:9px 0;border-bottom:1px solid var(--border)"><div style="flex:1"><div style="font-weight:600;font-size:13.5px">' + x[0] + '</div><div style="font-size:12px;color:var(--muted)">' + x[3] + '</div></div>' +
+            '<b style="font-size:18px;color:' + (x[1] ? '#DC2626' : '#16A34A') + '">' + x[1] + '</b><button class="detail-btn" onclick="openLeadsWith(\'' + x[2] + '\')">Xem</button></div>';
+        }).join('') +
+        '<div style="display:flex;align-items:center;gap:12px;padding:9px 0"><div style="flex:1"><div style="font-weight:600;font-size:13.5px">Khách vận hành cần xử lý</div><div style="font-size:12px;color:var(--muted)">' +
+        (ops ? ops.filter(function (o) { return o.kind === 'expired'; }).length + ' hết hạn còn buổi · ' + ops.filter(function (o) { return o.kind === 'soon'; }).length + ' sắp hết hạn · ' + ops.filter(function (o) { return o.kind === 'nouse'; }).length + ' mua chưa dùng' : 'Đang tải…') +
+        '</div></div><b style="font-size:18px;color:' + (ops && ops.length ? '#DC2626' : '#16A34A') + '">' + (ops ? ops.length : '…') + '</b><button class="detail-btn" onclick="navTo(\'lj-weekly\')">Xem</button></div>' +
+        '</div></div>';
+      var card = sum + wkFollowCard_(g, {});
+      var i = h.indexOf('<div class="card" id="today-meetings"');
+      return i > -1 ? h.slice(0, i) + card + h.slice(i) : h + card;
+    } catch (e) { console.error(e); return h; }
+  };
+})();
+// ── Trang "Hôm nay" Sale: follow-up cho lead của chính Sale ──
+(function () {
+  var oSale = window.renderSaleToday;
+  if (typeof oSale !== 'function') return;
+  window.renderSaleToday = function (s) {
+    var h = oSale.apply(this, arguments);
+    try {
+      if (!_saleData || _saleData.loadedFor !== s.id) return h;
+      var g = wkGroups_((_saleData.leads || []).map(wkNorm_), null);
+      var card = wkFollowCard_(g, { sale: true });
+      var i = h.indexOf('<div class="card" id="sale-meetings"');
+      return i > -1 ? h.slice(0, i) + card + h.slice(i) : h + card;
+    } catch (e) { console.error(e); return h; }
+  };
+})();
+
+// ═════════ Bộ lọc trang Leads tư vấn: dùng được, mỗi nút có mục tiêu rõ ═════════
+var _leadStaffSel = '', _leadWeekSel = '', _leadStatusSel = '', _leadResultSel = '';
+var LEAD_VIEWS = [
+  ['todo', '⚑ Cần xử lý', 'Việc phải làm ngay: lead chưa liên hệ, chưa gán người, quá hạn theo SOP, hoặc đã tư vấn xong mà chưa ghi kết quả.'],
+  ['upcoming', '📅 Sắp tư vấn', 'Đã chốt lịch và chưa tới giờ hẹn — dùng để nhắc khách trước buổi.'],
+  ['noresult', '✍️ Chưa ghi kết quả', 'Buổi tư vấn đã qua nhưng chưa chọn cột “Kết quả”. Ghi đủ thì tỷ lệ chốt trong báo cáo mới đúng.'],
+  ['follow', '🔁 Đang follow-up', 'Khách đã tư vấn và đang cân nhắc — liên hệ lại để chốt đăng ký.'],
+  ['nodate', '🕒 Chờ chốt lịch', 'Lead chưa chọn giờ tư vấn — nhắn Zalo / gọi để hẹn lịch.'],
+  ['open', 'Tất cả đang mở', 'Mọi lead chưa đóng (chưa đăng ký, chưa đóng / tạm đóng).'],
+  ['closed', 'Đã đóng', 'Lịch sử: đã đăng ký, đã chuyển thành khách, hoặc đã đóng / tạm đóng / không phù hợp. Không cần xử lý thêm.'],
+  ['all', 'Tất cả', 'Toàn bộ lead, gồm cả đã đóng.']
+];
+(function () {
+  var oMatch = window.leadMatchesFilter, oNeeds = window.leadNeedsAction;
+  function grp(c) { var n = wkNorm_(c); return wkGroups_([n], null); }
+  window.leadNeedsAction = function (c) {
+    if (oNeeds(c)) return true;
+    var g = grp(c); return !!(g.noresult.length || g.pastdue.length);
+  };
+  window.leadMatchesFilter = function (c, f) {
+    switch (f) {
+      case 'upcoming': { var n = wkNorm_(c); return !leadIsClosed(c) && !!n.when && n.when > new Date(); }
+      case 'noresult': { var g = grp(c); return !!(g.noresult.length || g.pastdue.length); }
+      case 'follow': return grp(c).follow.length > 0;
+      case 'stale': return grp(c).stale.length > 0;
+      case 'today': return grp(c).today.length > 0;
+      case 'closed': case 'all': case 'open': return true;
+    }
+    return oMatch(c, f);
+  };
+  var oCounts = window.leadCounts;
+  window.leadCounts = function () {
+    var n = oCounts();
+    var v = {}; LEAD_VIEWS.forEach(function (x) { v[x[0]] = 0; });
+    _leadObjs.forEach(function (c) {
+      var closed = leadIsClosed(c);
+      v.all++; if (closed) v.closed++; else v.open++;
+      if (closed) return;
+      if (leadMatchesFilter(c, 'todo')) v.todo++;
+      if (leadMatchesFilter(c, 'upcoming')) v.upcoming++;
+      if (leadMatchesFilter(c, 'noresult')) v.noresult++;
+      if (leadMatchesFilter(c, 'follow')) v.follow++;
+      if (!c.date) v.nodate++;
+    });
+    n.views = v; return n;
+  };
+  window.leadRowVisible = function (c, q) {
+    var f = _leadFilter, closed = leadIsClosed(c);
+    if (f === 'closed') { if (!closed) return false; }
+    else if (f !== 'all' && String(f).indexOf('st:') !== 0 && closed) return false;
+    if (!leadMatchesFilter(c, f)) return false;
+    if (_leadStaffSel) { if (_leadStaffSel === '__none') { if (c.staff) return false; } else if (c.staff !== _leadStaffSel) return false; }
+    if (_leadStatusSel && c.status !== _leadStatusSel) return false;
+    if (_leadResultSel) { if (_leadResultSel === '__none') { if (c.result) return false; } else if (c.result !== _leadResultSel) return false; }
+    if (_leadWeekSel) { var d = wkParseDate_(c.date); if (!d || ymd(wkMonday_(d)) !== _leadWeekSel) return false; }
+    if (q === undefined) q = stripDiacritics(String(_leadSearch || '').trim());
+    if (q && leadSearchKey(c).indexOf(q) === -1) return false;
+    return true;
+  };
+  window.leadFilterBarHtml = function () {
+    var n = leadCounts(), v = n.views, h = '<div class="chip-row">';
+    LEAD_VIEWS.forEach(function (x) { h += leadChip(x[0], x[1], v[x[0]] || 0, x[2]); });
+    var extra = { overdue: ['Quá hạn', n.overdue], unassigned: ['Chưa gán Sale', n.unassigned], stale: ['Mở quá 48h', 0], today: ['Tư vấn hôm nay', 0] }[_leadFilter];
+    if (extra) h += leadChip(_leadFilter, extra[0], extra[1] || _leadObjs.filter(function (c) { return !leadIsClosed(c) && leadMatchesFilter(c, _leadFilter); }).length, 'Bộ lọc đang chọn');
+    h += '</div>';
+    var cur = LEAD_VIEWS.filter(function (x) { return x[0] === _leadFilter; })[0];
+    h += '<div style="font-size:12.5px;color:var(--muted);margin:2px 0 12px;line-height:1.55">' + (cur ? '<b style="color:var(--text)">' + escHtml(cur[1]) + ':</b> ' + escHtml(cur[2]) : (String(_leadFilter).indexOf('st:') === 0 ? 'Đang lọc theo trạng thái ' + escHtml(String(_leadFilter).slice(3)) : 'Bộ lọc đặc biệt đang bật — bấm “Xoá bộ lọc” để về danh sách “Cần xử lý”.')) + '</div>';
+    var staffs = {}, weeks = {};
+    _leadObjs.forEach(function (c) { if (c.staff) staffs[c.staff] = 1; var d = wkParseDate_(c.date); if (d) { var k = ymd(wkMonday_(d)); weeks[k] = (weeks[k] || 0) + 1; } });
+    var sel = function (id, label, cur, opts) {
+      return '<label style="font-size:11.5px;color:var(--muted);display:flex;flex-direction:column;gap:3px;min-width:150px">' + label + '<select class="form-select" style="padding:7px 10px;font-size:13px" onchange="ljLeadSel_(\'' + id + '\',this.value)">' +
+        opts.map(function (o) { return '<option value="' + escHtml(o[0]) + '"' + (String(cur) === String(o[0]) ? ' selected' : '') + '>' + escHtml(o[1]) + '</option>'; }).join('') + '</select></label>';
+    };
+    var anyF = _leadStaffSel || _leadWeekSel || _leadStatusSel || _leadResultSel || _leadFilter !== 'todo' || _leadSearch;
+    h += '<div style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;margin-bottom:14px">' +
+      sel('staff', 'Người phụ trách', _leadStaffSel, [['', 'Tất cả'], ['__none', 'Chưa gán người']].concat(Object.keys(staffs).sort().map(function (s) { return [s, s]; }))) +
+      sel('status', 'Trạng thái tư vấn', _leadStatusSel, [['', 'Tất cả']].concat(CONSULT_STATUS.concat([LEAD_CONVERTED_STATUS]).map(function (s) { return [s, s]; }))) +
+      sel('result', 'Kết quả', _leadResultSel, [['', 'Tất cả'], ['__none', '— Chưa ghi kết quả —']].concat(RESULT_REGISTERED.concat(RESULT_NOT_REGISTERED).map(function (s) { return [s, s]; }))) +
+      sel('week', 'Tuần tư vấn', _leadWeekSel, [['', 'Tất cả']].concat(Object.keys(weeks).sort().reverse().slice(0, 16).map(function (k) { var d = wkParseDate_(k); var e = new Date(d); e.setDate(e.getDate() + 6); return [k, wkLbl_(d) + ' – ' + wkLbl_(e) + ' (' + weeks[k] + ')']; }))) +
+      (anyF ? '<button class="detail-btn" style="height:34px" onclick="clearLeadFilters()">✕ Xoá bộ lọc</button>' : '') + '</div>';
+    return h;
+  };
+  window.ljLeadSel_ = function (k, v) {
+    if (k === 'staff') _leadStaffSel = v; else if (k === 'status') _leadStatusSel = v; else if (k === 'result') _leadResultSel = v; else if (k === 'week') _leadWeekSel = v;
+    refreshLeadFilterBar(); refreshLeadTable();
+  };
+  window.clearLeadFilters = function () {
+    _leadFilter = 'todo'; _leadShowClosed = false; _leadSearch = ''; _leadStaffSel = _leadWeekSel = _leadStatusSel = _leadResultSel = '';
+    var inp = document.getElementById('lead-search'); if (inp) inp.value = '';
+    refreshLeadFilterBar(); refreshLeadTable();
+  };
+  var oLoadLeads = window.loadNewRegistrationsPage;
+  window.loadNewRegistrationsPage = function (keep) {
+    if (keep !== true) { _leadStaffSel = _leadWeekSel = _leadStatusSel = _leadResultSel = ''; }
+    return oLoadLeads.apply(this, arguments);
+  };
+})();
+
+// ═════════════════════════ TRANG "BÁO CÁO TUẦN" ═════════════════════════
+window.loadWeeklyReportAsync = function () { insLoadPage_('lj-weekly', 'Báo cáo tuần', renderWeeklyReport); };
+window.renderWeeklyReport = function () {
+  var now = new Date(), today = ymd(now);
+  var leadsRaw = (_insData && _insData.leads) || [], bookings = (_insData && _insData.bookings) || [], sessions = (_insData && _insData.sessions) || [];
+  var all = leadsRaw.filter(function (r) { return r.lead_id; }).map(wkNorm_);
+  var booked = all.filter(function (n) { return n.booked && n.date >= '2020-01-01'; });
+  var thisMon = wkMonday_(now), W = Math.max(1, Number(WK.weeks) || 2);
+  var winStart = new Date(thisMon); winStart.setDate(winStart.getDate() - 7 * (W - 1));
+  var winKey = ymd(winStart), endKey = today;
+  var inWin = booked.filter(function (n) { return n.date >= winKey && n.date <= ymd(new Date(thisMon.getFullYear(), thisMon.getMonth(), thisMon.getDate() + 6)); });
+  var regOf = function (l) { return l.filter(function (n) { return n.registered; }).length; };
+  var noResOf = function (l) { return l.filter(wkNoResult_).length; };
+  var sec = function (t, sub) { return '<div class="rp-sec">' + t + (sub ? ' <span style="text-transform:none;letter-spacing:0;font-weight:500">· ' + sub + '</span>' : '') + '</div>'; };
+  var tbl = function (heads, rows, empty, right) {
+    return '<div class="card" style="overflow-x:auto">' + (rows.length ? '<table class="bookings-table"><thead><tr>' + heads.map(function (x, i) { return '<th' + (right && right.indexOf(i) > -1 ? ' style="text-align:right"' : '') + '>' + x + '</th>'; }).join('') + '</tr></thead><tbody>' + rows.join('') + '</tbody></table>' : '<div class="today-empty" style="padding:20px">' + empty + '</div>') + '</div>';
+  };
+  var td = function (v, r) { return '<td' + (r ? ' style="text-align:right"' : '') + '>' + v + '</td>'; };
+
+  // 1) Bảng theo tuần (9 tuần)
+  var weekRows = [], weekStats = [];
+  for (var i = 8; i >= 0; i--) {
+    var ws = new Date(thisMon); ws.setDate(ws.getDate() - 7 * i); var we = new Date(ws); we.setDate(we.getDate() + 6);
+    var k1 = ymd(ws), k2 = ymd(we);
+    var wl = booked.filter(function (n) { return n.date >= k1 && n.date <= k2; });
+    var reg = regOf(wl), nr = noResOf(wl), rate = wkPct_(reg, wl.length);
+    var upcoming = wl.filter(function (n) { return !wkPast_(n); }).length;
+    weekStats.push({ start: ws, n: wl.length, reg: reg, rate: rate, nr: nr, current: i === 0 });
+    weekRows.push('<tr><td><b>' + wkLbl_(ws) + '</b>' + (i === 0 ? ' <span style="font-size:11px;color:var(--muted)">(tuần này)</span>' : '') + '</td>' + td(wl.length, 1) + td(reg, 1) +
+      '<td style="text-align:right"><b>' + (rate === null ? '—' : rate + '%') + '</b></td><td style="width:140px"><div style="height:8px;background:#EEECE8;border-radius:100px;overflow:hidden"><div style="height:100%;width:' + (rate || 0) + '%;background:#16A34A"></div></div></td>' +
+      '<td style="text-align:right;' + (nr ? 'color:#DC2626;font-weight:700' : '') + '">' + nr + '</td>' + td(upcoming || '', 1) + '</tr>');
+  }
+  // 2) Theo người phụ trách (trong cửa sổ)
+  var by = {};
+  inWin.forEach(function (n) { var k = n.staff || 'Chưa gán người'; (by[k] = by[k] || []).push(n); });
+  var staffRows = Object.keys(by).sort(function (a, b) { return by[b].length - by[a].length; }).map(function (k) {
+    var l = by[k], r = regOf(l), nr = noResOf(l);
+    return '<tr><td><b>' + escHtml(k) + '</b></td>' + td(l.length, 1) + td(r, 1) + '<td style="text-align:right"><b>' + (wkPct_(r, l.length) === null ? '—' : wkPct_(r, l.length) + '%') + '</b></td><td style="text-align:right;' + (nr ? 'color:#DC2626;font-weight:700' : '') + '">' + nr + '</td></tr>';
+  });
+  // 3) Kết quả / lý do fail
+  var rc = {}; var cntReg = 0;
+  inWin.forEach(function (n) {
+    var k = n.registered ? 'Đăng ký' : (n.result ? n.result : (wkPast_(n) ? 'Chưa ghi kết quả' : 'Chưa tới giờ tư vấn'));
+    rc[k] = (rc[k] || 0) + 1;
+  });
+  var resRows = Object.keys(rc).sort(function (a, b) { return rc[b] - rc[a]; }).map(function (k) {
+    var bad = k === 'Chưa ghi kết quả';
+    return '<tr><td' + (bad ? ' style="color:#DC2626;font-weight:700"' : '') + '>' + escHtml(k) + '</td>' + td(rc[k], 1) + td(wkPct_(rc[k], inWin.length) + '%', 1) + '</tr>';
+  });
+  // 4) Marketing: ngành + câu hỏi (không tự diễn giải, chỉ thống kê và liệt kê)
+  var dept = {}, qList = inWin.filter(function (n) { return n.question; });
+  inWin.forEach(function (n) { if (n.dept) String(n.dept).split(/[,;]/).forEach(function (d) { d = d.trim(); if (d) dept[d] = (dept[d] || 0) + 1; }); });
+  var deptRows = Object.keys(dept).sort(function (a, b) { return dept[b] - dept[a]; }).slice(0, 8).map(function (k) { return '<tr><td>' + escHtml(k) + '</td>' + td(dept[k], 1) + '</tr>'; });
+  // 5) Vận hành
+  var ops = wkOpsIssues_(bookings, sessions);
+  var conf = bookings.filter(function (b) { return String(b.status || '').trim().toLowerCase() === 'confirmed'; });
+  var sold = conf.reduce(function (s, b) { return s + (Number(b.sessions_total) || 0); }, 0);
+  var real = sessions.filter(function (s) { return s.booking_id; });
+  var cnt = function (st) { return real.filter(function (s) { return String(s.status || '').trim().toLowerCase() === st; }).length; };
+  var done = cnt('completed'), sched = cnt('scheduled'), canc = cnt('cancelled') + cnt('canceled');
+  var staleSched = real.filter(function (s) { return String(s.status || '').trim().toLowerCase() === 'scheduled' && String(s.scheduled_date || '').slice(0, 10) < today && String(s.scheduled_date || '').slice(0, 10); }).length;
+  var bkIn = function (a, b) { return conf.filter(function (x) { var d = String(x.created_at || '').slice(0, 10); return d >= a && d <= b; }); };
+  var lastMon = new Date(thisMon); lastMon.setDate(lastMon.getDate() - 7); var lastSun = new Date(thisMon); lastSun.setDate(lastSun.getDate() - 1);
+  var bkThis = bkIn(ymd(thisMon), today), bkLast = bkIn(ymd(lastMon), ymd(lastSun));
+  var sumP = function (l) { return l.reduce(function (s, b) { return s + (Number(b.package_price) || 0); }, 0); };
+  var opsRows = ops.slice(0, 15).map(function (o) {
+    var c = o.kind === 'expired' ? '#DC2626' : (o.kind === 'soon' ? '#D97706' : '#6B7280');
+    return '<tr onclick="navToStaffAdviseeDetail(\'' + escHtml(o.ae.id) + '\',\'staffcare\')" style="cursor:pointer"><td><b>' + escHtml(o.ae.name) + '</b></td><td>' + escHtml(o.ae.advisor || '—') + '</td><td>' + escHtml(o.ae.pkg) + '</td><td>' + o.remaining + '/' + o.ae.sessionsTotal + ' buổi</td><td>' + (o.ae.expiry ? fmtDMY(o.ae.expiry) : '—') + '</td><td style="color:' + c + ';font-weight:700">' + escHtml(o.note) + '</td></tr>';
+  });
+  // 6) Follow-up hôm nay + cảnh báo
+  var g = wkGroups_(all, bookings);
+  var items = [];
+  var nrAll = booked.filter(wkNoResult_).length;
+  if (nrAll >= 1) items.push({ lv: nrAll >= 5 ? 'red' : 'amber', t: nrAll + ' lead đã tư vấn nhưng chưa ghi kết quả', x: 'Thiếu kết quả thì tỷ lệ chốt thật có thể cao hơn số đang hiện. Sale cập nhật cột “Kết quả” ngay sau buổi tư vấn.' });
+  if (g.stale.length) items.push({ lv: g.stale.length >= 5 ? 'red' : 'amber', t: g.stale.length + ' lead mở quá 48 giờ chưa được cập nhật', x: 'Liên hệ lại hoặc đổi trạng thái để không bỏ sót khách.' });
+  if (g.unassigned.length) items.push({ lv: 'amber', t: g.unassigned.length + ' lead chưa gán người phụ trách', x: 'Chia cho Sale trong tab Leads (lọc “Chưa gán người”).' });
+  var full = weekStats.filter(function (w) { return !w.current && w.n >= 3; });
+  if (full.length >= 3) { var last = full[full.length - 1], prev = full.slice(-5, -1), avg = Math.round(prev.reduce(function (s, w) { return s + (w.rate || 0); }, 0) / prev.length); if (last.rate !== null && avg - last.rate >= 15) items.push({ lv: 'amber', t: 'Tỷ lệ chốt tuần ' + wkLbl_(last.start) + ' giảm còn ' + last.rate + '% (TB các tuần trước ' + avg + '%)', x: 'Kiểm tra số lead chưa ghi kết quả của tuần đó trước khi kết luận.' }); }
+  var exp = ops.filter(function (o) { return o.kind === 'expired'; }).length, soon = ops.filter(function (o) { return o.kind === 'soon'; }).length;
+  if (exp) items.push({ lv: 'red', t: exp + ' khách đã hết hạn nhưng còn buổi chưa dùng', x: 'Quyết định gia hạn hay đặt lịch bù (bảng “Khách vận hành cần xử lý”).' });
+  if (soon) items.push({ lv: 'amber', t: soon + ' khách sắp hết hạn trong 10 ngày', x: 'Nhắc khách đặt lịch trước hạn.' });
+  if (staleSched) items.push({ lv: 'amber', t: staleSched + ' buổi còn trạng thái “scheduled” nhưng ngày đã qua', x: 'Có thể là dữ liệu thử hoặc chưa cập nhật — dọn lại trong Sheet Sessions.' });
+  items.sort(function (a, b) { return (a.lv === 'red' ? 0 : 1) - (b.lv === 'red' ? 0 : 1); });
+  var wkEnd = new Date(thisMon); wkEnd.setDate(wkEnd.getDate() + 6);
+  var rate = wkPct_(regOf(inWin), inWin.length), nrWin = noResOf(inWin);
+
+  var h = pageHeader('Báo cáo tuần', 'Lead chốt lịch, tỷ lệ chốt, theo người phụ trách, lý do chưa đăng ký, khách vận hành và việc follow-up — tự tính từ Sheet mỗi lần mở',
+    '<button class="update-btn" onclick="window.print()">⬇ Xuất PDF</button>');
+  h += '<div class="card period-bar"><div class="period-bar-inner"><div class="period-nav"><div class="period-label">Từ ' + wkLbl_(winStart) + ' đến ' + wkLbl_(now) + '/' + now.getFullYear() + '</div></div>' +
+    '<label style="font-size:13px;color:var(--muted);display:flex;gap:8px;align-items:center">Xem gộp <select class="form-select" style="padding:6px 10px;width:auto" onchange="WK.weeks=+this.value;reportRerender()">' +
+    [1, 2, 4, 8].map(function (w) { return '<option value="' + w + '"' + (W === w ? ' selected' : '') + '>' + w + ' tuần gần nhất</option>'; }).join('') + '</select></label></div></div>';
+  h += '<div id="report-printable"><div class="print-only"><h2 style="margin:0 0 4px">Báo cáo tuần LinkaJob</h2><div style="color:#666;font-size:13px;margin-bottom:16px">' + wkLbl_(winStart) + ' – ' + wkLbl_(now) + '/' + now.getFullYear() + '</div></div>';
+
+  var redN = items.filter(function (x) { return x.lv === 'red'; }).length;
+  h += '<div class="rp-banner ' + (redN ? 'red' : (items.length ? 'amber' : 'green')) + '"><span class="rp-ic">' + (redN ? '⚠️' : (items.length ? '👀' : '✅')) + '</span><div><b>' +
+    (items.length ? 'Cần chú ý: ' + redN + ' vấn đề nghiêm trọng, ' + (items.length - redN) + ' cần theo dõi' : 'Không có cảnh báo trong kỳ này') + '</b></div></div>';
+  if (items.length) h += '<div class="rp-act">' + items.map(function (x) { return '<div class="rp-act-i"><span class="rp-dot ' + x.lv + '"></span><div><div class="rp-act-t">' + escHtml(x.t) + '</div><div class="rp-act-x">' + escHtml(x.x) + '</div></div></div>'; }).join('') + '</div>';
+
+  var kp = function (cls, l, v, d) { return '<div class="rp-kpi ' + cls + '"><div class="l">' + l + '</div><div class="v">' + v + '</div><div class="d">' + d + '</div></div>'; };
+  h += '<div class="rp-kpis">' +
+    kp('', 'Lead đã chốt lịch', inWin.length, '<span class="rp-d-n">' + W + ' tuần gần nhất · có link Meet</span>') +
+    kp(rate === null ? '' : (rate < 20 ? 'red' : rate < 35 ? 'amber' : 'green'), 'Tỷ lệ chốt', rate === null ? '—' : rate + '%', '<span class="rp-d-n">' + regOf(inWin) + ' đăng ký / ' + inWin.length + ' lead</span>') +
+    kp(nrWin ? 'amber' : 'green', 'Chưa ghi kết quả', nrWin, '<span class="rp-d-n">Đã tư vấn xong nhưng chưa chọn kết quả</span>') +
+    kp('', 'Booking mới tuần này', bkThis.length, '<span class="rp-d-n">' + ljRevMoney_(sumP(bkThis)) + ' · tuần trước ' + bkLast.length + ' (' + ljRevMoney_(sumP(bkLast)) + ')</span>') + '</div>';
+
+  h += sec('Số khách và tỷ lệ chốt theo tuần tư vấn', 'chỉ tính lead đã chốt lịch (có link Meet), xếp theo ngày tư vấn');
+  h += tbl(['TUẦN BẮT ĐẦU', 'LEAD CHỐT LỊCH', 'ĐĂNG KÝ', 'TỶ LỆ CHỐT', '', 'CHƯA GHI KẾT QUẢ', 'SẮP DIỄN RA'], weekRows, 'Chưa có dữ liệu.', [1, 2, 3, 5, 6]);
+  h += '<div style="font-size:12px;color:var(--muted);margin:-8px 4px 14px">Tỷ lệ chốt = lead có kết quả “Đăng ký” hoặc đã chuyển thành khách ÷ lead đã chốt lịch. Tuần gần đây còn thấp vì nhiều lead chưa ghi kết quả hoặc chưa tới buổi.</div>';
+
+  h += '<div class="two-col"><div>' + sec('Team Sale · theo người phụ trách', wkLbl_(winStart) + ' – ' + wkLbl_(now)) +
+    tbl(['NGƯỜI PHỤ TRÁCH', 'CHỐT LỊCH', 'ĐĂNG KÝ', 'TỶ LỆ', 'CHƯA GHI KQ'], staffRows, 'Chưa có lead chốt lịch trong kỳ.', [1, 2, 3, 4]) +
+    (inWin.length && inWin.length < 15 ? '<div style="font-size:12px;color:var(--muted);margin:-8px 4px 10px">Mẫu còn nhỏ (' + inWin.length + ' lead) nên chưa đủ để so sánh từng người.</div>' : '') + '</div>' +
+    '<div>' + sec('Kết quả & lý do chưa đăng ký') + tbl(['KẾT QUẢ', 'SỐ LEAD', '%'], resRows, 'Chưa có dữ liệu.', [1, 2]) + '</div></div>';
+
+  h += sec('Khách vận hành cần xử lý (' + ops.length + ')', 'hết hạn còn buổi · sắp hết hạn 10 ngày · mua nhưng chưa dùng');
+  h += '<div class="card" style="margin-bottom:6px"><div style="padding:14px 24px;font-size:13px;line-height:1.7">Tổng <b>' + conf.length + '</b> booking · <b>' + sold + '</b> buổi đã bán · <b>' + done + '</b> đã hoàn thành' + (sold ? ' (' + wkPct_(done, sold) + '%)' : '') + ' · <b>' + sched + '</b> đang “scheduled” · <b>' + canc + '</b> huỷ' + (staleSched ? ' · <span style="color:#D97706;font-weight:700">' + staleSched + ' buổi scheduled đã quá ngày</span>' : '') + '</div></div>';
+  h += tbl(['KHÁCH', 'ADVISOR', 'GÓI', 'CÒN LẠI', 'HẠN', 'VẤN ĐỀ'], opsRows, '✓ Không có khách nào cần xử lý gấp.') + (ops.length > 15 ? '<div style="font-size:12px;color:var(--muted);margin:-8px 4px 14px">Hiển thị 15 / ' + ops.length + ' khách.</div>' : '');
+
+  h += '<div class="two-col"><div>' + sec('Ngành khách quan tâm', 'lead chốt lịch trong kỳ') + tbl(['NGÀNH', 'LEAD'], deptRows, 'Chưa có lead điền ngành.', [1]) + '</div>' +
+    '<div>' + sec('Câu hỏi khách điền', qList.length + ' / ' + inWin.length + ' lead có điền') +
+    '<div class="card"><div style="padding:6px 24px 14px;max-height:260px;overflow:auto">' + (qList.length ? qList.map(function (n) { return '<div style="padding:8px 0;border-bottom:1px solid var(--border);font-size:13px"><b>' + escHtml(n.name) + '</b> <span style="color:var(--muted);font-size:11.5px">' + fmtDMY(n.date) + '</span><div style="color:#374151;margin-top:2px;white-space:pre-wrap">' + escHtml(n.question) + '</div></div>'; }).join('') : '<div class="today-empty">Chưa có câu hỏi nào.</div>') + '</div></div></div></div>';
+
+  h += sec('Follow-up hôm nay') + wkFollowCard_(g, {});
+
+  var badNext = booked.filter(function (n) { return n.deadline && !wkParseDate_(n.deadline); }).length;
+  var noNext = booked.filter(function (n) { return !n.deadline; }).length;
+  var noContact = booked.filter(function (n) { return !n.contacted; }).length;
+  h += sec('Chất lượng dữ liệu') + '<div class="card"><div style="padding:14px 24px;font-size:13px;line-height:1.9">' +
+    '• Lead đã chốt lịch chưa có kết quả (đã qua giờ hẹn): <b>' + nrAll + '</b> / ' + booked.length + '<br>' +
+    '• Lead chốt lịch chưa có ngày hạn follow-up (next_step_deadline): <b>' + noNext + '</b>' + (badNext ? ' · <span style="color:#DC2626">' + badNext + ' ô đang chứa chữ thay vì ngày</span>' : '') + '<br>' +
+    '• Lead chốt lịch chưa điền ngày liên hệ (contacted_date): <b>' + noContact + '</b><br>' +
+    '• Lead chưa gán người phụ trách: <b>' + g.unassigned.length + '</b></div></div>';
+  return h + '</div>';
+};
 
 // ───────────────────────── Nút con mắt hiện / ẩn mật khẩu ─────────────────────────
 (function () {
