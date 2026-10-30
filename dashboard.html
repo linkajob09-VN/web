@@ -5273,7 +5273,7 @@ function loadCoursesPageAsync() {
 
 function renderCoursesPage() {
   var html = pageHeader('Khoá học', 'Quản lý mùa học, học viên, bài tập & chấm bài, thanh toán',
-    '<button class="update-btn" onclick="openNewCourse()">+ Thêm khoá học</button>');
+    '<button class="submit-btn" style="padding:8px 16px;font-size:13px;width:auto" onclick="openNewCourse()">+ Thêm khoá học</button>');
   if (CM_COURSES.length === 0) html += '<div class="empty-state"><div class="icon">📚</div>Chưa có khoá học nào — bấm "+ Thêm khoá học" để tạo.</div>';
   CM_COURSES.forEach(function(course){
     var seasons = CM_SEASONS.filter(function(s){ return s.course_id === course.id; }).sort(function(a, b){ return b.season_no - a.season_no; });
