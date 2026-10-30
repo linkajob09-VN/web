@@ -6497,6 +6497,7 @@ function openAdvisorSelfEditModal() {
 //  MODULE 3: ADVISEE
 // ════════════════════════════════════════════════════════════
 function renderAdviseeModule() {
+  if (window._ljAeePending) { var _pp = window._ljAeePending; window._ljAeePending = null; _aeFilter = _pp.view || 'all'; _aeAdvisorSel = _pp.advisor || ''; _aePkgSel = _pp.pkg || ''; }
   var html = pageHeader('Advisee', 'Lọc theo trạng thái, theo dõi tiến độ buổi học và yêu cầu đổi lịch',
     (currentUser && (currentUser.role === 'Admin' || (currentUser.role === 'Staff' && currentUser.subRole === 'Admin')))
       ? '<button class="login-btn" style="width:auto;padding:9px 16px;font-size:13px" onclick="openLegacyImport()">⬆ Nhập khách từ web cũ</button>'
@@ -6523,7 +6524,9 @@ function renderAdviseeModule() {
     html += '<table class="bookings-table"><thead><tr><th>ADVISEE</th><th>GÓI · ADVISOR</th><th>TIẾN ĐỘ</th><th>HẠN DÙNG</th><th>TRẠNG THÁI</th><th></th></tr></thead><tbody id="advisee-list-tbody">';
     var _aeList = sortList_('ae', MOCK.advisees);
     if (_aeFilter !== 'all') _aeList = _aeList.filter(function(a){ return aeStatusOf_(a) === _aeFilter; });
-    if (_aeList.length === 0) html += '<tr><td colspan="6"><div class="empty-state"><div class="icon">🔍</div>Không có advisee nào ở trạng thái này.<br><a href="#" onclick="setAeFilter(\'all\');return false" style="color:var(--brand);font-weight:600">Xem tất cả</a></div></td></tr>';
+    if (_aeAdvisorSel) _aeList = _aeList.filter(function(a){ return _aeAdvisorSel === '__none' ? !a.advisor : a.advisor === _aeAdvisorSel; });
+    if (_aePkgSel) _aeList = _aeList.filter(function(a){ return _aePkgSel === '__none' ? !a.pkg : a.pkg === _aePkgSel; });
+    if (_aeList.length === 0) html += '<tr><td colspan="6"><div class="empty-state"><div class="icon">🔍</div>Không có advisee nào ở trạng thái này.<br><a href="#" onclick="clearAeFilters();return false" style="color:var(--brand);font-weight:600">Xem tất cả</a></div></td></tr>';
     _aeList.forEach(function(ae) {
       var exA = expiryAlert_(ae);
       var pct = pctOf(ae.sessionsDone, ae.sessionsTotal);
@@ -6618,6 +6621,7 @@ function expiryCompare_(a, b) {
 //   active     Đang dùng gói  : các khách còn lại đang trong hạn dùng
 var AE_NEW_DAYS = 7;
 var _aeFilter = 'all';
+var _aeAdvisorSel = '', _aePkgSel = '';
 function aeStatusOf_(ae) {
   var total = Number(ae.sessionsTotal) || 0, done = Number(ae.sessionsDone) || 0;
   if (total > 0 && done >= total) return 'completed';
@@ -6643,19 +6647,47 @@ function aeStatusCounts_() {
 }
 function aeFilterBarHtml_() {
   var n = aeStatusCounts_();
-  return '<div class="chip-row">' + AE_STATUS_CHIPS.map(function(c){
-    return '<button class="chip' + (_aeFilter === c[0] ? ' active' : '') + (c[0] === 'soon' && n.soon > 0 ? ' chip-danger' : '') + '" title="' + escHtml(c[2]) + '" onclick="setAeFilter(\'' + c[0] + '\')">' +
-      escHtml(c[1]) + ' <span class="chip-n">' + n[c[0]] + '</span></button>';
-  }).join('') + '</div>';
+  var advisors = {}, pkgs = {};
+  MOCK.advisees.forEach(function(a){ if (a.advisor) advisors[a.advisor] = (advisors[a.advisor] || 0) + 1; if (a.pkg) pkgs[a.pkg] = (pkgs[a.pkg] || 0) + 1; });
+  var sel = function(id, label, cur, opts, minW) {
+    return '<label style="font-size:11.5px;color:var(--muted);display:flex;flex-direction:column;gap:3px;min-width:' + minW + 'px">' + label +
+      '<select class="form-select" style="padding:7px 10px;font-size:13px" onchange="setAeSel_(\'' + id + '\',this.value)">' +
+      opts.map(function(o){ return '<option value="' + escHtml(o[0]) + '"' + (String(cur) === String(o[0]) ? ' selected' : '') + '>' + escHtml(o[1]) + '</option>'; }).join('') + '</select></label>';
+  };
+  var anyF = _aeFilter !== 'all' || _aeAdvisorSel || _aePkgSel;
+  return '<div style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;margin-bottom:14px">' +
+    sel('view', 'Trạng thái', _aeFilter, AE_STATUS_CHIPS.map(function(c){ return [c[0], c[1].replace(/^[^\wÀ-ỹ]+\s*/, '') + ' (' + n[c[0]] + ')']; }), 210) +
+    sel('advisor', 'Advisor', _aeAdvisorSel, [['', 'Tất cả'], ['__none', 'Chưa gán advisor']].concat(Object.keys(advisors).sort().map(function(k){ return [k, k + ' (' + advisors[k] + ')']; })), 170) +
+    sel('pkg', 'Gói', _aePkgSel, [['', 'Tất cả'], ['__none', 'Chưa có gói']].concat(Object.keys(pkgs).sort().map(function(k){ return [k, k + ' (' + pkgs[k] + ')']; })), 170) +
+    (anyF ? '<button class="detail-btn" style="height:34px" onclick="clearAeFilters()">✕ Xoá bộ lọc</button>' : '') + '</div>';
 }
-function setAeFilter(key) {
+function aeRerender_() {
   var inp = document.querySelector('input[oninput*="advisee-list-tbody"]');
   var q = inp ? inp.value : '';
-  _aeFilter = key;
   document.getElementById('main-content').innerHTML = renderAdviseeModule();
   var inp2 = document.querySelector('input[oninput*="advisee-list-tbody"]');
   if (inp2 && q) { inp2.value = q; filterRowsBySearch(inp2, 'advisee-list-tbody'); }
+  aeSyncHash_();
 }
+function aeSyncHash_() {
+  try {
+    if (typeof activeNavId === 'undefined' || activeNavId !== 'aee-list') return;
+    var h = String(location.hash || '').replace(/^#\/?/, '');
+    if (/\/m$/.test(h) || h.split('?')[0] !== 'aee-list') return;
+    var parts = [];
+    if (_aeFilter !== 'all') parts.push('view=' + encodeURIComponent(_aeFilter));
+    if (_aeAdvisorSel) parts.push('advisor=' + encodeURIComponent(_aeAdvisorSel));
+    if (_aePkgSel) parts.push('pkg=' + encodeURIComponent(_aePkgSel));
+    var nh = '#/aee-list' + (parts.length ? '?' + parts.join('&') : '');
+    if (location.hash !== nh) history.replaceState(history.state, '', location.pathname + location.search + nh);
+  } catch (e) {}
+}
+function setAeSel_(k, v) {
+  if (k === 'view') _aeFilter = v || 'all'; else if (k === 'advisor') _aeAdvisorSel = v; else if (k === 'pkg') _aePkgSel = v;
+  aeRerender_();
+}
+function setAeFilter(key) { _aeFilter = key; aeRerender_(); }
+function clearAeFilters() { _aeFilter = 'all'; _aeAdvisorSel = ''; _aePkgSel = ''; aeRerender_(); }
 function toggleAeUrgent() { setAeFilter(_aeFilter === 'soon' ? 'all' : 'soon'); }
 
 function navToStaffAdviseeDetail(aeId, fromAdvisorId) {
@@ -10288,7 +10320,10 @@ insDeptOf_ = function(lead) { return deptPrimary_(lead && lead.interested_dept);
 
   // Dựng lại đúng màn hình từ 1 đường dẫn '#'
   function routeFromHash_(h) {
-    var path = baseOf_(String(h || '').replace(/^#\/?/, ''));
+    var raw_ = baseOf_(String(h || '').replace(/^#\/?/, ''));
+    var qi_ = raw_.indexOf('?');
+    var query_ = qi_ > -1 ? raw_.slice(qi_ + 1) : '';
+    var path = baseOf_(qi_ > -1 ? raw_.slice(0, qi_) : raw_);
     if (!path || !currentUser) return;
     var seg = path.split('/').map(function (x) { try { return decodeURIComponent(x); } catch (e) { return x; } });
     var isStaff = currentUser.role === 'Staff' || currentUser.role === 'Admin';
@@ -10321,6 +10356,19 @@ insDeptOf_ = function(lead) { return deptPrimary_(lead && lead.interested_dept);
         return;
       }
       if (typeof ROUTE_MAP !== 'undefined' && ROUTE_MAP[seg[0]] && document.getElementById('ni-' + seg[0])) {
+        if (seg[0] === 'lj-newreg' || seg[0] === 'aee-list') {
+          var pend_ = null;
+          if (query_) {
+            pend_ = {};
+            query_.split('&').forEach(function (kv) {
+              var i = kv.indexOf('=');
+              var k = i > -1 ? kv.slice(0, i) : kv, v = i > -1 ? kv.slice(i + 1) : '';
+              try { k = decodeURIComponent(k.replace(/\+/g, ' ')); v = decodeURIComponent(v.replace(/\+/g, ' ')); } catch (e) {}
+              pend_[k] = v;
+            });
+          }
+          if (seg[0] === 'lj-newreg') window._ljLeadPending = pend_; else window._ljAeePending = pend_;
+        }
         try { navTo(seg[0]); } finally { done(); }
         return;
       }
@@ -11790,6 +11838,68 @@ window.renderWeeklyReport = function () {
   }
   scan();
   new MutationObserver(scan).observe(document.body, { childList: true, subtree: true });
+})();
+</script>
+
+<script id="lj-lead-hash">
+(function () {
+  function defs() { return { view: 'open', closed: '', staff: '', status: '', result: '', week: '', q: '' }; }
+  function cur() {
+    return {
+      view: typeof _leadFilter !== 'undefined' ? _leadFilter : 'open',
+      closed: (typeof _leadShowClosed !== 'undefined' && _leadShowClosed) ? '1' : '',
+      staff: typeof _leadStaffSel !== 'undefined' ? _leadStaffSel : '',
+      status: typeof _leadStatusSel !== 'undefined' ? _leadStatusSel : '',
+      result: typeof _leadResultSel !== 'undefined' ? _leadResultSel : '',
+      week: typeof _leadWeekSel !== 'undefined' ? _leadWeekSel : '',
+      q: typeof _leadSearch !== 'undefined' ? _leadSearch : ''
+    };
+  }
+  function applyState(p) {
+    if (!p) return;
+    if (p.view) _leadFilter = p.view;
+    _leadShowClosed = p.closed === '1';
+    _leadStaffSel = p.staff || '';
+    _leadStatusSel = p.status || '';
+    _leadResultSel = p.result || '';
+    _leadWeekSel = p.week || '';
+    _leadSearch = p.q || '';
+  }
+  function syncHash() {
+    try {
+      if (typeof activeNavId === 'undefined' || activeNavId !== 'lj-newreg') return;
+      var h = String(location.hash || '').replace(/^#\/?/, '');
+      if (/\/m$/.test(h)) return;
+      var base = h.split('?')[0];
+      if (base !== 'lj-newreg') return;
+      var c = cur(), d = defs(), parts = [];
+      Object.keys(c).forEach(function (k) {
+        var v = c[k] == null ? '' : String(c[k]);
+        if (v !== d[k]) parts.push(k + '=' + encodeURIComponent(v));
+      });
+      var nh = '#/lj-newreg' + (parts.length ? '?' + parts.join('&') : '');
+      if (location.hash !== nh) history.replaceState(history.state, '', location.pathname + location.search + nh);
+    } catch (e) { console.warn('lead hash sync:', e); }
+  }
+  if (typeof loadNewRegistrationsPage === 'function') {
+    var origLoad = loadNewRegistrationsPage;
+    loadNewRegistrationsPage = function (keep) {
+      var r = origLoad.apply(this, arguments);
+      if (keep !== true && window._ljLeadPending) {
+        applyState(window._ljLeadPending);
+      }
+      window._ljLeadPending = null;
+      return r;
+    };
+  }
+  if (typeof refreshLeadTable === 'function') {
+    var origRef = refreshLeadTable;
+    refreshLeadTable = function () {
+      var r = origRef.apply(this, arguments);
+      syncHash();
+      return r;
+    };
+  }
 })();
 </script>
 
