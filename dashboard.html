@@ -1863,7 +1863,7 @@ function sendDayRanges() {
   var btn = document.getElementById('day-send-btn');
   if (btn) { btn.innerHTML = '<span class="spinner"></span> Đang gửi...'; btn.disabled = true; }
 
-  apiPost({ action: 'addSlots', advisor: currentUser.name, advisor_email: currentUser.email, slots: keys, duration_minutes: 30 }).then(function(res){
+  apiPost({ action: 'addSlots', advisor: currentUser.name, advisor_email: currentUser.email, slots: keys, duration_minutes: 60 }).then(function(res){
     if (res && res.success) {
       toast('Đã gửi ' + _dayModalPendingRanges.length + ' khung giờ (' + keys.length + ' slot)!', 'success');
       _dayModalPendingRanges = [];
@@ -10619,8 +10619,17 @@ function ljSlotDay(dateStr) {
   ljRenderSlotDay_(true);
 }
 
+// Mỗi meeting của Advisor dài 60 phút → mỗi giờ trống hiển thị đúng 60 phút (09:00 – 10:00)
+var LJ_MEETING_MIN = 60;
 function ljRangesOf_(times) {
-  return groupTimesIntoRanges(times.slice().sort());
+  var sorted = times.slice().sort(), ranges = [], cur = null;
+  sorted.forEach(function (t) {
+    var m = timeStrToMinutes(t);
+    if (cur && m === cur.endMins) { cur.endMins += LJ_MEETING_MIN; cur.times.push(t); }
+    else { if (cur) ranges.push(cur); cur = { startMins: m, endMins: m + LJ_MEETING_MIN, times: [t] }; }
+  });
+  if (cur) ranges.push(cur);
+  return ranges;
 }
 
 function ljRenderSlotDay_(openIt) {
@@ -10666,7 +10675,7 @@ function ljRenderSlotDay_(openIt) {
       HALF_HOUR_OPTIONS.map(function (t) { return '<option value="' + t + '"' + (t === '10:00' ? ' selected' : '') + '>' + t + '</option>'; }).join('') + '</select></div>' +
       '<div><div class="form-label">Lặp lại</div><select class="form-input" id="lj-sl-rep" style="margin-top:4px">' +
       [[0, 'Chỉ ngày này'], [1, '+ 1 tuần sau'], [2, '+ 2 tuần sau'], [3, '+ 3 tuần sau'], [4, '+ 4 tuần sau'], [7, '+ 7 tuần sau']].map(function (o) { return '<option value="' + o[0] + '">' + o[1] + '</option>'; }).join('') + '</select></div></div>' +
-      '<div style="font-size:11.5px;color:var(--muted);margin-top:6px">"Lặp lại" = cùng thứ, cùng giờ ở các tuần tiếp theo (hợp với lịch cố định của Advisor).</div></div>';
+      '<div style="font-size:11.5px;color:var(--muted);margin-top:6px">Mỗi meeting dài 60 phút: 09:00 – 11:00 tạo 2 giờ trống (09:00–10:00 và 10:00–11:00). "Lặp lại" = cùng thứ, cùng giờ ở các tuần tiếp theo (hợp với lịch cố định của Advisor).</div></div>';
   }
 
   var actions = '<button class="btn-secondary" onclick="closeModal()" style="width:auto;padding:10px 20px">Đóng</button>';
@@ -10689,14 +10698,14 @@ function ljSlotAdd() {
   var a = _sl.advisor; if (!a) return;
   var from = document.getElementById('lj-sl-from').value, to = document.getElementById('lj-sl-to').value;
   var rep = Number(document.getElementById('lj-sl-rep').value) || 0;
-  if (timeStrToMinutes(to) <= timeStrToMinutes(from)) { toast('Giờ "Đến" phải sau giờ "Từ"', 'error'); return; }
+  if (timeStrToMinutes(to) - timeStrToMinutes(from) < LJ_MEETING_MIN) { toast('Mỗi meeting dài 60 phút — giờ "Đến" phải cách giờ "Từ" ít nhất 60 phút', 'error'); return; }
   var existing = {};
   _sl.slots.forEach(function (s) { existing[s.date + '_' + s.time] = true; });
   var keys = [], skippedPast = 0;
   for (var w = 0; w <= rep; w++) {
     var dt = new Date(_slDay.date + 'T00:00:00'); dt.setDate(dt.getDate() + w * 7);
     var ds = ymd(dt);
-    for (var m = timeStrToMinutes(from); m < timeStrToMinutes(to); m += 30) {
+    for (var m = timeStrToMinutes(from); m + LJ_MEETING_MIN <= timeStrToMinutes(to); m += LJ_MEETING_MIN) {
       var t = minutesToTimeStr(m);
       if (ljSlotStartMs_(ds, t) <= Date.now()) { skippedPast++; continue; }
       if (existing[ds + '_' + t]) continue;
@@ -10706,7 +10715,7 @@ function ljSlotAdd() {
   if (!keys.length) { toast(skippedPast ? 'Các khung giờ này đã qua hoặc đã tồn tại' : 'Khung giờ này đã có trong lịch rồi', 'error'); return; }
   var btn = document.getElementById('lj-sl-add');
   if (btn) { btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> Đang thêm...'; }
-  apiPost({ action: 'addSlots', advisor: a.name, advisor_id: a.id, advisor_email: a.email, slots: keys, duration_minutes: 30, added_by: currentUser && currentUser.email }).then(function (res) {
+  apiPost({ action: 'addSlots', advisor: a.name, advisor_id: a.id, advisor_email: a.email, slots: keys, duration_minutes: 60, added_by: currentUser && currentUser.email }).then(function (res) {
     if (!res || !res.success) { toast('Lỗi: ' + ((res && res.error) || 'không thêm được'), 'error'); if (btn) { btn.disabled = false; btn.textContent = '+ Thêm vào lịch'; } return; }
     toast('Đã thêm ' + res.count + ' slot cho ' + a.name + (res.skipped ? ' (bỏ qua ' + res.skipped + ' slot trùng)' : '') + ' ✅', 'success');
     ljSlotAfterChange_();
@@ -10883,7 +10892,7 @@ function ljSbAddSlot() {
   var adv = ljAdvisorByName_(_sb.advisorName);
   if (!adv) { toast('Không tìm thấy hồ sơ Advisor "' + _sb.advisorName + '"', 'error'); return; }
   var btn = document.getElementById('lj-sb-addslot'); if (btn) { btn.disabled = true; btn.textContent = 'Đang thêm...'; }
-  apiPost({ action: 'addSlots', advisor: adv.name, advisor_id: adv.id, advisor_email: adv.email, slots: [date + '_' + time], duration_minutes: 30, added_by: currentUser && currentUser.email }).then(function (res) {
+  apiPost({ action: 'addSlots', advisor: adv.name, advisor_id: adv.id, advisor_email: adv.email, slots: [date + '_' + time], duration_minutes: 60, added_by: currentUser && currentUser.email }).then(function (res) {
     if (!res || !res.success) { toast('Lỗi: ' + ((res && res.error) || 'không thêm được'), 'error'); if (btn) { btn.disabled = false; btn.textContent = '+ Thêm & chọn'; } return; }
     toast(res.count ? 'Đã thêm giờ mới cho ' + adv.name + ' ✅' : 'Giờ này đã có sẵn trong lịch — đã chọn giúp bạn', 'success');
     ljSbLoadSlots_({ date: date, time: time });
