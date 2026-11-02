@@ -3686,12 +3686,13 @@ function generateMeetForConsult(cid) {
     title: 'Tư vấn LinkaJob — ' + c.name,
     guest_name: c.name,
     guests: [c.email, staffEmail].filter(Boolean),
+    lead_email: c.email || '', staff_email: staffEmail || '', staff_name: c.staff || '',
   }).then(function(res){
     btn.disabled = false;
     if (res && res.success && res.meetLink) {
       linkInput.value = res.meetLink;
       btn.textContent = '✓ Đã tạo';
-      toast('Đã tạo Google Meet tự động — bấm "Lưu tất cả thay đổi" để lưu lại ✅', 'success');
+      toast(res.emailed ? 'Đã tạo Google Meet và gửi email lịch tư vấn tới ' + res.lead_email + ' — bấm "Lưu tất cả thay đổi" để lưu lại ✅' : 'Đã tạo Google Meet nhưng CHƯA gửi được email cho khách (lead chưa có email?) — bấm "Lưu tất cả thay đổi" để lưu lại', res.emailed ? 'success' : 'error');
     } else {
       btn.textContent = oldLabel;
       toast('Không tạo được Meet tự động — dán link tay vào ô bên cạnh nhé', 'error');
