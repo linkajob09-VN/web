@@ -2364,12 +2364,14 @@ function openDayReschedule(idx) {
 // ── Chi tiết 1 buổi trong lịch: chuẩn bị của advisee + nhận xét advisor + feedback advisee ──
 function _mdBlock(label, valHtml, empty) {
   return '<div style="margin-bottom:10px"><div style="font-size:10.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:4px">' + label + '</div>' +
-    (valHtml ? '<div style="font-size:13.5px;line-height:1.6;white-space:pre-wrap;word-break:break-word">' + valHtml + '</div>'
+    (valHtml ? '<div style="font-size:13.5px;line-height:1.65;white-space:pre-line;word-break:break-word;max-height:240px;overflow-y:auto;padding-right:4px">' + valHtml + '</div>'
              : '<div style="font-size:13px;color:var(--muted);font-style:italic">' + (empty || 'Chưa có') + '</div>') + '</div>';
 }
 function _mdLinks(t) {
-  var x = escHtml(String(t || ''));
-  return x.replace(/(https?:\/\/[^\s<]+)/g, '<a href="$1" target="_blank" rel="noopener">$1</a>');
+  // Văn bản dán từ Docs/Word hay bị ngắt dòng giữa câu → nối lại; giữ nguyên dòng trống và danh sách (1. / - / •)
+  var raw = String(t || '').replace(/\r/g, '').replace(/([^\n])\n(?!\n|\s*(?:[-•*]|\d+[.)])\s)/g, '$1 ');
+  var x = escHtml(raw);
+  return x.replace(/(https?:\/\/[^\s<]+)/g, function (u) { return '<a href="' + u + '" target="_blank" rel="noopener" title="' + u + '">' + ljShortUrl_(u) + ' ↗</a>'; });
 }
 function _mdSection(title, inner) {
   return '<div style="border:1.5px solid var(--border);border-radius:12px;padding:14px 16px;margin-top:12px"><div style="font-weight:700;font-size:13.5px;margin-bottom:10px">' + title + '</div>' + inner + '</div>';
