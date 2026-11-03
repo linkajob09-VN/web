@@ -808,6 +808,7 @@ function loadAdvisorsFromSheet(callback, force) {
 
 // ── Ghép 1 dòng Booking + các dòng Sessions liên quan thành 1 object
 //    "advisee" đúng shape mà renderAdviseeModule / renderRevenuePage / renderStaffCareTab đang cần ──
+function normalizeNameLoose_(n) { return String(n || '').trim().replace(/\s+/g, ' ').toLowerCase(); }
 function buildAdviseeFromBooking(b, allSessions) {
   var mySessions = allSessions.filter(function(s){ return s.booking_id === b.booking_id; });
   // Buổi đã huỷ (vd tự huỷ vì chưa gửi câu hỏi) không tính là đã đặt: trả buổi đó về trạng thái "chưa xếp lịch" để khách đặt lại
@@ -819,7 +820,14 @@ function buildAdviseeFromBooking(b, allSessions) {
 
   var sessions = [];
   for (var no = 1; no <= sessionsTotal; no++) {
-    var row = mySessions.find(function(s){ return Number(s.session_number) === no; });
+    // Cùng 1 số buổi có thể có nhiều dòng (vd đổi Advisor sau khi đã đặt lịch): ưu tiên dòng của Advisor hiện tại, rồi dòng có thông tin chuẩn bị, rồi dòng mới nhất
+    var cands = mySessions.filter(function(s){ return Number(s.session_number) === no; });
+    var row = cands.length > 1
+      ? cands.slice().sort(function(x, y){
+          var sc = function(z){ return (normalizeNameLoose_(z.advisor_name) === normalizeNameLoose_(b.advisor_name) ? 4 : 0) + (z.prep_question ? 2 : 0); };
+          return sc(y) - sc(x);
+        })[0]
+      : cands[0];
 
     if (!row) {
       var cxRow = cancelledRows.filter(function(s){ return Number(s.session_number) === no; }).pop();
