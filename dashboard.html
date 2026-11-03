@@ -11732,6 +11732,36 @@ var LEAD_VIEWS = [
 
 // ═════════════════════════ TRANG "BÁO CÁO TUẦN" ═════════════════════════
 window.loadWeeklyReportAsync = function () { insLoadPage_('lj-weekly', 'Báo cáo tuần', renderWeeklyReport); };
+// Khách vận hành cần xử lý: hết hạn còn buổi · sắp hết hạn (10 ngày) · mua nhưng chưa dùng buổi nào
+function wkOpsIssues_(bookings, sessions) {
+  var today = ymd(new Date()), out = [];
+  var dayDiff = function (a, b) { return Math.round((new Date(b + 'T00:00:00') - new Date(a + 'T00:00:00')) / 86400000); };
+  var byBk = {};
+  (sessions || []).forEach(function (x) {
+    if (!x.booking_id) return;
+    var st = String(x.status || '').trim().toLowerCase();
+    if (st === 'cancelled' || st === 'canceled') return;
+    (byBk[x.booking_id] = byBk[x.booking_id] || []).push(st);
+  });
+  (bookings || []).forEach(function (b) {
+    if (String(b.status || '').trim().toLowerCase() !== 'confirmed') return;
+    var total = Number(b.sessions_total) || 0;
+    if (!total) return;
+    var list = byBk[b.booking_id] || [];
+    var doneN = list.filter(function (st) { return st === 'completed'; }).length;
+    var remaining = Math.max(0, total - doneN);
+    if (!remaining) return;
+    var expiry = String(b.expiry_date || '').slice(0, 10);
+    var created = String(b.created_at || '').slice(0, 10);
+    var ae = { id: b.booking_id, name: b.advisee_name || '—', advisor: b.advisor_name || '', pkg: b.package_name || '', sessionsTotal: total, expiry: expiry };
+    var kind = '', note = '', rank = 9;
+    if (expiry && expiry < today) { kind = 'expired'; rank = 0; note = 'Đã hết hạn ' + dayDiff(expiry, today) + ' ngày, còn ' + remaining + ' buổi chưa dùng'; }
+    else if (expiry && dayDiff(today, expiry) <= 10) { kind = 'soon'; rank = 1; note = 'Còn ' + dayDiff(today, expiry) + ' ngày hết hạn, còn ' + remaining + ' buổi'; }
+    else if (!list.length && created && dayDiff(created, today) >= 3) { kind = 'unused'; rank = 2; note = 'Đã mua ' + dayDiff(created, today) + ' ngày, chưa đặt buổi nào'; }
+    if (kind) out.push({ ae: ae, kind: kind, remaining: remaining, note: note, rank: rank, expiry: expiry });
+  });
+  return out.sort(function (a, b) { return a.rank - b.rank || String(a.expiry || '9999').localeCompare(String(b.expiry || '9999')); });
+}
 window.renderWeeklyReport = function () {
   var now = new Date(), today = ymd(now);
   var leadsRaw = (_insData && _insData.leads) || [], bookings = (_insData && _insData.bookings) || [], sessions = (_insData && _insData.sessions) || [];
@@ -11781,8 +11811,23 @@ window.renderWeeklyReport = function () {
   });
   // 4) Marketing: ngành + câu hỏi (không tự diễn giải, chỉ thống kê và liệt kê)
   var dept = {}, qList = inWin.filter(function (n) { return n.question; });
-  inWin.forEach(function (n) { if (n.dept) String(n.dept).split(/[,;]/).forEach(function (d) { d = d.trim(); if (d) dept[d] = (dept[d] || 0) + 1; }); });
-  var deptRows = Object.keys(dept).sort(function (a, b) { return dept[b] - dept[a]; }).slice(0, 8).map(function (k) { return '<tr><td>' + escHtml(k) + '</td>' + td(dept[k], 1) + '</tr>'; });
+  var deptReg = {};
+  inWin.forEach(function (n) { if (n.dept) String(n.dept).split(/[,;]/).forEach(function (d) { d = d.trim(); if (d) { dept[d] = (dept[d] || 0) + 1; if (n.registered) deptReg[d] = (deptReg[d] || 0) + 1; } }); });
+  var deptKeys = Object.keys(dept).sort(function (a, b) { return dept[b] - dept[a] || a.localeCompare(b); });
+  var deptTotal = deptKeys.reduce(function (t, k) { return t + dept[k]; }, 0), deptMax = deptKeys.length ? dept[deptKeys[0]] : 1;
+  var deptChart = deptKeys.length
+    ? '<div class="card"><div style="padding:16px 24px 18px">' +
+      '<div style="display:flex;gap:16px;font-size:11.5px;color:var(--muted);margin-bottom:12px"><span><i style="display:inline-block;width:10px;height:10px;border-radius:3px;background:#16A34A;margin-right:5px"></i>Đã đăng ký</span><span><i style="display:inline-block;width:10px;height:10px;border-radius:3px;background:#F4451A;margin-right:5px"></i>Chưa đăng ký / đang tư vấn</span></div>' +
+      deptKeys.slice(0, 10).map(function (k) {
+        var n = dept[k], r = deptReg[k] || 0, w = Math.max(4, Math.round(n / deptMax * 100));
+        return '<div style="display:grid;grid-template-columns:minmax(90px,34%) 1fr 64px;gap:10px;align-items:center;margin-bottom:8px;font-size:12.5px">' +
+          '<div title="' + escHtml(k) + '" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + escHtml(k) + '</div>' +
+          '<div style="background:var(--bg);border-radius:6px;height:18px;overflow:hidden"><div style="width:' + w + '%;height:100%;display:flex"><div style="width:' + Math.round(r / n * 100) + '%;background:#16A34A"></div><div style="flex:1;background:#F4451A"></div></div></div>' +
+          '<div style="text-align:right;font-variant-numeric:tabular-nums"><b>' + n + '</b> <span style="color:var(--muted)">' + wkPct_(n, deptTotal) + '%</span></div></div>';
+      }).join('') +
+      (deptKeys.length > 10 ? '<div style="font-size:11.5px;color:var(--muted);margin-top:4px">+ ' + (deptKeys.length - 10) + ' ngành khác (' + deptKeys.slice(10).reduce(function (t, k) { return t + dept[k]; }, 0) + ' lead)</div>' : '') +
+      '</div></div>'
+    : '<div class="card"><div class="today-empty">Chưa có lead điền ngành.</div></div>';
   // 5) Vận hành
   var ops = wkOpsIssues_(bookings, sessions);
   var conf = bookings.filter(function (b) { return String(b.status || '').trim().toLowerCase() === 'confirmed'; });
@@ -11848,7 +11893,7 @@ window.renderWeeklyReport = function () {
   h += '<div class="card" style="margin-bottom:6px"><div style="padding:14px 24px;font-size:13px;line-height:1.7">Tổng <b>' + conf.length + '</b> booking · <b>' + sold + '</b> buổi đã bán · <b>' + done + '</b> đã hoàn thành' + (sold ? ' (' + wkPct_(done, sold) + '%)' : '') + ' · <b>' + sched + '</b> đang “scheduled” · <b>' + canc + '</b> huỷ' + (staleSched ? ' · <span style="color:#D97706;font-weight:700">' + staleSched + ' buổi scheduled đã quá ngày</span>' : '') + '</div></div>';
   h += tbl(['KHÁCH', 'ADVISOR', 'GÓI', 'CÒN LẠI', 'HẠN', 'VẤN ĐỀ'], opsRows, '✓ Không có khách nào cần xử lý gấp.') + (ops.length > 15 ? '<div style="font-size:12px;color:var(--muted);margin:-8px 4px 14px">Hiển thị 15 / ' + ops.length + ' khách.</div>' : '');
 
-  h += '<div class="two-col"><div>' + sec('Ngành khách quan tâm', 'lead chốt lịch trong kỳ') + tbl(['NGÀNH', 'LEAD'], deptRows, 'Chưa có lead điền ngành.', [1]) + '</div>' +
+  h += '<div class="two-col"><div>' + sec('Ngành khách quan tâm', 'lead chốt lịch trong kỳ · top 10') + deptChart + '</div>' +
     '<div>' + sec('Câu hỏi khách điền', qList.length + ' / ' + inWin.length + ' lead có điền') +
     '<div class="card"><div style="padding:6px 24px 14px;max-height:260px;overflow:auto">' + (qList.length ? qList.map(function (n) { return '<div style="padding:8px 0;border-bottom:1px solid var(--border);font-size:13px"><b>' + escHtml(n.name) + '</b> <span style="color:var(--muted);font-size:11.5px">' + fmtDMY(n.date) + '</span><div style="color:#374151;margin-top:2px;white-space:pre-wrap">' + escHtml(n.question) + '</div></div>'; }).join('') : '<div class="today-empty">Chưa có câu hỏi nào.</div>') + '</div></div></div></div>';
 
