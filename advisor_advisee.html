@@ -1735,9 +1735,10 @@ function schOpenDay(dateStr) {
   var to = Math.min(23 * 60 + 45, from + 180);
   document.getElementById('modal-title').textContent = dayLabel(dateStr) + ' — Chọn khung giờ rảnh';
   var info = schDayInfo(dateStr), body = '';
+  window._schRanges = info.ranges;
   if (info.ranges.length || info.booked.length) {
     body += '<div style="font-size:12.5px;color:var(--muted);margin-bottom:12px">Đã gửi cho ngày này: ' +
-      info.ranges.map(function(r){ return '<span class="sc-chip free">' + tstr(r[0]) + '–' + tstr(r[1]) + '</span>'; }).join(' ') +
+      info.ranges.map(function(r, ri){ return '<span class="sc-chip free">' + tstr(r[0]) + '–' + tstr(r[1]) + ' <a href="#" title="Sửa hoặc xoá khung giờ này" onclick="schEditRange(\'' + dateStr + '\',' + ri + ');return false" style="color:inherit;font-weight:700;margin-left:6px;text-decoration:underline">✎ Sửa</a></span>'; }).join(' ') +
       info.booked.map(function(b){ return ' <span class="sc-chip booked">' + tstr(b) + ' · đã đặt</span>'; }).join('') + '</div>';
   }
   var mine = _schDraft.map(function(r, i){ return { r: r, i: i }; }).filter(function(x){ return x.r.date === dateStr; });
@@ -1759,6 +1760,92 @@ function schOpenDay(dateStr) {
     '<button class="btn-secondary" onclick="schAddDraft(\'more\')" style="width:auto;padding:10px 18px">+ Chọn thêm</button>' +
     '<button class="login-btn" onclick="schAddDraft(\'send\')" style="width:auto;padding:10px 20px">Gửi khung giờ →</button>';
   document.getElementById('modal-overlay').classList.add('open');
+}
+
+// ── Sửa / xoá một khung giờ rảnh ĐÃ GỬI ──
+// Khung giờ được lưu trên Sheet thành từng slot (mỗi 15 phút). Sửa = xoá các slot không còn
+// nằm trong khung mới + thêm các slot mới. Slot đã có Advisee đặt luôn được giữ nguyên.
+function schRangeSlots_(dateStr, r) {
+  // các slot "available" của mình có giờ bắt đầu thuộc khung r = [r0, r1)
+  return (sheetData.slots || []).filter(function(s) {
+    if (normName(s.advisor_name) !== normName(currentUser.name) || slotDate(s) !== dateStr) return false;
+    if (s.status && s.status !== 'available') return false;
+    var m = tmin(s.time_start); return m != null && m >= r[0] && m + SC_DUR <= r[1];
+  });
+}
+function schEditRange(dateStr, ri) {
+  var r = (window._schRanges || [])[ri]; if (!r) return;
+  window._schEdit = { date: dateStr, range: r };
+  document.getElementById('modal-title').textContent = dayLabel(dateStr) + ' — Sửa khung giờ đã gửi';
+  document.getElementById('modal-body').innerHTML =
+    '<div style="font-size:13px;color:var(--muted);margin-bottom:12px">Khung hiện tại: <span class="sc-chip free">' + tstr(r[0]) + '–' + tstr(r[1]) + '</span></div>' +
+    '<div class="form-label" style="margin-bottom:6px">Khung giờ mới <span style="color:var(--brand)">*</span></div>' +
+    '<div class="sc-fields">' +
+      '<div><div class="sc-sublabel">Ngày</div><input class="form-input" type="date" value="' + dateStr + '" disabled></div>' +
+      '<div><div class="sc-sublabel">Từ</div><input class="form-input" type="time" id="sch-edit-from" step="900" value="' + tstr(r[0]) + '"></div>' +
+      '<div><div class="sc-sublabel">Đến</div><input class="form-input" type="time" id="sch-edit-to" step="900" value="' + tstr(r[1]) + '"></div>' +
+    '</div>' +
+    '<div style="font-size:12px;color:var(--muted);margin-top:12px;line-height:1.6">Khoảng giờ tối thiểu 60 phút, làm tròn theo bước 15 phút. Giờ nào đã có advisee đặt sẽ được giữ lại, không bị xoá.</div>';
+  document.getElementById('modal-actions').innerHTML =
+    '<button class="btn-secondary" onclick="schOpenDay(\'' + dateStr + '\')" style="width:auto;padding:10px 18px">← Quay lại</button>' +
+    '<button class="btn-secondary" id="sch-edit-del" onclick="schDeleteRange()" style="width:auto;padding:10px 18px;color:#B91C1C">🗑 Xoá khung này</button>' +
+    '<button class="login-btn" id="sch-edit-save" onclick="schSaveEdit()" style="width:auto;padding:10px 20px">Lưu thay đổi</button>';
+  document.getElementById('modal-overlay').classList.add('open');
+}
+function schEditBusy_(busy, label) {
+  ['sch-edit-save', 'sch-edit-del'].forEach(function(id) { var b = document.getElementById(id); if (b) b.disabled = busy; });
+  var sv = document.getElementById('sch-edit-save'); if (sv) sv.innerHTML = busy ? '<span class="spinner"></span> ' + label : 'Lưu thay đổi';
+}
+function schEditDone_(msg) { toast(msg, 'success'); closeModal(); switchRoleTab('schedule'); }
+function schDeleteRange() {
+  var ctx = window._schEdit; if (!ctx) return;
+  var ids = schRangeSlots_(ctx.date, ctx.range).map(function(x) { return x.slot_id; }).filter(Boolean);
+  if (!ids.length) { toast('Không tìm thấy giờ nào để xoá', 'error'); return; }
+  if (!confirm('Xoá khung giờ ' + tstr(ctx.range[0]) + '–' + tstr(ctx.range[1]) + ' ngày ' + dayLabel(ctx.date) + '?\nGiờ đã có advisee đặt sẽ được giữ lại.')) return;
+  schEditBusy_(true, 'Đang xoá...');
+  apiPost({ action: 'deleteSlots', slot_ids: ids }).then(function(res) {
+    if (!res || !res.success) { toast('Lỗi: ' + ((res && res.error) || 'không xoá được'), 'error'); schEditBusy_(false); return; }
+    schEditDone_('Đã xoá khung giờ' + (res.skipped_booked ? ' (giữ ' + res.skipped_booked + ' giờ đã có người đặt)' : '') + ' ✅');
+  }).catch(function(e) { toast('Lỗi kết nối: ' + e.message, 'error'); schEditBusy_(false); });
+}
+function schSaveEdit() {
+  var ctx = window._schEdit; if (!ctx) return;
+  var f = document.getElementById('sch-edit-from').value, t = document.getElementById('sch-edit-to').value;
+  if (!f || !t) { toast('Vui lòng điền đủ giờ bắt đầu và giờ kết thúc', 'error'); return; }
+  var from = Math.ceil(tmin(f) / SC_STEP) * SC_STEP, to = Math.floor(tmin(t) / SC_STEP) * SC_STEP, nowM = minutesNowIfToday(ctx.date);
+  if (to - from < SC_DUR) { toast('Khoảng giờ phải dài ít nhất 60 phút', 'error'); return; }
+  if (from <= nowM) { toast('Giờ bắt đầu phải ở tương lai', 'error'); return; }
+  if (from === ctx.range[0] && to === ctx.range[1]) { toast('Chưa có thay đổi nào', 'error'); return; }
+
+  var oldSlots = schRangeSlots_(ctx.date, ctx.range);
+  var mine = (sheetData.slots || []).filter(function(s) { return normName(s.advisor_name) === normName(currentUser.name) && slotDate(s) === ctx.date; });
+  var existing = {}, bookedMins = [];
+  mine.forEach(function(s) { var m = tmin(s.time_start); if (m == null) return; existing[tstr(m)] = true; if (s.status === 'booked') bookedMins.push(m); });
+  var want = {}, addKeys = [];
+  for (var m = from; m + SC_DUR <= to; m += SC_STEP) {
+    if (m <= nowM) continue;
+    if (bookedMins.some(function(b) { return Math.abs(m - b) < SC_DUR; })) continue;   // không đè lên buổi đã đặt
+    want[tstr(m)] = true;
+    if (!existing[tstr(m)]) addKeys.push(ctx.date + '_' + tstr(m));
+  }
+  var delIds = oldSlots.filter(function(s) { return !want[tstr(tmin(s.time_start))]; }).map(function(s) { return s.slot_id; }).filter(Boolean);
+  if (!addKeys.length && !delIds.length) { toast('Chưa có thay đổi nào', 'error'); return; }
+
+  schEditBusy_(true, 'Đang lưu...');
+  var fail = function(msg) { toast(msg, 'error'); schEditBusy_(false); };
+  var doAdd = function(removed) {
+    if (!addKeys.length) { schEditDone_('Đã cập nhật khung giờ ✅'); return; }
+    apiPost({ action: 'addSlots', advisor: currentUser.name, advisor_id: currentUser.advisorId || '', advisor_email: currentUser.email, slots: addKeys, duration_minutes: SC_DUR })
+      .then(function(res) {
+        if (res && res.success) schEditDone_('Đã cập nhật khung giờ ' + tstr(from) + '–' + tstr(to) + ' ✅');
+        else fail('Đã xoá giờ cũ nhưng chưa thêm được giờ mới: ' + ((res && res.error) || 'không rõ lỗi') + ' — hãy gửi lại khung giờ.');
+      }).catch(function(e) { fail('Lỗi kết nối khi thêm giờ mới: ' + e.message + ' — hãy kiểm tra lại lịch.'); });
+  };
+  if (!delIds.length) { doAdd(0); return; }
+  apiPost({ action: 'deleteSlots', slot_ids: delIds }).then(function(res) {
+    if (!res || !res.success) { fail('Lỗi: ' + ((res && res.error) || 'không cập nhật được')); return; }
+    doAdd(res.deleted || 0);
+  }).catch(function(e) { fail('Lỗi kết nối: ' + e.message); });
 }
 
 function schAddDraft(next) {
