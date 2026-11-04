@@ -472,7 +472,7 @@ body{font-family:'Montserrat',sans-serif;background:#F5F4F1;color:#1C1C1C;overfl
 @media (max-width:560px){ .mctx{margin:12px 16px 0;} .mctx-pkg{text-align:left;width:100%;} }
 
 </style>
-<link rel="stylesheet" href="đăng-ký-tư-vấn.css">
+<link rel="stylesheet" href="dang-ky-tu-van.css">
 </head>
 <body>
 
@@ -1051,7 +1051,7 @@ document.addEventListener('DOMContentLoaded', function(){
   fetchAdvisorsFromSheet().then(function(){
     renderAdvisorGrid(); // vẽ ngay — không chờ reviews nữa
     // Mở sẵn đúng advisor nếu link có kèm mã, ví dụ:
-    // đội-ngũ-advisor.html?advisor=ADV003
+    // doi-ngu-advisor.html?advisor=ADV003
     // Hỗ trợ cả link mới (#advisor=ADV003) và link cũ (?advisor=ADV003)
     var presetAdvisorId = hashAdvisorId() || urlParams.get('advisor');
     if (presetAdvisorId && findAdvisorById(presetAdvisorId)) openDrawer(presetAdvisorId, 'replace');
@@ -1425,7 +1425,7 @@ function renderSteps(active){
 
 <!-- WIDGET "ĐĂNG KÝ TƯ VẤN" — dùng chung, nút "Đăng ký tư vấn" trên nav gọi openConsultWidget() -->
 <div id="lj-widget-root"></div>
-<script src="đăng-ký-tư-vấn.js"></script>
+<script src="dang-ky-tu-van.js"></script>
 <script>initConsultWidget();</script>
 </body>
 </html>
