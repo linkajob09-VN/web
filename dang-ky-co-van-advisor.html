@@ -253,6 +253,7 @@ table.pc:not(.pc-open) tr.pc-extra{display:none;}
 table.pc td.pc-xtd{vertical-align:top;}
 </style>
 <link rel="stylesheet" href="nav.css">
+<link rel="stylesheet" href="đăng-ký-tư-vấn.css">
 </head>
 <body>
 <div class="lj">
@@ -756,7 +757,9 @@ document.addEventListener('DOMContentLoaded', loadPricingTable);
 
 
 </script>
+<div id="lj-widget-root"></div>
 <script src="nav.js"></script>
-<script>initSharedNav();</script>
+<script src="đăng-ký-tư-vấn.js"></script>
+<script>initSharedNav(); initConsultWidget();</script>
 </body>
 </html>
