@@ -407,7 +407,7 @@ button:focus-visible, a:focus-visible, .lj-nav-btn-plain:focus-visible, .fbtn:fo
 }
 </style>
 <link rel="stylesheet" href="nav.css">
-<link rel="stylesheet" href="đăng-ký-tư-vấn.css">
+<link rel="stylesheet" href="dang-ky-tu-van.css">
 </head>
 <body>
 
@@ -513,13 +513,13 @@ function fbAvatarHtml(name, photoUrl, verified){
 }
 
 // Chip Advisor (1 dòng nhỏ): tự lấy ảnh từ hồ sơ Advisor; Advisor thật (có advisor_id) → bấm vào mở card Advisor
-// trên đội-ngũ-advisor.html. Tên khoá học (không khớp Advisor) → chỉ hiển thị, không có link.
+// trên doi-ngu-advisor.html. Tên khoá học (không khớp Advisor) → chỉ hiển thị, không có link.
 function fbAdvisorHtml(f){
   var isCourse = f.service === 'Khoá học';
   var label = isCourse ? 'Khoá học <b>'+f.advisor+'</b>' : 'Advisor <b>'+f.advisor+'</b>';
   var av = fbAvatarHtml(f.advisor, f.advisor_photo_url, false);
   if (!f.advisor_id) return '<div class="fb-adv">'+av+'<span>'+label+'</span></div>';
-  return '<a class="fb-adv" href="đội-ngũ-advisor.html?advisor='+encodeURIComponent(f.advisor_id)+'" title="Xem hồ sơ Advisor">'+av+'<span>'+label+' ›</span></a>';
+  return '<a class="fb-adv" href="doi-ngu-advisor.html?advisor='+encodeURIComponent(f.advisor_id)+'" title="Xem hồ sơ Advisor">'+av+'<span>'+label+' ›</span></a>';
 }
 
 function renderRatingSummary(){
@@ -604,7 +604,7 @@ document.addEventListener('DOMContentLoaded', function(){
 
 // MỚI: lấy dữ liệu thật từ Sheet AdvisorReviews rồi mới render — thay vì
 // render ngay từ mảng cứng như trước.
-// FIX: CW_WEBAPP_URL được khai báo trong đăng-ký-tư-vấn.js, file này nạp SAU đoạn
+// FIX: CW_WEBAPP_URL được khai báo trong dang-ky-tu-van.js, file này nạp SAU đoạn
 // script inline này nên gọi trực tiếp lúc đó sẽ lỗi "CW_WEBAPP_URL is not defined"
 // (trang trống, không báo gì). Giờ đợi trang nạp xong mới lấy URL, và có URL dự phòng.
 var FB_FALLBACK_URL = 'https://script.google.com/macros/s/AKfycbx7Bd9VvoyzfiiezQV9huoY2BKHH_Br1RAFIz00mjdyKeis-Zv-38a0gf_b-fMlul2C/exec';
@@ -692,7 +692,7 @@ window.addEventListener('load', loadFeedbacks);
 })();
 </script>
 <script src="nav.js"></script>
-<script src="đăng-ký-tư-vấn.js"></script>
+<script src="dang-ky-tu-van.js"></script>
 <script>initSharedNav(); initConsultWidget();</script>
 
 </body>
