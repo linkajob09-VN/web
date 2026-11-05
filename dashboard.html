@@ -3624,12 +3624,9 @@ function renderConsultationDetail(cid) {
 
   // ── Ghi chú tư vấn (nội bộ): lưới 2-3 cột cho gọn ──
   html += '<div class="card" style="margin-bottom:12px"><div class="card-header"><div class="card-header-left">Ghi chú tư vấn (nội bộ)</div></div><div style="padding:0 24px 18px">';
-  html += '<div class="form-grid cd-g cd-g2"><div><div class="form-label">Học vấn</div><input class="form-input" id="cv-education" value="' + escHtml(p.education||'') + '"></div>' +
-    '<div><div class="form-label">Kinh nghiệm apply</div><input class="form-input" id="cv-experience" value="' + escHtml(p.experience||'') + '"></div></div>';
+  html += '<div class="form-label">Kinh nghiệm apply</div><input class="form-input" id="cv-experience" value=" rows="3">' + escHtml(p.experience||'') + '"></div></div>';
   html += '<div class="form-grid cd-g cd-g3">' +
     '<div><div class="form-label">Mong muốn (kỳ vọng cho buổi cố vấn)</div><textarea class="form-textarea" id="cv-desire" rows="3">' + escHtml(p.desire||'') + '</textarea></div>' +
-    '<div><div class="form-label">Barrier (rào cản)</div><textarea class="form-textarea" id="cv-barrier" rows="3">' + escHtml(p.barrier||'') + '</textarea></div>' +
-    '<div><div class="form-label">Follow up</div><textarea class="form-textarea" id="cv-followup" rows="3">' + escHtml(p.followUp||'') + '</textarea></div></div>';
   html += '</div></div>';
   html += '</div><div class="cd-side">';
 
