@@ -2066,12 +2066,9 @@ function openCreateLeadModal() {
     '<input class="form-input" id="cl-cv" placeholder="https://drive.google.com/..." style="margin-top:6px"></div>' +
     '<div class="modal-field"><div class="form-label">Nguồn</div>' +
     '<select class="form-input" id="cl-source" style="margin-top:6px">' +
-      '<option value="Facebook">Facebook</option>' +
-      '<option value="Instagram">Instagram</option>' +
-      '<option value="TikTok">TikTok</option>' +
-      '<option value="Zalo">Zalo</option>' +
-      '<option value="Giới thiệu">Giới thiệu</option>' +
-      '<option value="Khác">Khác</option>' +
+      '<option value="Mobile">Mobile</option>' +
+      '<option value="Desktop">Desktop</option>' +
+      '<option value="Affiliate">Affiliate</option>' +
     '</select></div>' +
     '<div class="modal-field"><div class="form-label">Tư vấn về</div>' +
     '<select class="form-input" id="cl-service" style="margin-top:6px">' +
@@ -3484,11 +3481,21 @@ function updateLeadContactedInline(cid, field, value) {
   persistLead(c);
 }
 
+// Ghi 1 dòng nhật ký có cấu trúc mỗi lần đổi Status → báo cáo "đã từng ở trạng thái nào" đọc được từ đây.
+function logStatusChange_(c, from, to) {
+  if (!c || !c.id || from === to) return;
+  var now = new Date(), who = (currentUser && currentUser.name) ? currentUser.name : '';
+  var entry = { time: pad(now.getDate())+'/'+pad(now.getMonth()+1)+'/'+now.getFullYear()+' '+pad(now.getHours())+':'+pad(now.getMinutes()), user: who, text: '🔁 Status: "' + (from || '') + '" → "' + (to || '') + '"' };
+  (c.log = c.log || []).push(entry);
+  persistLeadLog(c.id, entry);
+}
 // Lưu ngay khi đổi Status tư vấn trên list, không cần vào trang chi tiết
 function updateLeadStatusInline(cid, newStatus) {
   var c = MOCK.consultations.find(function(x){ return x.id === cid; });
   if (!c) return;
+  var _oldSt = c.status;
   c.status = newStatus;
+  logStatusChange_(c, _oldSt, newStatus);
   toast(newStatus === 'Đã đóng' && !c.result ? 'Đã đóng lead. Nhớ chọn lý do ở cột Kết quả nhé' : 'Đã cập nhật status cho ' + c.name, newStatus === 'Đã đóng' && !c.result ? 'info' : 'success');
   persistLead(c);
   // re-render đúng tab đang xem (leads) để badge/SLA cập nhật lại
@@ -3601,7 +3608,7 @@ function renderConsultationDetail(cid) {
   html += '</div></div>';
 
   html += '<div class="form-grid cd-g">';
-  html += '<div><div class="form-label">Nguồn</div><input class="form-input" id="cv-topsource" value="' + String(c.source||'').replace(/"/g,'&quot;') + '"></div>';
+  html += '<div><div class="form-label">Nguồn (thiết bị / kênh vào)</div><select class="form-select" id="cv-topsource"><option value="">-- Chọn --</option>' + ['Mobile','Desktop','Affiliate'].map(function(o){ return '<option' + (o===c.source?' selected':'') + '>' + o + '</option>'; }).join('') + (c.source && ['Mobile','Desktop','Affiliate'].indexOf(c.source) === -1 ? '<option selected>' + escHtml(c.source) + '</option>' : '') + '</select></div>';
   html += '<div><div class="form-label">Quan tâm dịch vụ</div><select class="form-select" id="cv-consultabout">' + CONSULT_ABOUT_OPTIONS.map(function(o){ return '<option' + (o===c.consultAbout?' selected':'') + '>' + o + '</option>'; }).join('') + (CONSULT_ABOUT_OPTIONS.indexOf(c.consultAbout) === -1 && c.consultAbout ? '<option selected>' + c.consultAbout + '</option>' : '') + '</select></div>';
   html += '<div><div class="form-label">Bạn hiện là</div><select class="form-select" id="cv-customertype" onchange="cvToggleCustomerTypeFields()"><option value="">-- Chọn --</option><option value="Sinh viên"' + (p.customerType==='Sinh viên'?' selected':'') + '>Sinh viên</option><option value="Mới tốt nghiệp"' + (p.customerType==='Mới tốt nghiệp'?' selected':'') + '>Mới tốt nghiệp</option><option value="Đã đi làm"' + (p.customerType==='Đã đi làm'?' selected':'') + '>Đã đi làm</option>' + (p.customerType && ['Sinh viên','Mới tốt nghiệp','Đã đi làm'].indexOf(p.customerType) === -1 ? '<option selected>' + escHtml(p.customerType) + '</option>' : '') + '</select></div>';
   html += '<div id="cv-studentyear-wrap" style="display:' + (p.customerType==='Sinh viên'?'block':'none') + '"><div class="form-label">Sinh viên năm mấy</div><select class="form-select" id="cv-studentyear"><option value="">-- Chọn --</option>' + ['Năm 1','Năm 2','Năm 3','Năm 4','Đã tốt nghiệp'].map(function(y){ return '<option' + (p.studentYear===y?' selected':'') + '>' + y + '</option>'; }).join('') + '</select></div>';
@@ -3609,7 +3616,7 @@ function renderConsultationDetail(cid) {
   html += '<div class="full"><div class="form-label">Phòng ban / vị trí quan tâm <span style="color:var(--muted);font-weight:400">(chọn được nhiều)</span></div>' + cvFieldPicker(p.interestedDept) + '</div>';
   html += '<div><div class="form-label">Level quan tâm</div><select class="form-select" id="cv-interestedlevel"><option value="">-- Chọn --</option>' + ['Intern','Fresh Graduate','Junior','Senior','Manager trở lên'].map(function(l){ return '<option' + (p.interestedLevel===l?' selected':'') + '>' + l + '</option>'; }).join('') + '</select></div>';
   html += '<div><div class="form-label">Khu vực</div><select class="form-select" id="cv-region"><option value="">-- Chọn --</option>' + ['Miền Bắc','Miền Trung','Miền Nam'].map(function(r){ return '<option' + (p.region===r?' selected':'') + '>' + r + '</option>'; }).join('') + '</select></div>';
-  html += '<div><div class="form-label">Biết đến LinkaJob qua đâu</div>' + cvOtherSelect('cv-source', ['Facebook','Instagram','Threads','TikTok','Được giới thiệu','Khác'], p.sourceChannel) + '</div>';
+  html += '<div><div class="form-label">Biết đến LinkaJob qua đâu <span style="color:var(--muted);font-weight:400">(Social media / Webinar / Workshop)</span></div>' + cvOtherSelect('cv-source', ['Facebook','Instagram','Threads','TikTok','YouTube','Zalo','LinkedIn','Webinar','Workshop','Được giới thiệu','Khác'], p.sourceChannel) + '</div>';
   html += '<div class="full"><div class="form-label">Câu hỏi muốn tư vấn</div><textarea class="form-textarea" id="cv-question" rows="2">' + (p.question||'') + '</textarea></div>';
   html += '<div class="full"><div class="form-label">CV</div><div style="display:flex;gap:8px"><input class="form-input" id="cv-cvlink" placeholder="Link CV khách gửi..." value="' + String(leadCvForInput(c)).replace(/"/g,'&quot;') + '" style="flex:1">' + (safeHttpUrl(leadCvForInput(c)) ? '<a href="' + safeHttpUrl(leadCvForInput(c)) + '" target="_blank" rel="noopener" class="update-btn" style="flex-shrink:0;white-space:nowrap">🔗 Mở CV</a>' : '') + '</div></div>';
   html += '</div>';
@@ -3618,9 +3625,9 @@ function renderConsultationDetail(cid) {
   // ── Ghi chú tư vấn (nội bộ): lưới 2-3 cột cho gọn ──
   html += '<div class="card" style="margin-bottom:12px"><div class="card-header"><div class="card-header-left">Ghi chú tư vấn (nội bộ)</div></div><div style="padding:0 24px 18px">';
   html += '<div class="form-grid cd-g cd-g2"><div><div class="form-label">Học vấn</div><input class="form-input" id="cv-education" value="' + escHtml(p.education||'') + '"></div>' +
-    '<div><div class="form-label">Kinh nghiệm</div><input class="form-input" id="cv-experience" value="' + escHtml(p.experience||'') + '"></div></div>';
+    '<div><div class="form-label">Kinh nghiệm apply</div><input class="form-input" id="cv-experience" value="' + escHtml(p.experience||'') + '"></div></div>';
   html += '<div class="form-grid cd-g cd-g3">' +
-    '<div><div class="form-label">Mong muốn</div><textarea class="form-textarea" id="cv-desire" rows="3">' + escHtml(p.desire||'') + '</textarea></div>' +
+    '<div><div class="form-label">Mong muốn (kỳ vọng cho buổi cố vấn)</div><textarea class="form-textarea" id="cv-desire" rows="3">' + escHtml(p.desire||'') + '</textarea></div>' +
     '<div><div class="form-label">Barrier (rào cản)</div><textarea class="form-textarea" id="cv-barrier" rows="3">' + escHtml(p.barrier||'') + '</textarea></div>' +
     '<div><div class="form-label">Follow up</div><textarea class="form-textarea" id="cv-followup" rows="3">' + escHtml(p.followUp||'') + '</textarea></div></div>';
   html += '</div></div>';
@@ -3668,8 +3675,6 @@ function renderConsultationDetail(cid) {
     });
   }
   html += '</div>';
-  html += '<textarea class="form-textarea" id="cv-newlog" rows="2" placeholder="Ghi lại nội dung trao đổi, kết quả cuộc gọi/meeting..." style="margin-top:10px"></textarea>';
-  html += '<button class="submit-btn" style="margin-top:10px" onclick="addConsultLog(\'' + c.id + '\')">+ Thêm ghi chú</button>';
   html += '</div></div>';
   html += '</div></div>';
 
@@ -3783,8 +3788,8 @@ function saveConsultationAll(cid) {
     ['Next step', c.nextStep, document.getElementById('cv-nextstep').value.trim()],
     ['Deadline next step', c.nextStepDeadline, document.getElementById('cv-deadline').value],
     ['Học vấn', c.profile.education, document.getElementById('cv-education').value.trim()],
-    ['Kinh nghiệm', c.profile.experience, document.getElementById('cv-experience').value.trim()],
-    ['Mong muốn', c.profile.desire, document.getElementById('cv-desire').value.trim()],
+    ['Kinh nghiệm apply', c.profile.experience, document.getElementById('cv-experience').value.trim()],
+    ['Mong muốn (kỳ vọng cho buổi cố vấn)', c.profile.desire, document.getElementById('cv-desire').value.trim()],
     ['Barrier', c.profile.barrier, document.getElementById('cv-barrier').value.trim()],
     ['Follow up', c.profile.followUp, document.getElementById('cv-followup').value.trim()],
   ];
@@ -10106,7 +10111,88 @@ function progHtml(list){
 function curTotals(D, range){ var c = { leads: 0, bookings: 0, revenue: 0 }; D.leads.forEach(function(l){ if (inRange(l.created_at, range)) c.leads++; }); D.bookings.filter(bookingCounts).forEach(function(b){ if (inRange(b.created_at, range)) { c.bookings++; c.revenue += Number(b.package_price) || 0; } }); return c; }
 
 // ── 1. TỔNG QUAN ĐIỀU HÀNH ──
+
+// ── Phân tích Status tư vấn & thời gian chuyển đổi (Tổng quan điều hành) ──
+var _insLogs;  // undefined = chưa tải · null = lỗi/không có API · {leadId:[{time,text}]}
+function insLoadLogs_() {
+  if (_insLogs !== undefined) return;
+  _insLogs = null;
+  apiGet('getAllLeadLogs', {}).then(function(res){
+    if (!res || !res.data) return;
+    var m = {}; res.data.forEach(function(r){ (m[r.lead_id] = m[r.lead_id] || []).push({ time: r.time_label, text: String(r.text || '') }); });
+    _insLogs = m;
+    if (typeof _reportRerender === 'function' && activeNavId === 'lj-exec') _reportRerender();
+  }).catch(function(){ _insLogs = null; });
+}
+function insStatusTransitions_(logs) {
+  var out = [];
+  (logs || []).forEach(function(g){
+    var re = /(?:🔁 Status|• Status tư vấn):\s*"([^"]*)"\s*→\s*"([^"]*)"/g, m, t = parseVNDateTime(g.time);
+    while ((m = re.exec(g.text))) out.push({ from: m[1], to: m[2], at: t });
+  });
+  return out.sort(function(a, b){ return (a.at || 0) - (b.at || 0); });
+}
+function insFmtDur_(ms) {
+  if (ms == null || !isFinite(ms)) return '—';
+  var h = ms / 3600000; if (h < 1) return Math.max(1, Math.round(ms / 60000)) + ' phút';
+  if (h < 48) return (Math.round(h * 10) / 10) + ' giờ';
+  return (Math.round(h / 24 * 10) / 10) + ' ngày';
+}
+function insStatusJourney_(D, range) {
+  var STS = CONSULT_STATUS.concat([LEAD_CONVERTED_STATUS]), reached = {}, cnt = {}, total = 0;
+  STS.forEach(function(x){ cnt[x] = 0; });
+  var idx = insLeadIndex_(D.leads), firstBuy = {};
+  D.bookings.forEach(function(b){
+    if (!bookingCounts(b)) return; var l = idx(b), d = parseLeadCreated(b.created_at); if (!l || !d) return;
+    var k = l.lead_id; if (!firstBuy[k] || d < firstBuy[k]) firstBuy[k] = d;
+  });
+  var dContact = [], dBook = [], dBuyFromConsult = [], dBuyFromLead = [];
+  D.leads.forEach(function(l){
+    if (!inRange(l.created_at, range)) return;
+    total++;
+    var tr = insStatusTransitions_(_insLogs && _insLogs[l.lead_id]), set = {}, st = String(l.status || '').trim();
+    tr.forEach(function(t){ set[t.from] = 1; set[t.to] = 1; });
+    if (st) set[st] = 1;
+    var created = parseLeadCreated(l.created_at), meet = l.date ? parseSheetDate(l.date) : null;
+    var meetAt = meet; if (meet && l.time) { var hm = /(\d{1,2}):(\d{2})/.exec(String(l.time)); if (hm) meetAt = new Date(meet.getFullYear(), meet.getMonth(), meet.getDate(), +hm[1], +hm[2]); }
+    var cAt = null; if (l.contacted_date) { cAt = parseSheetDate(l.contacted_date); var ch = /(\d{1,2}):(\d{2})/.exec(String(l.contacted_time || '')); if (cAt && ch) cAt = new Date(cAt.getFullYear(), cAt.getMonth(), cAt.getDate(), +ch[1], +ch[2]); }
+    var bought = isRegisteredResult(l.result) || st === LEAD_CONVERTED_STATUS || !!firstBuy[l.lead_id];
+    if (cAt) set['Đang liên hệ'] = 1;               // suy từ ngày liên hệ
+    if (meet) set['Đã chốt lịch'] = 1;               // suy từ ngày hẹn
+    if (bought) { set['Đã tư vấn xong'] = 1; set[LEAD_CONVERTED_STATUS] = 1; }
+    STS.forEach(function(x){ if (set[x]) cnt[x]++; });
+    if (created && cAt && cAt >= created) dContact.push(cAt - created);
+    var bookT = tr.filter(function(t){ return t.to === 'Đã chốt lịch' && t.at; })[0];
+    var bookAt = bookT ? bookT.at : null;
+    if (cAt && bookAt && bookAt >= cAt) dBook.push(bookAt - cAt);
+    else if (cAt && meet && !bookAt) { var u = parseLeadCreated(l.updated_at); if (u && u >= cAt && u <= meetAt) dBook.push(u - cAt); }
+    var buy = firstBuy[l.lead_id];
+    if (buy && meetAt && buy >= meetAt) dBuyFromConsult.push(buy - meetAt);
+    if (buy && created && buy >= created) dBuyFromLead.push(buy - created);
+  });
+  var avg = function(a){ return a.length ? a.reduce(function(x, y){ return x + y; }, 0) / a.length : null; };
+  var med = function(a){ if (!a.length) return null; var b = a.slice().sort(function(x, y){ return x - y; }); return b[Math.floor(b.length / 2)]; };
+  return { total: total, cnt: cnt, sts: STS, t: {
+    contact: { n: dContact.length, avg: avg(dContact), med: med(dContact) },
+    book: { n: dBook.length, avg: avg(dBook), med: med(dBook) },
+    buyC: { n: dBuyFromConsult.length, avg: avg(dBuyFromConsult), med: med(dBuyFromConsult) },
+    buyL: { n: dBuyFromLead.length, avg: avg(dBuyFromLead), med: med(dBuyFromLead) } } };
+}
+function insJourneyHtml_(J) {
+  var hasLogs = !!_insLogs;
+  var rows = J.sts.map(function(x){ var n = J.cnt[x]; return '<tr><td><b>' + escHtml(x) + '</b></td><td>' + n + '</td><td>' + (J.total ? Math.round(n / J.total * 100) + '%' : '—') + '</td></tr>'; }).join('');
+  var T = J.t, tr = function(label, o){ return '<tr><td>' + label + '</td><td><b>' + insFmtDur_(o.avg) + '</b></td><td>' + insFmtDur_(o.med) + '</td><td>' + o.n + '</td></tr>'; };
+  var note = hasLogs ? 'Đếm theo lịch sử đổi trạng thái đã ghi + trạng thái hiện tại.' : 'Chưa có lịch sử đổi trạng thái (hoặc đang tải) — tạm đếm theo trạng thái hiện tại và ngày liên hệ / ngày hẹn. Số liệu sẽ chính xác dần khi nhân viên đổi trạng thái.';
+  return '<div class="rp-sec">Hành trình trạng thái tư vấn</div><div class="rp-card">' +
+    '<div style="font-size:12px;color:var(--muted);margin-bottom:8px">Số khách ĐÃ TỪNG ở từng trạng thái (trên ' + J.total + ' lead tạo trong kỳ). ' + note + '</div>' +
+    tbl(['TRẠNG THÁI', 'SỐ KHÁCH ĐÃ TỪNG', '% LEAD'], rows, []) + '</div>' +
+    '<div class="rp-sec">Thời gian trung bình giữa các bước</div><div class="rp-card">' +
+    tbl(['BƯỚC', 'TRUNG BÌNH', 'TRUNG VỊ', 'SỐ MẪU'],
+      tr('Lead tạo → liên hệ lần đầu', T.contact) + tr('Liên hệ → chốt được lịch tư vấn', T.book) + tr('Buổi tư vấn → mua hàng', T.buyC) + tr('Lead tạo → mua hàng', T.buyL), []) +
+    '<div style="font-size:12px;color:var(--muted);margin-top:8px">Mua hàng = booking đã xác nhận/hoàn tất khớp lead qua email/SĐT. Chỉ tính các khách có đủ mốc thời gian.</div></div>';
+}
 window.renderExecPage = function(){
+  insLoadLogs_();
   var range = reportPeriodRange(), prev = reportPrevPeriodRange(), D = insD_(), E = insightExec_(D, range, prev), pv = curTotals(D, prev), c = E.cur;
   var tp = targetsProg(range, c), conv = E.funnel.lead ? Math.round(E.funnel.registered / E.funnel.lead * 100) : null;
   var lab = { hire: 'Tuyển / giảm tải', content: 'Marketing', event: 'Webinar / khoá học', sale: 'Sale', target: 'Mục tiêu', data: 'Dữ liệu' }, lv = { 0: 'red', 1: 'amber', 2: 'blue' };
@@ -10122,6 +10208,7 @@ window.renderExecPage = function(){
   h += actions(items);
   h += '<div class="rp-sec">Tiến độ so với mục tiêu</div><div class="rp-card">' + progHtml(tp) + '</div>';
   h += '<div class="rp-sec">Phễu khách hàng</div><div class="rp-card">' + funnel(E.funnel) + '</div>';
+  h += insJourneyHtml_(insStatusJourney_(D, range));
   var tk = Object.keys(E.topics).sort(function(a, b){ return E.topics[b].n - E.topics[a].n; });
   h += targetsDet(tp);
   if (tk.length) h += det('Chủ đề khách hay hỏi (gợi ý webinar)', tbl(['CHỦ ĐỀ', 'SỐ LẦN', 'NGÀNH HỎI NHIỀU'], tk.map(function(t){ var x = E.topics[t], top = Object.keys(x.by).sort(function(a, b){ return x.by[b] - x.by[a]; }).slice(0, 2); return '<tr><td><b>' + escHtml(t) + '</b></td><td>' + x.n + '</td><td>' + top.map(function(d){ return escHtml(d) + ' (' + x.by[d] + ')'; }).join(', ') + '</td></tr>'; }).join(''), []));
