@@ -3624,9 +3624,10 @@ function renderConsultationDetail(cid) {
 
   // ── Ghi chú tư vấn (nội bộ): lưới 2-3 cột cho gọn ──
   html += '<div class="card" style="margin-bottom:12px"><div class="card-header"><div class="card-header-left">Ghi chú tư vấn (nội bộ)</div></div><div style="padding:0 24px 18px">';
-  html += '<div class="form-label">Kinh nghiệm apply</div><input class="form-input" id="cv-experience" value=" rows="3">' + escHtml(p.experience||'') + '"></div></div>';
   html += '<div class="form-grid cd-g cd-g3">' +
+    '<div><div class="form-label">Kinh nghiệm apply</div><textarea class="form-textarea" id="cv-experience" rows="3">' + escHtml(p.experience||'') + '</textarea></div>' +
     '<div><div class="form-label">Mong muốn (kỳ vọng cho buổi cố vấn)</div><textarea class="form-textarea" id="cv-desire" rows="3">' + escHtml(p.desire||'') + '</textarea></div>' +
+    '</div>';
   html += '</div></div>';
   html += '</div><div class="cd-side">';
 
@@ -3784,11 +3785,8 @@ function saveConsultationAll(cid) {
     ['Kết quả', c.result, resultVal],
     ['Next step', c.nextStep, document.getElementById('cv-nextstep').value.trim()],
     ['Deadline next step', c.nextStepDeadline, document.getElementById('cv-deadline').value],
-    ['Học vấn', c.profile.education, document.getElementById('cv-education').value.trim()],
     ['Kinh nghiệm apply', c.profile.experience, document.getElementById('cv-experience').value.trim()],
     ['Mong muốn (kỳ vọng cho buổi cố vấn)', c.profile.desire, document.getElementById('cv-desire').value.trim()],
-    ['Barrier', c.profile.barrier, document.getElementById('cv-barrier').value.trim()],
-    ['Follow up', c.profile.followUp, document.getElementById('cv-followup').value.trim()],
   ];
 
   var changedLines = [];
@@ -3814,11 +3812,8 @@ function saveConsultationAll(cid) {
   c.nextStep = document.getElementById('cv-nextstep').value.trim();
   c.nextStepDeadline = document.getElementById('cv-deadline').value;
   c.profile = {
-    education: document.getElementById('cv-education').value.trim(),
     experience: document.getElementById('cv-experience').value.trim(),
     desire: document.getElementById('cv-desire').value.trim(),
-    barrier: document.getElementById('cv-barrier').value.trim(),
-    followUp: document.getElementById('cv-followup').value.trim(),
     customerType: document.getElementById('cv-customertype').value,
     region: document.getElementById('cv-region').value,
     studentYear: document.getElementById('cv-studentyear').value,
