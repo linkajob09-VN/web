@@ -852,7 +852,7 @@ function buildAdviseeFromBooking(b, allSessions) {
     var timeEnd = '';
     if (row.scheduled_time) {
       var parts = String(row.scheduled_time).split(':');
-      var mins = (Number(parts[0])||0) * 60 + (Number(parts[1])||0) + (Number(row.duration_minutes) || 20);
+      var mins = (Number(parts[0])||0) * 60 + (Number(parts[1])||0) + (Number(row.duration_minutes) || 60);
       timeEnd = (Math.floor(mins/60)%24 < 10 ? '0':'') + (Math.floor(mins/60)%24) + ':' + (mins%60 < 10 ? '0':'') + (mins%60);
     }
 
@@ -3825,20 +3825,25 @@ function saveConsultationAll(cid) {
     cvLink: document.getElementById('cv-cvlink').value.trim(),
   };
 
-  var savePromise = persistLead(c);
-
-  // Đổi ngày/giờ ngay trong form → cũng phải cập nhật buổi (Sessions) + Google Calendar,
-  // nếu không lịch Calendar vẫn giữ giờ cũ. Không gửi email (muốn báo khách thì dùng nút "Đổi lịch & báo khách").
+  // Đổi ngày/giờ ngay trong form → phải cập nhật cả buổi (Sessions) + Google Calendar.
+  // Gọi rescheduleMeeting TRƯỚC khi saveLead: saveLead ghi đè ngày/giờ mới lên Sheet, nếu để sau thì
+  // backend không còn thấy giờ cũ nên không tìm ra event để dời. Gửi kèm old_date/old_time/meet_link
+  // để backend tìm đúng event. Không gửi email (muốn báo khách thì dùng "Đổi lịch & báo khách").
   var _newDate = c.date || '', _newTime = String(c.time || '').slice(0, 5);
-  if (_oldDate && _newDate && _newTime && (_oldDate !== _newDate || _oldTime !== _newTime)) {
-    savePromise.then(function(){
-      return apiPost({ action: 'rescheduleMeeting', session_id: c.sessionId || '', lead_id: c.id, new_date: _newDate, new_time: _newTime,
-        reason: 'Sửa ngày/giờ trong hồ sơ lead (' + _oldDate + ' ' + _oldTime + ' → ' + _newDate + ' ' + _newTime + ')', notify: false, changed_by: currentUser && currentUser.email });
+  var _needResched = !!(_oldDate && _newDate && _newTime && (_oldDate !== _newDate || _oldTime !== _newTime));
+  var savePromise;
+  if (_needResched) {
+    savePromise = apiPost({ action: 'rescheduleMeeting', session_id: c.sessionId || '', lead_id: c.id,
+      old_date: _oldDate, old_time: _oldTime, new_date: _newDate, new_time: _newTime, meet_link: c.meetLink || '', duration_minutes: 20,
+      reason: 'Sửa ngày/giờ trong hồ sơ lead (' + _oldDate + ' ' + _oldTime + ' → ' + _newDate + ' ' + _newTime + ')', notify: false, changed_by: currentUser && currentUser.email
     }).then(function(res){
-      if (res && res.success) {
-        toast(res.calendar && String(res.calendar).indexOf('error') > -1 ? 'Đã lưu, nhưng Google Calendar chưa cập nhật được' : 'Đã cập nhật lịch trên Google Calendar ✅', res.calendar && String(res.calendar).indexOf('error') > -1 ? 'error' : 'success');
-      } else toast((res && res.error) || 'Đã lưu lead nhưng chưa cập nhật được Google Calendar', 'error');
-    }).catch(function(e){ toast('Lỗi cập nhật Calendar: ' + e.message, 'error'); });
+      var calErr = res && res.calendar && String(res.calendar).indexOf('error') > -1;
+      if (res && res.success) toast(calErr ? 'Đã lưu, nhưng Google Calendar chưa cập nhật được' : 'Đã cập nhật lịch trên Google Calendar ✅', calErr ? 'error' : 'success');
+      else toast((res && res.error) || 'Chưa cập nhật được Google Calendar', 'error');
+    }).catch(function(e){ toast('Lỗi cập nhật Calendar: ' + e.message, 'error'); })
+      .then(function(){ return persistLead(c); });
+  } else {
+    savePromise = persistLead(c);
   }
 
   if (changedLines.length > 0) {
@@ -7220,7 +7225,7 @@ function confirmBookSession() {
   if (btn) { btn.innerHTML = '<span class="spinner"></span> Đang đặt lịch...'; btn.disabled = true; }
 
   apiPost({
-    action: 'bookSession',
+    action: 'bookSession', duration_minutes: 60,
     slot_id: sel.slotId,
     booking_id: ae.bookingId,
     session_number: ctx.sessionNo,
@@ -9765,7 +9770,7 @@ function saveReschedule_() {
   if (!d || !t) { toast('Chọn ngày và giờ mới', 'error'); return; }
   if (!reason) { toast('Vui lòng nhập lý do đổi lịch', 'error'); return; }
   var btn = document.getElementById('rs-save'); btn.disabled = true; btn.textContent = 'Đang lưu...';
-  apiPost({ action: 'rescheduleMeeting', session_id: m.sessionId || '', lead_id: m.leadId || '', new_date: d, new_time: t,
+  apiPost({ action: 'rescheduleMeeting', session_id: m.sessionId || '', lead_id: m.leadId || '', old_date: m.date || '', old_time: String(m.time || '').slice(0, 5), duration_minutes: (m.leadId ? 20 : 60), new_date: d, new_time: t,
             reason: reason, notify: document.getElementById('rs-notify').checked, changed_by: currentUser.email }).then(function(res){
     if (!res || !res.success) { toast((res && res.error) || 'Không đổi được lịch', 'error'); btn.disabled = false; btn.textContent = 'Lưu lịch mới'; return; }
     var cal = res.emails_sent ? ' Đã gửi email cho ' + res.emails_sent + ' người.' : (res.mail_error ? ' (Chưa gửi được email — hãy báo khách thủ công.)' : '');
@@ -11123,7 +11128,7 @@ function ljSbConfirm() {
   };
   var book = function () {
     apiPost({
-      action: 'bookSession', slot_id: sel.slotId, booking_id: ae.bookingId, session_number: ctx.sessionNo, advisee_name: ae.name,
+      action: 'bookSession', duration_minutes: 60, slot_id: sel.slotId, booking_id: ae.bookingId, session_number: ctx.sessionNo, advisee_name: ae.name,
       by: currentUser && currentUser.email, cv_link: cv.trim(), questions: q.trim(), other_docs: links.trim(),
     }).then(function (res) {
       if (!res || !res.success) { fail('Không đặt được: ' + ((res && res.error) || 'slot có thể vừa bị chọn')); ljSbLoadSlots_(); return; }
