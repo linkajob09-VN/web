@@ -3047,6 +3047,8 @@ function loadStaffLeadsAsync() {
         studentYear: r.student_year || '', experienceYears: r.experience_years || '',
         interestedDept: r.interested_dept || '', interestedLevel: r.interested_level || '',
         sourceChannel: r.source_channel || '',
+        // đồng bộ với mergeLeadRow: câu hỏi + link CV khách điền ở widget "Đăng ký tư vấn"
+        question: r.question || '', cvLink: r.cv_link || '',
       };
       if (!existing) MOCK.consultations.push(obj);
     });
@@ -3551,7 +3553,7 @@ function resultOptionsHtml(cur) {
 
 // Tư vấn dịch vụ — đúng field "quan tâm dịch vụ" khách chọn ở widget đăng ký tư vấn,
 // staff có thể sửa lại trong lúc tư vấn nếu nhu cầu khách thay đổi.
-const CONSULT_ABOUT_OPTIONS = ['Cố vấn 1-1','Khoá học','Cả 2'];
+const CONSULT_ABOUT_OPTIONS = ['Cố vấn 1-1','Khoá học','Cả 2','Chưa rõ — cần tư vấn thêm'];
 
 // Status khiến lead/consultation KHÔNG hiển thị trên dashboard Admin/Sale nữa —
 // dữ liệu vẫn còn nguyên trong Sheet ("Excel"), chỉ ẩn ở giao diện.
@@ -3581,15 +3583,13 @@ function renderConsultationDetail(cid) {
   var backLabel = c.date ? 'Lịch tư vấn' : 'Khách chưa đặt lịch';
 
   var html = '';
-  html += '<div style="display:flex;align-items:center;gap:8px;margin-bottom:20px;font-size:13px">';
+  html += '<div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;font-size:13px">';
   html += '<button onclick="switchStaffDetailTab(\'' + backTab + '\')" style="background:none;border:none;color:var(--brand);cursor:pointer;font-family:inherit;font-size:13px;padding:0">← ' + backLabel + '</button>';
   html += '<span style="color:var(--border)">›</span><span style="color:var(--muted)">' + c.name + '</span>';
   html += '</div>';
 
-  // ── Card 1: Thông tin khách hàng — TOÀN BỘ nội dung khách điền ở widget
-  // "Đăng ký tư vấn", Staff sửa được trực tiếp vì quá trình tư vấn có thể
-  // phát sinh điều chỉnh (khách đổi ý định, cập nhật CV mới...). ──
-  html += '<div class="card" style="margin-bottom:16px">';
+  html += '<div class="cd-layout"><div class="cd-main">';
+  html += '<div class="card" style="margin-bottom:12px">';
   html += '<div class="card-header"><div class="card-header-left">Thông tin khách hàng</div></div>';
   html += '<div style="padding:0 24px 20px">';
   html += '<div style="display:flex;gap:16px;align-items:flex-start;margin-bottom:4px">';
@@ -3600,10 +3600,10 @@ function renderConsultationDetail(cid) {
   html += '<div><div class="form-label">Email</div><input class="form-input" id="cv-email" type="email" value="' + String(leadEmailForInput(c)).replace(/"/g,'&quot;') + '"></div>';
   html += '</div></div>';
 
-  html += '<div class="form-grid" style="padding:16px 0 0">';
+  html += '<div class="form-grid cd-g">';
   html += '<div><div class="form-label">Nguồn</div><input class="form-input" id="cv-topsource" value="' + String(c.source||'').replace(/"/g,'&quot;') + '"></div>';
   html += '<div><div class="form-label">Quan tâm dịch vụ</div><select class="form-select" id="cv-consultabout">' + CONSULT_ABOUT_OPTIONS.map(function(o){ return '<option' + (o===c.consultAbout?' selected':'') + '>' + o + '</option>'; }).join('') + (CONSULT_ABOUT_OPTIONS.indexOf(c.consultAbout) === -1 && c.consultAbout ? '<option selected>' + c.consultAbout + '</option>' : '') + '</select></div>';
-  html += '<div><div class="form-label">Bạn hiện là</div><select class="form-select" id="cv-customertype" onchange="cvToggleCustomerTypeFields()"><option value="">-- Chọn --</option><option value="Sinh viên"' + (p.customerType==='Sinh viên'?' selected':'') + '>Sinh viên</option><option value="Đã đi làm"' + (p.customerType==='Đã đi làm'?' selected':'') + '>Đã đi làm</option></select></div>';
+  html += '<div><div class="form-label">Bạn hiện là</div><select class="form-select" id="cv-customertype" onchange="cvToggleCustomerTypeFields()"><option value="">-- Chọn --</option><option value="Sinh viên"' + (p.customerType==='Sinh viên'?' selected':'') + '>Sinh viên</option><option value="Mới tốt nghiệp"' + (p.customerType==='Mới tốt nghiệp'?' selected':'') + '>Mới tốt nghiệp</option><option value="Đã đi làm"' + (p.customerType==='Đã đi làm'?' selected':'') + '>Đã đi làm</option>' + (p.customerType && ['Sinh viên','Mới tốt nghiệp','Đã đi làm'].indexOf(p.customerType) === -1 ? '<option selected>' + escHtml(p.customerType) + '</option>' : '') + '</select></div>';
   html += '<div id="cv-studentyear-wrap" style="display:' + (p.customerType==='Sinh viên'?'block':'none') + '"><div class="form-label">Sinh viên năm mấy</div><select class="form-select" id="cv-studentyear"><option value="">-- Chọn --</option>' + ['Năm 1','Năm 2','Năm 3','Năm 4','Đã tốt nghiệp'].map(function(y){ return '<option' + (p.studentYear===y?' selected':'') + '>' + y + '</option>'; }).join('') + '</select></div>';
   html += '<div id="cv-expyears-wrap" style="display:' + (p.customerType==='Đã đi làm'?'block':'none') + '"><div class="form-label">Kinh nghiệm bao lâu</div><select class="form-select" id="cv-expyears"><option value="">-- Chọn --</option>' + ['Dưới 1 năm','1-2 năm','2-5 năm','5-10 năm','Trên 10 năm'].map(function(y){ return '<option' + (p.experienceYears===y?' selected':'') + '>' + y + '</option>'; }).join('') + '</select></div>';
   html += '<div class="full"><div class="form-label">Phòng ban / vị trí quan tâm <span style="color:var(--muted);font-weight:400">(chọn được nhiều)</span></div>' + cvFieldPicker(p.interestedDept) + '</div>';
@@ -3613,43 +3613,50 @@ function renderConsultationDetail(cid) {
   html += '<div class="full"><div class="form-label">Câu hỏi muốn tư vấn</div><textarea class="form-textarea" id="cv-question" rows="2">' + (p.question||'') + '</textarea></div>';
   html += '<div class="full"><div class="form-label">CV</div><div style="display:flex;gap:8px"><input class="form-input" id="cv-cvlink" placeholder="Link CV khách gửi..." value="' + String(leadCvForInput(c)).replace(/"/g,'&quot;') + '" style="flex:1">' + (safeHttpUrl(leadCvForInput(c)) ? '<a href="' + safeHttpUrl(leadCvForInput(c)) + '" target="_blank" rel="noopener" class="update-btn" style="flex-shrink:0;white-space:nowrap">🔗 Mở CV</a>' : '') + '</div></div>';
   html += '</div>';
+  html += '</div></div>';
 
-  // Lịch tư vấn — gộp vào cùng card, sửa được (đổi lịch khi cần), có nút tạo Meet nhanh
-  html += '<div style="margin:4px 24px 0;padding:16px;border-radius:10px;background:var(--bg);border:1.5px solid var(--border)">';
+  // ── Ghi chú tư vấn (nội bộ): lưới 2-3 cột cho gọn ──
+  html += '<div class="card" style="margin-bottom:12px"><div class="card-header"><div class="card-header-left">Ghi chú tư vấn (nội bộ)</div></div><div style="padding:0 24px 18px">';
+  html += '<div class="form-grid cd-g cd-g2"><div><div class="form-label">Học vấn</div><input class="form-input" id="cv-education" value="' + escHtml(p.education||'') + '"></div>' +
+    '<div><div class="form-label">Kinh nghiệm</div><input class="form-input" id="cv-experience" value="' + escHtml(p.experience||'') + '"></div></div>';
+  html += '<div class="form-grid cd-g cd-g3">' +
+    '<div><div class="form-label">Mong muốn</div><textarea class="form-textarea" id="cv-desire" rows="3">' + escHtml(p.desire||'') + '</textarea></div>' +
+    '<div><div class="form-label">Barrier (rào cản)</div><textarea class="form-textarea" id="cv-barrier" rows="3">' + escHtml(p.barrier||'') + '</textarea></div>' +
+    '<div><div class="form-label">Follow up</div><textarea class="form-textarea" id="cv-followup" rows="3">' + escHtml(p.followUp||'') + '</textarea></div></div>';
+  html += '</div></div>';
+  html += '</div><div class="cd-side">';
+
+  // ── Lịch tư vấn (cột phải) ──
+  html += '<div class="card" style="margin-bottom:12px"><div style="padding:14px 16px">';
+  html += '<div>';
   html += '<div class="form-label" style="margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;gap:10px"><span>📅 Lịch tư vấn' + (!c.date ? ' <span style="color:#B45309;font-weight:700">— chưa chốt lịch</span>' : '') + '</span>' +
     (c.date ? '<button type="button" class="update-btn" style="font-size:12px" onclick="openConsultReschedule(\'' + c.id + '\')">📅 Đổi lịch & báo khách qua email</button>' : '') + '</div>';
-  html += '<div style="display:grid;grid-template-columns:1fr 1fr 2fr;gap:10px">';
+  html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">';
   html += '<div><input class="form-input" id="cv-date" type="date" value="' + (c.date||'') + '"></div>';
   html += '<div><input class="form-input" id="cv-time" type="time" value="' + (c.time||'') + '"></div>';
-  html += '<div style="display:flex;gap:6px">';
+  html += '<div style="display:flex;gap:6px;grid-column:1/-1;flex-wrap:wrap">';
   html += '<input class="form-input" id="cv-meetlink" placeholder="Link Google Meet..." value="' + String(c.meetLink||'').replace(/"/g,'&quot;') + '" style="flex:1">';
   html += '<button type="button" class="update-btn" style="flex-shrink:0;white-space:nowrap" id="cv-genmeet-btn" onclick="generateMeetForConsult(\'' + c.id + '\')">🎥 Tạo Meet</button>';
   html += (c.meetLink ? '<a href="' + c.meetLink + '" target="_blank" class="detail-btn" style="flex-shrink:0">Vào Meet</a>' : '');
   html += '</div></div></div>';
   html += '</div></div>';
 
-  // ── Card 2: Tiến trình tư vấn — ghi chú/đánh giá nội bộ của Staff ──
-  html += '<div class="card" style="margin-bottom:16px"><div class="card-header"><div class="card-header-left">Tiến trình tư vấn (nội bộ)</div></div>';
-  html += '<div class="form-grid">';
+  // ── Tiến trình tư vấn (cột phải) ──
+  html += '<div class="card" style="margin-bottom:12px"><div class="card-header"><div class="card-header-left">Tiến trình tư vấn</div></div>';
+  html += '<div class="form-grid cd-g cd-g2" style="padding:0 16px 14px">';
   html += '<div><div class="form-label">Status tư vấn</div><select class="form-select" id="cv-status">' + CONSULT_STATUS.map(function(st){ return '<option' + (st===c.status?' selected':'') + '>' + st + '</option>'; }).join('') + extraStatusOption(c.status) + '</select></div>';
   html += '<div><div class="form-label">Kết quả</div><select class="form-select" id="cv-result">' + resultOptionsHtml(c.result) + '</select></div>';
-  html += '<div class="full"><div class="form-label">Next step (kèm deadline)</div><div style="display:grid;grid-template-columns:2fr 1fr;gap:10px"><input class="form-input" id="cv-nextstep" value="' + (c.nextStep||'') + '" placeholder="Việc cần làm tiếp theo..."><input class="form-input" id="cv-deadline" type="date" value="' + (c.nextStepDeadline||'') + '"></div></div>';
-  html += '<div class="full"><div class="form-label">Học vấn</div><input class="form-input" id="cv-education" value="' + (p.education||'') + '"></div>';
-  html += '<div class="full"><div class="form-label">Kinh nghiệm</div><input class="form-input" id="cv-experience" value="' + (p.experience||'') + '"></div>';
-  html += '<div class="full"><div class="form-label">Mong muốn</div><textarea class="form-textarea" id="cv-desire" rows="2">' + (p.desire||'') + '</textarea></div>';
-  html += '<div class="full"><div class="form-label">Barrier (rào cản)</div><textarea class="form-textarea" id="cv-barrier" rows="2">' + (p.barrier||'') + '</textarea></div>';
-  html += '<div class="full"><div class="form-label">Follow up</div><textarea class="form-textarea" id="cv-followup" rows="2">' + (p.followUp||'') + '</textarea></div>';
-  html += '</div>';
+  html += '<div class="full"><div class="form-label">Next step (kèm deadline)</div><div style="display:grid;grid-template-columns:1fr 140px;gap:10px"><input class="form-input" id="cv-nextstep" value="' + (c.nextStep||'') + '" placeholder="Việc cần làm tiếp theo..."><input class="form-input" id="cv-deadline" type="date" value="' + (c.nextStepDeadline||'') + '"></div></div>';
+  html += '</div></div>';
+
+  // ── 1 nút lưu duy nhất cho TOÀN BỘ trang (luôn nằm trong tầm mắt ở cột phải) ──
+  html += '<div class="cd-save">';
+  html += '<button class="submit-btn" style="width:100%" id="cv-save-all-btn" onclick="saveConsultationAll(\'' + c.id + '\')">💾 Lưu tất cả thay đổi</button>';
   html += '</div>';
 
-  // ── 1 nút lưu duy nhất cho TOÀN BỘ trang ──
-  html += '<div style="display:flex;justify-content:flex-end;margin-bottom:16px">';
-  html += '<button class="submit-btn" id="cv-save-all-btn" onclick="saveConsultationAll(\'' + c.id + '\')">💾 Lưu tất cả thay đổi</button>';
-  html += '</div>';
-
-  // ── Nhật ký hoạt động — gộp chung ghi chú tay + log tự động khi Lưu (đổi field gì, lúc nào, ai đổi) ──
   html += '<div class="card"><div class="card-header"><div class="card-header-left">📝 Nhật ký hoạt động (' + c.log.length + ')</div></div>';
   html += '<div style="padding:4px 24px 20px">';
+  html += '<div style="max-height:230px;overflow:auto">';
   if (c.log.length === 0) {
     html += '<div class="empty-state" style="padding:24px 0"><div class="icon">🗒</div>Chưa có hoạt động nào</div>';
   } else {
@@ -3660,8 +3667,10 @@ function renderConsultationDetail(cid) {
       html += '</div>';
     });
   }
-  html += '<textarea class="form-textarea" id="cv-newlog" rows="3" placeholder="Ghi lại nội dung trao đổi, kết quả cuộc gọi/meeting..." style="margin-top:14px"></textarea>';
+  html += '</div>';
+  html += '<textarea class="form-textarea" id="cv-newlog" rows="2" placeholder="Ghi lại nội dung trao đổi, kết quả cuộc gọi/meeting..." style="margin-top:10px"></textarea>';
   html += '<button class="submit-btn" style="margin-top:10px" onclick="addConsultLog(\'' + c.id + '\')">+ Thêm ghi chú</button>';
+  html += '</div></div>';
   html += '</div></div>';
 
   return html;
@@ -10257,6 +10266,36 @@ window.renderSalesPerformancePage = function(partial){
 </script>
 
 <style>
+/* ── Trang chi tiết khách tư vấn: bố cục 2 cột gọn (hồ sơ bên trái · lịch/tiến trình/lưu/nhật ký bên phải) ── */
+.cd-layout{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(330px,1fr);gap:14px;align-items:start}
+.cd-main,.cd-side{min-width:0}
+.cd-side{position:sticky;top:12px;max-height:calc(100vh - 24px);overflow-y:auto;padding-right:2px}
+.form-grid.cd-g{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px 12px;padding:12px 0 0}
+.form-grid.cd-g2{grid-template-columns:repeat(2,minmax(0,1fr))}
+.form-grid.cd-g3{grid-template-columns:repeat(3,minmax(0,1fr))}
+.cd-g .full{grid-column:1/-1}
+.cd-main .form-label,.cd-side .form-label{font-size:12px;margin-bottom:4px}
+.cd-main .form-input,.cd-main .form-select,.cd-main .form-textarea,.cd-side .form-input,.cd-side .form-select,.cd-side .form-textarea{padding:7px 10px;font-size:13px}
+.cd-main .form-select,.cd-side .form-select{padding-right:28px}
+.cd-main .form-textarea,.cd-side .form-textarea{min-height:48px}
+.cd-main .card-header,.cd-side .card-header{padding-top:12px;padding-bottom:8px}
+.cd-save{position:sticky;bottom:0;z-index:2;background:linear-gradient(to top,var(--bg,#F7F5F0) 70%,transparent);padding:6px 0 12px}
+@media(max-width:1100px){.cd-layout{grid-template-columns:1fr}.cd-side{position:static;max-height:none;overflow:visible}.form-grid.cd-g,.form-grid.cd-g3{grid-template-columns:repeat(2,minmax(0,1fr))}}
+/* chọn phòng ban / vị trí: gọn — chip đã chọn + bảng chọn theo nhóm (tab) */
+.cvf-top{display:flex;gap:6px;flex-wrap:wrap;align-items:center;min-height:34px;padding:4px 6px;border:1.5px solid var(--border);border-radius:var(--radius-sm,10px);background:#fff}
+.cvf-ph{font-size:12.5px;color:var(--muted);padding:0 4px}
+.cvf-pill{display:inline-flex;align-items:center;gap:5px;background:var(--brand);color:#fff;border-radius:100px;padding:3px 6px 3px 10px;font-size:12px;font-weight:600}
+.cvf-pill button{background:rgba(255,255,255,.25);border:none;color:#fff;border-radius:50%;width:16px;height:16px;line-height:14px;font-size:11px;cursor:pointer;padding:0}
+.cvf-add{margin-left:auto;background:var(--bg);border:1.5px solid var(--border);border-radius:100px;padding:3px 12px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;color:var(--text)}
+.cvf-add:hover{border-color:var(--brand);color:var(--brand)}
+.cvf-panel{margin-top:6px;border:1.5px solid var(--border);border-radius:var(--radius-sm,10px);background:var(--bg);padding:8px}
+.cvf-tabs{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:8px}
+.cvf-tab{padding:4px 10px;border:none;background:transparent;border-radius:100px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;color:var(--muted)}
+.cvf-tab:hover{color:var(--text)}
+.cvf-tab.act{background:var(--text);color:#fff}
+.cvf-tab b{display:inline-block;min-width:15px;margin-left:4px;padding:0 4px;border-radius:100px;background:var(--brand);color:#fff;font-size:10px}
+</style>
+<style>
 .cvf-g{margin:8px 0 2px;font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
 .cvf-w{display:flex;flex-wrap:wrap;gap:6px}
 .cvf-chip{padding:6px 12px;border:1.5px solid var(--border);background:#fff;border-radius:100px;font-size:13px;cursor:pointer;font-family:inherit;color:var(--text)}
@@ -10276,39 +10315,70 @@ var LJ_FIELD_GROUPS = [
   ['Công nghệ & Dữ liệu', ['IT','AI','Software Engineer','Data Analysis']],
   ['Thiết kế', ['Visual Merchandiser']]
 ];
+// Đúng danh sách “Phòng ban / vị trí quan tâm” trong form Đăng ký tư vấn trên website — hiện thành tab đầu tiên
+// để lựa chọn của khách hiện đúng chip ở trang chi tiết (không bị coi là mục tự nhập).
+var LJ_WIDGET_DEPTS = ['Marketing','Sales/Kinh doanh','Tài chính/Kế toán','Chuỗi cung ứng/Logistics','Nhân sự','Data/Công nghệ','Vận hành','Tư vấn/Consulting','Khác'];
+function cvfGroups_() { return [['Khách chọn ở form đăng ký', LJ_WIDGET_DEPTS]].concat(LJ_FIELD_GROUPS); }
 function deptPrimary_(s) { s = String(s || '').trim(); if (s.indexOf(' / ') > -1) s = s.split(' / ')[0].trim(); return s || 'Không rõ'; }
 function cvFieldPicker(cur) {
-  var toks = String(cur || '').split(' / ').map(function(t){ return t.trim(); }).filter(function(t){ return t && t !== 'Khác'; });
-  var all = []; LJ_FIELD_GROUPS.forEach(function(g){ all = all.concat(g[1]); });
+  var toks = String(cur || '').split(' / ').map(function(t){ return t.trim(); }).filter(Boolean);
+  var all = []; cvfGroups_().forEach(function(g){ all = all.concat(g[1]); });
+  var known = toks.filter(function(t){ return all.indexOf(t) > -1; });
   var other = toks.filter(function(t){ return all.indexOf(t) === -1; }).join(', ');
-  var h = '<div class="cvf"><input type="hidden" id="cv-interesteddept" value="' + escHtml(String(cur || '')) + '">';
-  LJ_FIELD_GROUPS.forEach(function(g){
-    h += '<div class="cvf-g">' + g[0] + '</div><div class="cvf-w">' + g[1].map(function(o){
-      return '<button type="button" class="cvf-chip' + (toks.indexOf(o) > -1 ? ' on' : '') + '" data-v="' + escHtml(o) + '" onclick="cvFieldToggle(this)">' + escHtml(o) + '</button>';
-    }).join('') + '</div>';
-  });
-  h += '<div class="cvf-g">Khác</div><div class="cvf-w"><button type="button" class="cvf-chip cvf-other' + (other ? ' on' : '') + '" onclick="cvFieldToggle(this)">Khác (tự nhập)</button></div>' +
-    '<input class="form-input cvf-other-in" placeholder="Nhập ngành / vị trí khác, cách nhau bằng dấu phẩy" value="' + escHtml(other) + '" oninput="cvFieldSync(this)" style="margin-top:8px;display:' + (other ? 'block' : 'none') + '">' +
-    '<div class="cvf-sel"></div></div>';
-  return h;
+  var html = '<div class="cvf" data-tab="0" data-vals="' + escHtml(JSON.stringify(known)) + '">' +
+    '<input type="hidden" id="cv-interesteddept" value="' + escHtml(String(cur || '')) + '">' +
+    '<div class="cvf-top"><span class="cvf-pills" style="display:contents"></span>' +
+    '<button type="button" class="cvf-add" onclick="cvFieldPanel(this)">＋ Chọn</button></div>' +
+    '<div class="cvf-panel" style="display:none"><div class="cvf-tabs"></div><div class="cvf-w"></div>' +
+    '<input class="form-input cvf-other-in" placeholder="Khác: nhập ngành / vị trí, cách nhau bằng dấu phẩy" value="' + escHtml(other) + '" oninput="cvFieldSync(this)" style="margin-top:8px"></div></div>' +
+    '';
+  var tmp = document.createElement('div'); tmp.innerHTML = html;
+  cvFieldRender(tmp.firstChild);   // dựng sẵn chip đã chọn / tab / danh sách chip của nhóm đầu
+  return tmp.innerHTML;
 }
+function cvfVals_(root) { try { return JSON.parse(root.getAttribute('data-vals') || '[]'); } catch (e) { return []; } }
+function cvfOther_(root) {
+  var inp = root.querySelector('.cvf-other-in'); if (!inp) return [];
+  return inp.value.split(',').map(function(t){ return t.replace(/\s\/\s/g, ' - ').trim(); }).filter(Boolean);
+}
+function cvFieldRender(root) {
+  var vals = cvfVals_(root), other = cvfOther_(root), tab = Number(root.getAttribute('data-tab')) || 0;
+  var pills = vals.concat(other).map(function(v, i){
+    var isOther = i >= vals.length;
+    return '<span class="cvf-pill">' + escHtml(v) + '<button type="button" data-v="' + escHtml(v) + '" data-o="' + (isOther ? 1 : 0) + '" onclick="cvFieldRemove(this)">✕</button></span>';
+  }).join('');
+  root.querySelector('.cvf-pills').innerHTML = pills || '<span class="cvf-ph">Chưa chọn — bấm “＋ Chọn”</span>';
+  root.querySelector('.cvf-tabs').innerHTML = cvfGroups_().map(function(g, gi){
+    var n = g[1].filter(function(o){ return vals.indexOf(o) > -1; }).length;
+    return '<button type="button" class="cvf-tab' + (gi === tab ? ' act' : '') + '" onclick="cvFieldTab(this,' + gi + ')">' + escHtml(g[0]) + (n ? '<b>' + n + '</b>' : '') + '</button>';
+  }).join('');
+  root.querySelector('.cvf-w').innerHTML = (cvfGroups_()[tab] || cvfGroups_()[0])[1].map(function(o){
+    return '<button type="button" class="cvf-chip' + (vals.indexOf(o) > -1 ? ' on' : '') + '" data-v="' + escHtml(o) + '" onclick="cvFieldToggle(this)">' + escHtml(o) + '</button>';
+  }).join('');
+  root.querySelector('#cv-interesteddept').value = vals.concat(other).join(' / ');
+}
+function cvFieldPanel(btn) {
+  var root = btn.closest('.cvf'), pn = root.querySelector('.cvf-panel');
+  pn.style.display = pn.style.display === 'none' ? 'block' : 'none';
+  btn.textContent = pn.style.display === 'none' ? '＋ Chọn' : '✓ Xong';
+}
+function cvFieldTab(btn, gi) { var root = btn.closest('.cvf'); root.setAttribute('data-tab', gi); cvFieldRender(root); }
 function cvFieldToggle(btn) {
-  btn.classList.toggle('on');
-  var root = btn.closest('.cvf');
-  if (btn.classList.contains('cvf-other')) {
-    var inp = root.querySelector('.cvf-other-in'); inp.style.display = btn.classList.contains('on') ? 'block' : 'none';
-    if (btn.classList.contains('on')) inp.focus();
+  var root = btn.closest('.cvf'), v = btn.getAttribute('data-v'), vals = cvfVals_(root), k = vals.indexOf(v);
+  if (k > -1) vals.splice(k, 1); else vals.push(v);
+  root.setAttribute('data-vals', JSON.stringify(vals)); cvFieldRender(root);
+}
+function cvFieldRemove(btn) {
+  var root = btn.closest('.cvf'), v = btn.getAttribute('data-v');
+  if (btn.getAttribute('data-o') === '1') {
+    var inp = root.querySelector('.cvf-other-in');
+    inp.value = cvfOther_(root).filter(function(t){ return t !== v; }).join(', ');
+  } else {
+    root.setAttribute('data-vals', JSON.stringify(cvfVals_(root).filter(function(t){ return t !== v; })));
   }
-  cvFieldSync(btn);
+  cvFieldRender(root);
 }
-function cvFieldSync(el) {
-  var root = el.closest('.cvf'), vals = [];
-  root.querySelectorAll('.cvf-chip.on:not(.cvf-other)').forEach(function(b){ vals.push(b.getAttribute('data-v')); });
-  var ob = root.querySelector('.cvf-other');
-  if (ob.classList.contains('on')) root.querySelector('.cvf-other-in').value.split(',').forEach(function(t){ t = t.replace(/\//g, '-').trim(); if (t) vals.push(t); });
-  root.querySelector('#cv-interesteddept').value = vals.join(' / ');
-  root.querySelector('.cvf-sel').textContent = vals.length ? 'Đã chọn: ' + vals.join(', ') : '';
-}
+function cvFieldSync(el) { cvFieldRender(el.closest('.cvf')); }
 function cvOtherSelect(id, opts, cur) {
   cur = cur || ''; var isOther = cur && opts.indexOf(cur) === -1, sv = isOther ? 'Khác' : cur;
   return '<select class="form-select" id="' + id + '-sel" onchange="cvOtherSync(\'' + id + '\')"><option value="">-- Chọn --</option>' +
