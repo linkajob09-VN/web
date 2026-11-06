@@ -736,6 +736,7 @@ function doLogin() {
       initials: mkInitials(res.name || email),
       subRole: res.sub_role || null,
       staffId: res.staff_id || null,
+      token: res.token || '',
       advisorId: res.advisor_id || null,  
     });
   } else {
@@ -1379,6 +1380,17 @@ function fmtDateVN(ymd) {
 //    nhập (role Advisee) nhưng dữ liệu lấy từ module Khoá học trên Sheet. ──
 // ── Tab "Tài liệu luyện tập": liệt kê mọi tài liệu LinkaJob đang bán.
 //    Đã mua + còn hạn → nút "Sử dụng" (mở landing page của tài liệu); chưa mua → "Xem chi tiết". ──
+var APT_PRACTICE_URL = 'https://linkajob09-vn.github.io/web/luyen-aptitude.html';
+function openAptitudePractice() {
+  var w = window.open('', '_blank');
+  if (w) { w.opener = null; w.document.write('<p style="font-family:sans-serif;padding:24px">Đang mở tài liệu…</p>'); }
+  apiGet('aptitudeTicket', { token: (currentUser && currentUser.token) || '' }).then(function(res){
+    if (res && res.ok && res.ticket) { var u = APT_PRACTICE_URL + '#t=' + res.ticket; if (w) w.location.href = u; else location.href = u; return; }
+    if (w) w.close();
+    toast((res && res.message) || 'Không mở được tài liệu.', 'error');
+    if (res && res.code === 'auth') setTimeout(doLogout, 1500);
+  }).catch(function(){ if (w) w.close(); toast('Lỗi kết nối, vui lòng thử lại.', 'error'); });
+}
 function loadMyDocumentsAsync(c) {
   function esc(v){ return String(v == null ? '' : v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
   function render(list) {
@@ -1387,6 +1399,7 @@ function loadMyDocumentsAsync(c) {
     list.forEach(function(d){
       var owned = !!d.owned, expired = !!d.expired;
       var url = String(d.landing_url || '#');
+      var isApt = owned && d.doc_id === 'aptitude';
       if (owned && url.indexOf('#') === -1) url += (url.indexOf('?') > -1 ? '&' : '?') + 'email=' + encodeURIComponent(currentUser.email);
       html += '<div class="card" style="margin-bottom:14px;padding:20px;display:flex;justify-content:space-between;gap:16px;align-items:center;flex-wrap:wrap">' +
         '<div style="flex:1;min-width:220px"><div style="font-size:16px;font-weight:800">' + esc(d.name) + '</div>' +
@@ -1396,7 +1409,7 @@ function loadMyDocumentsAsync(c) {
                  : expired ? '<span style="color:#B91C1C;font-weight:600">Đã hết hạn ' + esc(fmtDateVN(String(d.expires_at || '').slice(0,10))) + '</span>'
                  : '<span style="color:var(--muted)">Chưa mua' + (d.price ? ' · ' + Number(d.price).toLocaleString('vi-VN') + 'đ' : '') + '</span>') +
         '</div></div>' +
-        '<a href="' + esc(url) + '" target="_blank" rel="noopener" class="login-btn" style="width:auto;padding:10px 22px;text-decoration:none;display:inline-block">' +
+        '<a href="' + (isApt ? '#' : esc(url)) + '"' + (isApt ? ' onclick="openAptitudePractice();return false"' : ' target="_blank" rel="noopener"') + ' class="login-btn" style="width:auto;padding:10px 22px;text-decoration:none;display:inline-block">' +
           (owned ? 'Sử dụng' : expired ? 'Mua lại' : 'Xem chi tiết') + '</a></div>';
     });
     c.innerHTML = html;
