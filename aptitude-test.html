@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Thử nhanh 5 phút · LinkaJob Aptitude</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap">
+<link rel="stylesheet" href="aptitude.css">
+<style>
+.page{padding:40px 0 72px}
+.panel{background:#fff;border:.5px solid var(--line);border-radius:20px;padding:clamp(20px,4vw,36px);max-width:760px;margin:0 auto}
+.panel h1{font-size:clamp(24px,4vw,32px);letter-spacing:-1px;margin:14px 0 10px}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin:14px 0 4px}
+.chip{font-size:12.5px;font-weight:600;padding:6px 14px;border-radius:100px;background:var(--paper);border:.5px solid var(--line)}
+.blk{margin-top:28px}
+.blk h2{font-size:13px;text-transform:uppercase;letter-spacing:.07em;color:var(--orange);margin-bottom:12px}
+.blk p{font-size:14.5px;color:var(--muted);line-height:1.75}
+.rules{list-style:none;display:grid;gap:10px;counter-reset:r}
+.rules li{counter-increment:r;display:flex;gap:12px;font-size:14.5px;line-height:1.6}
+.rules li::before{content:counter(r);flex:none;width:24px;height:24px;border-radius:50%;background:var(--orange-tint);color:var(--orange);font-weight:700;font-size:12px;display:grid;place-items:center;margin-top:1px}
+.ck{display:flex;gap:12px;align-items:flex-start;padding:12px 14px;border:1px solid var(--line);border-radius:12px;cursor:pointer;font-size:14.5px;margin-top:8px}
+.ck input{width:18px;height:18px;margin-top:2px;accent-color:var(--orange);flex:none}
+.ck:has(input:checked){border-color:var(--orange);background:var(--orange-tint)}
+.start{margin-top:24px;display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.hint{font-size:12.5px;color:var(--muted-2)}
+
+/* chế độ làm bài */
+body.exam .lj-nav, body.exam footer{display:none}
+.exam-bar{display:none;position:sticky;top:0;z-index:600;background:var(--dark);color:var(--text-dark);padding:12px 0;padding-top:max(12px,env(safe-area-inset-top,0px))}
+body.exam .exam-bar{display:block}
+.exam-bar .wrap{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.exam-bar .t{font-family:var(--mono);font-weight:700;font-size:20px;background:var(--dark-card);border:.5px solid var(--line-dark);padding:6px 14px;border-radius:100px;font-variant-numeric:tabular-nums}
+.exam-bar .t.low{background:var(--orange);border-color:var(--orange);color:#fff}
+.exam-bar .prog{font-size:13px;color:var(--muted-dark);font-weight:600}
+.bar{display:flex;gap:4px;margin:0 0 22px}.bar i{flex:1;height:4px;border-radius:2px;background:var(--line)}.bar i.on{background:var(--orange)}
+.skill{font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--orange);margin-bottom:10px}
+.q{font-size:clamp(17px,2.6vw,20px);font-weight:600;line-height:1.45;margin-bottom:16px}
+.passage{font-size:14.5px;color:var(--muted);border-left:3px solid var(--orange-line);padding-left:14px;margin-bottom:14px;line-height:1.7}
+.pairs{display:grid;gap:8px;margin-bottom:16px}
+.pair{font-family:var(--mono);font-size:12.5px;border:1px solid var(--line);border-radius:10px;padding:8px 12px;overflow-wrap:anywhere;line-height:1.7}
+.pair b{display:inline-block;width:46px;color:var(--muted-2);font-weight:500}
+.opts{display:grid;gap:8px;margin-bottom:18px}
+.opt{display:flex;gap:12px;align-items:center;width:100%;text-align:left;font:inherit;font-size:15px;padding:13px 14px;border-radius:12px;border:1.5px solid var(--line);background:#fff;color:var(--text);cursor:pointer}
+.opt:hover{border-color:var(--orange)}
+.opt .l{font-family:var(--mono);font-weight:700;width:26px;height:26px;display:grid;place-items:center;border-radius:7px;background:var(--paper);flex:none;font-size:13px}
+.opt[aria-pressed="true"]{border-color:var(--orange);background:var(--orange-tint)}
+.opt[aria-pressed="true"] .l{background:var(--orange);color:#fff}
+.actions{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.countdown{font-family:var(--mono);font-weight:700;font-size:clamp(88px,22vw,160px);line-height:1;text-align:center;color:var(--orange);padding:48px 0}
+.score{font-size:80px;font-weight:800;letter-spacing:-3px;line-height:1}.score small{font-size:28px;color:var(--muted-2);letter-spacing:0;font-weight:600}
+.rows{display:grid;margin:22px 0}
+.row{display:flex;justify-content:space-between;align-items:center;font-size:15px;padding:11px 0;border-bottom:.5px solid var(--line)}
+.pill{font-size:12px;font-weight:700;padding:3px 11px;border-radius:100px}
+.pill.ok{color:var(--ok);background:rgba(23,121,79,.12)}.pill.no{color:var(--bad);background:rgba(192,38,45,.1)}
+.lockbox{border:1px dashed var(--orange-line);background:var(--orange-tint);border-radius:14px;padding:16px 18px;font-size:14px;margin-bottom:18px}
+.lockbox b{display:block;margin-bottom:4px}
+.confirm-box{text-align:center}
+.confirm-box .big{font-size:22px;font-weight:800;letter-spacing:-.5px;margin-bottom:10px}
+.confirm-box p{font-size:14.5px;color:var(--muted);line-height:1.7;margin-bottom:22px}
+.confirm-box .two{display:grid;gap:10px}
+</style>
+</head>
+<body>
+
+<nav class="lj-nav" aria-label="Điều hướng chính">
+  <div class="wrap">
+    <a href="aptitude.html" aria-label="LinkaJob Aptitude"><span class="logo-img" role="img" aria-label="LinkaJob"></span></a>
+    <div class="lj-nav-links"><a class="lnk" href="aptitude.html">← Về trang chính</a></div>
+  </div>
+</nav>
+<div class="exam-bar" aria-label="Thanh làm bài"><div class="wrap"><span class="prog" id="prog"></span><span class="t" id="tm" role="timer">05:00</span></div></div>
+
+<main class="page"><div class="wrap">
+
+  <!-- 1. Giới thiệu, quy tắc, xác nhận -->
+  <div class="panel" id="vIntro">
+    <span class="eyebrow"><i></i>Bài thử miễn phí</span>
+    <h1>Thử nhanh 5 phút</h1>
+    <div class="chips"><span class="chip">5 phút</span><span class="chip">6 câu</span><span class="chip">5 dạng kỹ năng</span><span class="chip">Không quay lại câu trước</span></div>
+
+    <div class="blk"><h2>Ý nghĩa của bài test</h2>
+      <p>Aptitude test đo khả năng tư duy số, đọc hiểu, suy luận logic và xử lý thông tin dưới áp lực thời gian. Nhà tuyển dụng thường dùng nó để lọc ứng viên ở vòng đầu, trước phỏng vấn.</p>
+      <p style="margin-top:8px">Bài này giúp bạn làm quen cảm giác đó. Kết quả là ước tính sơ bộ từ 6 câu, chưa phải điểm percentile thật.</p></div>
+
+    <div class="blk"><h2>Quy tắc làm bài</h2>
+      <ol class="rules">
+        <li><span>Bạn có <b>5 phút</b> cho 6 câu. Đồng hồ <b>không dừng</b>. Hết giờ, bài tự nộp.</span></li>
+        <li><span>Mỗi câu chọn một đáp án. <b>Không quay lại</b> câu trước.</span></li>
+        <li><span>Được bỏ qua câu khó, nhưng cũng không quay lại được.</span></li>
+        <li><span>Được dùng giấy nháp và máy tính cầm tay.</span></li>
+        <li><span>Không tra cứu, không nhờ người khác. Bài này đo cách bạn làm việc dưới áp lực.</span></li>
+        <li><span>Tải lại hoặc đóng trang sẽ phải làm lại từ đầu.</span></li>
+      </ol></div>
+
+    <div class="blk"><h2>Trước khi bắt đầu</h2>
+      <label class="ck"><input type="checkbox" class="rdy"><span>Tôi đang ở nơi yên tĩnh và có 5 phút liên tục.</span></label>
+      <label class="ck"><input type="checkbox" class="rdy"><span>Tôi đã chuẩn bị giấy nháp và máy tính.</span></label>
+      <label class="ck"><input type="checkbox" class="rdy"><span>Tôi đã đọc quy tắc và hiểu đồng hồ không thể dừng.</span></label>
+      <div class="start"><button class="btn btn-orange" id="go" type="button" disabled>Bắt đầu làm bài</button><span class="hint">Tick đủ 3 mục để tiếp tục.</span></div>
+    </div>
+  </div>
+
+  <!-- 2. Đếm ngược -->
+  <div class="panel" id="vCount" hidden><div class="countdown" id="cd" aria-live="assertive">3</div><p style="text-align:center;color:var(--muted);font-size:14px">Chuẩn bị…</p></div>
+
+  <!-- 3. Câu hỏi -->
+  <div class="panel" id="vQ" hidden></div>
+
+  <!-- 4. Kết quả -->
+  <div class="panel" id="vRes" hidden></div>
+
+</div></main>
+
+<footer>
+  <div class="wrap">
+    <span class="logo-img" role="img" aria-label="LinkaJob" style="width:110px;height:22px"></span>
+    <div class="copy">© 2025 LinkaJob · Kết nối Cố vấn, Xây dựng Sự nghiệp<br>Câu hỏi do LinkaJob tự soạn. Kết quả chỉ để tham khảo.</div>
+    <div><a href="aptitude.html">Trang chính</a></div>
+  </div>
+</footer>
+
+<!-- Xác nhận sẵn sàng -->
+<div class="overlay" id="cf" aria-hidden="true">
+  <div class="modal confirm-box" role="dialog" aria-modal="true" aria-labelledby="cfT">
+    <div class="big" id="cfT">Bạn đã sẵn sàng chưa?</div>
+    <p>Đồng hồ 5 phút bắt đầu ngay sau khi bạn bấm “Sẵn sàng”. Bạn không thể tạm dừng hay quay lại câu trước, giống như một vòng test thật.</p>
+    <div class="two">
+      <button class="btn btn-orange btn-block" id="cfYes" type="button">Sẵn sàng, bắt đầu</button>
+      <button class="btn btn-light btn-block" id="cfNo" type="button">Chưa, quay lại</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(function () {
+  var DURATION = 300;
+  var QUESTIONS = [
+    { skill: "Numerical", q: "Doanh thu 2024 là 240 tỷ đồng. Năm 2025 tăng 15%, năm 2026 giảm 10% so với 2025. Doanh thu 2026?",
+      opts: ["248,4 tỷ", "252,0 tỷ", "264,0 tỷ", "276,0 tỷ", "270,0 tỷ"], a: 0 },
+    { skill: "Numerical", q: "Lô hàng 450 USD, tỉ giá 25.000 đ/USD, thuế nhập khẩu 8% trên giá hàng, phí vận chuyển 1.200.000 đ. Tổng chi phí?",
+      opts: ["12.450.000 đ", "13.350.000 đ", "13.500.000 đ", "12.150.000 đ", "14.550.000 đ"], a: 1 },
+    { skill: "Verbal", passage: "Công ty X áp dụng làm việc linh hoạt từ tháng 3. 68% nhân viên cho biết năng suất không đổi hoặc tăng. Bộ phận chăm sóc khách hàng chưa được áp dụng. Ban lãnh đạo sẽ xem xét mở rộng sau sáu tháng đánh giá thêm.",
+      q: "“Chăm sóc khách hàng sẽ được áp dụng sau sáu tháng.”", opts: ["Đúng", "Sai", "Không đủ thông tin"], a: 2 },
+    { skill: "Inductive", q: "Dãy số: 2, 6, 12, 20, 30, ?", opts: ["36", "38", "42", "44", "40"], a: 2 },
+    { skill: "Deductive", q: "An về trước Bình. Chi về sau Bình. Dũng về trước An. Ai về thứ ba?", opts: ["An", "Bình", "Chi", "Dũng"], a: 1 },
+    { skill: "Error checking", pairs: [
+        ["INV-20931 · Nguyễn Thị Hà · 4.560.000 · 12/03", "INV-20913 · Nguyễn Thị Hà · 4.560.000 · 12/03"],
+        ["INV-20932 · Trần Văn Minh · 1.275.000 · 14/03", "INV-20932 · Trần Văn Minh · 1.725.000 · 14/03"],
+        ["INV-20933 · Lê Hoàng Anh · 890.000 · 15/03", "INV-20933 · Lê Hoàng Anh · 890.000 · 15/03"],
+        ["INV-20934 · Phạm Quốc Bảo · 2.310.000 · 18/03", "INV-20934 · Phạm Quốc Bảo · 2.310.000 · 18/08"]],
+      q: "So bản gốc với bản nhập. Bao nhiêu dòng có lỗi?", opts: ["1", "2", "3", "4"], a: 2 }
+  ];
+  var $ = function (id) { return document.getElementById(id); };
+  var S = { i: 0, ans: [], pick: null, t0: 0, tick: null };
+  var views = ["vIntro", "vCount", "vQ", "vRes"];
+  function view(v) { views.forEach(function (x) { $(x).hidden = x !== v; }); document.body.classList.toggle("exam", v === "vQ"); window.scrollTo(0, 0); }
+  function fmt(s) { s = Math.max(0, Math.ceil(s)); return String(Math.floor(s / 60)).padStart(2, "0") + ":" + String(s % 60).padStart(2, "0"); }
+  function left() { return DURATION - (Date.now() - S.t0) / 1000; }
+
+  // Checklist -> bật nút -> hỏi xác nhận
+  var boxes = Array.prototype.slice.call(document.querySelectorAll(".rdy"));
+  function sync() { $("go").disabled = !boxes.every(function (b) { return b.checked; }); }
+  boxes.forEach(function (b) { b.addEventListener("change", sync); });
+  var opener = null;
+  function openCf() { opener = document.activeElement; $("cf").classList.add("show"); $("cf").setAttribute("aria-hidden", "false"); $("cfYes").focus(); }
+  function closeCf() { $("cf").classList.remove("show"); $("cf").setAttribute("aria-hidden", "true"); if (opener) opener.focus(); }
+  $("go").onclick = openCf;
+  $("cfNo").onclick = closeCf;
+  document.addEventListener("keydown", function (e) { if (e.key === "Escape" && $("cf").classList.contains("show")) closeCf(); });
+  $("cfYes").onclick = function () { closeCf(); countdown(); };
+
+  function countdown() {
+    var n = 3; view("vCount"); $("cd").textContent = n;
+    var iv = setInterval(function () { n--; if (n <= 0) { clearInterval(iv); begin(); } else $("cd").textContent = n; }, 1000);
+  }
+  function begin() {
+    S.i = 0; S.ans = []; S.t0 = Date.now();
+    view("vQ"); renderQ();
+    clearInterval(S.tick);
+    S.tick = setInterval(function () {
+      var r = left(); if (r <= 0) { finish(); return; }
+      $("tm").textContent = fmt(r); $("tm").classList.toggle("low", r <= 60);
+    }, 250);
+  }
+  function renderQ() {
+    var q = QUESTIONS[S.i], last = S.i === QUESTIONS.length - 1;
+    $("prog").textContent = "Câu " + (S.i + 1) + "/" + QUESTIONS.length;
+    $("tm").textContent = fmt(left());
+    var bar = QUESTIONS.map(function (_, k) { return '<i class="' + (k <= S.i ? "on" : "") + '"></i>'; }).join("");
+    var extra = "";
+    if (q.passage) extra += '<p class="passage">' + q.passage + '</p>';
+    if (q.pairs) extra += '<div class="pairs">' + q.pairs.map(function (p) { return '<div class="pair"><div><b>Gốc</b>' + p[0] + '</div><div><b>Nhập</b>' + p[1] + '</div></div>'; }).join("") + '</div>';
+    var opts = q.opts.map(function (o, k) { return '<button class="opt" type="button" data-k="' + k + '" aria-pressed="false"><span class="l">' + String.fromCharCode(65 + k) + '</span><span>' + o + '</span></button>'; }).join("");
+    $("vQ").innerHTML = '<div class="bar">' + bar + '</div><div class="skill">' + q.skill + '</div>' + extra +
+      '<p class="q">' + q.q + '</p><div class="opts">' + opts + '</div>' +
+      '<div class="actions"><button class="link" id="skip" type="button">Bỏ qua</button><button class="btn btn-orange" id="next" type="button" disabled>' + (last ? "Nộp bài" : "Tiếp theo") + '</button></div>';
+    S.pick = null;
+    var btns = $("vQ").querySelectorAll(".opt"), next = $("next");
+    btns.forEach(function (b) {
+      b.onclick = function () { btns.forEach(function (x) { x.setAttribute("aria-pressed", "false"); }); b.setAttribute("aria-pressed", "true"); S.pick = +b.dataset.k; next.disabled = false; };
+    });
+    next.onclick = function () { adv(S.pick); };
+    $("skip").onclick = function () { adv(null); };
+  }
+  function adv(p) { S.ans[S.i] = p; if (S.i >= QUESTIONS.length - 1) { finish(); return; } S.i++; renderQ(); }
+
+  function finish() {
+    clearInterval(S.tick);
+    var used = Math.min(DURATION, Math.round((Date.now() - S.t0) / 1000)), score = 0;
+    var rows = QUESTIONS.map(function (q, k) {
+      var ok = S.ans[k] === q.a; if (ok) score++;
+      return '<div class="row"><span>' + q.skill + '</span><span class="pill ' + (ok ? "ok" : "no") + '">' + (ok ? "Đúng" : (S.ans[k] == null ? "Chưa làm" : "Sai")) + '</span></div>';
+    }).join("");
+    var level = score >= 5 ? "Vững. Sẵn sàng thử bài dài hơn." : score >= 3 ? "Khá. Cần luyện thêm tốc độ." : "Cần luyện nền tảng trước.";
+    $("vRes").innerHTML =
+      '<span class="eyebrow"><i></i>Kết quả · ' + fmt(used) + ' / 05:00</span>' +
+      '<div style="margin:18px 0 6px" class="score">' + score + '<small>/' + QUESTIONS.length + '</small></div>' +
+      '<p style="font-weight:700;margin-bottom:4px">' + level + '</p>' +
+      '<p class="hint">Ước tính sơ bộ từ 6 câu, chưa phải percentile thật.</p>' +
+      '<div class="rows">' + rows + '</div>' +
+      '<div class="lockbox"><b>Giải thích từng câu và phân tích điểm yếu nằm trong gói 3 tháng.</b>Luyện theo kỹ năng, mô phỏng thi theo công ty, hồ sơ từng công ty và lịch mở đơn.</div>' +
+      '<div class="actions"><button class="link" id="again" type="button">Làm lại</button><a class="btn btn-orange" href="aptitude.html#gia">Xem gói 199.000đ</a></div>';
+    view("vRes");
+    $("again").onclick = function () { boxes.forEach(function (b) { b.checked = false; }); sync(); view("vIntro"); };
+  }
+})();
+</script>
+</body>
+</html>
