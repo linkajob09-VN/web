@@ -6141,6 +6141,16 @@ document.getElementById('login-password').addEventListener('keydown', function(e
 // Nếu đã có phiên đăng nhập hợp lệ trong localStorage, vào thẳng dashboard
 // thay vì hiện lại màn hình đăng nhập mỗi khi F5/mở lại trình duyệt.
 tryRestoreSession();
+
+  function ljDeviceId() {
+  try {
+    var d = localStorage.getItem('lj_dev');
+    if (!d || !/^[0-9a-f-]{36}$/i.test(d)) { d = crypto.randomUUID(); localStorage.setItem('lj_dev', d); }
+    return d;
+  } catch (e) { return ''; }
+}
+  API + '?action=aptitudeTicket&token=' + token +
+  '&device=' + ljDeviceId() + '&label=' + encodeURIComponent(navigator.userAgent.slice(0, 120))
 </script>
 </body>
 </html>
