@@ -3,7 +3,10 @@
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
 <link rel="stylesheet" href="aptitude.css">
+<link rel="stylesheet" href="nav.css">
+<link rel="stylesheet" href="dang-ky-tu-van.css">
 <style>
 .hero{background:radial-gradient(circle at 50% -5%,rgba(252,82,41,.1),transparent 55%),var(--paper);padding:72px 0 56px;text-align:center}
 .hero h1{font-size:clamp(30px,5.4vw,46px);letter-spacing:-1.6px;margin:20px auto 14px;max-width:16em}
@@ -69,17 +72,7 @@
 </style>
 
 
-<nav class="lj-nav" aria-label="Điều hướng chính">
-  <div class="wrap">
-    <a href="index.html" aria-label="LinkaJob"><span class="logo-img" role="img" aria-label="LinkaJob"></span></a>
-    <div class="lj-nav-links">
-      <a class="lnk" href="#tinh-nang">Tính năng</a>
-      <a class="lnk" href="#vi-sao">Vì sao chọn</a>
-      <a class="lnk" href="#gia">Bảng giá</a>
-      <a class="btn btn-orange btn-sm" href="aptitude-test.html" style="margin-left:8px">Thử nhanh 5 phút</a>
-    </div>
-  </div>
-</nav>
+<div id="lj-nav-root"></div>
 
 <main>
 <section class="hero">
@@ -276,7 +269,7 @@
 (function () {
   // Điền địa chỉ web app (Google Apps Script) khi chạy thật. Để trống = chế độ xem thử.
   var CONFIG = {
-    endpoint: "",
+    endpoint: "https://script.google.com/macros/s/AKfycbx7Bd9VvoyzfiiezQV9huoY2BKHH_Br1RAFIz00mjdyKeis-Zv-38a0gf_b-fMlul2C/exec",
     price: 199000,
     bank: { bin: "970432", account: "0918121482", name: "NGUYEN THI THUY LINH", label: "VPBank" }
   };
@@ -349,7 +342,10 @@
         $("doneMsg").textContent = d.message || "Gói 3 tháng đã được kích hoạt. Kiểm tra email của bạn.";
         show("stDone"); return;
       }
-      order = { id: d.order_id, amount: d.amount }; showQR();
+      order = { id: d.order_id, amount: d.amount };
+      // Chuyển sang trang thanh toán chung của LinkaJob (QR + tự xác nhận)
+      window.location.href = "thanh-toan.html?order_id=" + encodeURIComponent(order.id) + "&amount=" + encodeURIComponent(order.amount) +
+        "&desc=" + encodeURIComponent("LinkaJob Aptitude · Gói 3 tháng") + "&name=" + encodeURIComponent(name) + "&kind=aptitude";
     }).catch(function () { $("coSubmit").disabled = false; setStatus($("coStatus"), "Không kết nối được. Thử lại sau.", "err"); });
   });
 
@@ -395,4 +391,11 @@
 })();
 </script>
 
+
+<!-- CONSULT WIDGET -->
+<div id="lj-widget-root"></div>
+<script src="nav.js"></script>
+<script>initSharedNav();</script>
+<script src="dang-ky-tu-van.js"></script>
+<script>initConsultWidget();</script>
 </body></html>
