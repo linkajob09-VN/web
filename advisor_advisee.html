@@ -757,7 +757,7 @@ function doLogout() {
   document.getElementById('login-page').style.display = 'flex';
   closeUserMenu();
   _route = null; _baseRoute = null; _modalPushed = false;
-  window._coursesChecked = false; window._hasCourses = false;
+  window._coursesChecked = false; window._hasCourses = false; window._myDocs = null; window._hasBookings = true;
   try { history.replaceState(null, '', location.pathname + location.search); } catch (e) {}
 }
 
@@ -1065,10 +1065,15 @@ function buildTabBar(role) {
     var courseReq = role === 'Advisee'
       ? apiGet('getMyCourseEnrollments', { email: currentUser.email })
       : apiGet('getInstructorCourses', { advisor: currentUser.name });
-    courseReq.then(function(res){
+    // Advisee: tải thêm danh sách tài liệu luyện tập + cho biết tài khoản này có dùng dịch vụ LinkaJob (booking) hay chỉ mua tài liệu
+    var docReq = role === 'Advisee'
+      ? apiGet('getMyDocuments', { email: currentUser.email }).catch(function(){ return null; })
+      : Promise.resolve(null);
+    window._hasBookings = true; window._myDocs = null;
+    Promise.all([courseReq.catch(function(){ return null; }), docReq]).then(function(rs){
+      var res = rs[0], dres = rs[1];
       window._hasCourses = !!(res && res.data && res.data.length > 0);
-    }).catch(function(){
-      window._hasCourses = false;
+      if (dres && dres.success) { window._myDocs = dres.data || []; window._hasBookings = !!dres.has_bookings; }
     }).then(function(){ if (currentUser && currentUser.role === role) buildTabBar(role); });
     return;
   }
@@ -1086,11 +1091,15 @@ function buildTabBar(role) {
   };
 
   var tabs = (TABS[role] || []).slice();
+  // Advisee chỉ mua tài liệu (chưa có booking, chưa học khoá nào): ẩn "Cố vấn 1:1", chỉ còn "Tài liệu luyện tập"
+  if (role === 'Advisee' && window._myDocs && !window._hasBookings && !window._hasCourses) tabs = [];
   // Advisee: chỉ mở thêm section "Khoá học" khi đã đăng ký ít nhất 1 khoá
   if (window._hasCourses) {
     if (role === 'Advisee') tabs.push({ id:'courses', icon:'🎓', label:'Khoá học' });
     if (role === 'Advisor') tabs.push({ id:'my-courses', icon:'🎓', label:'Khoá học' });
   }
+  // Advisee: luôn có nút "Tài liệu luyện tập" (xem danh sách, đã mua thì hiện nút Sử dụng)
+  if (role === 'Advisee' && window._myDocs) tabs.push({ id:'documents', icon:'📚', label:'Tài liệu luyện tập' });
   var html = '';
   tabs.forEach(function(t) {
     html += '<div class="role-tab" id="rt-' + t.id + '" onclick="switchRoleTab(\'' + t.id + '\')">';
@@ -1331,6 +1340,8 @@ function renderAdvisee(tab) {
   // Tab "Khoá học" là sản phẩm riêng (học viên có thể chưa từng đặt lịch
   // advisor nào) — không bị chặn bởi gói booking 1-1 hết hạn.
   if (tab === 'courses') { loadMyCoursesAsync(c); return Promise.resolve(); }
+  // Tab "Tài liệu luyện tập": sản phẩm riêng, không phụ thuộc gói booking 1-1
+  if (tab === 'documents') { loadMyDocumentsAsync(c); return Promise.resolve(); }
   return loadAdviseeRealDataAsync().then(function(){
     var myAe = MOCK.advisees.filter(function(ae){ return ae.email === currentUser.email; });
     var activeAe = myAe.find(function(ae){ return !isAdviseeExpired(ae); });
@@ -1366,6 +1377,37 @@ function fmtDateVN(ymd) {
 // ── Advisee: tab "Khoá học" — danh sách khoá đang học + bài tập để nộp.
 //    Sản phẩm riêng với booking 1-1 advisor, dùng chung tài khoản đăng
 //    nhập (role Advisee) nhưng dữ liệu lấy từ module Khoá học trên Sheet. ──
+// ── Tab "Tài liệu luyện tập": liệt kê mọi tài liệu LinkaJob đang bán.
+//    Đã mua + còn hạn → nút "Sử dụng" (mở landing page của tài liệu); chưa mua → "Xem chi tiết". ──
+function loadMyDocumentsAsync(c) {
+  function esc(v){ return String(v == null ? '' : v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+  function render(list) {
+    if (!list.length) { c.innerHTML = '<div class="card"><div class="empty-state"><div class="icon">📚</div>Chưa có tài liệu nào.</div></div>'; return; }
+    var html = '<div style="font-size:12.5px;font-weight:700;color:var(--muted);text-transform:uppercase;margin-bottom:12px">Tài liệu luyện tập</div>';
+    list.forEach(function(d){
+      var owned = !!d.owned, expired = !!d.expired;
+      var url = String(d.landing_url || '#');
+      if (owned && url.indexOf('#') === -1) url += (url.indexOf('?') > -1 ? '&' : '?') + 'email=' + encodeURIComponent(currentUser.email);
+      html += '<div class="card" style="margin-bottom:14px;padding:20px;display:flex;justify-content:space-between;gap:16px;align-items:center;flex-wrap:wrap">' +
+        '<div style="flex:1;min-width:220px"><div style="font-size:16px;font-weight:800">' + esc(d.name) + '</div>' +
+        '<div style="font-size:13px;color:var(--muted);margin-top:4px;line-height:1.6">' + esc(d.description) + '</div>' +
+        '<div style="font-size:12.5px;margin-top:8px">' +
+          (owned ? '<span class="badge badge-confirmed">Đã mua</span> <span style="color:var(--muted)">Dùng được đến ' + esc(fmtDateVN(String(d.expires_at || '').slice(0,10))) + '</span>'
+                 : expired ? '<span style="color:#B91C1C;font-weight:600">Đã hết hạn ' + esc(fmtDateVN(String(d.expires_at || '').slice(0,10))) + '</span>'
+                 : '<span style="color:var(--muted)">Chưa mua' + (d.price ? ' · ' + Number(d.price).toLocaleString('vi-VN') + 'đ' : '') + '</span>') +
+        '</div></div>' +
+        '<a href="' + esc(url) + '" target="_blank" rel="noopener" class="login-btn" style="width:auto;padding:10px 22px;text-decoration:none;display:inline-block">' +
+          (owned ? 'Sử dụng' : expired ? 'Mua lại' : 'Xem chi tiết') + '</a></div>';
+    });
+    c.innerHTML = html;
+  }
+  if (window._myDocs) { render(window._myDocs); return; }
+  apiGet('getMyDocuments', { email: currentUser.email }).then(function(res){
+    window._myDocs = (res && res.data) ? res.data : [];
+    render(window._myDocs);
+  }).catch(function(e){ c.innerHTML = '<div class="empty-state">Lỗi tải tài liệu: ' + esc(e.message) + '</div>'; });
+}
+
 function loadMyCoursesAsync(c) {
   apiGet('getMyCourseEnrollments', { email: currentUser.email }).then(function(res){
     var list = (res && res.data) ? res.data : [];
