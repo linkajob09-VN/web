@@ -1380,11 +1380,24 @@ function fmtDateVN(ymd) {
 //    nhập (role Advisee) nhưng dữ liệu lấy từ module Khoá học trên Sheet. ──
 // ── Tab "Tài liệu luyện tập": liệt kê mọi tài liệu LinkaJob đang bán.
 //    Đã mua + còn hạn → nút "Sử dụng" (mở landing page của tài liệu); chưa mua → "Xem chi tiết". ──
+function ljDeviceId() {
+  try {
+    var d = localStorage.getItem('lj_dev');
+    if (!d || !/^[0-9a-f-]{36}$/i.test(d)) {
+      d = (window.crypto && crypto.randomUUID) ? crypto.randomUUID()
+        : 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+            var r = Math.random() * 16 | 0; return (c === 'x' ? r : (r & 3 | 8)).toString(16);
+          });
+      localStorage.setItem('lj_dev', d);
+    }
+    return d;
+  } catch (e) { return ''; }
+}
 var APT_PRACTICE_URL = 'https://linkajob09-vn.github.io/web/luyen-aptitude.html';
 function openAptitudePractice() {
   var w = window.open('', '_blank');
   if (w) { w.opener = null; w.document.write('<p style="font-family:sans-serif;padding:24px">Đang mở tài liệu…</p>'); }
-  apiGet('aptitudeTicket', { token: (currentUser && currentUser.token) || '' }).then(function(res){
+  apiGet('aptitudeTicket', { token: (currentUser && currentUser.token) || '', device: ljDeviceId(), label: navigator.userAgent.slice(0, 120) }).then(function(res){
     if (res && res.ok && res.ticket) { var u = APT_PRACTICE_URL + '#t=' + res.ticket; if (w) w.location.href = u; else location.href = u; return; }
     if (w) w.close();
     toast((res && res.message) || 'Không mở được tài liệu.', 'error');
@@ -6141,16 +6154,6 @@ document.getElementById('login-password').addEventListener('keydown', function(e
 // Nếu đã có phiên đăng nhập hợp lệ trong localStorage, vào thẳng dashboard
 // thay vì hiện lại màn hình đăng nhập mỗi khi F5/mở lại trình duyệt.
 tryRestoreSession();
-
-  function ljDeviceId() {
-  try {
-    var d = localStorage.getItem('lj_dev');
-    if (!d || !/^[0-9a-f-]{36}$/i.test(d)) { d = crypto.randomUUID(); localStorage.setItem('lj_dev', d); }
-    return d;
-  } catch (e) { return ''; }
-}
-  API + '?action=aptitudeTicket&token=' + token +
-  '&device=' + ljDeviceId() + '&label=' + encodeURIComponent(navigator.userAgent.slice(0, 120))
 </script>
 </body>
 </html>
