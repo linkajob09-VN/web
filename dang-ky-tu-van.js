@@ -10,6 +10,26 @@
    openConsultWidget() — chỉ cần đảm bảo widget.js được load trên mọi trang
    có dùng nav dùng chung, nếu không nút bấm sẽ không có phản ứng gì.
    ════════════════════════════════════════════════════════════ */
+/* ===== LinkaJob tracking: lưu UTM / ref khi khách vào bất kỳ trang nào ===== */
+(function () {
+  var KEY = 'lkj_track', DAYS = 30;
+  var KEYS = ['utm_source', 'utm_medium', 'utm_campaign', 'utm_content', 'ref'];
+  try {
+    var p = new URLSearchParams(location.search);
+    if (KEYS.some(function (k) { return p.get(k); })) {
+      var data = { ts: Date.now(), landing_page: location.pathname };
+      KEYS.forEach(function (k) { data[k] = (p.get(k) || '').toLowerCase().trim(); });
+      localStorage.setItem(KEY, JSON.stringify(data));
+    }
+  } catch (e) {}
+  window.lkjGetTrack = function () {
+    try {
+      var d = JSON.parse(localStorage.getItem(KEY));
+      if (d && Date.now() - d.ts < DAYS * 864e5) return d;
+    } catch (e) {}
+    return {};
+  };
+})();
 
 var CW_WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbx7Bd9VvoyzfiiezQV9huoY2BKHH_Br1RAFIz00mjdyKeis-Zv-38a0gf_b-fMlul2C/exec';
 var cwLeadCaptured = false;
@@ -91,6 +111,10 @@ var CW_TEMPLATE = `<div class="cw-overlay" id="cwOverlay" onclick="if(event.targ
         </select>
       </div>
       <div class="cw-field">
+        <label>Mã giới thiệu (nếu có)</label>
+        <input type="text" id="cwRefCode" placeholder="VD: LKJ-NS1">
+      </div>
+      <div class="cw-field">
         <label>Câu hỏi muốn tư vấn<span>*</span></label>
         <textarea id="cwQuestion" rows="3" placeholder="VD: Mình muốn hỏi thêm về cố vấn 1-1 sẽ diễn ra như nào..." oninput="cwCheckStep1()"></textarea>
       </div>
@@ -128,7 +152,7 @@ function openConsultWidget(){
   if (!cwWidgetLoaded) { cwPendingOpen = true; initConsultWidget(); if (!cwWidgetLoaded) return; }
   document.getElementById('cwOverlay').classList.add('show');
   cwLeadCaptured = false;
-  ['cwName','cwPhone','cwEmail','cwQuestion'].forEach(function(id){
+  ['cwName','cwPhone','cwEmail','cwQuestion','cwRefCode'].forEach(function(id){
     var el = document.getElementById(id); if(el) el.value = '';
   });
   var cvEl = document.getElementById('cwCv'); if (cvEl) cvEl.value = '';
@@ -198,6 +222,10 @@ function cwSubmitLead(){
   if (!cvLink) { alert('Vui lòng dán link CV gần nhất của bạn.'); return; }
   if (!cwCvLinkOk(cvLink)) { alert('Link CV chưa đúng — cần bắt đầu bằng http:// hoặc https://'); return; }
 
+   var t = window.lkjGetTrack ? window.lkjGetTrack() : {};
+  var refCodeEl = document.getElementById('cwRefCode');
+  var refManual = refCodeEl ? refCodeEl.value.trim().toUpperCase() : '';
+
   btn.dataset.sending = '1';
   btn.disabled = true;
   btn.textContent = 'Đang gửi...';
@@ -209,7 +237,15 @@ function cwSubmitLead(){
       action: 'captureLead',
       name: name, phone: phone, email: email, service: service, question: question,
       customer_type: customerType, interested_dept: interestedDept, region: region, source_channel: source,
-      cv_link: cvLink
+      cv_link: cvLink,
+       ref_manual: refManual,
+      ref_auto: t.ref || '',
+      utm_source: t.utm_source || '',
+      utm_medium: t.utm_medium || '',
+      utm_campaign: t.utm_campaign || '',
+      utm_content: t.utm_content || '',
+      landing_page: t.landing_page || '',
+      submit_page: location.pathname
     })
   })
   .then(function(r){ return r.json(); })
