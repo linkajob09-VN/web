@@ -1251,6 +1251,7 @@ const SIDEBAR_DEF = {
     { id: 'cus', icon: '👥', label: 'Khách hàng', children: [
       { id: 'lj-newreg',      label: 'Leads tư vấn' },
       { id: 'aee-list',       label: 'Advisee' },
+      { id: 'lj-students',    label: 'Học viên khoá học' },
       { id: 'aee-reschedule', label: 'Yêu cầu đổi lịch' },
     ]},
     { id: 'ops', icon: '⚙️', label: 'Vận hành', children: [
@@ -1317,6 +1318,7 @@ const ROUTE_MAP = {
   'adv-new':       { fn: function(){ renderStaff('adv-new'); } },
   'aee-list':      { fn: function(){ loadAdviseesFromSheet(function(){ renderStaff('advisee-mod'); }); } },
   'aee-reschedule': { fn: function(){ renderStaff('aee-reschedule'); } },
+  'lj-students':   { fn: function(){ loadCourseStudentsPageAsync(); } },
   'crs-list':      { fn: function(){ loadCoursesPageAsync(); } },
   'crs-new':       { fn: function(){ loadCoursesPageAsync(); setTimeout(openNewCourse, 50); } },
   // Sale routes (menu trái của Sale)
@@ -5650,12 +5652,12 @@ function openEnrollModal(seasonId) {
     }).join('') + '</datalist>';
   } catch (e) {}
   var html = '<div class="modal-field"><div class="form-label">Họ tên <span style="color:var(--brand)">*</span></div><input class="form-input" id="cm-en-name" list="cm-en-suggest" oninput="cmEnrollAutofill()" placeholder="VD: Nguyễn Văn A" style="margin-top:6px"></div>' + dl;
-  html += '<div class="modal-field"><div class="form-label">Email (để phát tài khoản đăng nhập)</div><input class="form-input" type="email" id="cm-en-email" placeholder="hocvien@gmail.com" style="margin-top:6px"></div>';
+  html += '<div class="modal-field"><div class="form-label">Email (để gửi lời mời lớp — KHÔNG tạo tài khoản)</div><input class="form-input" type="email" id="cm-en-email" placeholder="hocvien@gmail.com" style="margin-top:6px"></div>';
   html += '<div class="modal-field"><div class="form-label">Số điện thoại</div><input class="form-input" id="cm-en-phone" placeholder="VD: 0901234567" style="margin-top:6px"></div>';
   html += '<div class="modal-field"><div class="form-label">Hình thức thanh toán</div><select class="form-input" id="cm-en-plan" style="margin-top:6px">' + planOptions + '</select></div>';
   html += '<div class="modal-field"><div class="form-label">Số tiền đóng ngay (nếu có)</div><input class="form-input" type="number" id="cm-en-initial-pay" placeholder="VD: 500000" style="margin-top:6px"></div>';
   html += '<div id="cm-en-error" style="color:var(--brand);font-size:12.5px;display:none"></div>';
-  html += '<div style="font-size:12px;color:var(--muted)">Không gửi email cho học viên khi thêm.</div>';
+  html += '<div style="font-size:12px;color:var(--muted)">Học viên không có tài khoản đăng nhập — staff quản lý hoàn toàn trên dashboard. Không gửi email khi thêm.</div>';
   document.getElementById('modal-body').innerHTML = html;
   document.getElementById('modal-actions').innerHTML = '<button class="detail-btn" onclick="closeModal()">Hủy</button> <button class="login-btn" id="cm-en-save" style="width:auto;padding:10px 24px" onclick="saveEnrollModal(\'' + seasonId + '\')">Thêm học viên</button>';
   document.getElementById('modal-overlay').classList.add('open');
@@ -5685,14 +5687,14 @@ function saveEnrollModal(seasonId) {
   if (email && !/^\S+@\S+\.\S+$/.test(email)) { showErr('Email không hợp lệ'); return; }
   var btn = document.getElementById('cm-en-save');
   if (btn) { btn.disabled = true; btn.textContent = 'Đang thêm...'; }
-  apiPost({ action: 'addCourseEnrollment', season_id: seasonId, name: name, email: email, phone: phone, plan: plan, initial_pay: initialPay, by: currentUser && currentUser.email }).then(function(res){
+  apiPost({ action: 'addCourseEnrollment', season_id: seasonId, name: name, email: email, phone: phone, plan: plan, initial_pay: initialPay, no_account: true, source: 'consult_offline', by: currentUser && currentUser.email }).then(function(res){
     if (!res || !res.success) {
       showErr('Không thêm được học viên: ' + ((res && res.error) || 'lỗi không rõ — kiểm tra bản Apps Script đã Deploy phiên bản mới chưa'));
       if (btn) { btn.disabled = false; btn.textContent = 'Thêm học viên'; }
       return;
     }
     closeModal();
-    toast('Đã thêm học viên "' + name + '" ✅' + (email ? ' — đã phát tài khoản đăng nhập (mật khẩu = mã ' + res.enrollment_id + ')' : ''), 'success');
+    toast('Đã thêm học viên "' + name + '" ✅' + '', 'success');
     var s = CM_SEASONS.find(function(x){ return x.id === seasonId; });
     if (s) s.enrolled_count = (s.enrolled_count || 0) + 1;
     csLoadSeasonDetail(seasonId, function(){ document.getElementById('main-content').innerHTML = renderSeasonDetail(); });
@@ -5805,17 +5807,17 @@ function openCollectPaymentModal(enrollmentId) {
   }
   var due = enrollmentId ? cmComputePayment(enrollmentId, s.price_full).due : s.price_full;
   html += '<div class="modal-field"><div class="form-label">Cách ghi nhận</div><div style="display:flex;gap:8px;margin-top:6px">' +
-    '<label id="cm-cp-mode-ck-label" style="flex:1;border:1.5px solid var(--brand);border-radius:8px;padding:9px;font-size:12px;cursor:pointer;text-align:center">' +
-      '<input type="radio" name="cm-cp-mode" value="ck" checked onclick="cmSwitchPayMode()"> Tạo mã cho HV tự CK<br><span style="color:var(--muted)">(tự động xác nhận)</span></label>' +
-    '<label id="cm-cp-mode-manual-label" style="flex:1;border:1.5px solid var(--border);border-radius:8px;padding:9px;font-size:12px;cursor:pointer;text-align:center">' +
-      '<input type="radio" name="cm-cp-mode" value="manual" onclick="cmSwitchPayMode()"> Đã nhận rồi<br><span style="color:var(--muted)">(ghi tay)</span></label>' +
+    '<label id="cm-cp-mode-ck-label" style="flex:1;border:1.5px solid var(--border);border-radius:8px;padding:9px;font-size:12px;cursor:pointer;text-align:center">' +
+      '<input type="radio" name="cm-cp-mode" value="ck" onclick="cmSwitchPayMode()"> Tạo mã cho HV tự CK<br><span style="color:var(--muted)">(tự động xác nhận)</span></label>' +
+    '<label id="cm-cp-mode-manual-label" style="flex:1;border:1.5px solid var(--brand);border-radius:8px;padding:9px;font-size:12px;cursor:pointer;text-align:center">' +
+      '<input type="radio" name="cm-cp-mode" value="manual" checked onclick="cmSwitchPayMode()"> Đã nhận rồi<br><span style="color:var(--muted)">(ghi tay)</span></label>' +
     '</div></div>';
   html += '<div class="modal-field"><div class="form-label">Số tiền</div><input class="form-input" type="number" id="cm-cp-amount" value="' + (due > 0 ? due : '') + '" placeholder="VD: 1000000"></div>';
-  html += '<div class="modal-field" id="cm-cp-method-field" style="display:none"><div class="form-label">Hình thức</div><select class="form-input" id="cm-cp-method"><option>Chuyển khoản</option><option>Momo</option><option>Tiền mặt</option></select></div>';
-  html += '<div class="modal-field"><div class="form-label">Ghi chú</div><input class="form-input" id="cm-cp-note" placeholder="VD: Cọc giữ chỗ"></div>';
+  html += '<div class="modal-field" id="cm-cp-method-field"><div class="form-label">Hình thức</div><select class="form-input" id="cm-cp-method"><option>Chuyển khoản</option><option>Momo</option><option>Tiền mặt</option><option>Khác</option></select></div>';
+  html += '<div class="modal-field"><div class="form-label">Ghi chú</div><input class="form-input" id="cm-cp-note" placeholder="VD: Cọc giữ chỗ / mã giao dịch"></div>';
   html += '<div id="cm-cp-result"></div>';
   document.getElementById('modal-body').innerHTML = html;
-  document.getElementById('modal-actions').innerHTML = '<button class="detail-btn" onclick="closeModal()">Đóng</button> <button class="login-btn" style="width:auto;padding:10px 24px" id="cm-cp-submit-btn" onclick="saveCollectPayment()">Tạo mã CK</button>';
+  document.getElementById('modal-actions').innerHTML = '<button class="detail-btn" onclick="closeModal()">Đóng</button> <button class="login-btn" style="width:auto;padding:10px 24px" id="cm-cp-submit-btn" onclick="saveCollectPayment()">Ghi nhận đã đóng</button>';
   document.getElementById('modal-overlay').classList.add('open');
 }
 
@@ -12305,5 +12307,73 @@ window.renderWeeklyReport = function () {
 })();
 </script>
 
+
+<script id="lj-course-students">
+// ── Học viên khoá học (mọi mùa) — học viên KHÔNG có tài khoản, staff nhập tay sau khi thanh toán ngoài ──
+var _csAll = null, _csFilter = { q: '', season: '', debt: '' };
+function loadCourseStudentsPageAsync() {
+  var c = document.getElementById('main-content'); c.className = 'content';
+  c.innerHTML = '<div class="empty-state">Đang tải...</div>';
+  ljEnsureCourses_(function () {
+    apiGet('getRevenueExtras', {}).then(function (r) {
+      _csAll = (r && r.data) || { payments: [], enrollments: [] };
+      csRenderStudents_();
+    }).catch(function (e) { c.innerHTML = '<div class="empty-state">Lỗi tải học viên: ' + escHtml(e.message) + '</div>'; });
+  });
+}
+function csRows_() {
+  var seasonBy = {}; CM_SEASONS.forEach(function (x) { seasonBy[x.id] = x; });
+  var courseBy = {}; CM_COURSES.forEach(function (x) { courseBy[x.id] = x; });
+  var paid = {};
+  (_csAll.payments || []).forEach(function (p) { if (p.type === 'course') paid[p.ref_id] = (paid[p.ref_id] || 0) + (Number(p.amount) || 0); });
+  return (_csAll.enrollments || []).map(function (e) {
+    var se = seasonBy[e.season_id] || {}, co = courseBy[se.course_id] || {};
+    var price = Number(se.price_full) || 0, pd = paid[e.enrollment_id] || 0;
+    return { id: e.enrollment_id, season_id: e.season_id, name: e.name || '', email: e.email || '', phone: e.phone || '',
+      what: (co.name || 'Khoá học') + (se.season_no ? ' · Mùa ' + se.season_no : ''), plan: e.plan, enrolled: String(e.enrolled_at || '').slice(0, 10),
+      price: price, paid: pd, due: Math.max(0, price - pd) };
+  }).sort(function (a, b) { return String(b.enrolled).localeCompare(String(a.enrolled)); });
+}
+function csRenderStudents_() {
+  var rows = csRows_(), f = _csFilter, q = f.q.toLowerCase();
+  var list = rows.filter(function (r) {
+    if (f.season && r.season_id !== f.season) return false;
+    if (f.debt === 'due' && r.due <= 0) return false;
+    if (f.debt === 'paid' && r.due > 0) return false;
+    return !q || (r.name + ' ' + r.email + ' ' + r.phone).toLowerCase().indexOf(q) > -1;
+  });
+  var totalPaid = list.reduce(function (s, r) { return s + r.paid; }, 0), totalDue = list.reduce(function (s, r) { return s + r.due; }, 0);
+  var opts = '<option value="">Tất cả khoá / mùa</option>' + CM_SEASONS.map(function (se) {
+    var co = CM_COURSES.find(function (x) { return x.id === se.course_id; });
+    return '<option value="' + se.id + '"' + (f.season === se.id ? ' selected' : '') + '>' + escHtml((co ? co.name : '') + ' — Mùa ' + se.season_no) + '</option>';
+  }).join('');
+  var h = pageHeader('Học viên khoá học', 'Tư vấn miễn phí → thanh toán ngoài → staff thêm tại đây. Học viên không có tài khoản đăng nhập.',
+    '<button class="submit-btn" style="padding:8px 16px;font-size:13px;width:auto" onclick="csPickSeasonToEnroll_()">+ Thêm học viên</button>');
+  h += '<div class="card"><div style="padding:14px 24px;display:flex;gap:10px;flex-wrap:wrap;align-items:center">' +
+    '<input class="form-input" id="cs-q" placeholder="Tìm tên / email / SĐT" value="' + escHtml(f.q) + '" oninput="_csFilter.q=this.value;csRenderStudents_()" style="max-width:240px">' +
+    '<select class="form-input" style="max-width:260px" onchange="_csFilter.season=this.value;csRenderStudents_()">' + opts + '</select>' +
+    '<select class="form-input" style="max-width:170px" onchange="_csFilter.debt=this.value;csRenderStudents_()"><option value="">Mọi trạng thái</option><option value="due"' + (f.debt === 'due' ? ' selected' : '') + '>Còn nợ học phí</option><option value="paid"' + (f.debt === 'paid' ? ' selected' : '') + '>Đã đóng đủ</option></select>' +
+    '<div style="margin-left:auto;font-size:13px;color:var(--muted)">' + list.length + ' học viên · đã thu <b style="color:var(--text)">' + fmtMoney(totalPaid) + '</b> · còn nợ <b style="color:var(--text)">' + fmtMoney(totalDue) + '</b></div></div>';
+  h += '<table class="bookings-table"><thead><tr><th>HỌC VIÊN</th><th>SĐT</th><th>KHOÁ / MÙA</th><th>HÌNH THỨC</th><th>ĐÃ ĐÓNG</th><th>NGÀY THÊM</th><th></th></tr></thead><tbody>';
+  if (!list.length) h += '<tr><td colspan="7" style="text-align:center;color:var(--muted);padding:24px 0">Chưa có học viên nào khớp bộ lọc.</td></tr>';
+  list.forEach(function (r) {
+    h += '<tr><td><b>' + escHtml(r.name) + '</b>' + (r.email ? '<div style="font-size:11.5px;color:var(--muted)">' + escHtml(r.email) + '</div>' : '') + '</td><td>' + escHtml(r.phone) + '</td><td>' + escHtml(r.what) + '</td><td>' + cmPlanLabel(r.plan) + '</td>' +
+      '<td>' + fmtMoney(r.paid) + ' / ' + fmtMoney(r.price) + (r.due > 0 ? '<div style="font-size:11.5px;color:#B45309">Còn nợ ' + fmtMoney(r.due) + '</div>' : '<div style="font-size:11.5px;color:#15803D">Đã đóng đủ</div>') + '</td>' +
+      '<td>' + (r.enrolled ? fmtDateStr(r.enrolled) : '') + '</td><td><button class="detail-btn" onclick="navToSeasonDetail(\'' + r.season_id + '\',\'enroll\')">Mở mùa →</button></td></tr>';
+  });
+  h += '</tbody></table></div>';
+  document.getElementById('main-content').innerHTML = h;
+  var qi = document.getElementById('cs-q'); if (qi && f.q) { qi.focus(); qi.setSelectionRange(f.q.length, f.q.length); }
+}
+function csPickSeasonToEnroll_() {
+  var open = CM_SEASONS.filter(function (x) { return x.status !== 'Đã đóng'; });
+  if (!open.length) { toast('Chưa có mùa học nào đang mở — vào Khoá học để tạo mùa', 'error'); return; }
+  document.getElementById('modal-title').textContent = 'Thêm học viên vào mùa nào?';
+  document.getElementById('modal-body').innerHTML = '<div class="modal-field"><div class="form-label">Khoá / mùa học</div><select class="form-input" id="cs-pick-season" style="margin-top:6px">' +
+    open.map(function (se) { var co = CM_COURSES.find(function (x) { return x.id === se.course_id; }); return '<option value="' + se.id + '">' + escHtml((co ? co.name : '') + ' — Mùa ' + se.season_no + ' (' + se.status + ')') + '</option>'; }).join('') + '</select></div>';
+  document.getElementById('modal-actions').innerHTML = '<button class="detail-btn" onclick="closeModal()">Hủy</button> <button class="login-btn" style="width:auto;padding:10px 24px" onclick="var id=document.getElementById(\'cs-pick-season\').value;_cmCurrentSeasonId=id;openEnrollModal(id)">Tiếp tục</button>';
+  document.getElementById('modal-overlay').classList.add('open');
+}
+</script>
 </body>
 </html>
