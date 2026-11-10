@@ -900,7 +900,38 @@ function buildAdviseeFromBooking(b, allSessions) {
     expiry: b.expiry_date ? String(b.expiry_date).slice(0,10) : '',
     advisor: b.advisor_name, sessions: sessions,
     saleName: String(b.sale_name || '').trim(), saleId: String(b.sale_id || '').trim(), saleSource: b.sale_source || '',
+    profile: ljAdviseeProfileFromBooking_(b),
   };
+}
+
+// Hồ sơ khách điền ở form đặt lịch (Trường/Tổ chức, Năm học, Vị trí/Công ty muốn apply, Kỳ vọng cho buổi cố vấn).
+// Đơn cũ lưu gộp trong 1 chuỗi "Vị trí/Công ty muốn apply: … | Kỳ vọng: … | Trường/Tổ chức: …" → tách ra cho dễ đọc.
+function ljAdviseeProfileFromBooking_(b) {
+  var o = { school: String(b.advisee_school || '').trim(), year: String(b.advisee_year || '').trim(), target: String(b.advisee_target || '').trim(), goal: String(b.advisee_goal || '').trim() };
+  if (/(Kỳ vọng|Vị trí\/Công ty muốn apply|Trường\/Tổ chức)\s*:/.test(o.goal)) {
+    var rest = [];
+    o.goal.split(' | ').forEach(function (part) {
+      var m = /^(Kỳ vọng|Vị trí\/Công ty muốn apply|Trường\/Tổ chức)\s*:\s*([\s\S]*)$/.exec(part.trim());
+      if (!m) { if (part.trim()) rest.push(part.trim()); return; }
+      if (m[1] === 'Kỳ vọng') rest.push(m[2].trim());
+      else if (m[1] === 'Trường/Tổ chức') { if (!o.school) o.school = m[2].trim(); }
+      else if (!o.target) o.target = m[2].trim();
+    });
+    o.goal = rest.join(' | ');
+  }
+  return o;
+}
+function ljAdviseeProfileCardHtml_(ae) {
+  var p = ae.profile || {};
+  var cell = function (label, val, full) {
+    return '<div' + (full ? ' style="grid-column:1/-1"' : '') + '><div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin-bottom:3px">' + label + '</div>' +
+      '<div style="font-size:13.5px;line-height:1.55;white-space:pre-wrap">' + (val ? escHtml(val) : '<span style="color:var(--muted)">Chưa điền</span>') + '</div></div>';
+  };
+  return '<div class="card" style="margin-bottom:16px"><div class="card-header"><div class="card-header-left">Hồ sơ khách điền khi đặt lịch</div></div>' +
+    '<div style="padding:4px 24px 18px;display:grid;grid-template-columns:1fr 1fr;gap:14px 24px">' +
+    cell('Trường / Tổ chức', p.school) + cell('Năm học', p.year) +
+    cell('Vị trí / Công ty muốn apply', p.target, true) +
+    cell('Kỳ vọng cho buổi cố vấn', p.goal, true) + '</div></div>';
 }
 
 // ── Advisee — tải THẬT từ Bookings + Sessions, ghi thẳng vào MOCK.advisees.
@@ -6806,6 +6837,7 @@ function renderStaffAdviseeDetail(aeId, fromAdvisorId) {
   html += '<div><span style="color:var(--muted)">Liên hệ: </span><b>' + escHtml(ae.contact || '—') + '</b></div>';
   html += '</div></div></div>';
 
+  html += ljAdviseeProfileCardHtml_(ae);
   html += '<div id="sa-pay-card"></div>';
 
   // Session list — same compact format, same modal
@@ -6834,6 +6866,11 @@ function renderStaffAdviseeDetail(aeId, fromAdvisorId) {
 }
 
 // ── Staff: Chỉnh sửa thông tin Advisee & gói meeting ──
+function ljYearOptions_(cur) {
+  var opts = ['Năm 1','Năm 2','Năm 3','Năm 4','Mới tốt nghiệp','Đi làm 1–2 năm'];
+  if (cur && opts.indexOf(cur) === -1) opts.push(cur);
+  return opts.map(function(o){ return '<option' + (o === cur ? ' selected' : '') + '>' + escHtml(o) + '</option>'; }).join('');
+}
 function openEditAdviseeModal(aeId, fromAdvisorId) {
   var ae = MOCK.advisees.find(function(x){ return x.id === aeId; });
   if (!ae) return;
@@ -6851,6 +6888,12 @@ function openEditAdviseeModal(aeId, fromAdvisorId) {
     '<div><div class="form-label">SĐT</div><input class="form-input" id="eae-phone" value="' + ae.phone + '" style="margin-top:6px"></div>' +
     '</div>' +
     '<div><div class="form-label">Liên hệ khác (Zalo, FB...)</div><input class="form-input" id="eae-contact" value="' + (ae.contact||'') + '" style="margin-top:6px"></div>' +
+    '<div style="border-top:1px solid var(--border);padding-top:14px"><div class="form-label" style="margin-bottom:8px">Hồ sơ khách điền khi đặt lịch</div>' +
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">' +
+    '<div><div class="form-label">Trường / Tổ chức</div><input class="form-input" id="eae-school" value="' + escHtml((ae.profile||{}).school||'') + '" placeholder="UEH, RMIT..." style="margin-top:6px"></div>' +
+    '<div><div class="form-label">Năm học</div><select class="form-select" id="eae-year" style="margin-top:6px"><option value="">Chọn...</option>' + ljYearOptions_((ae.profile||{}).year) + '</select></div></div>' +
+    '<div style="margin-top:12px"><div class="form-label">Vị trí / Công ty muốn apply</div><input class="form-input" id="eae-target" value="' + escHtml((ae.profile||{}).target||'') + '" placeholder="Marketing Intern tại Unilever..." style="margin-top:6px"></div>' +
+    '<div style="margin-top:12px"><div class="form-label">Kỳ vọng cho buổi cố vấn</div><textarea class="form-textarea" id="eae-goal" rows="2" style="margin-top:6px">' + escHtml((ae.profile||{}).goal||'') + '</textarea></div></div>' +
     '<div style="border-top:1px solid var(--border);padding-top:14px"><div class="form-label" style="margin-bottom:8px">Gói meeting</div>' +
     '<select class="form-select" id="eae-pkg">' + pkgOptions + '</select>' +
     '<div style="font-size:12px;color:var(--muted);margin-top:6px">Đổi gói sẽ cập nhật lại tổng số buổi và giá trị đã thanh toán bên dưới. Bạn có thể chỉnh tay nếu cần.</div></div>' +
@@ -6899,6 +6942,10 @@ function saveAdviseeEdit(aeId, fromAdvisorId) {
     sessions_total: newTotal, sessions_done: newDone, done_before: ae.sessionsDone,
     paid: Number(document.getElementById('eae-paid').value) || 0,
     expiry: document.getElementById('eae-expiry').value || '',
+    profile: {
+      school: document.getElementById('eae-school').value.trim(), year: document.getElementById('eae-year').value,
+      target: document.getElementById('eae-target').value.trim(), goal: document.getElementById('eae-goal').value.trim()
+    },
     updated_by: currentUser.email
   }).then(function(res){
     if (!res || !res.success) {
@@ -7565,6 +7612,7 @@ function renderAdviseeDetailForAdvisor(aeId) {
   // Progress bar
   html += '<div style="text-align:right;min-width:80px"><div style="font-size:24px;font-weight:800;color:var(--brand)">' + pctOf(ae.sessionsDone, ae.sessionsTotal) + '%</div><div style="font-size:11px;color:var(--muted)">hoàn thành</div></div>';
   html += '</div></div>';
+  html += ljAdviseeProfileCardHtml_(ae);
 
   // ── Danh sách buổi meeting ──
   html += '<div class="card"><div class="card-header"><div class="card-header-left">Các buổi meeting</div></div>';
@@ -10033,7 +10081,6 @@ function renderSaleMeetings(s) {
 .rp-in{padding:6px 8px;border:1px solid var(--border);border-radius:6px;width:120px}
 @media(max-width:900px){.rp-kpis{grid-template-columns:repeat(2,1fr)}.rp-fun-r{grid-template-columns:90px 1fr 70px}}
 </style>
-<script>
 <script id="lj-social-report">
 (function () {
   var orig = window.renderMarketingReportPage;
@@ -10105,6 +10152,7 @@ function renderSaleMeetings(s) {
   };
 })();
 </script>
+<script>
 (function(){
 var LV = {red:'red',amber:'amber',green:'green',blue:'blue'};
 function nextWord(){ return _reportPeriod.mode === 'quarter' ? 'quý tới' : 'tháng tới'; }
