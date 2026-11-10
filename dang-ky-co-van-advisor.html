@@ -191,6 +191,7 @@ table.pc .pc-rowhead{position:sticky;left:0;z-index:2;background:#141414;text-al
 .pc-tag{display:inline-block;margin-bottom:9px;background:#fc5229;color:#fff;font-family:'Space Grotesk',sans-serif;font-size:10px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;padding:4px 10px;border-radius:100px;white-space:nowrap;}
 .pc-price{font-family:'Space Grotesk',sans-serif;font-size:17px;font-weight:700;color:#FFFFFF;letter-spacing:-.2px;}
 .pc-ok{color:#ff7a57;font-size:20px;}
+.pc-sep{color:rgba(255,255,255,.35);}
 .pc-dot{color:rgba(255,255,255,.3);font-size:20px;line-height:1;}
 table.pc .pc-hi{background:rgba(252,82,41,.12);border-left:1.5px solid rgba(252,82,41,.5);border-right:1.5px solid rgba(252,82,41,.5);border-bottom-color:rgba(252,82,41,.2);}
 table.pc thead .pc-hi{border-top:1.5px solid rgba(252,82,41,.5);border-radius:14px 14px 0 0;}
@@ -516,9 +517,17 @@ function pcToggleExtra(btn) {
   btn.setAttribute('aria-expanded', open ? 'true' : 'false');
   btn.querySelector('span').textContent = open ? 'Ẩn quyền lợi khác' : 'Xem thêm quyền lợi khác';
 }
+/* Thứ tự cột cố định: Dùng Thử → Cơ Bản → Bứt Phá → Chuyên Sâu, các gói còn lại (Đồng Hành, VVIP...) theo sort_order phía sau.
+   Sắp theo TÊN nên không phụ thuộc cột sort_order trên Sheet. */
+var PC_ORDER = ['dùng thử', 'cơ bản', 'bứt phá', 'chuyên sâu'];
+function pcRank(p) {
+  var i = PC_ORDER.indexOf(String(p.name || '').trim().toLowerCase().normalize('NFC'));
+  return i > -1 ? i : 100 + (Number(p.sort_order) || 0);
+}
 function renderPricingJourney(packages, featuresByPkg) {
   var wrapEl = document.getElementById('pj-wrap');
   if (!wrapEl) return;
+  packages = packages.slice().sort(function(a, b){ return pcRank(a) - pcRank(b); });
   var hiIdx = packages.findIndex(function(p){ return p.badge_label && String(p.badge_label).trim(); });
 
   var cols = packages.map(function(p){
@@ -602,8 +611,12 @@ function renderPricingJourney(packages, featuresByPkg) {
   }
   var rows = [
     { label: 'Giá', get: function(c){ return '<span class="pc-price">' + pricingEscHtml(c.price) + '</span>'; } },
-    { label: 'Tổng số buổi cố vấn', get: function(c){ return pricingEscHtml(c.sessions); } },
-    { label: 'Thời gian sử dụng', get: function(c){ return c.duration ? pricingEscHtml(c.duration) : '<span class="pc-dot">·</span>'; } },
+    { label: 'Số buổi / Thời gian sử dụng', get: function(c){
+        var n = String(c.sessions || '').trim();
+        var ses = /^\d+$/.test(n) ? n + ' buổi' : n;
+        if (c.duration) return pricingEscHtml(ses) + '<span class="pc-sep"> / </span>' + pricingEscHtml(c.duration);
+        return pricingEscHtml(ses);
+      } },
     { label: 'Advisor cố vấn', get: function(c){ return c.adv ? pricingEscHtml(c.adv) : '<span class="pc-dot">·</span>'; }, show: cols.some(function(c){ return c.adv; }) },
     { label: 'Định hướng ngành/phòng ban/vị trí phù hợp', key: 'guide' },
     { label: 'Sửa CV', key: 'cv' },
