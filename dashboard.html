@@ -10034,6 +10034,77 @@ function renderSaleMeetings(s) {
 @media(max-width:900px){.rp-kpis{grid-template-columns:repeat(2,1fr)}.rp-fun-r{grid-template-columns:90px 1fr 70px}}
 </style>
 <script>
+<script id="lj-social-report">
+(function () {
+  var orig = window.renderMarketingReportPage;
+  if (typeof orig !== 'function') return;
+  var NA = 'Không có UTM';
+  var isReg = function (l) { return isRegisteredResult(l.result) || String(l.status || '').trim() === LEAD_CONVERTED_STATUS; };
+  var ownerOf = function (l) { return String(l.social_owner || '').trim() || String(l.ref_auto || '').trim(); };
+  var campOf = function (l) { return String(l.utm_campaign || '').trim(); };
+  var get = function (m, k) { return m[k] || (m[k] = { k: k, leads: 0, reg: 0, bookings: 0, revenue: 0 }); };
+  var pct = function (a, b) { return b ? Math.round(a / b * 100) + '%' : '—'; };
+
+  function table(head, rows, right) {
+    return '<div class="rp-card"><table class="rp-tbl"><thead><tr>' + head.map(function (x, i) {
+      return '<th' + (right.indexOf(i) > -1 ? ' class="num"' : '') + '>' + x + '</th>'; }).join('') + '</tr></thead><tbody>' + rows + '</tbody></table></div>';
+  }
+  function build() {
+    var D = insD_(), range = reportPeriodRange(), find = insLeadIndex_(D.leads);
+    var own = {}, camp = {}, mx = {}, chTot = {}, total = 0, tracked = 0, manual = 0;
+    D.leads.forEach(function (l) {
+      if (!inRange(l.created_at, range)) return;
+      total++;
+      var o = ownerOf(l), cp = campOf(l);
+      if (o || String(l.utm_source || '').trim()) tracked++;
+      if (String(l.attribution_type || '') === 'manual') manual++;
+      if (o) {
+        var x = get(own, o); x.leads++; if (isReg(l)) x.reg++;
+        var ch = String(l.utm_source || '').trim().toLowerCase() || NA;
+        (mx[o] = mx[o] || {})[ch] = ((mx[o] || {})[ch] || 0) + 1; chTot[ch] = (chTot[ch] || 0) + 1;
+      }
+      if (cp) { var y = get(camp, cp); y.leads++; if (isReg(l)) y.reg++; }
+    });
+    D.bookings.filter(bookingCounts).forEach(function (b) {
+      if (!inRange(b.created_at, range)) return;
+      var l = find(b); if (!l) return;
+      var o = ownerOf(l), cp = campOf(l), price = Number(b.package_price) || 0;
+      if (o) { var x = get(own, o); x.bookings++; x.revenue += price; }
+      if (cp) { var y = get(camp, cp); y.bookings++; y.revenue += price; }
+    });
+    var h = '<div class="rp-sec">Social · theo nhân sự và chiến dịch</div>';
+    if (!tracked) {
+      return h + '<div class="rp-card"><div class="rp-ok" style="color:var(--muted)">Chưa có lead nào mang tracking trong kỳ này. Kiểm tra: Code.gs mới đã deploy, widget.js đã gửi ref/utm, và link đăng bài có đủ tham số.</div></div>';
+    }
+    var cov = Math.round(tracked / total * 100);
+    h += '<div class="rp-card"><div style="padding:12px 16px;font-size:13.5px">Lead có tracking: <b>' + tracked + '/' + total + '</b> (' + cov + '%) · khách tự nhập mã giới thiệu: <b>' + manual + '</b></div></div>';
+    if (total >= 10 && cov < 50) h += '<div class="today-warn">Dưới 50% lead có tracking, nên số theo từng nhân sự còn thiếu. Kiểm tra team có đăng link trần (không tham số) hay không.</div>';
+    var byRev = function (a, b) { return b.revenue - a.revenue || b.leads - a.leads; };
+    h += '<div class="rp-sec">Theo nhân sự</div>' + table(['NHÂN SỰ', 'LEAD', 'ĐĂNG KÝ', '% ĐĂNG KÝ', 'BOOKING', 'DOANH THU'],
+      Object.keys(own).map(function (k) { return own[k]; }).sort(byRev).map(function (x) {
+        return '<tr><td><b>' + escHtml(x.k) + '</b></td><td class="num">' + x.leads + '</td><td class="num">' + x.reg + '</td><td class="num">' + pct(x.reg, x.leads) +
+          '</td><td class="num">' + x.bookings + '</td><td class="num">' + fmtMoneyShort(x.revenue) + '</td></tr>'; }).join(''), [1, 2, 3, 4, 5]);
+    var chs = Object.keys(chTot).sort(function (a, b) { return chTot[b] - chTot[a]; });
+    h += '<div class="rp-sec">Nhân sự × kênh (số lead)</div>' + table(['NHÂN SỰ'].concat(chs.map(escHtml)),
+      Object.keys(mx).sort(function (a, b) { return own[b].leads - own[a].leads; }).map(function (o) {
+        return '<tr><td><b>' + escHtml(o) + '</b></td>' + chs.map(function (c) { return '<td class="num">' + (mx[o][c] || '–') + '</td>'; }).join('') + '</tr>'; }).join(''),
+      chs.map(function (c, i) { return i + 1; }));
+    var cps = Object.keys(camp).map(function (k) { return camp[k]; }).sort(byRev);
+    if (cps.length) h += '<div class="rp-sec">Theo chiến dịch (utm_campaign)</div>' + table(['CHIẾN DỊCH', 'LEAD', 'ĐĂNG KÝ', '% ĐĂNG KÝ', 'BOOKING', 'DOANH THU'],
+      cps.map(function (x) { return '<tr><td><b>' + escHtml(x.k) + '</b></td><td class="num">' + x.leads + '</td><td class="num">' + x.reg + '</td><td class="num">' + pct(x.reg, x.leads) +
+        '</td><td class="num">' + x.bookings + '</td><td class="num">' + fmtMoneyShort(x.revenue) + '</td></tr>'; }).join(''), [1, 2, 3, 4, 5]);
+    return h;
+  }
+  window.renderMarketingReportPage = function () {
+    var h = orig.apply(this, arguments), sec;
+    try { sec = build(); } catch (e) { console.error('social report:', e); return h; }
+    var i = h.indexOf('<div class="two-col">');
+    if (i > -1) return h.slice(0, i) + sec + h.slice(i);
+    var j = h.lastIndexOf('</div>');
+    return j > -1 ? h.slice(0, j) + sec + h.slice(j) : h + sec;
+  };
+})();
+</script>
 (function(){
 var LV = {red:'red',amber:'amber',green:'green',blue:'blue'};
 function nextWord(){ return _reportPeriod.mode === 'quarter' ? 'quý tới' : 'tháng tới'; }
