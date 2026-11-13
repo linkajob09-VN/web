@@ -385,7 +385,7 @@ footer .copy{flex:1 1 280px;text-align:center}
       <form id="coFormEl" novalidate>
         <div class="field"><label for="coName">Họ tên</label><input type="text" id="coName" autocomplete="name" required></div>
         <div class="field"><label for="coEmail">Email</label><input type="email" id="coEmail" autocomplete="email" required></div>
-        <div class="field"><label for="coPhone">Số điện thoại</label><input type="numbers" id="coPhone" autocomplete="phone" required></div>
+        <div class="field"><label for="coPhone">Số điện thoại</label><input type="tel" id="coPhone" autocomplete="tel" inputmode="tel" required></div>
         <div class="field"><label for="coCode">Mã ưu đãi (nếu có)</label>
           <div class="row2"><input type="text" id="coCode" autocomplete="off"><button class="btn btn-light btn-sm" id="coApply" type="button">Áp dụng</button></div></div>
         <p class="status" id="coStatus" role="status"></p>
@@ -434,25 +434,13 @@ footer .copy{flex:1 1 280px;text-align:center}
   var DEMO_MSG = "Chế độ xem thử: chưa nối máy chủ, chưa có email nào được gửi.";
   var emailOk = function (v) { return /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(v); };
 
-  // ---- Nhận mã ưu đãi ----
-  $("lead").addEventListener("submit", function (e) {
-    e.preventDefault();
-    var email = $("leadEmail").value.trim();
-    if (!emailOk(email)) { setStatus($("leadStatus"), "Email chưa đúng.", "err"); return; }
-    setStatus($("leadStatus"), "Đang gửi…");
-    api({ action: "aptitudeLead", email: email }).then(function (d) {
-      if (d.demo) setStatus($("leadStatus"), DEMO_MSG);
-      else setStatus($("leadStatus"), d.message || (d.ok ? "Đã ghi nhận. Mã sẽ gửi qua email sau khi xác nhận." : "Không thành công."), d.ok ? "ok" : "err");
-    }).catch(function () { setStatus($("leadStatus"), "Không kết nối được. Thử lại sau.", "err"); });
-  });
-
   // ---- Thanh toán ----
   var lastFocus = null, tInt = null, pInt = null, amount = CONFIG.price, order = null;
   function show(step) { ["stForm", "stQR", "stDone"].forEach(function (s) { $(s).hidden = s !== step; }); }
   function openCo() {
     lastFocus = document.activeElement;
     $("co").classList.add("show"); $("co").setAttribute("aria-hidden", "false");
-    show("stForm"); amount = CONFIG.price; $("coAmount").textContent = money(amount);
+    show("stForm"); $("coSubmit").textContent = "Thanh toán 199.000"; amount = CONFIG.price; $("coAmount").textContent = money(amount);
     setStatus($("coStatus"), ""); $("coName").focus();
   }
   function closeCo() {
@@ -472,26 +460,30 @@ footer .copy{flex:1 1 280px;text-align:center}
     api({ action: "aptitudePrice", code: code, email: email }).then(function (d) {
       if (d.demo) { setStatus($("coStatus"), DEMO_MSG); return; }
       if (d.ok) { amount = d.amount; $("coAmount").textContent = amount === 0 ? "Miễn phí" : money(amount); }
+      if (d.ok) $("coSubmit").textContent = amount === 0 ? "Kích hoạt miễn phí" : "Thanh toán " + Number(amount).toLocaleString("vi-VN");
       setStatus($("coStatus"), d.message || (d.ok ? "Đã áp dụng mã." : "Mã không hợp lệ."), d.ok ? "ok" : "err");
     }).catch(function () { setStatus($("coStatus"), "Không kết nối được. Thử lại sau.", "err"); });
   };
 
-  $("coFormEl").addEventListener("submit", function (e) {
+   $("coFormEl").addEventListener("submit", function (e) {
     e.preventDefault();
-    var name = $("coName").value.trim(), email = $("coEmail").value.trim(), code = $("coCode").value.trim();
+    var name = $("coName").value.trim(), email = $("coEmail").value.trim(),
+        phone = $("coPhone").value.replace(/[\s.\-]/g, ""), code = $("coCode").value.trim();
     if (!name) { setStatus($("coStatus"), "Nhập họ tên.", "err"); return; }
     if (!emailOk(email)) { setStatus($("coStatus"), "Email chưa đúng.", "err"); return; }
+    if (!/^(\+?84|0)\d{9,10}$/.test(phone)) { setStatus($("coStatus"), "Số điện thoại chưa đúng.", "err"); return; }
     $("coSubmit").disabled = true; setStatus($("coStatus"), "Đang tạo đơn…");
-    api({ action: "aptitudeOrder", name: name, email: email, code: code }).then(function (d) {
-      $("coSubmit").disabled = false;
-      if (d.demo) { order = { id: "APT-DEMO", amount: amount, demo: true }; showQR(); return; }
-      if (!d.ok) { setStatus($("coStatus"), d.message || "Không tạo được đơn.", "err"); return; }
-      if (d.amount === 0) {
+    api({ action: "aptitudeOrder", name: name, email: email, phone: phone, code: code }).then(function (d) {
+      if (d.demo) { $("coSubmit").disabled = false; setStatus($("coStatus"), DEMO_MSG); return; }
+      if (!d.ok) { $("coSubmit").disabled = false; setStatus($("coStatus"), d.message || "Không tạo được đơn.", "err"); return; }
+      if (d.amount === 0) {            // mã miễn phí: kích hoạt ngay, không cần thanh toán
+        $("coSubmit").disabled = false;
         $("doneTitle").textContent = "Đã kích hoạt";
-        $("doneMsg").innerHTML = (d.message || "Gói 3 tháng đã được kích hoạt. Kiểm tra email của bạn.") + ' <a class="link" href="aptitude-luyen.html">Vào luyện đề</a>';
+        $("doneMsg").innerHTML = (d.message || "Tài liệu đã được kích hoạt. Kiểm tra email của bạn.") + ' <a class="link" href="aptitude-luyen.html">Vào luyện đề</a>';
         show("stDone"); return;
       }
-      order = { id: d.order_id, amount: d.amount, url: d.payment_url || "" }; showQR();
+      // Có phí: chuyển sang trang thanh toán (giữ nút khoá để tránh bấm đôi)
+      window.location.href = d.payment_url || ("thanh-toan.html?order_id=" + encodeURIComponent(d.order_id) + "&kind=aptitude");
     }).catch(function () { $("coSubmit").disabled = false; setStatus($("coStatus"), "Không kết nối được. Thử lại sau.", "err"); });
   });
 
