@@ -4,6 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Thanh toán — LinkaJob</title>
+<link rel="icon" type="image/png" href="logo-icon.png">
+<link rel="apple-touch-icon" href="logo-icon.png">
 <style>
 * { margin:0; padding:0; box-sizing:border-box; }
 :root {
@@ -14,11 +16,10 @@
 body { font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
   background:var(--bg); color:var(--text); min-height:100vh;
   display:flex; flex-direction:column; align-items:center;
-  justify-content:flex-start; padding:24px 16px 48px; }
+  justify-content:flex-start; padding:12px 16px 48px; }
 
-.header { display:flex; align-items:center; gap:10px; margin-bottom:28px; }
-.logo-text { font-size:28px; font-weight:800; letter-spacing:-.5px; color:var(--text); }
-.logo-text b { color:var(--brand); }
+.header { display:flex; align-items:center; justify-content:center; margin-bottom:8px; }
+.logo-img { height:120px; width:auto; max-width:100%; display:block; }
 
 .card { background:var(--white); border-radius:var(--radius); width:100%; max-width:920px;
   box-shadow:0 2px 16px rgba(0,0,0,.08); overflow:hidden; }
@@ -35,6 +36,7 @@ body { font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
 @media (max-width:760px) {
   .card-grid { grid-template-columns:1fr; }
   .col-left { border-right:0; border-bottom:1px solid var(--border); }
+  .logo-img { height:96px; }
 }
 
 .order-info { padding:20px 24px 16px; }
@@ -78,6 +80,7 @@ body { font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
   background:var(--bg); color:var(--text); font-weight:700; font-size:11px;
   display:flex; align-items:center; justify-content:center; flex-shrink:0; margin-top:1px; }
 .instr-list li strong { color:var(--text); }
+.instr-list li a { color:var(--brand); font-weight:600; text-decoration:underline; word-break:break-all; }
 
 .notes { display:none; margin:0 24px 24px; padding:16px 18px; background:#FFF8EE; border:1px solid #FCD9B6; border-radius:12px; }
 .notes-title { font-size:12px; font-weight:700; color:#B45309; text-transform:uppercase; letter-spacing:.06em; margin-bottom:10px; }
@@ -112,7 +115,7 @@ body { font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
 </head>
 <body>
 
-<div class="header"><span class="logo-text">Linka<b>Job</b></span></div>
+<div class="header"><img class="logo-img" src="logo.png" alt="LinkaJob"></div>
 
 <!-- Expired overlay -->
 <div class="overlay" id="expired-overlay">
@@ -152,6 +155,7 @@ body { font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
           <li data-n="2"><span>Quét mã ở bên cạnh. Số tiền và nội dung chuyển khoản sẽ tự điền sẵn.</span></li>
           <li data-n="3"><span>Nếu chuyển thủ công, hãy nhập đúng <strong>nội dung chuyển khoản</strong> (mã đơn ở bên cạnh). Sai nội dung thì hệ thống không nhận ra khoản tiền.</span></li>
           <li data-n="4"><span>Chuyển xong, bạn <strong>giữ nguyên trang này</strong>. Trang sẽ tự báo thành công sau vài giây.</span></li>
+          <li data-n="5"><span>Nếu trong quá trình thanh toán có lỗi phát sinh nào, vui lòng gửi thông tin trực tiếp về <a href="https://www.facebook.com/linkajob.careerconsulting" target="_blank" rel="noopener">Facebook Page</a> để được hỗ trợ.</span></li>
         </ul>
       </div>
 
