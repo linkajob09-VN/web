@@ -4,8 +4,10 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Thanh toán — LinkaJob</title>
-<link rel="icon" type="image/png" href="logo-icon.png">
-<link rel="apple-touch-icon" href="logo-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700&display=swap" rel="stylesheet">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='141 148 270 270'%3E%3Cg fill='%23FD532F'%3E%3Cpath id='a' d='M284 151Q292 145 298 152Q301 156 301 162L301 207Q301 222 291 232L228 285Q214 297 214 306Q214 328 227 348Q205 345 185 323Q168 306 168 277Q168 243 192 222Z'/%3E%3Cpath transform='rotate(180 276 283)' d='M284 151Q292 145 298 152Q301 156 301 162L301 207Q301 222 291 232L228 285Q214 297 214 306Q214 328 227 348Q205 345 185 323Q168 306 168 277Q168 243 192 222Z'/%3E%3C/g%3E%3C/svg%3E">
 <style>
 * { margin:0; padding:0; box-sizing:border-box; }
 :root {
@@ -19,7 +21,7 @@ body { font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
   justify-content:flex-start; padding:12px 16px 48px; }
 
 .header { display:flex; align-items:center; justify-content:center; margin-bottom:8px; }
-.logo-img { height:120px; width:auto; max-width:100%; display:block; }
+.logo-img { height:64px; width:auto; max-width:100%; display:block; }
 
 .card { background:var(--white); border-radius:var(--radius); width:100%; max-width:920px;
   box-shadow:0 2px 16px rgba(0,0,0,.08); overflow:hidden; }
@@ -36,7 +38,7 @@ body { font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
 @media (max-width:760px) {
   .card-grid { grid-template-columns:1fr; }
   .col-left { border-right:0; border-bottom:1px solid var(--border); }
-  .logo-img { height:96px; }
+  .logo-img { height:52px; }
 }
 
 .order-info { padding:20px 24px 16px; }
@@ -115,7 +117,15 @@ body { font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
 </head>
 <body>
 
-<div class="header"><img class="logo-img" src="logo.png" alt="LinkaJob"></div>
+<div class="header">
+  <svg class="logo-img" viewBox="160 140 1330 285" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="LinkaJob">
+    <g fill="#FD532F">
+      <path d="M284 151Q292 145 298 152Q301 156 301 162L301 207Q301 222 291 232L228 285Q214 297 214 306Q214 328 227 348Q205 345 185 323Q168 306 168 277Q168 243 192 222Z"/>
+      <path transform="rotate(180 276 283)" d="M284 151Q292 145 298 152Q301 156 301 162L301 207Q301 222 291 232L228 285Q214 297 214 306Q214 328 227 348Q205 345 185 323Q168 306 168 277Q168 243 192 222Z"/>
+      <text x="503" y="361" font-family="Montserrat,'Segoe UI',Arial,sans-serif" font-weight="700" font-size="222" textLength="979" lengthAdjust="spacingAndGlyphs">LinkaJob</text>
+    </g>
+  </svg>
+</div>
 
 <!-- Expired overlay -->
 <div class="overlay" id="expired-overlay">
@@ -155,7 +165,7 @@ body { font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
           <li data-n="2"><span>Quét mã ở bên cạnh. Số tiền và nội dung chuyển khoản sẽ tự điền sẵn.</span></li>
           <li data-n="3"><span>Nếu chuyển thủ công, hãy nhập đúng <strong>nội dung chuyển khoản</strong> (mã đơn ở bên cạnh). Sai nội dung thì hệ thống không nhận ra khoản tiền.</span></li>
           <li data-n="4"><span>Chuyển xong, bạn <strong>giữ nguyên trang này</strong>. Trang sẽ tự báo thành công sau vài giây.</span></li>
-          <li data-n="5"><span>Nếu trong quá trình thanh toán có lỗi phát sinh nào, vui lòng gửi thông tin trực tiếp về <a href="https://www.facebook.com/linkajob.careerconsulting" target="_blank" rel="noopener">Facebook Page</a> để được hỗ trợ.</span></li>
+          <li data-n="5"><span>Nếu trong quá trình thanh toán có lỗi phát sinh, vui lòng gửi thông tin trực tiếp về <a href="https://www.facebook.com/linkajob.careerconsulting" target="_blank" rel="noopener">Facebook Page</a> để được hỗ trợ.</span></li>
         </ul>
       </div>
 
