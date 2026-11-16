@@ -1284,8 +1284,8 @@ function buildAdviseeFromBooking(b, allSessions, pkgFlag) {
 
     if (!row) {
       // Chưa từng có dòng Session cho buổi này — chỉ buổi 1 mở sẵn, còn lại khoá
-      // (gói không giới hạn buổi: buổi kế tiếp mở ngay khi buổi trước đã hoàn thành)
-      var prevDone = no === 1 || (sessionsUnlimited && sessions[no - 2] && sessions[no - 2].status === 'done');
+      // (mọi gói: buổi kế tiếp mở ngay khi buổi trước đã hoàn thành, kể cả buổi đã book ở web cũ)
+      var prevDone = no === 1 || (sessions[no - 2] && sessions[no - 2].status === 'done');
       sessions.push({
         no: no, date: null, timeStart: null, timeEnd: null,
         status: prevDone ? 'upcoming' : 'locked',
