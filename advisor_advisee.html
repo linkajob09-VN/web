@@ -1160,6 +1160,26 @@ function loadAdvisorRealDataAsync() {
   });
 }
 
+// ── Cờ của gói (lấy từ tab Packages): sessions_unlimited / advisor_unlimited ──
+//    Gói "Đồng Hành" bật cả 2 cờ → số buổi không giới hạn + được tự đổi advisor.
+var _pkgFlagsCache = null;
+function loadPkgFlags() {
+  if (_pkgFlagsCache) return Promise.resolve(_pkgFlagsCache);
+  var T = function(v){ return v === true || String(v).toUpperCase() === 'TRUE'; };
+  return apiGet('getPackages', {}).then(function(res){
+    var map = {};
+    ((res && res.data) || []).forEach(function(p){
+      map[p.name] = { sessionsUnlimited: T(p.sessions_unlimited), advisorUnlimited: T(p.advisor_unlimited) };
+    });
+    _pkgFlagsCache = map;
+    return map;
+  }).catch(function(){ return {}; });
+}
+function ensureAdvisorsLoaded() {
+  if (advisorsLoaded && sheetData.advisors && sheetData.advisors.length) return Promise.resolve();
+  return new Promise(function(resolve){ loadAdvisorsFromSheet(resolve); });
+}
+
 // ── Tương tự, cho Advisee đang đăng nhập ──
 function loadAdviseeRealDataAsync() {
   return apiGet('getBookings', { advisee_email: currentUser.email }).then(function(res){
@@ -1168,7 +1188,8 @@ function loadAdviseeRealDataAsync() {
     if (confirmed.length === 0) { MOCK.advisees = MOCK.advisees.filter(function(ae){ return ae.email !== currentUser.email; }); return; }
 
     // Sessions không có cột advisee_email, nên lấy hết rồi lọc theo booking_id ở client
-    return apiGet('getSessions', {}).then(function(sesRes){
+    return Promise.all([apiGet('getSessions', {}), loadPkgFlags()]).then(function(rr){
+      var sesRes = rr[0], pkgFlags = rr[1] || {};
       var allSessions = (sesRes && sesRes.data) ? sesRes.data : [];
       var bookingIds = confirmed.map(function(b){ return b.booking_id; });
       var mySessions = allSessions.filter(function(s){ return bookingIds.indexOf(s.booking_id) > -1; });
@@ -1177,7 +1198,7 @@ function loadAdviseeRealDataAsync() {
       var sortKey = function(b){ return String(b.created_at || '') + '|' + String(b.booking_id || ''); };
       confirmed.sort(function(a, b){ var x = sortKey(a), y = sortKey(b); return x < y ? 1 : (x > y ? -1 : 0); });
 
-      var realAdvisees = confirmed.map(function(b){ return buildAdviseeFromBooking(b, mySessions); });
+      var realAdvisees = confirmed.map(function(b){ return buildAdviseeFromBooking(b, mySessions, pkgFlags[b.package_name]); });
       // Gói còn hạn lên trước, gói hết hạn xuống sau (sort ổn định → vẫn giữ thứ tự mới → cũ)
       realAdvisees.sort(function(a, b){ return (isAdviseeExpired(a) ? 1 : 0) - (isAdviseeExpired(b) ? 1 : 0); });
 
@@ -1244,9 +1265,17 @@ function safeParseYMD(dateStr) {
   return { valid: true, dow: ['CN','T2','T3','T4','T5','T6','T7'][d.getDay()], dd: d.getDate(), mm: d.getMonth()+1, dateObj: d };
 }
 
-function buildAdviseeFromBooking(b, allSessions) {
+function buildAdviseeFromBooking(b, allSessions, pkgFlag) {
   var mySessions = allSessions.filter(function(s){ return s.booking_id === b.booking_id; });
   var sessionsTotal = Number(b.sessions_total) || 0;
+  var sessionsUnlimited = !!(pkgFlag && pkgFlag.sessionsUnlimited);
+  var advisorUnlimited = !!(pkgFlag && pkgFlag.advisorUnlimited);
+  if (sessionsUnlimited) {
+    // Không giới hạn buổi: hiện các buổi đã có + đúng 1 buổi kế tiếp để đặt
+    var maxNo = 0;
+    mySessions.forEach(function(s){ maxNo = Math.max(maxNo, Number(s.session_number) || 0); });
+    sessionsTotal = maxNo + 1;
+  }
   var today = new Date();
 
   var sessions = [];
@@ -1255,10 +1284,12 @@ function buildAdviseeFromBooking(b, allSessions) {
 
     if (!row) {
       // Chưa từng có dòng Session cho buổi này — chỉ buổi 1 mở sẵn, còn lại khoá
+      // (gói không giới hạn buổi: buổi kế tiếp mở ngay khi buổi trước đã hoàn thành)
+      var prevDone = no === 1 || (sessionsUnlimited && sessions[no - 2] && sessions[no - 2].status === 'done');
       sessions.push({
         no: no, date: null, timeStart: null, timeEnd: null,
-        status: no === 1 ? 'upcoming' : 'locked',
-        lockedReason: no === 1 ? undefined : 'Hoàn thành buổi trước để mở khoá',
+        status: prevDone ? 'upcoming' : 'locked',
+        lockedReason: prevDone ? undefined : 'Hoàn thành buổi trước để mở khoá',
         feedback: null, meetLink: '', prepInfo: null, advisorNotes: null, session_id: null,
       });
       continue;
@@ -1303,6 +1334,7 @@ function buildAdviseeFromBooking(b, allSessions) {
       no: no, date: schedDate || null, timeStart: schedTime || null, timeEnd: timeEnd,
       status: status, feedback: feedbackObj, meetLink: row.meet_link || '', prepInfo: prepInfo, advisorNotes: advisorNotesObj,
       session_id: row.session_id,
+      advisor: row.advisor_name || '',
     });
   }
 
@@ -1313,7 +1345,8 @@ function buildAdviseeFromBooking(b, allSessions) {
     name: b.advisee_name, email: b.advisee_email, phone: b.advisee_phone,
     pkg: b.package_name, bookingId: b.booking_id,
     advisorTitle: '', sessionsTotal: sessionsTotal, sessionsDone: sessionsDone,
-    progress: sessionsDone + '/' + sessionsTotal,
+    progress: sessionsUnlimited ? (sessionsDone + ' buổi') : (sessionsDone + '/' + sessionsTotal),
+    sessionsUnlimited: sessionsUnlimited, advisorUnlimited: advisorUnlimited,
     paid: Number(b.package_price) || 0,
     registeredAt: b.created_at ? String(b.created_at).slice(0,10) : '',
     expiry: (b.expiry_date || b.expiry) ? String(b.expiry_date || b.expiry).slice(0,10) : '',
@@ -4928,8 +4961,8 @@ function renderMyBookings() {
   html += '<div class="aee-advisor-info"><div class="aee-advisor-name">' + ae.advisor + '</div><div class="aee-advisor-title">' + (ae.advisorTitle||'Advisor · LinkaJob') + '</div></div>';
   html += '</div>';
   html += '<div class="aee-pkg-row">';
-  html += '<div><div class="aee-pkg-name">Gói ' + ae.pkg + '</div><div class="aee-pkg-meta">' + (pkg.sessions||ae.sessionsTotal) + ' buổi · 45–60 phút/buổi · ' + (ae.bookingId||'') + '</div></div>';
-  html += '<div class="aee-progress-badge">Đã đặt ' + ae.sessionsDone + '/' + ae.sessionsTotal + '</div>';
+  html += '<div><div class="aee-pkg-name">Gói ' + ae.pkg + '</div><div class="aee-pkg-meta">' + (ae.sessionsUnlimited ? 'Không giới hạn buổi' : ((pkg.sessions||ae.sessionsTotal) + ' buổi')) + ' · 45–60 phút/buổi' + (ae.advisorUnlimited ? ' · Không giới hạn advisor' : '') + ' · ' + (ae.bookingId||'') + '</div></div>';
+  html += '<div class="aee-progress-badge">' + (ae.sessionsUnlimited ? ('Đã dùng ' + ae.sessionsDone + ' buổi') : ('Đã đặt ' + ae.sessionsDone + '/' + ae.sessionsTotal)) + '</div>';
   html += '</div>';
   var expiryDate = new Date(ae.expiry + 'T00:00:00');
   var today = new Date(); today.setHours(0,0,0,0);
@@ -4940,7 +4973,7 @@ function renderMyBookings() {
   html += '<span style="font-size:16px">⏱</span><span>Gói hết hạn vào <strong style="color:' + expiryColor + '">' + expiryLabel + '</strong> — còn ' + daysLeft + ' ngày</span></div>';
   html += '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-top:12px">';
   html += '<div style="border:1.5px solid var(--border);border-radius:12px;padding:16px 18px;cursor:pointer;transition:border-color .15s" onmouseover="this.style.borderColor=\"var(--brand)\"" onmouseout="this.style.borderColor=\"var(--border)\"" onclick="openExtendModal(\'' + ae.id + '\')">' + '<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px"><span style="font-size:18px">📅</span><div style="font-size:14px;font-weight:700">Gia hạn thời gian</div></div><div style="font-size:12.5px;color:var(--muted);margin-bottom:8px">Chọn số tuần cần thêm</div><div style="font-size:13px;font-weight:700;color:var(--brand)">100.000đ / tuần</div></div>';
-  html += '<div style="border:1.5px solid var(--border);border-radius:12px;padding:16px 18px;cursor:pointer;transition:border-color .15s" onmouseover="this.style.borderColor=\"var(--brand)\"" onmouseout="this.style.borderColor=\"var(--border)\"" onclick="openSwitchAdvisorModal(\'' + ae.id + '\')">' + '<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px"><span style="font-size:18px">🔄</span><div style="font-size:14px;font-weight:700">Meet advisor khác</div></div><div style="font-size:12.5px;color:var(--muted);margin-bottom:8px">Đổi sang advisor mới, 1 lần</div><div style="font-size:13px;font-weight:700;color:var(--brand)">100.000đ</div></div>';
+  html += ae.advisorUnlimited ? ('<div style="border:1.5px solid var(--brand);border-radius:12px;padding:16px 18px;cursor:pointer;transition:border-color .15s;background:var(--brand-light)" onclick="openPickAdvisorModal(\'' + ae.id + '\')">' + '<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px"><span style="font-size:18px">🔄</span><div style="font-size:14px;font-weight:700">Đổi advisor</div></div><div style="font-size:12.5px;color:var(--muted);margin-bottom:8px">Không giới hạn, đổi bất cứ lúc nào</div><div style="font-size:13px;font-weight:700;color:var(--brand)">Miễn phí</div></div>') : ('<div style="border:1.5px solid var(--border);border-radius:12px;padding:16px 18px;cursor:pointer;transition:border-color .15s" onmouseover="this.style.borderColor=\"var(--brand)\"" onmouseout="this.style.borderColor=\"var(--border)\"" onclick="openSwitchAdvisorModal(\'' + ae.id + '\')">' + '<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px"><span style="font-size:18px">🔄</span><div style="font-size:14px;font-weight:700">Meet advisor khác</div></div><div style="font-size:12.5px;color:var(--muted);margin-bottom:8px">Đổi sang advisor mới, 1 lần</div><div style="font-size:13px;font-weight:700;color:var(--brand)">100.000đ</div></div>');
   html += '<div style="border:1.5px solid var(--border);border-radius:12px;padding:16px 18px;cursor:pointer;transition:border-color .15s" onmouseover="this.style.borderColor=\"var(--brand)\"" onmouseout="this.style.borderColor=\"var(--border)\"" onclick="openUpgradePackageModal(\'' + ae.id + '\')">' + '<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px"><span style="font-size:18px">⬆</span><div style="font-size:14px;font-weight:700">Nâng cấp gói</div></div><div style="font-size:12.5px;color:var(--muted);margin-bottom:8px">Giữ nguyên buổi/thời gian đã dùng</div><div style="font-size:13px;font-weight:700;color:var(--brand)">Chỉ trả chênh lệch</div></div>';
   html += '</div></div>';
 
@@ -4964,6 +4997,7 @@ function renderMyBookings() {
     html += '<span style="background:'+sc.bg+';color:'+sc.color+';font-size:12px;font-weight:700;padding:4px 12px;border-radius:100px">'+sc.label+'</span>';
     if (extraTag) html += extraTag;
     if (s.meetLink && s.status !== 'locked') html += '<a href="'+s.meetLink+'" target="_blank" class="detail-btn" style="font-size:12px;padding:6px 12px">🎥 Meet</a>';
+    if (s.status === 'upcoming' && !s.date) html += '<button class="login-btn" onclick="openBookSessionModal(\'' + ae.id + '\',' + s.no + ')" style="width:auto;font-size:12px;padding:6px 14px">🗓 Đặt lịch</button>';
     if (s.status !== 'locked') html += '<button class="detail-btn" onclick="openAdviseeSessionModal('+s.no+')" style="font-size:12px;padding:6px 12px">Chi tiết</button>';
     html += '</div>';
   });
@@ -5066,10 +5100,65 @@ function openAdviseeSessionModal(sessionNo) {
 var _bookSessionCtx = null; // { aeId, sessionNo, advisorName }
 var _bk = { avail: {}, booked: {}, selDate: null, selM: null, step: 'pick' };
 
+// ── Gói không giới hạn advisor: tự chọn / đổi advisor, miễn phí ──
+function nextBookableSessionNo_(ae) {
+  var s = (ae.sessions || []).find(function(x){ return x.status === 'upcoming' && !x.date; });
+  return s ? s.no : null;
+}
+function applyAdvisorChange_(ae, newName) {
+  var adv = (sheetData.advisors || []).find(function(a){ return normName(a.name) === normName(newName); }) || {};
+  return apiPost({
+    action: 'changeAdvisorFree', booking_id: ae.bookingId, advisee_email: ae.email,
+    new_advisor_name: newName, new_advisor_id: adv.id || '', new_advisor_email: adv.email || '',
+  }).then(function(res){
+    if (!res || !res.success) { toast('Không đổi được advisor: ' + (res && res.error ? res.error : 'lỗi không xác định'), 'error'); return false; }
+    ae.advisor = newName; ae.advisorTitle = adv.title ? (adv.title + (adv.company ? ' · ' + adv.company : '')) : ae.advisorTitle;
+    return true;
+  }).catch(function(e){ toast('Lỗi kết nối: ' + e.message, 'error'); return false; });
+}
+function openPickAdvisorModal(aeId) {
+  var ae = MOCK.advisees.find(function(x){ return x.id === aeId; });
+  if (!ae) return;
+  document.getElementById('modal-title').textContent = '🔄 Chọn advisor';
+  document.getElementById('modal-body').innerHTML = skeletonRows(3);
+  document.getElementById('modal-actions').innerHTML = '<button class="btn-secondary" onclick="closeModal()" style="width:auto;padding:10px 20px">Đóng</button>';
+  document.getElementById('modal-overlay').classList.add('open');
+  ensureAdvisorsLoaded().then(function(){
+    var list = (sheetData.advisors || []).filter(function(a){ return a.active; });
+    var body = '<div style="font-size:13px;color:var(--muted);line-height:1.7;margin-bottom:14px">Gói <strong>' + ae.pkg + '</strong> <strong>không giới hạn advisor</strong> — bạn có thể đổi bất cứ lúc nào, <strong style="color:var(--brand)">miễn phí</strong>. Chọn advisor rồi xem lịch trống để đặt buổi tiếp theo.</div>';
+    if (!list.length) body += '<div class="empty-state">Chưa tải được danh sách advisor.</div>';
+    body += '<div style="display:flex;flex-direction:column;gap:10px;max-height:55vh;overflow:auto">';
+    list.forEach(function(a){
+      var cur = normName(ae.advisor) === normName(a.name);
+      body += '<div style="display:flex;align-items:center;gap:12px;border:1.5px solid ' + (cur ? 'var(--brand)' : 'var(--border)') + ';border-radius:12px;padding:12px 16px;cursor:pointer" onclick="pickAdvisor(\'' + aeId + '\',\'' + String(a.name).replace(/'/g, "\\'") + '\')">' +
+        avatarCircle(a.name, 38) +
+        '<div style="flex:1"><div style="font-weight:700;font-size:13.5px">' + a.name + (cur ? ' <span style="font-size:11px;color:var(--brand)">(Đang chọn)</span>' : '') + '</div>' +
+        '<div style="font-size:12px;color:var(--muted)">' + (a.title || '') + (a.company ? ' · ' + a.company : '') + '</div></div>' +
+        '<div style="font-size:12px;color:var(--brand);font-weight:600">' + (cur ? 'Xem lịch →' : 'Chọn →') + '</div></div>';
+    });
+    body += '</div>';
+    document.getElementById('modal-body').innerHTML = body;
+  });
+}
+function pickAdvisor(aeId, name) {
+  var ae = MOCK.advisees.find(function(x){ return x.id === aeId; });
+  if (!ae) return;
+  var go = function(){
+    var no = nextBookableSessionNo_(ae);
+    closeModal();
+    if (no) { setTimeout(function(){ openBookSessionModal(aeId, no); }, 150); }
+    else { toast('Đã chọn advisor ' + name + '. Hoàn thành buổi hiện tại để đặt buổi tiếp theo.', 'success'); }
+    document.getElementById('main-content').innerHTML = renderMyBookings();
+  };
+  if (normName(ae.advisor) === normName(name)) { go(); return; }
+  document.getElementById('modal-body').innerHTML = skeletonRows(2);
+  applyAdvisorChange_(ae, name).then(function(ok){ if (ok) go(); else openPickAdvisorModal(aeId); });
+}
+
 function openBookSessionModal(aeId, sessionNo) {
   var ae = MOCK.advisees.find(function(x){ return x.id === aeId; });
   if (!ae) return;
-  _bookSessionCtx = { aeId: aeId, sessionNo: sessionNo, advisorName: ae.advisor };
+  _bookSessionCtx = { aeId: aeId, sessionNo: sessionNo, advisorName: ae.advisor, advisorUnlimited: !!ae.advisorUnlimited };
   _bk = { avail: {}, booked: {}, selDate: null, selM: null, step: 'pick' };
   _cal.advisee = { view: 'week', anchor: new Date() };
   _calRerender.advisee = renderBkBody;
@@ -5080,8 +5169,16 @@ function openBookSessionModal(aeId, sessionNo) {
   var box = document.querySelector('.modal'); if (box) box.style.maxWidth = '780px';
   document.getElementById('modal-overlay').classList.add('open');
 
-  apiGet('getSlots', { advisor: ae.advisor }).then(function(res) {
+  var _go = function(){ bkLoadSlots(true); };
+  if (ae.advisorUnlimited) ensureAdvisorsLoaded().then(_go); else _go();
+}
+
+// Tải lịch trống của advisor đang chọn trong modal (đổi advisor → gọi lại hàm này)
+function bkLoadSlots(jumpToFirst) {
+  var ctx = _bookSessionCtx;
+  apiGet('getSlots', { advisor: ctx.advisorName }).then(function(res) {
     var raw = (res && res.data) ? res.data : [], today = ymd(new Date()), starts = {};
+    _bk.avail = {}; _bk.booked = {};
     raw.forEach(function(s) {
       var d = slotDate(s), m = tmin(s.time_start);
       if (!d || m == null || d < today) return; // chỉ từ hôm nay trở đi
@@ -5106,10 +5203,27 @@ function openBookSessionModal(aeId, sessionNo) {
 
 function bkStarts(d) { return (_bk.avail[d] || []).map(function(x){ return x.m; }); }
 
+function bkAdvisorSelectHtml() {
+  if (!_bookSessionCtx || !_bookSessionCtx.advisorUnlimited) return '';
+  var list = (sheetData.advisors || []).filter(function(a){ return a.active || normName(a.name) === normName(_bookSessionCtx.advisorName); });
+  if (!list.length) return '';
+  return '<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;background:var(--brand-light);border:1.5px solid #FECACA;border-radius:10px;padding:10px 14px;margin-bottom:12px">' +
+    '<span class="form-label" style="margin:0">Advisor</span>' +
+    '<select class="sc-sel" style="min-width:220px" onchange="bkSwitchAdvisor(this.value)">' +
+    list.map(function(a){ return '<option value="' + String(a.name).replace(/"/g, '&quot;') + '"' + (normName(a.name) === normName(_bookSessionCtx.advisorName) ? ' selected' : '') + '>' + a.name + (a.title ? ' — ' + a.title : '') + '</option>'; }).join('') +
+    '</select><span style="font-size:12px;color:var(--muted)">Gói Đồng Hành: đổi advisor miễn phí, không giới hạn</span></div>';
+}
+function bkSwitchAdvisor(name) {
+  _bookSessionCtx.advisorName = name;
+  _bk = { avail: {}, booked: {}, selDate: null, selM: null, step: 'pick' };
+  document.getElementById('modal-body').innerHTML = bkAdvisorSelectHtml() + skeletonRows(2);
+  bkLoadSlots(true);
+}
+
 function renderBkBody() {
   if (_bk.step === 'confirm') { renderBkConfirm(); return; }
   var hasAny = Object.keys(_bk.avail).length > 0;
-  var html = '<div style="font-size:13px;color:var(--muted);margin-bottom:6px;line-height:1.6">Chọn ngày có khung giờ trống của Advisor <b>' + _bookSessionCtx.advisorName + '</b>, sau đó chọn giờ và phút bắt đầu (buổi meeting 60 phút).</div>';
+  var html = bkAdvisorSelectHtml() + '<div style="font-size:13px;color:var(--muted);margin-bottom:6px;line-height:1.6">Chọn ngày có khung giờ trống của Advisor <b>' + _bookSessionCtx.advisorName + '</b>, sau đó chọn giờ và phút bắt đầu (buổi meeting 60 phút).</div>';
   if (!hasAny) {
     html += '<div class="empty-state"><div class="icon">📭</div>Advisor hiện chưa có giờ trống nào từ hôm nay trở đi. Vui lòng liên hệ đội LinkaJob để được hỗ trợ xếp lịch.</div>';
     document.getElementById('modal-body').innerHTML = html;
@@ -5187,8 +5301,22 @@ function renderBkConfirm() {
     '<button class="login-btn" id="bk-confirm-btn" onclick="confirmBookSession()" style="width:auto;padding:10px 24px">Xác nhận đặt lịch</button>';
 }
 
-// Bước cuối: gửi request đặt lịch thật
+// Bước cuối: nếu advisee vừa chọn advisor khác (gói không giới hạn advisor) → lưu đổi advisor trước, rồi mới đặt lịch
 function confirmBookSession() {
+  var ctx = _bookSessionCtx;
+  var ae = MOCK.advisees.find(function(x){ return x.id === ctx.aeId; });
+  if (ae && ctx.advisorUnlimited && normName(ae.advisor) !== normName(ctx.advisorName)) {
+    var btn = document.getElementById('bk-confirm-btn');
+    if (btn) { btn.innerHTML = '<span class="spinner"></span> Đang đặt lịch...'; btn.disabled = true; }
+    applyAdvisorChange_(ae, ctx.advisorName).then(function(ok){
+      if (!ok) { if (btn) { btn.innerHTML = 'Xác nhận đặt lịch'; btn.disabled = false; } return; }
+      confirmBookSessionCore();
+    });
+    return;
+  }
+  confirmBookSessionCore();
+}
+function confirmBookSessionCore() {
   var ctx = _bookSessionCtx, d = _bk.selDate, m = _bk.selM;
   var slot = (_bk.avail[d] || []).filter(function(x){ return x.m === m; })[0];
   if (!slot) { toast('Vui lòng chọn lại giờ meeting', 'error'); bkBack(); return; }
@@ -5200,7 +5328,7 @@ function confirmBookSession() {
 
   apiPost({
     action: 'bookSession', slot_id: slot.slot_id, booking_id: ae.bookingId,
-    session_number: ctx.sessionNo, advisee_name: ae.name,
+    session_number: ctx.sessionNo, advisee_name: ae.name, advisor_name: ctx.advisorName,
   }).then(function(res) {
     if (!res || !res.success) {
       toast('Lỗi: ' + (res && res.error ? res.error : 'không đặt được lịch — khung giờ có thể vừa bị người khác chọn'), 'error');
@@ -5209,7 +5337,7 @@ function confirmBookSession() {
     }
     var s = ae.sessions.find(function(x){ return x.no === ctx.sessionNo; });
     var time = tstr(m);
-    if (s) { s.date = d; s.timeStart = time; s.timeEnd = tstr(m + SC_DUR); s.session_id = res.session_id; s.status = 'upcoming'; }
+    if (s) { s.advisor = ctx.advisorName; s.date = d; s.timeStart = time; s.timeEnd = tstr(m + SC_DUR); s.session_id = res.session_id; s.status = 'upcoming'; }
     toast('Đã đặt lịch buổi ' + ctx.sessionNo + ' thành công ✅', 'success');
     document.getElementById('main-content').innerHTML = renderMyBookings();
     showBookingSuccessNotice(ctx.sessionNo, d, time);
