@@ -300,6 +300,18 @@ body{font-family:'Montserrat',sans-serif;background:#F5F4F1;color:#1C1C1C;overfl
 .total-row{background:var(--orange-tint);border:.5px solid rgba(252,82,41,.18);border-radius:10px;padding:12px 16px;display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;}
 .total-l{font-family:'Montserrat',sans-serif;font-size:13px;font-weight:700;color:var(--text);}
 .total-p{font-family:'Montserrat',sans-serif;font-size:20px;font-weight:700;color:#fc5229;}
+.vbox{margin-bottom:12px;}
+.vlbl{font-size:10px;color:var(--muted);font-family:'Montserrat',sans-serif;font-weight:600;letter-spacing:.04em;text-transform:uppercase;margin-bottom:5px;}
+.vrow{display:flex;gap:8px;}
+.vrow input{flex:1;min-width:0;background:#fff;border:.5px solid var(--line);border-radius:8px;color:var(--text);font-size:13px;font-family:'Montserrat',sans-serif;padding:9px 12px;outline:none;text-transform:uppercase;letter-spacing:.05em;}
+.vrow input:focus{border-color:#fc5229;}
+.vrow input:disabled{background:var(--orange-tint);}
+.vbtn{background:#fff;border:.5px solid rgba(252,82,41,.35);color:#fc5229;font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:12px;padding:9px 18px;border-radius:100px;cursor:pointer;white-space:nowrap;}
+.vbtn:hover{background:var(--orange-tint-2);}
+.vbtn:disabled{opacity:.5;cursor:default;}
+.vmsg{font-size:12px;line-height:1.5;margin-top:6px;}
+.vmsg.ok{color:#1f7a4d;}.vmsg.err{color:#c2300f;}
+.vline{display:flex;justify-content:space-between;align-items:center;font-size:12.5px;color:#1f7a4d;font-family:'Montserrat',sans-serif;font-weight:600;padding:0 4px 8px;}
 /* payment */
 .pay-wrap{display:flex;gap:14px;align-items:flex-start;margin-bottom:12px;}
 .pay-qr{background:#fff;border:.5px solid var(--line);border-radius:10px;padding:10px;flex-shrink:0;}
@@ -683,6 +695,12 @@ body{font-family:'Montserrat',sans-serif;background:#F5F4F1;color:#1C1C1C;overfl
         <div class="crow"><span class="cl">Email</span><div class="cv" id="cvEmail" style="font-weight:400;font-size:11px;">—</div></div>
         <div class="crow"><span class="cl">SĐT</span><div class="cv" id="cvPhone" style="font-weight:400;font-size:11px;">—</div></div>
       </div>
+      <div class="vbox" id="vBox" style="display:none">
+        <div class="vlbl">Mã voucher (nếu có)</div>
+        <div class="vrow"><input id="vInput" type="text" placeholder="LJ-XXXX-XXXX" maxlength="14" autocomplete="off" aria-label="Mã voucher"><button class="vbtn" id="vBtn" type="button" onclick="applyVoucher()">Áp dụng</button></div>
+        <div class="vmsg" id="vMsg" role="status"></div>
+      </div>
+      <div class="vline" id="vLine" style="display:none"><span>Voucher giảm giá</span><span id="vAmt"></span></div>
       <div class="total-row"><div class="total-l">Tổng thanh toán</div><div class="total-p" id="cvTotal">—</div></div>
       <div class="pay-warn">
         <div class="pay-warn-title"><i class="ti ti-alert-triangle"></i> Lưu ý:</div>
@@ -1300,7 +1318,7 @@ function goStep(step){
     document.getElementById('cvEmail').textContent = document.getElementById('mEmail').value;
     document.getElementById('cvPhone').textContent = document.getElementById('mPhone').value;
     // priceLabel đã là chuỗi đầy đủ (VD "419.000đ" hoặc "Liên hệ") — không nối thêm đuôi nữa
-    document.getElementById('cvTotal').textContent = S.priceLabel;
+    refreshVoucherUI();
     setCtx(true);
   } else if(step===2){
     setCtx();
@@ -1316,7 +1334,7 @@ function chkF(){
  
 function resetForm(){
   ['mName','mPhone','mEmail','mSchool','mTarget','mGoal'].forEach(function(id){var el=document.getElementById(id);if(el)el.value='';});
-  var y=document.getElementById('mYear');if(y)y.value='';
+  var y=document.getElementById('mYear');if(y)y.value='';S.voucher=null;
   var b=document.getElementById('mBtn2');if(b)b.disabled=true;
   var st=document.getElementById('mSubmitStatus');if(st){st.style.display='none';st.textContent='';}
   var bd=document.getElementById('mBtnDone');if(bd){bd.disabled=false;bd.textContent='Tiến hành thanh toán →';}
@@ -1328,6 +1346,69 @@ function showPanel(id){
   document.getElementById('mModal').scrollTop=0;
 }
  
+/* ─── VOUCHER (chỉ gói Đồng Hành) ─── */
+function isDongHanh_(){
+  return String(S.pkg||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/đ/gi,'d').toLowerCase().indexOf('dong hanh') > -1;
+}
+function fmtVnd_(n){ return Number(n||0).toLocaleString('vi-VN') + 'đ'; }
+function curTotalLabel_(){
+  if (S.voucher && isDongHanh_() && S.priceNum > 0) return fmtVnd_(Math.max(0, S.priceNum - S.voucher.value));
+  return S.priceLabel;
+}
+function setVoucherMsg_(kind, msg){
+  var el = document.getElementById('vMsg');
+  el.className = 'vmsg' + (kind ? ' ' + kind : '');
+  el.textContent = msg || '';
+}
+function refreshVoucherUI(){
+  var show = isDongHanh_() && S.priceNum > 0;
+  if (S.voucher && (!show || S.voucherPkg !== S.pkg)) S.voucher = null; // đổi gói → bỏ voucher cũ
+  document.getElementById('vBox').style.display = show ? 'block' : 'none';
+  var inp = document.getElementById('vInput'), btn = document.getElementById('vBtn');
+  if (S.voucher) {
+    inp.value = S.voucher.code; inp.disabled = true;
+    btn.textContent = 'Gỡ'; btn.setAttribute('onclick','removeVoucher()'); btn.disabled = false;
+    document.getElementById('vLine').style.display = 'flex';
+    document.getElementById('vAmt').textContent = '−' + fmtVnd_(S.voucher.value);
+  } else {
+    inp.disabled = false;
+    btn.textContent = 'Áp dụng'; btn.setAttribute('onclick','applyVoucher()'); btn.disabled = false;
+    document.getElementById('vLine').style.display = 'none';
+    if (!show) inp.value = '';
+  }
+  document.getElementById('cvTotal').textContent = curTotalLabel_();
+}
+function removeVoucher(){
+  S.voucher = null;
+  document.getElementById('vInput').value = '';
+  setVoucherMsg_('', '');
+  refreshVoucherUI();
+}
+function applyVoucher(){
+  var code = (document.getElementById('vInput').value || '').trim().toUpperCase();
+  if (!code) { setVoucherMsg_('err', 'Vui lòng nhập mã voucher.'); return; }
+  var btn = document.getElementById('vBtn');
+  btn.disabled = true; btn.textContent = 'Đang kiểm tra...';
+  setVoucherMsg_('', '');
+  fetch(WEBAPP_URL + '?action=validateVoucher&code=' + encodeURIComponent(code) +
+        '&package_name=' + encodeURIComponent(S.pkg || '') +
+        '&email=' + encodeURIComponent(document.getElementById('mEmail').value.trim()) +
+        '&_=' + Date.now())
+    .then(function(r){ return r.json(); })
+    .then(function(res){
+      if (!res.success) throw new Error(res.error || 'Mã voucher không hợp lệ.');
+      S.voucher = { code: res.code, value: Number(res.value) || 0 };
+      S.voucherPkg = S.pkg;
+      setVoucherMsg_('ok', 'Đã áp dụng voucher ' + fmtVnd_(S.voucher.value) + '. Voucher không cộng gộp, không quy đổi tiền mặt và không chuyển nhượng.');
+      refreshVoucherUI();
+    })
+    .catch(function(err){
+      S.voucher = null;
+      setVoucherMsg_('err', err.message || 'Không kiểm tra được mã. Vui lòng thử lại.');
+      refreshVoucherUI();
+    });
+}
+
 /* ─── SUBMIT BOOKING (gửi về Apps Script) ─── */
 function buildGoalText(){
   var goal = (document.getElementById('mGoal').value||'').trim();
@@ -1368,7 +1449,8 @@ function submitBooking(){
     advisee_goal    : buildGoalText(),
     advisor_name    : S.adv || '',
     advisor_email   : '',
-    package_name    : S.pkg
+    package_name    : S.pkg,
+    voucher_code    : (S.voucher && isDongHanh_()) ? S.voucher.code : ''
   };
 
   btn.disabled = true;
@@ -1410,7 +1492,7 @@ function setCtx(showTotal){
   if (S.pkg) {
     pk.classList.remove('is-empty');
     document.getElementById('mctxPkgName').textContent = 'Gói ' + S.pkg;
-    document.getElementById('mctxPkgSub').textContent = showTotal ? (S.sess + ' · Tổng: ' + S.priceLabel) : S.sess;
+    document.getElementById('mctxPkgSub').textContent = showTotal ? (S.sess + ' · Tổng: ' + curTotalLabel_()) : S.sess;
   } else {
     pk.classList.add('is-empty');
     document.getElementById('mctxPkgName').textContent = 'Chưa chọn gói';
