@@ -2696,7 +2696,8 @@ function confirmExtend(aeId) {
   }).catch(function(e){ toast('Lỗi kết nối: ' + e.message, 'error'); btn.innerHTML = 'Tạo mã thanh toán'; btn.disabled = false; });
 }
 
-function openSwitchAdvisorModal(aeId) {
+function openSwitchAdvisorModal(aeId) { ensureAdvisorsLoaded().then(function(){ openSwitchAdvisorModalCore_(aeId); }); }
+function openSwitchAdvisorModalCore_(aeId) {
   const activeAdvisors = sheetData.advisors.filter(function(a){ return a.active; });
   const ae = MOCK.advisees.find(function(x){ return x.id === aeId; });
   document.getElementById('modal-title').textContent = '🔄 Đổi sang Advisor khác';
@@ -2738,6 +2739,19 @@ function confirmSwitchAdvisor(aeId, newAdvisorName) {
       '<button class="login-btn" id="switchadv-submit-btn" onclick="submitSwitchAdvisor(\'' + aeId + '\',\'' + newAdvisorName + '\')" style="width:auto;padding:10px 24px">Tạo mã thanh toán</button>';
     document.getElementById('modal-overlay').classList.add('open');
   }, 150);
+}
+// Đổi advisor có phí (gói thường): backend requestChangeAdvisor tạo đơn 100.000đ, thanh toán xong mới áp dụng
+function submitSwitchAdvisor(aeId, newAdvisorName) {
+  var ae = MOCK.advisees.find(function(x){ return x.id === aeId; });
+  if (!ae) return;
+  var adv = (sheetData.advisors || []).find(function(a){ return normName(a.name) === normName(newAdvisorName); }) || {};
+  var btn = document.getElementById('switchadv-submit-btn');
+  if (btn) { btn.innerHTML = '<span class="spinner"></span>'; btn.disabled = true; }
+  apiPost({ action: 'requestChangeAdvisor', booking_id: ae.bookingId, new_advisor_id: adv.id || '',
+    advisee_name: ae.name, advisee_email: ae.email, advisee_phone: ae.phone || '' }).then(function(res){
+    if (!res || !res.success) { toast('Lỗi: ' + (res && res.error), 'error'); if (btn) { btn.innerHTML = 'Tạo mã thanh toán'; btn.disabled = false; } return; }
+    window.location.href = res.payment_url;
+  }).catch(function(e){ toast('Lỗi kết nối: ' + e.message, 'error'); if (btn) { btn.innerHTML = 'Tạo mã thanh toán'; btn.disabled = false; } });
 }
 // ── Nâng cấp gói: cộng dồn buổi đã dùng + thời gian đã học, KHÔNG tính
 //    lại từ đầu như mua mới. Chỉ trả phần chênh lệch giá. ──
