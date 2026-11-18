@@ -214,7 +214,7 @@ body { font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
       <div class="pay-success" id="pay-success">
         <div class="tick">✓</div>
         <h2>Thanh toán thành công!</h2>
-        <p>LinkaJob đã nhận được thanh toán của bạn.<br>
+        <p id="success-msg">LinkaJob đã nhận được thanh toán của bạn.<br>
         Kiểm tra email để nhận thông tin tài khoản và bắt đầu hành trình sự nghiệp mới!</p>
       </div>
     </div>
@@ -237,11 +237,17 @@ document.getElementById('td-name').textContent     = name || '—';
 document.getElementById('td-amount').textContent   = amount.toLocaleString('vi-VN') + 'đ';
 document.getElementById('order-code').textContent  = orderId;
 
+// Master Class: nội dung thành công riêng (link Zoom thay vì tài khoản)
+if (/master class/i.test(desc)) {
+  document.getElementById('success-msg').innerHTML =
+    'LinkaJob đã nhận được thanh toán của bạn.<br>' +
+    'Kiểm tra email để nhận link Zoom và thông tin hai buổi học nhé!';
+}
 
 // Hiện "Lưu ý" chỉ khi khách mua gói Cố vấn 1-1 (không phải Aptitude, khoá học, gia hạn, đổi Advisor, nâng cấp...)
 (function () {
   var d = desc.toLowerCase();
-  var other = /aptitude|tài liệu|khoá học|khóa học|học phí|gia hạn|đổi advisor|nâng cấp/.test(d);
+  var other = /aptitude|tài liệu|khoá học|khóa học|học phí|gia hạn|đổi advisor|nâng cấp|master class/.test(d);
   var isAdvisorPkg = /cơ bản|bứt phá|chuyên sâu|cố vấn|advisor/.test(d);
   if (!other && (isAdvisorPkg || params.get('type') === 'booking')) {
     document.getElementById('advisor-notes').style.display = 'block';
