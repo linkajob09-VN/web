@@ -5,6 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>MASTER CLASS: INTERVIEW LIKE A PRO | LinkaJob</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+<link rel="stylesheet" href="nav.css">
+<link rel="stylesheet" href="dang-ky-tu-van.css">
 <style>
 :root{--dark:#0D0D0D;--card:#1A1A1A;--paper:#F5F4F1;--white:#fff;--orange:#fc5229;--tint:rgba(252,82,41,.1);--text:#1C1C1C;--tdark:#F0F0F0;--muted:rgba(28,28,28,.55);--mdark:rgba(240,240,240,.55);--line:rgba(28,28,28,.1);--ldark:rgba(255,255,255,.09);
 color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
@@ -106,20 +109,20 @@ footer span{color:var(--orange)}
 .sch small{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:rgba(240,240,240,.4)}
 .sr{display:flex;gap:10px 24px;flex-wrap:wrap;align-items:baseline;margin-top:6px;font-size:14px;color:var(--mdark)}
 .sr b{color:var(--orange);font-size:15px}
-.overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);display:none;align-items:center;justify-content:center;z-index:900;padding:16px}
-.overlay.show{display:flex}
-.modal{background:#fff;border-radius:20px;width:100%;max-width:460px;max-height:calc(100vh - 32px);overflow:auto;padding:28px 24px;position:relative;color:var(--text)}
-.modal h3{font-size:20px;margin-bottom:4px}.modal .plan{font-size:13px;color:var(--muted)}
-.modal .x{position:absolute;right:12px;top:12px;height:34px;padding:0 14px;border-radius:99px;border:0;background:var(--paper);cursor:pointer;font:600 12px 'Montserrat',sans-serif;color:var(--text)}
-.field{display:grid;gap:6px;margin-top:14px}
-.field label{font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
-.field input,.field select{font:inherit;font-size:15px;padding:12px 14px;border-radius:10px;border:1px solid var(--line);background:#fff;color:var(--text);min-width:0;width:100%}
-.field input:focus,.field select:focus{outline:2px solid var(--orange);border-color:transparent}
-.row2{display:flex;gap:8px}
+.co-overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);display:none;align-items:center;justify-content:center;z-index:900;padding:16px}
+.co-overlay.show{display:flex}
+.co-modal{background:#fff;border-radius:20px;width:100%;max-width:460px;max-height:calc(100vh - 32px);overflow:auto;padding:28px 24px;position:relative;color:var(--text)}
+.co-modal h3{font-size:20px;margin-bottom:4px}.co-modal .co-plan{font-size:13px;color:var(--muted)}
+.co-modal .co-x{position:absolute;right:12px;top:12px;height:34px;padding:0 14px;border-radius:99px;border:0;background:var(--paper);cursor:pointer;font:600 12px 'Montserrat',sans-serif;color:var(--text)}
+.co-field{display:grid;gap:6px;margin-top:14px}
+.co-field label{font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+.co-field input,.co-field select{font:inherit;font-size:15px;padding:12px 14px;border-radius:10px;border:1px solid var(--line);background:#fff;color:var(--text);min-width:0;width:100%}
+.co-field input:focus,.co-field select:focus{outline:2px solid var(--orange);border-color:transparent}
+.co-row2{display:flex;gap:8px}
 .btn-l{background:#fff;color:var(--text);border:.5px solid var(--line);padding:9px 20px;font-size:13px;white-space:nowrap}
-.status{font-size:13px;color:var(--muted);min-height:20px;margin-top:10px}.status.err{color:#C0262D}.status.ok{color:#17794F}
-.sum{display:flex;justify-content:space-between;align-items:baseline;padding:14px 0;margin-top:16px;border-top:1px solid var(--line);font-size:14px}
-.sum b{font-size:22px;color:var(--orange)}
+.co-st{font-size:13px;color:var(--muted);min-height:20px;margin-top:10px}.co-st.err{color:#C0262D}.co-st.ok{color:#17794F}
+.co-sum{display:flex;justify-content:space-between;align-items:baseline;padding:14px 0;margin-top:16px;border-top:1px solid var(--line);font-size:14px}
+.co-sum b{font-size:22px;color:var(--orange)}
 .btn:disabled{opacity:.35;cursor:not-allowed}
 #mods{display:grid;grid-template-columns:1fr 1fr;gap:20px;align-items:start}
 #mods .mod{border:.5px solid var(--line);border-radius:18px;background:#fff;padding:10px 26px 12px}
@@ -168,9 +171,12 @@ footer span{color:var(--orange)}
 #mods .part{padding:0 0 24px}
 #mods .part b{text-wrap:balance;line-height:1.4}
 @media(max-width:860px){#mods{display:grid;grid-template-columns:1fr;row-gap:20px}#mods .mod{display:block;grid-row:auto}#mods .ma{display:block}}
+html{scroll-padding-top:84px}
 </style>
 </head>
 <body>
+<div id="lj-nav-root"></div>
+
 <header class="hero"><div class="wrap split">
 <div>
 <span class="eyebrow d"><i></i>Master Class LinkaJob</span>
@@ -277,36 +283,36 @@ footer span{color:var(--orange)}
 <a class="btn btn-o" href="#dangky">Xem học phí và đăng ký</a>
 </div></section>
 <footer><div class="wrap">Linka<span>Job</span> | MASTER CLASS: INTERVIEW LIKE A PRO</div></footer>
-<div class="overlay" id="co" aria-hidden="true"><div class="modal" role="dialog" aria-modal="true" aria-labelledby="coTitle">
-<button class="x" id="coClose" type="button">Đóng</button>
-<div id="stForm"><h3 id="coTitle">MASTER CLASS: INTERVIEW LIKE A PRO</h3><p class="plan" id="coPlan"></p>
+<div class="co-overlay" id="co" aria-hidden="true"><div class="co-modal" role="dialog" aria-modal="true" aria-labelledby="coTitle">
+<button class="co-x" id="coClose" type="button">Đóng</button>
+<div id="stForm"><h3 id="coTitle">MASTER CLASS: INTERVIEW LIKE A PRO</h3><p class="co-plan" id="coPlan"></p>
 <form id="coFormEl" novalidate>
-<div class="field"><label for="coCourse">Khoá học</label><select id="coCourse"><option value="Khoá 1: 19:00 ngày 28 và 29/11">Khoá 1: 19:00 ngày 28 và 29/11</option></select></div>
-<div class="field"><label for="coName">Họ tên</label><input type="text" id="coName" autocomplete="name" required></div>
-<div class="field"><label for="coEmail">Email</label><input type="email" id="coEmail" autocomplete="email" required></div>
-<div class="field"><label for="coPhone">Số điện thoại</label><input type="tel" id="coPhone" autocomplete="tel" inputmode="tel" required></div>
-<div class="field"><label for="coCode">Mã ưu đãi (nếu có)</label><div class="row2"><input type="text" id="coCode" autocomplete="off"><button class="btn btn-l" id="coApply" type="button">Áp dụng</button></div></div>
-<p class="status" id="coStatus" role="status"></p>
-<div class="sum"><span>Tổng thanh toán</span><b id="coAmount"></b></div>
+<div class="co-co-field"><label for="coCourse">Khoá học</label><select id="coCourse"><option value="Khoá 1: 19:00 ngày 28 và 29/11">Khoá 1: 19:00 ngày 28 và 29/11</option></select></div>
+<div class="co-co-field"><label for="coName">Họ tên</label><input type="text" id="coName" autocomplete="name" required></div>
+<div class="co-co-field"><label for="coEmail">Email</label><input type="email" id="coEmail" autocomplete="email" required></div>
+<div class="co-co-field"><label for="coPhone">Số điện thoại</label><input type="tel" id="coPhone" autocomplete="tel" inputmode="tel" required></div>
+<div class="co-co-field"><label for="coCode">Mã ưu đãi (nếu có)</label><div class="co-row2"><input type="text" id="coCode" autocomplete="off"><button class="btn btn-l" id="coApply" type="button">Áp dụng</button></div></div>
+<p class="co-st" id="coStatus" role="status"></p>
+<div class="co-sum"><span>Tổng thanh toán</span><b id="coAmount"></b></div>
 <button class="btn btn-o" style="width:100%" type="submit" id="coSubmit"></button>
 </form></div>
-<div id="stDone" hidden><h3>Hoàn tất</h3><p class="status" id="doneMsg" style="margin-top:12px;font-size:14px"></p><button class="btn btn-o" style="width:100%;margin-top:18px" id="doneClose" type="button">Đóng</button></div>
+<div id="stDone" hidden><h3>Hoàn tất</h3><p class="co-st" id="doneMsg" style="margin-top:12px;font-size:14px"></p><button class="btn btn-o" style="width:100%;margin-top:18px" id="doneClose" type="button">Đóng</button></div>
 </div></div>
 <script>
 (function(){
-var CONFIG={endpoint:"",base:600000}; /* Điền endpoint Apps Script để kết nối đơn hàng */
+var CONFIG={endpoint:"https://script.google.com/macros/s/AKfycbx7Bd9VvoyzfiiezQV9huoY2BKHH_Br1RAFIz00mjdyKeis-Zv-38a0gf_b-fMlul2C/exec",base:600000,product:"Master Class: Interview Like a Pro"};
 var $=function(i){return document.getElementById(i)};
 var money=function(n){return Number(n).toLocaleString("vi-VN")+"đ"};
 var emailOk=function(v){return /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(v)};
 var phoneOk=function(v){return /^(\+?84|0)\d{9,10}$/.test(v)};
 var DEMO="Chế độ xem thử: chưa nối máy chủ.",amount=CONFIG.base,plan="Standard",last=null;
 function api(p){if(!CONFIG.endpoint)return Promise.resolve({demo:true});return fetch(CONFIG.endpoint,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify(p)}).then(function(r){return r.json()})}
-function st(m,c){$("coStatus").textContent=m;$("coStatus").className="status"+(c?" "+c:"")}
+function st(m,c){$("coStatus").textContent=m;$("coStatus").className="co-st"+(c?" "+c:"")}
 function setAmt(n){amount=n;$("coAmount").textContent=n===0?"Miễn phí":money(n);$("coSubmit").textContent=n===0?"Kích hoạt miễn phí":"Thanh toán "+money(n)}
 function show(s){["stForm","stDone"].forEach(function(x){$(x).hidden=x!==s})}
 function open(price,name){last=document.activeElement;plan=name;CONFIG.base=price;$("coPlan").textContent="Học phí "+money(price);$("co").classList.add("show");$("co").setAttribute("aria-hidden","false");show("stForm");setAmt(price);$("coSubmit").disabled=false;st("");$("coName").focus()}
 function close(){$("co").classList.remove("show");$("co").setAttribute("aria-hidden","true");if(last)last.focus()}
-document.querySelectorAll("[data-price]").forEach(function(b){b.addEventListener("click",function(){open(+b.dataset.price,b.dataset.plan)})});
+document.querySelectorAll("[data-price]").forEach(function(b){b.addEventListener("click",function(){open(+b.dataset.price,b.dataset.co-plan)})});
 $("coClose").onclick=close;$("doneClose").onclick=close;
 document.addEventListener("keydown",function(e){if(e.key==="Escape"&&$("co").classList.contains("show"))close()});
 $("co").addEventListener("mousedown",function(e){if(e.target===$("co"))close()});
@@ -319,16 +325,21 @@ $("coFormEl").addEventListener("submit",function(ev){ev.preventDefault();
 var n=$("coName").value.trim(),e=$("coEmail").value.trim(),p=$("coPhone").value.replace(/[\s.\-]/g,""),c=$("coCode").value.trim();
 if(!n){st("Nhập họ tên.","err");return}if(!emailOk(e)){st("Email chưa đúng.","err");return}if(!phoneOk(p)){st("Số điện thoại chưa đúng.","err");return}
 $("coSubmit").disabled=true;st("Đang tạo đơn…");
-api({action:"masterclassOrder",course:$("coCourse").value,plan:plan,name:n,email:e,phone:p,code:c}).then(function(d){
+api({action:"masterclassOrder",course:$("coCourse").value,product:CONFIG.product,plan:plan,name:n,email:e,phone:p,code:c}).then(function(d){
 if(d.demo){$("coSubmit").disabled=false;st(DEMO);return}
 if(!d.ok){$("coSubmit").disabled=false;st(d.message||"Không tạo được đơn.","err");return}
 if(d.amount===0){$("coSubmit").disabled=false;$("doneMsg").textContent=d.message||"Đã đăng ký thành công. Kiểm tra email của bạn.";show("stDone");return}
-window.location.href=d.payment_url||("thanh-toan.html?order_id="+encodeURIComponent(d.order_id)+"&kind=masterclass")}).catch(function(){$("coSubmit").disabled=false;st("Không kết nối được. Thử lại sau.","err")})});
+var amt=(d.amount!=null?Number(d.amount):amount);window.location.href=d.payment_url||("thanh-toan.html?order_id="+encodeURIComponent(d.order_id)+"&amount="+amt+"&desc="+encodeURIComponent(CONFIG.product)+"&name="+encodeURIComponent(n))}).catch(function(){$("coSubmit").disabled=false;st("Không kết nối được. Thử lại sau.","err")})});
 })();
 </script>
 <script>
 function bind(sel,q,a,single){document.querySelectorAll(sel).forEach(function(it){var an=it.querySelector(a);if(it.classList.contains('open'))an.style.maxHeight=an.scrollHeight+'px';it.querySelector(q).addEventListener('click',function(){var o=it.classList.contains('open');if(single)document.querySelectorAll(sel+'.open').forEach(function(x){x.classList.remove('open');x.querySelector(a).style.maxHeight=null});it.classList.toggle('open',!o);an.style.maxHeight=o?null:an.scrollHeight+'px'})})}
 bind('.fi','.fq','.fa',true);
 </script>
+<div id="lj-widget-root"></div>
+<script src="nav.js"></script>
+<script>initSharedNav();</script>
+<script src="dang-ky-tu-van.js"></script>
+<script>initConsultWidget();</script>
 </body>
 </html>
