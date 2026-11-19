@@ -252,6 +252,7 @@ footer span{ color:var(--orange);}
   .hero-cta .btn{ width:100%;}
   .hero-stats{ display:grid; grid-template-columns:1fr 1fr; gap:22px 14px; text-align:center; margin-top:36px;}
   .hstat{ text-align:center;}
+  .hero-split .hero-stats{ grid-template-columns:1fr 1fr; gap:22px 14px; margin-top:36px;}
 }
 
 /* ── animation system ── */
@@ -287,6 +288,10 @@ button:focus-visible, a:focus-visible, .lj-nav-btn-plain:focus-visible, .fbtn:fo
 .hero-split .hero-text .eyebrow{ margin-bottom:20px;}
 .hero-split .hero-text h1{ white-space:normal;}
 .hero-split .hero-cta, .hero-split .hero-stats{ justify-content:flex-start; margin-left:0;}
+.hero-split .hero-text .sub{ margin-left:0; margin-right:0; max-width:520px; text-align:left;}
+.hero-split .hero-stats{ display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:16px 20px; align-items:start; max-width:none; margin:44px 0 0;}
+.hero-split .hstat{ text-align:left;}
+.hero-split .hstat-lbl{ line-height:1.4; letter-spacing:.04em;}
 .hero-split .hero-stats{ border-top:.5px solid var(--line-dark); padding-top:28px;}
 .hero-photo-col{ position:relative;}
 .hero-photo{ position:relative; border-radius:22px; overflow:hidden; aspect-ratio:4/5; background:linear-gradient(180deg,#1c1c1c,#0a0a0a); border:.5px solid var(--line-dark);}
@@ -303,6 +308,8 @@ button:focus-visible, a:focus-visible, .lj-nav-btn-plain:focus-visible, .fbtn:fo
 @media(max-width:860px){
   .hero-split{ grid-template-columns:1fr; gap:32px;}
   .hero-split .hero-text{ text-align:center;}
+  .hero-split .hero-text .sub{ margin-left:auto; margin-right:auto; text-align:center;}
+  .hero-split .hstat{ text-align:center;}
   .hero-split .hero-cta, .hero-split .hero-stats{ justify-content:center;}
   .hero-photo-col{ max-width:340px; width:100%; margin:0 auto;}
 }
@@ -321,6 +328,7 @@ button:focus-visible, a:focus-visible, .lj-nav-btn-plain:focus-visible, .fbtn:fo
   .process-cols{ grid-template-columns:1fr; gap:26px;}
 }
 </style>
+<link rel="preload" as="image" href="assets/advisors/ngo-minh-tri.jpg" fetchpriority="high">
 <link rel="stylesheet" href="nav.css">
 <link rel="stylesheet" href="dang-ky-tu-van.css">
 </head>
@@ -346,12 +354,12 @@ button:focus-visible, a:focus-visible, .lj-nav-btn-plain:focus-visible, .fbtn:fo
     </div>
     <div class="hero-photo-col">
       <div class="hero-photo">
-        <img id="heroPhotoMain" src="assets/advisors/ngo-minh-tri.jpg" alt="Ngô Minh Trí" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+        <img id="heroPhotoMain" src="assets/advisors/ngo-minh-tri.jpg" fetchpriority="high" decoding="async" alt="Ngô Minh Trí" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
         <div class="avatar-fallback" style="display:none;">MT</div>
         <div class="hero-exp-badge"><b>9+</b><span>năm<br>kinh nghiệm</span></div>
         <div class="hero-advisor-card">
           <div class="avatar">
-            <img id="heroPhotoMini" src="assets/advisors/ngo-minh-tri.jpg" alt="" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+            <img id="heroPhotoMini" src="assets/advisors/ngo-minh-tri.jpg" decoding="async" alt="" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
             <span id="heroPhotoMiniFallback" style="display:none;">MT</span>
           </div>
           <div><strong>Ngô Minh Trí</strong><span>Shopee · Strategic Network Lead</span></div>
@@ -902,6 +910,33 @@ button:focus-visible, a:focus-visible, .lj-nav-btn-plain:focus-visible, .fbtn:fo
 (function(){
   var ADVISOR_WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbx7Bd9VvoyzfiiezQV9huoY2BKHH_Br1RAFIz00mjdyKeis-Zv-38a0gf_b-fMlul2C/exec';
   var TARGET_NAME = 'minh trí'; // đối chiếu không phân biệt hoa/thường, chỉ cần chứa cụm này trong tên advisor
+  var CACHE_KEY = 'lj_adv_photo_minh_tri';
+
+  function directImg(url){
+    url = String(url||'').trim();
+    var m = url.match(/drive\.google\.com\/file\/d\/([^/]+)/) || url.match(/[?&]id=([^&]+)/);
+    return (m && m[1]) ? 'https://lh3.googleusercontent.com/d/' + m[1] : url;
+  }
+  // Ảnh mặc định (assets/advisors/...) luôn hiện ngay. Ảnh từ sheet được tải ngầm,
+  // chỉ khi tải xong mới thay vào → không bị trống/chớp trong lúc chờ.
+  function swap(url){
+    if(!url) return;
+    var pre = new Image();
+    pre.onload = function(){
+      ['heroPhotoMain','heroPhotoMini','instructorPhoto'].forEach(function(id){
+        var el = document.getElementById(id);
+        if(!el || el.getAttribute('src') === url) return;
+        var fb = el.nextElementSibling; if(fb) fb.style.display = 'none';
+        el.style.display = '';
+        el.src = url;
+      });
+    };
+    pre.src = url; // lỗi → không làm gì, giữ ảnh mặc định
+  }
+
+  var cached = '';
+  try { cached = localStorage.getItem(CACHE_KEY) || ''; } catch(e){}
+  if(cached) swap(cached); // lần truy cập sau: có URL ngay, không phải chờ Apps Script
 
   fetch(ADVISOR_WEBAPP_URL + '?action=getAdvisors&only_active=1')
     .then(function(r){ return r.json(); })
@@ -911,28 +946,10 @@ button:focus-visible, a:focus-visible, .lj-nav-btn-plain:focus-visible, .fbtn:fo
         return String(a.name||'').toLowerCase().indexOf(TARGET_NAME) > -1;
       });
       var photo = match && (match.photo || match.photo_url || match.avatar || match.image || match.image_url);
+      photo = directImg(photo);
       if(!photo) return;
-      var main = document.getElementById('heroPhotoMain');
-      var mini = document.getElementById('heroPhotoMini');
-      var instructor = document.getElementById('instructorPhoto');
-      if(main){
-        var mainFb = main.nextElementSibling; // .avatar-fallback
-        if(mainFb) mainFb.style.display = 'none';
-        main.style.display = '';
-        main.src = photo;
-      }
-      if(mini){
-        var miniFb = mini.nextElementSibling; // #heroPhotoMiniFallback
-        if(miniFb) miniFb.style.display = 'none';
-        mini.style.display = '';
-        mini.src = photo;
-      }
-      if(instructor){
-        var instructorFb = instructor.nextElementSibling; // #instructorPhotoFallback
-        if(instructorFb) instructorFb.style.display = 'none';
-        instructor.style.display = '';
-        instructor.src = photo;
-      }
+      try { localStorage.setItem(CACHE_KEY, photo); } catch(e){}
+      if(photo !== cached) swap(photo);
     })
     .catch(function(){ /* giữ nguyên ảnh mặc định nếu fetch lỗi */ });
 })();
