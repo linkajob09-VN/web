@@ -5764,7 +5764,8 @@ function saveSeasonEditor(seasonId) {
   var classLink = v('cm-se-classlink');
   var slideLink = v('cm-se-slidelink');
   var maxSeats = Number(document.getElementById('cm-se-maxseats').value) || 0;
-  var instructorAdvisor = v('cm-se-instructor');
+  // Giảng viên không còn nhập ở đây: advisor được chọn theo từng buổi học (tab 'Buổi khoá học'). Giữ nguyên giá trị cũ để không mất dữ liệu.
+  var instructorAdvisor = ((CM_SEASONS.find(function(x){ return x.id === seasonId; }) || {}).instructor_advisor) || '';
   var plans = Array.prototype.slice.call(document.querySelectorAll('.cm-se-plan:checked')).map(function(el){ return el.value; });
   if (!seasonNo) { toast('Vui lòng nhập số mùa', 'error'); return; }
   if (!price) { toast('Vui lòng nhập học phí', 'error'); return; }
@@ -5873,7 +5874,6 @@ function renderCmSettingsTab(s) {
   html += '<div><div class="form-label">Link lớp học (Zoom/Meet)</div><input class="form-input" id="cm-se-classlink" value="' + (s.class_link || '') + '" placeholder="https://meet.google.com/..." style="margin-top:6px"></div>';
   html += '<div><div class="form-label">Link tài liệu slide</div><input class="form-input" id="cm-se-slidelink" value="' + (s.slide_link || '') + '" placeholder="https://drive.google.com/..." style="margin-top:6px"></div>';
   html += '<div><div class="form-label">Số chỗ tối đa</div><input class="form-input" type="number" id="cm-se-maxseats" value="' + s.max_seats + '" placeholder="VD: 30" style="margin-top:6px"></div>';
-  html += '<div><div class="form-label">Giảng viên (Advisor)</div><input class="form-input" id="cm-se-instructor" value="' + (s.instructor_advisor || '') + '" placeholder="Tên Advisor làm giảng viên" style="margin-top:6px"></div>';
   html += '<div style="grid-column:1 / -1"><div class="form-label" style="margin-bottom:8px">Hình thức thanh toán cho phép</div>';
   [['full', 'Đóng full'], ['deposit_500k', 'Cọc 500k'], ['deposit_50', 'Cọc 50%']].forEach(function(pl){
     var checked = (s.plans || []).indexOf(pl[0]) !== -1;
@@ -11548,20 +11548,7 @@ function ljRenderStaffBook_() {
   html += '<div class="lj-lbl" style="margin-top:0">Chọn giờ trống của Advisor' + (_sb.hidden ? ' <span style="font-weight:400;color:var(--muted)">(ẩn ' + _sb.hidden + ' giờ trùng/sát buổi đã đặt)</span>' : '') + '</div>';
   if (_sb.loading) html += '<div class="lj-slotbox" style="padding:20px;color:var(--muted);font-size:13px">Đang tải lịch trống...</div>';
   else if (_sb.error) html += '<div class="lj-warn">Không tải được lịch trống: ' + escHtml(_sb.error) + '</div>';
-  else {
-    var dates = Object.keys(_sb.slots).filter(function (d) { return _sb.slots[d].length; }).sort();
-    html += '<div class="lj-slotbox">';
-    if (!dates.length) html += '<div style="padding:16px 0;font-size:13px;color:var(--muted)">Advisor chưa có giờ trống nào phù hợp. Thêm giờ mới ở ô bên dưới.</div>';
-    dates.forEach(function (d) {
-      html += '<div class="lj-lbl">' + ljDowLabel_(d) + '</div><div style="display:flex;flex-wrap:wrap;gap:8px">';
-      _sb.slots[d].forEach(function (sl) {
-        var on = _sb.selected && _sb.selected.slotId === sl.slot_id;
-        html += '<button class="day-time-chip' + (on ? ' selected' : '') + '" style="min-width:64px" onclick="ljSbPick(\'' + d + '\',\'' + sl.time + '\',\'' + sl.slot_id + '\')">' + sl.time + '</button>';
-      });
-      html += '</div>';
-    });
-    html += '</div>';
-  }
+  else html += '<div id="lj-sb-pk"></div>';
 
   // Thêm slot riêng khi Advisor không có giờ hợp
   html += '<details style="margin-top:12px"><summary style="cursor:pointer;font-size:13px;font-weight:600;color:var(--brand)">Không có giờ phù hợp? Thêm giờ mới cho Advisor</summary>' +
@@ -11593,10 +11580,11 @@ function ljRenderStaffBook_() {
     ljOpenModal_(titleTxt, html, actions, 640);
   }
   document.getElementById('modal-title').textContent = titleTxt;
+  if (typeof ljSbMountPicker_ === 'function') ljSbMountPicker_();
 }
 
 function ljSbSetNo(v) { _sb.sessionNo = Number(v) || _sb.sessionNo; ljRenderStaffBook_(); }
-function ljSbSetAdvisor(name) { _sb.advisorName = name; _sb.selected = null; ljRenderStaffBook_(); ljSbLoadSlots_(); }
+function ljSbSetAdvisor(name) { _sb.advisorName = name; _sb.selected = null; _sb.pkSeen = false; ljRenderStaffBook_(); ljSbLoadSlots_(); }
 function ljSbPick(date, time, slotId) { _sb.selected = { date: date, time: time, slotId: slotId }; ljRenderStaffBook_(); }
 
 function ljSbAddSlot() {
@@ -11783,7 +11771,12 @@ function ljRenderCourseTab_() {
     '<div class="modal-field" style="margin-top:12px"><div class="form-label">Link buổi học</div><select class="form-input" id="lj-r-linkmode" onchange="ljCmLinkMode(\'r\')" style="margin-top:4px"></select>' +
     '<input class="form-input" id="lj-r-link" placeholder="https://meet.google.com/..." style="margin-top:8px;display:none"></div>' +
     '<label style="display:flex;align-items:center;gap:8px;font-size:13px;margin:10px 0"><input type="checkbox" id="lj-r-invite" checked> Gửi lời mời qua email cho học viên đã đăng ký + giảng viên</label>' +
-    '<div class="modal-field"><div class="form-label">Ghi chú</div><input class="form-input" id="lj-r-notes" style="margin-top:4px" placeholder="VD: Buổi 3 — Case study"></div>' +
+    '<div class="modal-field"><div class="form-label">Advisor dạy buổi này <span style="color:var(--brand)">*</span> <span style="color:var(--muted);font-weight:400">(chọn 1 hoặc nhiều)</span></div>' +
+    '<div style="display:flex;flex-wrap:wrap;gap:6px 16px;margin-top:6px">' +
+    (sheetData.advisors || []).filter(function (a) { return a.is_active !== false; }).map(function (a) {
+      return '<label style="display:inline-flex;align-items:center;gap:6px;font-size:13px;cursor:pointer"><input type="checkbox" class="lj-r-adv" value="' + escHtml(a.name) + '"> ' + escHtml(a.name) + '</label>';
+    }).join('') + '</div></div>' +
+    '<div class="modal-field"><div class="form-label">Ghi chú / chủ đề buổi</div><input class="form-input" id="lj-r-notes" style="margin-top:4px" placeholder="VD: Buổi 3 — Case study"></div>' +
     '<div id="lj-cm-err" style="color:var(--brand);font-size:12.5px;display:none"></div>';
   document.getElementById('modal-actions').innerHTML = '<button class="btn-secondary" onclick="closeModal()" style="width:auto;padding:10px 20px">Đóng</button>' +
     '<button class="login-btn" id="lj-cm-submit" onclick="ljCmSubmitCourse()" style="width:auto;padding:10px 22px">Tạo buổi học</button>';
@@ -11804,23 +11797,29 @@ function ljCmSubmitCourse() {
   var date = v('lj-r-date'), time = v('lj-r-time'), dur = Number(v('lj-r-dur')) || 90, notes = v('lj-r-notes');
   var mode = v('lj-r-linkmode'), link = v('lj-r-link');
   var invite = !!(document.getElementById('lj-r-invite') || {}).checked;
+  var advNames = Array.prototype.slice.call(document.querySelectorAll('.lj-r-adv:checked')).map(function (el) { return el.value; });
   if (!date || !time) return ljCmErr_('Vui lòng nhập Ngày và Giờ.');
+  if (!advNames.length) return ljCmErr_('Chọn ít nhất 1 advisor dạy buổi này.');
   if (mode === 'custom' && !/^https?:\/\//i.test(link)) return ljCmErr_('Link phải bắt đầu bằng http(s)://');
   if (ljSlotStartMs_(date, time) < Date.now() && !confirm('Giờ này đã qua. Vẫn tạo buổi học?')) return;
   var c = CM_COURSES.find(function (x) { return x.id === s.course_id; });
   var label = (c ? c.name : 'Khoá học') + ' · Mùa ' + s.season_no;
   var btn = document.getElementById('lj-cm-submit'); btn.disabled = true; btn.textContent = 'Đang tạo...';
   var send = function (emails) {
-    var instr = s.instructor_advisor ? ljAdvisorByName_(s.instructor_advisor) : null;
-    if (instr && instr.email) emails.push(instr.email);
+    advNames.forEach(function (n) { var ad = ljAdvisorByName_(n); if (ad && ad.email) emails.push(ad.email); });
     apiPost({
-      action: 'createManualMeeting', meeting_type: 'course', attendee_name: label, advisor_name: s.instructor_advisor || '',
+      action: 'createManualMeeting', meeting_type: 'course', attendee_name: label, advisor_name: advNames.join(', '),
       course_code: label, date: date, time: time, duration_minutes: dur, guest_emails: emails,
       create_meet: mode === 'new', meet_link: mode === 'class' ? s.class_link : (mode === 'custom' ? link : ''),
       send_invite: invite, notes: notes, title: '[LinkaJob] ' + label + (notes ? ' — ' + notes : ''), by: currentUser && currentUser.email,
     }).then(function (res) {
       if (!res || !res.success) { btn.disabled = false; btn.textContent = 'Tạo buổi học'; return ljCmErr_((res && res.error) || 'Có lỗi khi tạo buổi học.'); }
       toast('Đã tạo buổi học' + (res.meet_link ? ' + link Meet' : '') + (res.invited ? ' · đã mời ' + res.invited + ' người' : '') + ' ✅', 'success');
+      // Lưu lịch dạy để hiện trên trang advisor_advisee (advisor) và tab Khoá học (học viên)
+      apiPost({ action: 'saveCourseSession', season_id: s.id, date: date, time: time, duration_minutes: dur, topic: notes, advisor_names: advNames,
+        meet_link: res.meet_link || (mode === 'custom' ? link : ''), by: currentUser && currentUser.email })
+        .then(function (r2) { if (!r2 || !r2.success) toast('Đã tạo meeting nhưng chưa lưu được lịch dạy: ' + ((r2 && r2.error) || 'lỗi'), 'error'); })
+        .catch(function () { toast('Đã tạo meeting nhưng chưa lưu được lịch dạy (lỗi kết nối)', 'error'); });
       closeModal(); loadMeetingCalendarAsync();
     }).catch(function (e) { btn.disabled = false; btn.textContent = 'Tạo buổi học'; ljCmErr_('Lỗi kết nối: ' + e.message); });
   };
@@ -12752,6 +12751,585 @@ function csPickSeasonToEnroll_() {
     open.map(function (se) { var co = CM_COURSES.find(function (x) { return x.id === se.course_id; }); return '<option value="' + se.id + '">' + escHtml((co ? co.name : '') + ' — Mùa ' + se.season_no + ' (' + se.status + ')') + '</option>'; }).join('') + '</select></div>';
   document.getElementById('modal-actions').innerHTML = '<button class="detail-btn" onclick="closeModal()">Hủy</button> <button class="login-btn" style="width:auto;padding:10px 24px" onclick="var id=document.getElementById(\'cs-pick-season\').value;_cmCurrentSeasonId=id;openEnrollModal(id)">Tiếp tục</button>';
   document.getElementById('modal-overlay').classList.add('open');
+}
+</script>
+<script>
+/* ═══════════════════════════════════════════════════════════════════════════
+   LJS — LinkaJob Schedule UI. Giao diện lịch DÙNG CHUNG cho advisor_advisee.html và dashboard.html.
+   (Giữ NGUYÊN văn bản này ở cả 2 file để Advisor / Advisee / Staff thấy cùng một thiết kế.)
+     LJS.picker.mount(host, opts)  — ĐẶT LỊCH: lịch tháng + chọn giờ + tóm tắt
+     LJS.avail.mount(host, opts)   — GỬI LỊCH TRỐNG: lịch cố định hàng tuần + lịch tháng + sửa từng ngày
+   Cần có sẵn trong trang: apiGet(action, params), apiPost(payload), toast(msg, type), biến CSS --brand, --border…
+   ═══════════════════════════════════════════════════════════════════════════ */
+(function (global) {
+  'use strict';
+  var STEP = 15, MEET = 60;
+  var DOW_FULL = ['Thứ Hai', 'Thứ Ba', 'Thứ Tư', 'Thứ Năm', 'Thứ Sáu', 'Thứ Bảy', 'Chủ nhật'];
+  var DOW_SHORT = ['T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'CN'];
+  var WD_HDR = ['T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'CN'];
+
+  // ── helpers ──
+  function pad(n) { return (n < 10 ? '0' : '') + n; }
+  function esc(s) { return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
+  function ymd(d) { return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()); }
+  function parse(ds) { var p = String(ds).slice(0, 10).split('-'); return new Date(+p[0], +p[1] - 1, +p[2]); }
+  function minOf(t) { var m = /(\d{1,2}):(\d{2})/.exec(String(t || '')); return m ? (+m[1]) * 60 + (+m[2]) : null; }
+  function str(m) { return pad(Math.floor(m / 60)) + ':' + pad(m % 60); }
+  function dowIdx(ds) { return (parse(ds).getDay() + 6) % 7; }                       // T2 = 0 … CN = 6
+  function dayShort(ds) { var d = parse(ds); return DOW_FULL[dowIdx(ds)] + ' ' + d.getDate() + '/' + (d.getMonth() + 1); }
+  function dayFull(ds) { return dayShort(ds) + '/' + ds.slice(0, 4); }
+  function norm(s) { return String(s || '').trim().replace(/\s+/g, ' ').toLowerCase(); }
+  function nowMinIfToday(ds) { var n = new Date(); return ds === ymd(n) ? n.getHours() * 60 + n.getMinutes() : -1; }
+  function safeKey(k) { return String(k).replace(/[^\w-]/g, '_'); }
+  function say(msg, type) { if (typeof global.toast === 'function') global.toast(msg, type); }
+  function inDom(el) { return !!(el && el.ownerDocument && el.ownerDocument.body.contains(el)); }
+
+  // Gom các giờ bắt đầu (mỗi giờ phủ `dur` phút) thành các khoảng liên tục [a, b)
+  function rangesOf(starts, dur) {
+    var out = [];
+    (starts || []).slice().sort(function (a, b) { return a - b; }).forEach(function (s) {
+      var e = s + (dur || MEET);
+      if (out.length && s <= out[out.length - 1][1]) out[out.length - 1][1] = Math.max(out[out.length - 1][1], e);
+      else out.push([s, e]);
+    });
+    return out;
+  }
+  function rangeText(rs) {
+    if (!rs.length) return '';
+    return str(rs[0][0]) + '–' + str(rs[0][1]) + (rs.length > 1 ? ' +' + (rs.length - 1) : '');
+  }
+  // [from,to) trừ các khoảng busy, chỉ giữ mảnh >= 60 phút
+  function subtract(from, to, busy) {
+    var pieces = [[from, to]];
+    busy.forEach(function (b) {
+      var next = [];
+      pieces.forEach(function (p) {
+        if (b[1] <= p[0] || b[0] >= p[1]) { next.push(p); return; }
+        if (b[0] > p[0]) next.push([p[0], b[0]]);
+        if (b[1] < p[1]) next.push([b[1], p[1]]);
+      });
+      pieces = next;
+    });
+    return pieces.filter(function (p) { return p[1] - p[0] >= MEET; });
+  }
+
+  // ── CSS (chèn 1 lần) ──
+  var CSS = [
+    '.ljs{color:var(--text,#111);font-size:14px;line-height:1.5}.ljs *{box-sizing:border-box}',
+    '.ljs button{font-family:inherit}',
+    /* lịch tháng */
+    '.ljs-nav{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:10px}',
+    '.ljs-navl{display:flex;align-items:center;gap:6px}',
+    '.ljs-ib{width:32px;height:32px;border-radius:8px;border:1.5px solid var(--border,#D8D5D0);background:var(--white,#fff);cursor:pointer;font-size:17px;line-height:1;color:inherit}',
+    '.ljs-ib:hover{border-color:var(--brand,#F4451A);color:var(--brand,#F4451A)}',
+    '.ljs-nl{font-weight:700;font-size:15px;min-width:118px;text-align:center}',
+    '.ljs-ghost{font-size:12.5px;font-weight:600;padding:6px 12px;border-radius:8px;border:1.5px solid var(--border,#D8D5D0);background:var(--white,#fff);cursor:pointer;color:inherit}',
+    '.ljs-ghost:hover{border-color:var(--brand,#F4451A);color:var(--brand,#F4451A)}',
+    '.ljs-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px}',
+    '.ljs-wd{font-size:11px;font-weight:700;color:var(--muted,#555);text-align:center;padding:4px 0;letter-spacing:.04em}',
+    '.ljs-cell{position:relative;min-height:68px;padding:6px;border-radius:10px;border:1.5px solid transparent;background:#FAFAF8;text-align:left;cursor:default;display:flex;flex-direction:column;gap:4px;overflow:hidden;color:inherit}',
+    '.ljs-cell.on{cursor:pointer;background:var(--white,#fff);border-color:var(--border,#D8D5D0)}',
+    '.ljs-cell.on:hover{border-color:var(--brand,#F4451A)}',
+    '.ljs-cell.other{opacity:.4}.ljs-cell.past{opacity:.45}',
+    '.ljs-cell.sel{border-color:var(--brand,#F4451A);background:var(--brand-light,#fff1ee);box-shadow:0 0 0 1px var(--brand,#F4451A) inset}',
+    '.ljs-dn{align-self:flex-start;min-width:22px;height:22px;line-height:22px;text-align:center;border-radius:100px;font-size:12px;font-weight:700;padding:0 5px}',
+    '.ljs-cell.today .ljs-dn{background:var(--brand,#F4451A);color:#fff}',
+    '.ljs-cb{display:flex;flex-direction:column;gap:3px;min-width:0}',
+    '.ljs-pill,.ljs-tag{display:inline-block;max-width:100%;font-size:10.5px;font-weight:700;padding:2px 7px;border-radius:100px;border:1px solid transparent;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}',
+    '.ljs-free{background:#ECFDF5;color:#047857;border-color:#A7F3D0}',
+    '.ljs-booked{background:#FEF3C7;color:#92400E;border-color:#FDE68A}',
+    '.ljs-rule{background:#EFF6FF;color:#1D4ED8;border-color:#BFDBFE}',
+    '.ljs-legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--muted,#555);margin-top:10px}',
+    '.ljs-legend i{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:5px;vertical-align:middle}',
+    /* ĐẶT LỊCH */
+    '.ljs-pk{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,1fr);gap:18px;align-items:start}',
+    '.ljs-side{border:1.5px solid var(--border,#D8D5D0);border-radius:14px;padding:14px 16px;background:var(--white,#fff);min-height:220px}',
+    '.ljs-side h4{font-size:15px;font-weight:700;margin:0 0 2px}',
+    '.ljs-sub{font-size:12.5px;color:var(--muted,#555);margin-bottom:12px}',
+    '.ljs-grp{font-size:11.5px;font-weight:700;color:var(--muted,#555);margin:12px 0 6px;letter-spacing:.03em}',
+    '.ljs-chips{display:grid;grid-template-columns:repeat(auto-fill,minmax(64px,1fr));gap:8px}',
+    '.ljs-chip{font-size:13px;font-weight:600;padding:8px 0;border-radius:10px;border:1.5px solid var(--border,#D8D5D0);background:var(--white,#fff);cursor:pointer;color:inherit}',
+    '.ljs-chip:hover{border-color:var(--brand,#F4451A);color:var(--brand,#F4451A)}',
+    '.ljs-chip.on{background:var(--brand,#F4451A);border-color:var(--brand,#F4451A);color:#fff}',
+    '.ljs-hint{font-size:13px;color:var(--muted,#555);padding:22px 4px;text-align:center;line-height:1.6}',
+    '.ljs-sum{margin-top:14px;background:var(--green-bg,#f0fdf4);border:1.5px solid #A7F3D0;border-radius:12px;padding:12px 14px;font-size:13.5px;display:flex;gap:10px;align-items:center}',
+    '.ljs-sum .ck{width:24px;height:24px;border-radius:50%;background:var(--green,#16a34a);color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;flex:none}',
+    '.ljs-sum b.t{color:var(--brand,#F4451A)}',
+    /* GỬI LỊCH TRỐNG */
+    '.ljs-card{background:var(--white,#fff);border-radius:var(--radius-md,16px);box-shadow:var(--shadow,0 1px 4px rgba(0,0,0,.08));padding:20px 22px;margin-bottom:16px}',
+    '.ljs-h{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:6px}',
+    '.ljs-t{font-size:16px;font-weight:700}',
+    '.ljs-acts{display:flex;gap:8px;flex-wrap:wrap}',
+    '.ljs-btn{font-size:13px;font-weight:700;padding:9px 16px;border-radius:10px;border:1.5px solid var(--brand,#F4451A);background:var(--brand,#F4451A);color:#fff;cursor:pointer}',
+    '.ljs-btn:disabled{opacity:.55;cursor:not-allowed}',
+    '.ljs-btn.sec{background:var(--white,#fff);color:inherit;border-color:var(--border,#D8D5D0)}',
+    '.ljs-btn.sec:hover{border-color:var(--brand,#F4451A);color:var(--brand,#F4451A)}',
+    '.ljs-btn.sm{padding:6px 11px;font-size:12.5px;font-weight:600;border-radius:8px}',
+    '.ljs-btn.danger{color:#B91C1C}.ljs-btn.danger:hover{border-color:#B91C1C;color:#B91C1C}',
+    '.ljs-p{font-size:13px;color:var(--muted,#555);line-height:1.65;margin:0 0 12px}',
+    '.ljs-stats{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0 14px}',
+    '.ljs-warn{background:#FEF2F2;border:1px solid #FECACA;color:#B91C1C;border-radius:10px;padding:10px 14px;font-size:13px;margin-bottom:10px}',
+    '.ljs-sec{font-size:13px;font-weight:700;margin:4px 0 8px;display:flex;align-items:center;gap:8px}',
+    '.ljs-rules{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:6px}',
+    '.ljs-rl{display:inline-flex;align-items:center;gap:8px;border:1.5px solid #BFDBFE;background:#EFF6FF;border-radius:12px;padding:6px 6px 6px 12px;font-size:13px;font-weight:600;color:#1D4ED8}',
+    '.ljs-rl button{border:none;background:transparent;cursor:pointer;font-size:13px;padding:3px 5px;border-radius:6px;color:inherit}',
+    '.ljs-rl button:hover{background:rgba(29,78,216,.12)}',
+    '.ljs-empty{font-size:13px;color:var(--muted,#555);padding:6px 0}',
+    '.ljs-hr{border:none;border-top:1px solid var(--border,#D8D5D0);margin:16px 0}',
+    '.ljs-day{margin-top:16px;border:1.5px solid var(--border,#D8D5D0);border-radius:14px;padding:14px 16px}',
+    '.ljs-row{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;border:1px solid var(--border,#D8D5D0);border-radius:10px;padding:9px 12px;margin-bottom:8px;font-size:13.5px;font-weight:600}',
+    '.ljs-row.bk{background:#FFFBEB;border-color:#FDE68A;color:#92400E}',
+    '.ljs-comp{margin-top:16px;border:1.5px solid var(--brand,#F4451A);border-radius:14px;padding:16px 18px;background:#FFFBFA}',
+    '.ljs-seg{display:inline-flex;border:1.5px solid var(--border,#D8D5D0);border-radius:10px;overflow:hidden;margin-bottom:12px}',
+    '.ljs-seg button{border:none;background:var(--white,#fff);padding:8px 14px;font-size:13px;font-weight:600;cursor:pointer;color:inherit}',
+    '.ljs-seg button.on{background:var(--brand,#F4451A);color:#fff}',
+    '.ljs-dows{display:flex;gap:6px;flex-wrap:wrap;margin:6px 0 12px}',
+    '.ljs-dow{min-width:44px;padding:8px 10px;border-radius:10px;border:1.5px solid var(--border,#D8D5D0);background:var(--white,#fff);font-size:13px;font-weight:600;cursor:pointer;color:inherit}',
+    '.ljs-dow.on{border-color:var(--brand,#F4451A);background:var(--brand-light,#fff1ee);color:var(--brand,#F4451A)}',
+    '.ljs-dow:disabled{opacity:.5;cursor:not-allowed}',
+    '.ljs-fields{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:6px}.ljs-fields>div{flex:1;min-width:120px}',
+    '.ljs-lb{font-size:12px;color:var(--muted,#555);margin-bottom:4px}',
+    '.ljs-in{width:100%;padding:10px 12px;font-size:14px;border:1.5px solid var(--border,#D8D5D0);border-radius:10px;background:var(--white,#fff);color:inherit;font-family:inherit}',
+    '.ljs-in:focus{outline:none;border-color:var(--brand,#F4451A)}',
+    '.ljs-foot{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;margin-top:14px}',
+    '@media(max-width:640px){.ljs-pk{grid-template-columns:1fr}.ljs-card{padding:16px 14px}}',
+    '@media(max-width:560px){.ljs-cell{min-height:48px;padding:4px}.ljs-pill{font-size:0;width:8px;height:8px;padding:0;border-radius:50%}.ljs-cb{flex-direction:row;flex-wrap:wrap}}'
+  ].join('');
+  function injectCss() {
+    if (document.getElementById('ljs-css')) return;
+    var st = document.createElement('style'); st.id = 'ljs-css'; st.textContent = CSS; document.head.appendChild(st);
+  }
+
+  // ── lịch tháng dùng chung ──
+  function monthWeeks(ym) {
+    var y = +ym.slice(0, 4), m = +ym.slice(5, 7) - 1;
+    var first = new Date(y, m, 1), start = new Date(y, m, 1 - ((first.getDay() + 6) % 7)), weeks = [];
+    for (var w = 0; w < 6; w++) {
+      var row = [];
+      for (var d = 0; d < 7; d++) row.push(ymd(new Date(start.getFullYear(), start.getMonth(), start.getDate() + w * 7 + d)));
+      if (w >= 4 && row[0].slice(0, 7) > ym) break;   // hàng cuối hoàn toàn thuộc tháng sau → bỏ
+      weeks.push(row);
+    }
+    return weeks;
+  }
+  function addMonth(ym, k) { var y = +ym.slice(0, 4), m = +ym.slice(5, 7) - 1 + k; var d = new Date(y, m, 1); return d.getFullYear() + '-' + pad(d.getMonth() + 1); }
+  // o: { month, selected, nav(dir)->js, today()->js, cell(ds)->{html,enabled}, day(ds)->js }
+  function calHtml(o) {
+    var today = ymd(new Date());
+    var h = '<div class="ljs-nav"><div class="ljs-navl"><button type="button" class="ljs-ib" aria-label="Tháng trước" onclick="' + o.nav(-1) + '">‹</button>' +
+      '<span class="ljs-nl">Tháng ' + (+o.month.slice(5, 7)) + ' ' + o.month.slice(0, 4) + '</span>' +
+      '<button type="button" class="ljs-ib" aria-label="Tháng sau" onclick="' + o.nav(1) + '">›</button></div>' +
+      '<button type="button" class="ljs-ghost" onclick="' + o.nav(0) + '">Hôm nay</button></div><div class="ljs-grid">';
+    WD_HDR.forEach(function (w) { h += '<div class="ljs-wd">' + w + '</div>'; });
+    monthWeeks(o.month).forEach(function (week) {
+      week.forEach(function (ds) {
+        var c = o.cell(ds) || {}, other = ds.slice(0, 7) !== o.month;
+        var cls = 'ljs-cell' + (c.enabled ? ' on' : '') + (other ? ' other' : '') + (ds < today ? ' past' : '') + (ds === today ? ' today' : '') + (o.selected === ds ? ' sel' : '');
+        h += '<button type="button" class="' + cls + '"' + (c.enabled ? ' onclick="' + o.day(ds) + '"' : ' tabindex="-1"') + ' aria-label="' + esc(dayFull(ds)) + '">' +
+          '<span class="ljs-dn">' + parse(ds).getDate() + '</span><span class="ljs-cb">' + (c.html || '') + '</span></button>';
+      });
+    });
+    return h + '</div>';
+  }
+  function stepMonth(cur, dir) { return dir === 0 ? ymd(new Date()).slice(0, 7) : addMonth(cur, dir); }
+
+  /* ═════════════════════════════ ĐẶT LỊCH ═════════════════════════════ */
+  // opts: { key, slots:{ 'YYYY-MM-DD':[{m, ...}] }, sel:{date,m}|null, onSelect(date,m) (date=null khi bỏ chọn), dur, note(html), emptyHtml }
+  var PK = {};
+  var picker = {
+    mount: function (host, o) {
+      if (!host) return;
+      injectCss();
+      var key = safeKey(o.key || 'pk'), st = PK[key] || (PK[key] = {});
+      st.o = o; st.host = host; st.key = key;
+      var dates = Object.keys(o.slots || {}).filter(function (d) { return (o.slots[d] || []).length; }).sort();
+      st.dates = dates;
+      if (o.sel && o.sel.date) st.day = o.sel.date;
+      if (!st.month || o.resetMonth) st.month = ((o.sel && o.sel.date) || dates[0] || ymd(new Date())).slice(0, 7);
+      if (st.day && !(o.slots[st.day] || []).length) st.day = null;
+      render(st);
+    },
+    reset: function (key) { delete PK[safeKey(key)]; },
+    _day: function (key, ds) {
+      var st = PK[key]; if (!st) return;
+      st.day = ds;
+      if (st.o.sel && st.o.sel.date !== ds) { st.o.sel = null; st.o.onSelect && st.o.onSelect(null, null); }
+      render(st);
+    },
+    _time: function (key, ds, m) {
+      var st = PK[key]; if (!st) return;
+      st.day = ds; st.o.sel = { date: ds, m: m };
+      st.o.onSelect && st.o.onSelect(ds, m);
+      render(st);
+    },
+    _month: function (key, dir) { var st = PK[key]; if (!st) return; st.month = stepMonth(st.month, dir); render(st); }
+  };
+  function render(st) {
+    var o = st.o, host = st.host;
+    if (!inDom(host)) { var again = document.getElementById(host.id); if (again) host = st.host = again; else return; }
+    var key = st.key, dur = o.dur || MEET, dates = st.dates, slots = o.slots || {};
+    if (!dates.length) { host.innerHTML = '<div class="ljs">' + (o.emptyHtml || '<div class="ljs-hint">📭 Advisor hiện chưa có giờ trống nào từ hôm nay trở đi.<br>Vui lòng liên hệ đội LinkaJob để được hỗ trợ xếp lịch.</div>') + '</div>'; return; }
+    var cal = calHtml({
+      month: st.month, selected: st.day,
+      nav: function (d) { return "LJS.picker._month('" + key + "'," + d + ")"; },
+      day: function (ds) { return "LJS.picker._day('" + key + "','" + ds + "')"; },
+      cell: function (ds) {
+        var list = slots[ds] || [];
+        if (!list.length) return { enabled: false };
+        return { enabled: true, html: '<span class="ljs-pill ljs-free">Trống</span>' };
+      }
+    });
+    cal += '<div class="ljs-legend"><span><i style="background:#10B981"></i>Ngày còn giờ trống</span><span><i style="background:var(--brand,#F4451A)"></i>Hôm nay</span></div>';
+
+    var side;
+    if (!st.day) {
+      side = '<div class="ljs-hint">👆 Bấm vào một ngày có giờ trống<br>để chọn giờ bắt đầu.</div>';
+    } else {
+      var list = (slots[st.day] || []).slice().sort(function (a, b) { return a.m - b.m; });
+      var rs = rangesOf(list.map(function (x) { return x.m; }), dur);
+      side = '<h4>' + esc(dayFull(st.day)) + '</h4><div class="ljs-sub">Advisor rảnh: ' + rs.map(function (r) { return str(r[0]) + '–' + str(r[1]); }).join(', ') + '</div>';
+      [['Sáng', 0, 720], ['Chiều', 720, 1080], ['Tối', 1080, 1440]].forEach(function (g) {
+        var part = list.filter(function (x) { return x.m >= g[1] && x.m < g[2]; });
+        if (!part.length) return;
+        side += '<div class="ljs-grp">' + g[0].toUpperCase() + '</div><div class="ljs-chips">' + part.map(function (x) {
+          var on = o.sel && o.sel.date === st.day && o.sel.m === x.m;
+          return '<button type="button" class="ljs-chip' + (on ? ' on' : '') + '" onclick="LJS.picker._time(\'' + key + '\',\'' + st.day + '\',' + x.m + ')">' + str(x.m) + '</button>';
+        }).join('') + '</div>';
+      });
+    }
+    var sum = (o.sel && o.sel.date)
+      ? '<div class="ljs-sum"><span class="ck">✓</span><div>Buổi meeting: <b>' + esc(dayFull(o.sel.date)) + '</b> · <b class="t">' + str(o.sel.m) + ' – ' + str(o.sel.m + dur) + '</b> <span style="color:var(--muted,#555);font-size:12.5px">(' + dur + ' phút)</span></div></div>'
+      : '';
+    host.innerHTML = '<div class="ljs"><div class="ljs-pk"><div>' + cal + '</div><div><div class="ljs-side">' + side + '</div>' + sum + '</div></div>' + (o.note || '') + '</div>';
+  }
+
+  /* ═════════════════════════════ GỬI LỊCH TRỐNG ═════════════════════════════ */
+  // opts: { key, advisor:{name,id,email}, actor:{email}, staffMode, onLoaded }
+  var AV = {};
+  function buildModel(rows, advisorName) {
+    var today = ymd(new Date()), by = {};
+    (rows || []).forEach(function (s) {
+      if (s.advisor_name && norm(s.advisor_name) !== norm(advisorName)) return;
+      var d = String(s.date || '').slice(0, 10);
+      if (!d || d < today) return;
+      var a = minOf(s.time_start); if (a == null) return;
+      var b = minOf(s.time_end); if (b == null || b <= a) b = a + MEET; b = Math.max(b, a + MEET);
+      var st = String(s.status || 'available').toLowerCase();
+      var o = by[d] = by[d] || { avail: [], booked: [], free: [] };
+      if (st === 'booked') o.booked.push([a, a + MEET]);
+      else if (st === 'available') o.avail.push({ id: s.slot_id, a: a, b: b });
+    });
+    Object.keys(by).forEach(function (d) {
+      var o = by[d], merged = [];
+      o.booked.sort(function (x, y) { return x[0] - y[0]; });
+      o.avail.slice().sort(function (x, y) { return x.a - y.a; }).forEach(function (r) {
+        var last = merged[merged.length - 1];
+        if (last && r.a <= last.b) { last.b = Math.max(last.b, r.b); last.ids.push(r.id); } else merged.push({ a: r.a, b: r.b, ids: [r.id] });
+      });
+      merged.forEach(function (m) { subtract(m.a, m.b, o.booked).forEach(function (p) { o.free.push({ a: p[0], b: p[1], ids: m.ids }); }); });
+      o.free.sort(function (x, y) { return x.a - y.a; });
+    });
+    return by;
+  }
+  function who(st) { var a = st.o.advisor || {}; return { advisor_name: a.name, advisor_id: a.id || '', advisor_email: a.email || '' }; }
+  function timeSelect(id, val) {
+    var h = '<select class="ljs-in" id="' + id + '">';
+    for (var m = 5 * 60; m <= 23 * 60 + 45; m += STEP) h += '<option value="' + str(m) + '"' + (str(m) === val ? ' selected' : '') + '>' + str(m) + '</option>';
+    return h + '</select>';
+  }
+
+  var avail = {
+    mount: function (host, o) {
+      if (!host) return;
+      injectCss();
+      var key = safeKey(o.key || 'av'), st = AV[key];
+      if (!st || st.o.advisor.name !== o.advisor.name) st = AV[key] = { month: ymd(new Date()).slice(0, 7), day: null, comp: null, rules: [], rows: [], loading: true };
+      st.o = o; st.host = host; st.key = key;
+      avail.refresh(key);
+    },
+    refresh: function (key) {
+      var st = AV[key]; if (!st) return;
+      st.loading = true; paint(st);
+      var adv = st.o.advisor.name;
+      Promise.all([
+        global.apiGet('getSlots', { advisor: adv }).catch(function (e) { return { _err: e.message }; }),
+        global.apiPost({ action: 'getAvailabilityRules', advisor_name: adv }).catch(function (e) { return { _err: e.message }; })
+      ]).then(function (r) {
+        var s = r[0], ru = r[1];
+        st.rows = (s && s.data) || []; st.slotsErr = (s && s._err) || '';
+        if (ru && ru.success) { st.rules = ru.data || []; st.rulesErr = ''; st.rulesOk = true; }
+        else { st.rules = []; st.rulesOk = false; var msg = (ru && (ru.error || ru._err)) || 'không tải được'; st.rulesErr = /Unknown action/i.test(msg) ? 'Backend chưa bật tính năng lịch cố định hàng tuần (cần Availability.gs).' : msg; }
+        st.loading = false; paint(st);
+        if (st.o.onLoaded) { var f = st.o.onLoaded; st.o.onLoaded = null; try { f(); } catch (e) { } }
+      });
+    },
+    _month: function (key, dir) { var st = AV[key]; if (!st) return; st.month = stepMonth(st.month, dir); paint(st); },
+    _day: function (key, ds) { var st = AV[key]; if (!st) return; st.day = ds; st.comp = null; paint(st); },
+    // mở form thêm / sửa. opts: {} | {rule:id} | {date, range:index} | {date}
+    _open: function (key, opts) {
+      var st = AV[key]; if (!st) return; opts = opts || {};
+      var model = buildModel(st.rows, st.o.advisor.name), c = { mode: st.rulesOk ? 'weekly' : 'single', dows: [], date: '', from: '09:00', to: '17:00', ruleId: '', replaceIds: [], lock: false, title: 'Thêm lịch trống' };
+      if (opts.rule) {
+        var r = st.rules.filter(function (x) { return String(x.rule_id) === String(opts.rule); })[0]; if (!r) return;
+        c.mode = 'weekly'; c.ruleId = r.rule_id; c.dows = [Number(r.dow)]; c.from = r.time_start; c.to = r.time_end; c.lock = true; c.title = 'Sửa lịch cố định · ' + DOW_FULL[r.dow - 1];
+      } else if (opts.date && opts.range != null) {
+        var o = model[opts.date], f = o && o.free[opts.range]; if (!f) return;
+        c.mode = 'single'; c.date = opts.date; c.from = str(f.a); c.to = str(f.b); c.replaceIds = f.ids.slice(); c.lock = true; c.title = dayShort(opts.date) + ' · sửa khung giờ';
+      } else {
+        var d = opts.date || st.day || ymd(new Date(Date.now() + 86400000));
+        c.date = d; c.dows = [dowIdx(d) + 1];
+        if (opts.date) c.mode = 'single';
+      }
+      st.comp = c; paint(st);
+      var el = st.host.querySelector('.ljs-comp'); if (el && el.scrollIntoView) el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    },
+    _close: function (key) { var st = AV[key]; if (!st) return; st.comp = null; paint(st); },
+    _mode: function (key, m) { var st = AV[key]; if (!st || !st.comp) return; keepComp(st); st.comp.mode = m; paint(st); },
+    _dow: function (key, i) {
+      var st = AV[key]; if (!st || !st.comp || st.comp.lock) return; keepComp(st);
+      var a = st.comp.dows, k = a.indexOf(i); if (k > -1) a.splice(k, 1); else a.push(i); paint(st);
+    },
+    _save: function (key) { save(AV[key]); },
+    _delRule: function (key, id) {
+      var st = AV[key]; if (!st) return;
+      var r = st.rules.filter(function (x) { return String(x.rule_id) === String(id); })[0]; if (!r) return;
+      if (!global.confirm('Xoá lịch cố định ' + DOW_FULL[r.dow - 1] + ' ' + r.time_start + ' – ' + r.time_end + '?\nCác ngày sắp tới của lịch này sẽ bị gỡ. Giờ đã có advisee đặt được giữ lại.')) return;
+      global.apiPost({ action: 'deleteAvailabilityRule', rule_id: id, by: actorEmail(st) }).then(function (res) {
+        if (!res || !res.success) { say('Lỗi: ' + ((res && res.error) || 'không xoá được'), 'error'); return; }
+        say('Đã xoá lịch cố định ✅', 'success'); avail.refresh(key);
+      }).catch(function (e) { say('Lỗi kết nối: ' + e.message, 'error'); });
+    },
+    _delRange: function (key, ds, idx) {
+      var st = AV[key]; if (!st) return;
+      var f = (buildModel(st.rows, st.o.advisor.name)[ds] || { free: [] }).free[idx]; if (!f) return;
+      if (!global.confirm('Xoá khung giờ ' + str(f.a) + ' – ' + str(f.b) + ' ngày ' + dayFull(ds) + '?\nGiờ đã có advisee đặt được giữ lại.')) return;
+      delSlots(st, f.ids, 'Đã xoá khung giờ');
+    },
+    _skip: function (key, ds) {
+      var st = AV[key]; if (!st) return;
+      var o = buildModel(st.rows, st.o.advisor.name)[ds]; if (!o) return;
+      var ids = []; o.free.forEach(function (f) { f.ids.forEach(function (id) { if (ids.indexOf(id) < 0) ids.push(id); }); });
+      if (!ids.length) return;
+      if (!global.confirm((st.o.staffMode ? 'Advisor nghỉ ' : 'Nghỉ ') + dayFull(ds) + '?\nCác khoảng giờ trống của ngày này sẽ bị gỡ. Giờ đã có advisee đặt được giữ lại (cần báo advisee hoặc LinkaJob để đổi giờ buổi đó).\nCác tuần khác của lịch cố định không bị ảnh hưởng.')) return;
+      delSlots(st, ids, 'Đã nghỉ ' + dayShort(ds));
+    }
+  };
+  function actorEmail(st) { return (st.o.actor && st.o.actor.email) || ''; }
+  function delSlots(st, ids, okMsg) {
+    global.apiPost({ action: 'deleteSlots', slot_ids: ids }).then(function (res) {
+      if (!res || !res.success) { say('Lỗi: ' + ((res && res.error) || 'không xoá được'), 'error'); return; }
+      say(okMsg + (res.skipped_booked ? ' (giữ lại giờ đã có người đặt)' : '') + ' ✅', 'success'); avail.refresh(st.key);
+    }).catch(function (e) { say('Lỗi kết nối: ' + e.message, 'error'); });
+  }
+  // lưu giá trị đang gõ trong form trước khi vẽ lại
+  function keepComp(st) {
+    var c = st.comp; if (!c) return;
+    var f = document.getElementById('ljs-' + st.key + '-from'), t = document.getElementById('ljs-' + st.key + '-to'), d = document.getElementById('ljs-' + st.key + '-date');
+    if (f) c.from = f.value; if (t) c.to = t.value; if (d && !c.lock) c.date = d.value;
+  }
+  function busy(st, on) {
+    var b = document.getElementById('ljs-' + st.key + '-save');
+    if (b) { b.disabled = on; b.innerHTML = on ? 'Đang lưu...' : 'Lưu lịch'; }
+  }
+
+  function save(st) {
+    var c = st && st.comp; if (!c) return;
+    keepComp(st);
+    var from = Math.ceil(minOf(c.from) / STEP) * STEP, to = Math.floor(minOf(c.to) / STEP) * STEP;
+    if (isNaN(from) || isNaN(to)) { say('Vui lòng chọn giờ bắt đầu và kết thúc', 'error'); return; }
+    if (to - from < MEET) { say('Khoảng giờ phải dài ít nhất 60 phút', 'error'); return; }
+    var p = who(st), actor = actorEmail(st);
+
+    if (c.mode === 'weekly') {
+      if (!c.dows.length) { say('Chọn ít nhất 1 ngày trong tuần', 'error'); return; }
+      busy(st, true);
+      global.apiPost({ action: 'saveAvailabilityRule', advisor_name: p.advisor_name, advisor_id: p.advisor_id, advisor_email: p.advisor_email, days: c.dows, time_start: str(from), time_end: str(to), rule_id: c.ruleId || '', by: actor }).then(function (res) {
+        if (!res || !res.success) { say('Lỗi: ' + ((res && res.error) || 'không lưu được'), 'error'); busy(st, false); return; }
+        say('Đã lưu lịch cố định hàng tuần ✅', 'success'); st.comp = null; avail.refresh(st.key);
+      }).catch(function (e) { say('Lỗi kết nối: ' + e.message, 'error'); busy(st, false); });
+      return;
+    }
+
+    var ds = c.date;
+    if (!ds) { say('Vui lòng chọn ngày', 'error'); return; }
+    if (ds < ymd(new Date())) { say('Ngày phải từ hôm nay trở đi', 'error'); return; }
+    var model = buildModel(st.rows, st.o.advisor.name), o = model[ds] || { free: [], booked: [] };
+    var busyR = o.booked.slice();
+    if (!c.replaceIds.length) o.free.forEach(function (x) { busyR.push([x.a, x.b]); });     // thêm mới: chỉ ghi phần chưa có
+    var nowM = nowMinIfToday(ds);
+    if (nowM >= 0) from = Math.max(from, Math.ceil((nowM + 1) / STEP) * STEP);
+    var pieces = subtract(from, to, busyR);
+    if (!pieces.length) { say('Khung giờ này đã có trong lịch (hoặc trùng giờ đã đặt)', 'error'); return; }
+    busy(st, true);
+    var groups = {};
+    pieces.forEach(function (pc) { var d = pc[1] - pc[0]; (groups[d] = groups[d] || []).push(ds + '_' + str(pc[0])); });
+    var durs = Object.keys(groups), i = 0;
+    var addNext = function () {
+      if (i >= durs.length) { say('Đã lưu khung giờ ✅', 'success'); st.comp = null; avail.refresh(st.key); return; }
+      var d = durs[i++];
+      global.apiPost({ action: 'addSlots', advisor: p.advisor_name, advisor_id: p.advisor_id, advisor_email: p.advisor_email, slots: groups[d], duration_minutes: Number(d), added_by: actor }).then(function (res) {
+        if (!res || !res.success) { say('Lỗi: ' + ((res && res.error) || 'không gửi được'), 'error'); busy(st, false); avail.refresh(st.key); return; }
+        addNext();
+      }).catch(function (e) { say('Lỗi kết nối: ' + e.message, 'error'); busy(st, false); avail.refresh(st.key); });
+    };
+    if (c.replaceIds.length) {
+      global.apiPost({ action: 'deleteSlots', slot_ids: c.replaceIds }).then(function (res) {
+        if (!res || !res.success) { say('Lỗi: ' + ((res && res.error) || 'không cập nhật được'), 'error'); busy(st, false); return; }
+        addNext();
+      }).catch(function (e) { say('Lỗi kết nối: ' + e.message, 'error'); busy(st, false); });
+    } else addNext();
+  }
+
+  function paint(st) {
+    var host = st.host;
+    if (!inDom(host)) { var again = host.id && document.getElementById(host.id); if (again) host = st.host = again; else return; }
+    var key = st.key, o = st.o, adv = o.advisor.name;
+    var title = o.staffMode ? '📅 Lịch trống của ' + esc(adv) : '📅 Lịch trống của tôi';
+    var h = '<div class="ljs"><div class="ljs-card">' +
+      '<div class="ljs-h"><div class="ljs-t">' + title + '</div><div class="ljs-acts">' +
+      '<button type="button" class="ljs-btn sec sm" onclick="LJS.avail.refresh(\'' + key + '\')">↻ Làm mới</button>' +
+      '<button type="button" class="ljs-btn" onclick="LJS.avail._open(\'' + key + '\')">+ Thêm lịch trống</button></div></div>';
+    h += '<p class="ljs-p">' + (o.staffMode
+      ? 'Bạn đang chỉnh lịch <b>thay Advisor</b>. Mọi thay đổi hiện ngay cho Advisee khi đặt lịch.'
+      : 'Bạn chỉ cần gửi lịch <b>một lần</b> — hệ thống tự áp dụng cho các tuần tiếp theo. Khi bận, hãy <b>nghỉ ngày đó</b> hoặc sửa giờ ngay trên lịch.') +
+      ' Mỗi buổi meeting dài 60 phút.</p>';
+    if (st.loading && !st.rows.length) { host.innerHTML = h + '<div class="ljs-empty">Đang tải lịch…</div></div></div>'; return; }
+    if (st.slotsErr) h += '<div class="ljs-warn">⚠ Không tải được lịch trống: ' + esc(st.slotsErr) + '</div>';
+
+    var model = buildModel(st.rows, adv), dates = Object.keys(model);
+    var nFree = 0, nBooked = 0;
+    dates.forEach(function (d) { nFree += model[d].free.length; nBooked += model[d].booked.length; });
+    h += '<div class="ljs-stats"><span class="ljs-tag ljs-free" style="font-size:12px;padding:4px 10px">🟢 ' + nFree + ' khung giờ trống sắp tới</span>' +
+      '<span class="ljs-tag ljs-booked" style="font-size:12px;padding:4px 10px">🟡 ' + nBooked + ' buổi đã được đặt</span></div>';
+
+    // 1) lịch cố định hàng tuần
+    h += '<div class="ljs-sec">🔁 Lịch cố định hàng tuần</div>';
+    if (st.rulesErr) h += '<div class="ljs-warn">⚠ ' + esc(st.rulesErr) + '</div>';
+    if (st.rulesOk && !st.rules.length) h += '<div class="ljs-empty">Chưa có lịch cố định. Bấm <b>+ Thêm lịch trống</b> → “Lặp lại hàng tuần” để chọn các thứ trong tuần và khoảng giờ rảnh.</div>';
+    if (st.rules.length) {
+      h += '<div class="ljs-rules">' + st.rules.slice().sort(function (a, b) { return a.dow - b.dow || String(a.time_start).localeCompare(String(b.time_start)); }).map(function (r) {
+        return '<span class="ljs-rl">' + DOW_FULL[r.dow - 1] + ' · ' + esc(r.time_start) + '–' + esc(r.time_end) +
+          '<span><button type="button" title="Sửa" onclick="LJS.avail._open(\'' + key + '\',{rule:\'' + esc(r.rule_id) + '\'})">✎</button>' +
+          '<button type="button" title="Xoá" onclick="LJS.avail._delRule(\'' + key + '\',\'' + esc(r.rule_id) + '\')">🗑</button></span></span>';
+      }).join('') + '</div><div class="ljs-lb">Tự áp dụng cho các tuần tiếp theo (luôn giữ sẵn 8 tuần phía trước).</div>';
+    }
+    h += '<hr class="ljs-hr">';
+
+    // 2) lịch tháng
+    h += '<div class="ljs-sec">🗓 Lịch theo ngày <span style="font-weight:400;color:var(--muted,#555)">— bấm vào một ngày để xem, sửa hoặc nghỉ</span></div>';
+    h += calHtml({
+      month: st.month, selected: st.day,
+      nav: function (d) { return "LJS.avail._month('" + key + "'," + d + ")"; },
+      day: function (ds) { return "LJS.avail._day('" + key + "','" + ds + "')"; },
+      cell: function (ds) {
+        var m = model[ds], past = ds < ymd(new Date());
+        var html = '';
+        if (m && m.free.length) html += '<span class="ljs-pill ljs-free">' + rangeText(m.free.map(function (f) { return [f.a, f.b]; })) + '</span>';
+        if (m && m.booked.length) html += '<span class="ljs-pill ljs-booked">' + m.booked.length + ' đã đặt</span>';
+        return { enabled: !past, html: html };
+      }
+    });
+    h += '<div class="ljs-legend"><span><i style="background:#10B981"></i>Giờ trống</span><span><i style="background:#F59E0B"></i>Đã có người đặt</span><span><i style="background:var(--brand,#F4451A)"></i>Hôm nay</span></div>';
+
+    // 3) form thêm/sửa hoặc panel ngày
+    if (st.comp) h += compHtml(st);
+    else if (st.day) h += dayHtml(st, model);
+    h += '</div></div>';
+    host.innerHTML = h;
+  }
+
+  function dayHtml(st, model) {
+    var key = st.key, ds = st.day, o = model[ds] || { free: [], booked: [] };
+    var h = '<div class="ljs-day"><div class="ljs-h" style="margin-bottom:10px"><div class="ljs-t" style="font-size:15px">' + esc(dayFull(ds)) + '</div><div class="ljs-acts">' +
+      '<button type="button" class="ljs-btn sec sm" onclick="LJS.avail._open(\'' + key + '\',{date:\'' + ds + '\'})">+ Thêm giờ ngày này</button>' +
+      (o.free.length ? '<button type="button" class="ljs-btn sec sm danger" onclick="LJS.avail._skip(\'' + key + '\',\'' + ds + '\')">' + (st.o.staffMode ? '🚫 Advisor nghỉ ngày này' : '🚫 Nghỉ ngày này') + '</button>' : '') + '</div></div>';
+    if (!o.free.length && !o.booked.length) h += '<div class="ljs-empty">Chưa có khung giờ nào cho ngày này.</div>';
+    o.free.forEach(function (f, i) {
+      h += '<div class="ljs-row"><span><span class="ljs-tag ljs-free" style="font-size:12.5px;padding:4px 10px">🕐 ' + str(f.a) + ' – ' + str(f.b) + '</span> <span style="font-weight:400;color:var(--muted,#555);font-size:12.5px;margin-left:6px">Trống</span></span>' +
+        '<span class="ljs-acts"><button type="button" class="ljs-btn sec sm" onclick="LJS.avail._open(\'' + key + '\',{date:\'' + ds + '\',range:' + i + '})">✎ Sửa</button>' +
+        '<button type="button" class="ljs-btn sec sm danger" onclick="LJS.avail._delRange(\'' + key + '\',\'' + ds + '\',' + i + ')">🗑 Xoá</button></span></div>';
+    });
+    o.booked.forEach(function (b) { h += '<div class="ljs-row bk"><span>🔒 ' + str(b[0]) + ' – ' + str(b[1]) + ' · Đã có Advisee đặt</span></div>'; });
+    return h + '</div>';
+  }
+
+  function compHtml(st) {
+    var key = st.key, c = st.comp, id = 'ljs-' + key;
+    var h = '<div class="ljs-comp"><div class="ljs-t" style="font-size:15px;margin-bottom:10px">' + esc(c.title) + '</div>';
+    if (!c.lock) {
+      h += '<div class="ljs-seg"><button type="button" class="' + (c.mode === 'weekly' ? 'on' : '') + '"' + (st.rulesOk ? '' : ' disabled style="opacity:.5;cursor:not-allowed"') + ' onclick="LJS.avail._mode(\'' + key + '\',\'weekly\')">🔁 Lặp lại hàng tuần</button>' +
+        '<button type="button" class="' + (c.mode === 'single' ? 'on' : '') + '" onclick="LJS.avail._mode(\'' + key + '\',\'single\')">Chỉ một ngày</button></div>';
+    }
+    if (c.mode === 'weekly') {
+      h += '<div class="ljs-lb">Các ngày rảnh trong tuần <span style="color:var(--brand,#F4451A)">*</span></div><div class="ljs-dows">';
+      for (var i = 1; i <= 7; i++) h += '<button type="button" class="ljs-dow' + (c.dows.indexOf(i) > -1 ? ' on' : '') + '"' + (c.lock ? ' disabled' : '') + ' onclick="LJS.avail._dow(\'' + key + '\',' + i + ')">' + DOW_SHORT[i - 1] + '</button>';
+      h += '</div>';
+    } else {
+      h += '<div class="ljs-fields"><div><div class="ljs-lb">Ngày <span style="color:var(--brand,#F4451A)">*</span></div><input class="ljs-in" type="date" id="' + id + '-date" value="' + esc(c.date) + '" min="' + ymd(new Date()) + '"' + (c.lock ? ' disabled' : '') + '></div></div>';
+    }
+    h += '<div class="ljs-fields"><div><div class="ljs-lb">Rảnh từ</div>' + timeSelect(id + '-from', c.from) + '</div><div><div class="ljs-lb">Đến</div>' + timeSelect(id + '-to', c.to) + '</div></div>';
+    h += '<div class="ljs-lb" style="line-height:1.6;margin-top:8px">Tối thiểu 60 phút. VD rảnh 09:00 – 17:00 thì Advisee đặt được mọi giờ bắt đầu từ 09:00 đến 16:00 (kể cả 09:30, 10:15…).' +
+      (c.mode === 'weekly' ? '<br>Lịch cố định tự áp dụng cho các tuần tiếp theo, không cần gửi lại.' : '') + '</div>';
+    h += '<div class="ljs-foot"><button type="button" class="ljs-btn sec" onclick="LJS.avail._close(\'' + key + '\')">Đóng</button>' +
+      '<button type="button" class="ljs-btn" id="' + id + '-save" onclick="LJS.avail._save(\'' + key + '\')">Lưu lịch</button></div></div>';
+    return h;
+  }
+
+  global.LJS = { picker: picker, avail: avail, util: { rangesOf: rangesOf, str: str, minOf: minOf, dayFull: dayFull, ymd: ymd, esc: esc, injectCss: injectCss }, version: '1.0' };
+})(window);
+
+
+/* ── Nối LJS vào dashboard: ghi đè các hàm cũ (lịch trống Advisor + đặt lịch) ── */
+function ljLoadAdvisorSlots(advisorId, done) {
+  var a = (sheetData.advisors || []).find(function (x) { return x.id === advisorId; });
+  if (!a) return;
+  _sl.advisorId = advisorId; _sl.advisor = a;
+  var host = document.getElementById('sa-slots-card'); if (!host) return;
+  LJS.avail.mount(host, { key: 'staff-' + advisorId, advisor: { name: a.name, id: a.id, email: a.email }, actor: { email: currentUser && currentUser.email }, staffMode: true, onLoaded: done });
+}
+function ljRenderSlotsCard_() { if (_sl.advisor) ljLoadAdvisorSlots(_sl.advisorId); }
+
+// Advisee đặt lịch (màn cũ trong dashboard)
+function renderBookSessionModalBody() {
+  var ctx = _bookSessionCtx, slots = {};
+  Object.keys(_bookSessionSlots).forEach(function (d) { slots[d] = (_bookSessionSlots[d] || []).map(function (x) { return { m: x.m, slot_id: x.slot_id }; }); });
+  document.getElementById('modal-body').innerHTML =
+    '<div style="font-size:13px;color:var(--muted);margin-bottom:12px;line-height:1.6">Chọn ngày Advisor <b>' + ctx.advisorName + '</b> rảnh, sau đó chọn giờ bắt đầu. Mỗi buổi meeting kéo dài 60 phút.</div>' +
+    '<div style="background:#EFF6FF;border:1px solid #BFDBFE;border-radius:10px;padding:10px 14px;margin-bottom:14px;font-size:12.5px;line-height:1.7;color:#1E40AF">📌 <b>Quy định đặt lịch</b><br>• Đặt lịch trước giờ hẹn ít nhất <b>' + BOOK_MIN_HOURS + ' giờ</b>' + (_bookSessionHidden ? ' (một số khung giờ quá gần đã được ẩn)' : '') + '.<br>• Gửi <b>câu hỏi chuẩn bị</b> trước giờ hẹn <b>' + PREP_DEADLINE_HOURS + ' giờ</b> (hệ thống sẽ gửi email nhắc). Nếu chưa gửi, buổi sẽ <b>tự huỷ</b> và bạn cần đặt lại lịch.</div>' +
+    '<div id="ljs-bk-host"></div>';
+  LJS.picker.mount(document.getElementById('ljs-bk-host'), {
+    key: 'bkd-' + ctx.advisorName + '-' + ctx.sessionNo, slots: slots, dur: AV_MEET, resetMonth: true,
+    sel: _bookSessionSelected ? { date: _bookSessionSelected.date, m: avMin(_bookSessionSelected.time) } : null,
+    onSelect: function (d, m) {
+      var hit = d ? (_bookSessionSlots[d] || []).filter(function (x) { return x.m === m; })[0] : null;
+      _bookSessionSelected = hit ? { date: d, time: hit.time, slotId: hit.slot_id } : null;
+      renderBookSessionModalActions();
+    }
+  });
+  renderBookSessionModalActions();
+}
+
+// Staff đặt hộ Advisee: phần chọn giờ dùng cùng lịch tháng
+function ljSbMountPicker_() {
+  var host = document.getElementById('lj-sb-pk'); if (!host || !_sb) return;
+  var slots = {};
+  Object.keys(_sb.slots || {}).forEach(function (d) { slots[d] = (_sb.slots[d] || []).map(function (x) { return { m: timeStrToMinutes(x.time), slot_id: x.slot_id, time: x.time }; }); });
+  LJS.picker.mount(host, {
+    key: 'sb-' + _sb.aeId + '-' + _sb.advisorName, slots: slots, dur: 60, resetMonth: !_sb.pkSeen,
+    sel: _sb.selected ? { date: _sb.selected.date, m: timeStrToMinutes(_sb.selected.time) } : null,
+    onSelect: function (d, m) {
+      var hit = d ? (_sb.slots[d] || []).filter(function (x) { return timeStrToMinutes(x.time) === m; })[0] : null;
+      _sb.selected = hit ? { date: d, time: hit.time, slotId: hit.slot_id } : null;
+      ljSbRefreshActions_();
+    }
+  });
+  _sb.pkSeen = true;
+}
+function ljSbRefreshActions_() {
+  var a = '<button class="btn-secondary" onclick="closeModal()" style="width:auto;padding:10px 20px">Đóng</button>';
+  if (_sb && _sb.selected) a += '<button class="login-btn" id="lj-sb-confirm" onclick="ljSbConfirm()" style="width:auto;padding:10px 22px">Xác nhận đặt ' + _sb.selected.date.split('-').reverse().join('/') + ' · ' + _sb.selected.time + ' →</button>';
+  else a += '<button class="login-btn" disabled style="width:auto;padding:10px 22px;opacity:.5;cursor:not-allowed">Chọn 1 khung giờ ở trên</button>';
+  document.getElementById('modal-actions').innerHTML = a;
 }
 </script>
 </body>
