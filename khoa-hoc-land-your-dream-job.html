@@ -594,7 +594,7 @@ button:focus-visible, a:focus-visible, .lj-nav-btn-plain:focus-visible, .fbtn:fo
       <p>Hiện đang làm việc tại các tập đoàn đa quốc gia – Advisors tại LinkaJob. Lớp học nhỏ chỉ 5 học viên, được dẫn dắt trực tiếp bởi 3 Advisor dưới đây.</p>
     </div>
     <div class="instructor-grid three">
-      <div class="instructor-card">
+      <div class="instructor-card" data-advisor="hoang oanh">
         <div class="instructor-photo">
           <img src="https://linkajob.vn/wp-content/uploads/2025/09/hoang-oanh.webp" alt="Advisor Hoàng Oanh" loading="lazy" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
           <div class="avatar-fallback" style="display:none;">HO</div>
@@ -610,7 +610,7 @@ button:focus-visible, a:focus-visible, .lj-nav-btn-plain:focus-visible, .fbtn:fo
           </ul>
         </div>
       </div>
-      <div class="instructor-card">
+      <div class="instructor-card" data-advisor="hai trieu">
         <div class="instructor-photo">
           <img src="https://linkajob.vn/wp-content/uploads/2026/10/2aOboR3maCmLuIxBqFc5pm1ThkitBcf9sDFZq1Ca.webp" alt="Advisor Hải Triều" loading="lazy" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
           <div class="avatar-fallback" style="display:none;">HT</div>
@@ -626,7 +626,7 @@ button:focus-visible, a:focus-visible, .lj-nav-btn-plain:focus-visible, .fbtn:fo
           </ul>
         </div>
       </div>
-      <div class="instructor-card">
+      <div class="instructor-card" data-advisor="hung cuong">
         <div class="instructor-photo">
           <img src="https://linkajob.vn/wp-content/uploads/2026/09/Advisor-Quoc-Cuong.webp" alt="Advisor Hùng Cường" loading="lazy" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
           <div class="avatar-fallback" style="display:none;">HC</div>
@@ -1158,6 +1158,53 @@ button:focus-visible, a:focus-visible, .lj-nav-btn-plain:focus-visible, .fbtn:fo
       .catch(function(err){ if (window.console) console.warn('Không tải được đánh giá khoá học, giữ nội dung mẫu:', err); });
   }
   window.addEventListener('load', load);
+})();
+</script>
+<script>
+/* Ảnh giảng viên: lấy từ tab "Advisors" trong Google Sheet (cột ảnh: photo_url / photo / avatar / image).
+   Khớp theo TÊN (không dấu, không phân biệt hoa thường) với thuộc tính data-advisor của từng thẻ.
+   Muốn khớp chính xác hơn, thêm data-advisor-id="adv-..." vào thẻ (khớp theo cột advisor_id).
+   Lỗi tải hoặc không khớp → GIỮ NGUYÊN ảnh cũ (linkajob.vn). */
+(function(){
+  var ADV_ACTION = 'getAdvisors'; // tên action của Apps Script trả về tab Advisors — sửa nếu khác
+  var FALLBACK_URL = 'https://script.google.com/macros/s/AKfycbx7Bd9VvoyzfiiezQV9huoY2BKHH_Br1RAFIz00mjdyKeis-Zv-38a0gf_b-fMlul2C/exec';
+  function norm(s){ return String(s == null ? '' : s).normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/đ/g,'d').replace(/Đ/g,'D').toLowerCase().replace(/\s+/g,' ').trim(); }
+  function directImg(url){
+    if(!url) return '';
+    url = String(url).trim();
+    var m = url.match(/drive\.google\.com\/file\/d\/([^/]+)/) || url.match(/[?&]id=([^&]+)/);
+    return (m && m[1]) ? 'https://lh3.googleusercontent.com/d/' + m[1] : url;
+  }
+  function photoOf(r){ return r.photo_url || r.photoUrl || r.photo || r.avatar || r.avatar_url || r.image || r.image_url || ''; }
+  function base(){ return (typeof CW_WEBAPP_URL !== 'undefined' && CW_WEBAPP_URL) ? CW_WEBAPP_URL : FALLBACK_URL; }
+
+  function apply(rows){
+    document.querySelectorAll('.instructor-card[data-advisor]').forEach(function(card){
+      var key = card.getAttribute('data-advisor'), id = card.getAttribute('data-advisor-id');
+      var row = rows.find(function(r){
+        if (id && r.advisor_id === id) return true;
+        var n = norm(r.name);
+        return n === key || n.indexOf(key) !== -1 || key.indexOf(n) !== -1 && n.length > 3;
+      });
+      if (!row) return;
+      var src = directImg(photoOf(row));
+      if (!src) return;
+      var wrap = card.querySelector('.instructor-photo'), img = wrap && wrap.querySelector('img');
+      if (!img) return;
+      var fb = wrap.querySelector('.avatar-fallback');
+      img.onload = function(){ img.style.display = ''; if (fb) fb.style.display = 'none'; };
+      img.src = src;
+    });
+  }
+  window.addEventListener('load', function(){
+    fetch(base() + '?action=' + ADV_ACTION)
+      .then(function(r){ return r.json(); })
+      .then(function(res){
+        var rows = Array.isArray(res) ? res : (res && res.data) ? res.data : [];
+        if (rows.length) apply(rows);
+      })
+      .catch(function(e){ if (window.console) console.warn('Không tải được ảnh advisor từ sheet, giữ ảnh cũ:', e); });
+  });
 })();
 </script>
 <script src="nav.js"></script>
