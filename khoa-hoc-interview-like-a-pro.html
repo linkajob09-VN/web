@@ -6,6 +6,7 @@
 <title>MASTER CLASS: INTERVIEW LIKE A PRO | LinkaJob</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+<link rel="preload" as="image" href="advisor-hoang-thanh-tram.jpg" fetchpriority="high">
 <link rel="stylesheet" href="nav.css">
 <link rel="stylesheet" href="dang-ky-tu-van.css">
 <style>
@@ -41,6 +42,7 @@ section{padding:80px 0}
 .stat span{font-size:11px;color:rgba(240,240,240,.4);text-transform:uppercase;letter-spacing:.06em}
 .photo{position:relative;border-radius:22px;overflow:hidden;aspect-ratio:4/5;background:#1c1c1c;border:.5px solid var(--ldark)}
 .photo img{width:100%;height:100%;object-fit:cover;display:block}
+.photo .adv-fallback{position:absolute;inset:0;align-items:center;justify-content:center;font-family:'Montserrat',sans-serif;font-weight:800;font-size:52px;color:var(--orange)}
 .who{position:absolute;left:14px;right:14px;bottom:14px;background:rgba(13,13,13,.82);backdrop-filter:blur(10px);border:.5px solid var(--ldark);border-radius:14px;padding:12px 14px}
 .who strong{display:block;font-size:14px;color:var(--tdark)}.who span{font-size:11.5px;color:var(--orange);font-weight:600}
 .wave{background:var(--dark);line-height:0}.wave svg{width:100%;height:36px;display:block}
@@ -195,7 +197,7 @@ html{scroll-padding-top:84px}
 <div class="stat"><b>Zoom</b><span>Học trực tuyến</span></div>
 </div></div>
 <!-- ẢNH ADVISOR: thay src bên dưới bằng đường dẫn ảnh của bạn (hoặc dán lại chuỗi data:image/jpeg;base64,... cũ) -->
-<div class="photo"><img src="advisor-hoang-thanh-tram.jpg" alt="Advisor Hoàng Thanh Trâm"><div class="who"><strong>Hoàng Thanh Trâm</strong><span>Advisor LinkaJob</span></div></div>
+<div class="photo"><img id="advPhoto" src="advisor-hoang-thanh-tram.jpg" alt="Advisor Hoàng Thanh Trâm" fetchpriority="high" decoding="async" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"><div class="adv-fallback" style="display:none;">TT</div><div class="who"><strong>Hoàng Thanh Trâm</strong><span>Advisor LinkaJob</span></div></div>
 </div></header>
 <div class="wave"><svg viewBox="0 0 1440 40" preserveAspectRatio="none"><path d="M0,40 C360,0 1080,0 1440,40 L0,40 Z" fill="#F5F4F1"/></svg></div>
 
@@ -344,6 +346,41 @@ function bind(sel,q,a,single){document.querySelectorAll(sel).forEach(function(it
 bind('.fi','.fq','.fa',true);
 </script>
 <div id="lj-widget-root"></div>
+<script>
+/* Ảnh advisor: ảnh mặc định (advisor-hoang-thanh-tram.jpg) hiện ngay. Ảnh từ tab Advisors được tải ngầm,
+   tải xong mới thay vào (không chớp/trống) và được cache để lần sau không phải chờ Apps Script.
+   Lỗi hoặc không khớp tên → giữ nguyên ảnh mặc định. */
+(function(){
+  var URL_ = 'https://script.google.com/macros/s/AKfycbx7Bd9VvoyzfiiezQV9huoY2BKHH_Br1RAFIz00mjdyKeis-Zv-38a0gf_b-fMlul2C/exec';
+  var TARGET = 'thanh tram', CACHE_KEY = 'lj_adv_photo_thanh_tram';
+  function norm(s){ return String(s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/đ/g,'d').replace(/Đ/g,'D').toLowerCase(); }
+  function direct(u){ u=String(u||'').trim(); var m=u.match(/drive\.google\.com\/file\/d\/([^/]+)/)||u.match(/[?&]id=([^&]+)/); return (m&&m[1])?'https://lh3.googleusercontent.com/d/'+m[1]:u; }
+  function swap(url){
+    if(!url) return;
+    var pre=new Image();
+    pre.onload=function(){
+      var el=document.getElementById('advPhoto');
+      if(!el||el.getAttribute('src')===url) return;
+      var fb=el.nextElementSibling; if(fb&&fb.classList.contains('adv-fallback')) fb.style.display='none';
+      el.style.display=''; el.src=url;
+    };
+    pre.src=url;
+  }
+  var cached=''; try{ cached=localStorage.getItem(CACHE_KEY)||''; }catch(e){}
+  if(cached) swap(cached);
+  fetch(URL_+'?action=getAdvisors&only_active=1')
+    .then(function(r){return r.json();})
+    .then(function(res){
+      if(!res||!res.data) return;
+      var a=res.data.find(function(x){return norm(x.name).indexOf(TARGET)>-1;});
+      var p=direct(a&&(a.photo||a.photo_url||a.avatar||a.image||a.image_url));
+      if(!p) return;
+      try{ localStorage.setItem(CACHE_KEY,p); }catch(e){}
+      if(p!==cached) swap(p);
+    })
+    .catch(function(){});
+})();
+</script>
 <script src="nav.js"></script>
 <script>initSharedNav();</script>
 <script src="dang-ky-tu-van.js"></script>
