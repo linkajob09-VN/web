@@ -1265,6 +1265,18 @@ function safeParseYMD(dateStr) {
   return { valid: true, dow: ['CN','T2','T3','T4','T5','T6','T7'][d.getDay()], dd: d.getDate(), mm: d.getMonth()+1, dateObj: d };
 }
 
+// ── Cache feedback advisee đã gửi theo session_id (localStorage) — lưới an toàn:
+// nếu backend getSessions chưa trả feedback_* thì dashboard vẫn hiện feedback đã gửi,
+// buổi vẫn 'done' và buổi kế tiếp vẫn mở khoá, advisee không phải điền lại.
+function fbCacheGet(sid) {
+  if (!sid) return null;
+  try { var r = localStorage.getItem('linkajob_fb_' + sid); return r ? JSON.parse(r) : null; } catch (e) { return null; }
+}
+function fbCacheSet(sid, obj) {
+  if (!sid) return;
+  try { localStorage.setItem('linkajob_fb_' + sid, JSON.stringify(obj)); } catch (e) {}
+}
+
 function buildAdviseeFromBooking(b, allSessions, pkgFlag) {
   var mySessions = allSessions.filter(function(s){ return s.booking_id === b.booking_id; });
   var sessionsTotal = Number(b.sessions_total) || 0;
@@ -1305,8 +1317,14 @@ function buildAdviseeFromBooking(b, allSessions, pkgFlag) {
       timeEnd = (Math.floor(mins/60)%24 < 10 ? '0':'') + (Math.floor(mins/60)%24) + ':' + (mins%60 < 10 ? '0':'') + (mins%60);
     }
 
+    // FIX: feedback đã lưu ở AdvisorReviews (feedback_rating/feedback_text) => buổi coi như đã hoàn thành,
+    // kể cả khi cột status của tab Sessions chưa được backend đổi sang 'completed'.
+    // Trước đây chỉ dựa vào row.status === 'completed' nên reload trang là buổi quay lại 'Cần feedback',
+    // buổi kế tiếp không mở khoá được để book.
+    var cachedFb = fbCacheGet(row.session_id);
+    var hasSavedFeedback = !!(row.feedback_rating || row.feedback_text || cachedFb);
     var status;
-    if (row.status === 'completed') status = 'done';
+    if (row.status === 'completed' || hasSavedFeedback) status = 'done';
     else {
       var sessDate = schedDate ? new Date(schedDate + 'T' + (schedTime||'00:00')) : null;
       status = (sessDate && sessDate < today) ? 'feedback' : 'upcoming';
@@ -1325,7 +1343,7 @@ function buildAdviseeFromBooking(b, allSessions, pkgFlag) {
     // bắt gửi lại. Nay đọc đúng ra để hiển thị lại dữ liệu đã lưu, cả 2 chiều advisor/advisee.
     var feedbackObj = (row.feedback_rating || row.feedback_text)
       ? { rating: Number(row.feedback_rating) || 0, text: row.feedback_text || '', createdAt: row.feedback_created_at || '' }
-      : null;
+      : (cachedFb ? { rating: Number(cachedFb.rating) || 0, text: cachedFb.text || '', createdAt: cachedFb.createdAt || '' } : null);
     var advisorNotesObj = row.advisor_note_summary
       ? { summary: row.advisor_note_summary || '', feedback: row.advisor_note_feedback || '', actionItems: row.advisor_note_action_items || '', submittedAt: row.advisor_note_created_at || '' }
       : null;
@@ -5761,6 +5779,11 @@ function submitAdviseeFeedbackModal(sessionNo) {
   if (!ae) return;
   var s = ae.sessions.find(function(x){ return x.no === sessionNo; });
   if (!s) return;
+
+  // FIX: chặn gửi lặp (tránh tạo nhiều dòng review trùng cho cùng 1 session_id)
+  if (s.feedback || s._fbSubmitting) { closeModal(); return; }
+  s._fbSubmitting = true;
+  fbCacheSet(s.session_id, { rating: rating, text: text, createdAt: new Date().toISOString() });
 
   var feedbackSessionId = s.session_id || (ae.bookingId + '-' + sessionNo);
 
