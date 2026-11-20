@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Khám phá Assessment Center · LinkaJob</title>
+<meta name="description" content="3 buổi giải case Group Case và Individual Case theo format Assessment Center, lớp tối đa 5 bạn, nhận feedback riêng cho phần làm của bạn. Từ 2.000.000đ.">
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap');
 :root{
@@ -38,6 +39,11 @@ h1,h2,h3,h4{font-weight:700; letter-spacing:-0.02em; line-height:1.15;}
 .btn-orange:hover{opacity:.88; transform:translateY(-1px);}
 .btn-ghost-dark{background:transparent; color:var(--muted-dark); border:.5px solid var(--line-dark);}
 .btn-ghost-dark:hover{color:var(--text-dark); border-color:rgba(252,82,41,.4);}
+
+.x-do,.x-get{display:flex; gap:10px; font-size:13.5px; line-height:1.6; margin-top:12px;}
+.x-do i,.x-get i{flex:none; width:58px; font-style:normal; font-weight:700; font-size:12px; padding-top:1px;}
+.x-do{color:var(--muted);} .x-do i{color:var(--muted-2);}
+.x-get{color:var(--text);} .x-get i{color:var(--orange);}
 
 /* hero */
 .hero{background:var(--dark); padding:64px 0 44px; text-align:center;}
@@ -183,13 +189,13 @@ button:focus-visible,a:focus-visible{outline:2px solid var(--orange); outline-of
 
 <section class="hero">
   <div class="wrap">
-    <span class="eyebrow on-dark"><span class="eyebrow-dot"></span>Chương trình thực chiến Assessment Center · LinkaJob</span>
+    <span class="eyebrow on-dark"><span class="eyebrow-dot"></span>Luyện Assessment Center có feedback · LinkaJob</span>
     <h1>Khám phá <em>Assessment Center</em></h1>
-    <div class="tag">Mock Group Case, Individual Case và cách giải case của người làm đa quốc gia</div>
-    <p class="sub">3 buổi giải case mô phỏng vòng Assessment Center, kèm feedback trực tiếp để bạn chuẩn bị cho vòng AC thật. Dành cho bạn đang nhắm vào vị trí Management Trainee tại các tập đoàn FMCG.</p>
+    <div class="tag">Giải Group Case và Individual Case, nhận feedback riêng, biết rõ mình cần sửa gì trước vòng AC thật</div>
+    <p class="sub">3 buổi giải case mô phỏng vòng Assessment Center, lớp tối đa 5 bạn chia theo phòng ban, kèm feedback cho chính phần làm của bạn. Dành cho bạn đang nhắm vào vị trí Management Trainee tại các tập đoàn FMCG.</p>
     <div class="hero-cta">
       <button class="btn btn-orange" onclick="openConsultWidget()">Đăng ký tư vấn</button>
-      <a href="#noidung" class="btn btn-ghost-dark">Xem chương trình</a>
+      <a href="#noidung" class="btn btn-ghost-dark">Xem nội dung 3 buổi</a>
     </div>
     <div class="hero-stats">
       <div class="hstat"><div class="hstat-num">3</div><div class="hstat-lbl">Buổi giải case</div></div>
@@ -205,8 +211,8 @@ button:focus-visible,a:focus-visible{outline:2px solid var(--orange); outline-of
 <section>
   <div class="wrap">
     <div class="section-head">
-      <span class="eyebrow"><span class="eyebrow-dot"></span>Vì sao bạn nên thử</span>
-      <h2>Đọc về Assessment Center khác xa việc tự bước vào một buổi AC</h2>
+      <span class="eyebrow"><span class="eyebrow-dot"></span>Vì sao cần luyện trước</span>
+      <h2>Biết quy trình AC chưa đủ. Bạn cần làm case thật và có người chỉ ra chỗ cần sửa</h2>
       <p>Vòng Management Trainee ở các tập đoàn FMCG thường có Assessment Center. Luyện trước một lần giúp bạn biết mình đang đứng ở đâu và cần chuẩn bị gì cho vòng AC thật.</p>
     </div>
     <div class="problem-grid">
@@ -220,9 +226,9 @@ button:focus-visible,a:focus-visible{outline:2px solid var(--orange); outline-of
 
 <section class="solution">
   <div class="wrap">
-    <span class="eyebrow on-dark"><span class="eyebrow-dot"></span>Chương trình này là gì</span>
-    <h2>Không phải khoá học. Đây là nơi bạn luyện Assessment Center thực chiến và nhận feedback để ứng tuyển tự tin hơn.</h2>
-    <p class="lead">Chương trình không dạy kiến thức. Bạn thực chiến giải case, được xem cách người làm đa quốc gia giải cùng bài toán và nhận nhận xét cho chính phần làm của mình. Mỗi lớp tối đa 5 bạn, được chia theo phòng ban.</p>
+    <span class="eyebrow on-dark"><span class="eyebrow-dot"></span>Chương trình gồm gì</span>
+    <h2>Bạn giải Group Case và Individual Case như vòng thật, rồi dùng feedback cho quá trình ứng tuyển.</h2>
+    <p class="lead">Toàn bộ thời gian dành cho thực hành: bạn giải case, xem cách người làm đa quốc gia giải cùng bài toán và nhận nhận xét cho chính phần làm của mình. Mỗi lớp tối đa 5 bạn, được chia theo phòng ban.</p>
     <div class="pill-row">
       <span class="pill">Mock Group Case</span>
       <span class="pill">Individual Case</span>
@@ -235,14 +241,20 @@ button:focus-visible,a:focus-visible{outline:2px solid var(--orange); outline-of
 <section id="noidung">
   <div class="wrap">
     <div class="section-head">
-      <span class="eyebrow"><span class="eyebrow-dot"></span>Bạn sẽ thực hành gì</span>
-      <h2>3 buổi giải case, 3 góc nhìn về Assessment Center</h2>
-      <p>Mỗi phần giúp bạn hiểu một khía cạnh khác nhau của một buổi Assessment Center.</p>
+      <span class="eyebrow"><span class="eyebrow-dot"></span>Nội dung 3 buổi</span>
+      <h2>3 buổi giải case, mỗi buổi một kết quả cụ thể</h2>
+      <p>Mỗi buổi có phần bạn làm và phần bạn nhận được sau buổi đó.</p>
     </div>
     <div class="exp-grid">
-      <div class="exp-card"><span class="num">01</span><h3>Mock Group Case</h3><p>Làm việc nhóm để giải một case trong lớp nhỏ tối đa 5 bạn, được chia theo phòng ban. Bạn thấy rõ mình thể hiện thế nào khi cùng nhóm tìm ra giải pháp.</p></div>
-      <div class="exp-card"><span class="num">02</span><h3>Individual Case</h3><p>Tự mình phân tích và đề xuất giải pháp cho một case, sau đó nhận feedback cho riêng phần làm của bạn.</p></div>
-      <div class="exp-card"><span class="num">03</span><h3>Cách giải case của người làm đa quốc gia</h3><p>Tìm hiểu cách người đang làm việc tại các công ty đa quốc gia tiếp cận, cấu trúc và giải quyết một case.</p></div>
+      <div class="exp-card"><span class="num">01</span><h3>Mock Group Case</h3>
+        <p class="x-do"><i>Bạn làm</i><span>Giải một case cùng nhóm tối đa 5 bạn, chia theo phòng ban.</span></p>
+        <p class="x-get"><i>Bạn nhận</i><span>Feedback về cách bạn làm việc nhóm: bạn nổi bật ở đâu và cần điều chỉnh gì khi cùng nhóm tìm giải pháp.</span></p></div>
+      <div class="exp-card"><span class="num">02</span><h3>Individual Case</h3>
+        <p class="x-do"><i>Bạn làm</i><span>Tự phân tích và đề xuất giải pháp cho một case.</span></p>
+        <p class="x-get"><i>Bạn nhận</i><span>Nhận xét riêng cho phần làm của bạn, để lần sau không lặp lại cùng một lỗi.</span></p></div>
+      <div class="exp-card"><span class="num">03</span><h3>Cách giải case của người làm đa quốc gia</h3>
+        <p class="x-do"><i>Bạn làm</i><span>Xem người đang làm tại công ty đa quốc gia tiếp cận và cấu trúc case.</span></p>
+        <p class="x-get"><i>Bạn nhận</i><span>Một chuẩn để đối chiếu với bài của mình và thấy chỗ cần cải thiện.</span></p></div>
     </div>
   </div>
 </section>
@@ -251,17 +263,17 @@ button:focus-visible,a:focus-visible{outline:2px solid var(--orange); outline-of
   <div class="wrap">
     <div class="section-head">
       <span class="eyebrow"><span class="eyebrow-dot"></span>Khác biệt</span>
-      <h2>Chương trình này khác khoá học thông thường thế nào?</h2>
+      <h2>Khác gì so với học lý thuyết theo lớp đông?</h2>
     </div>
     <div class="transform-table">
       <div class="col-before">
-        <div class="col-head">Không phải khoá học</div>
-        <div class="transform-row"><span class="mark"></span><span class="t">Không giảng dạy kiến thức hay lý thuyết</span></div>
-        <div class="transform-row"><span class="mark"></span><span class="t">Không phải lớp đông ngồi nghe một chiều</span></div>
-        <div class="transform-row"><span class="mark"></span><span class="t">Không chỉ đọc về Assessment Center</span></div>
+        <div class="col-head">Học theo lớp thông thường</div>
+        <div class="transform-row"><span class="mark"></span><span class="t">Chủ yếu nghe giảng kiến thức và framework</span></div>
+        <div class="transform-row"><span class="mark"></span><span class="t">Lớp đông, ít người xem kỹ bài làm của bạn</span></div>
+        <div class="transform-row"><span class="mark"></span><span class="t">Biết quy trình AC nhưng chưa tự làm một buổi</span></div>
       </div>
       <div class="col-after">
-        <div class="col-head">Là buổi thực chiến có feedback</div>
+        <div class="col-head">Khám phá Assessment Center</div>
         <div class="transform-row"><span class="mark"></span><span class="t">Tự giải Group Case và Individual Case</span></div>
         <div class="transform-row"><span class="mark"></span><span class="t">Lớp tối đa 5 bạn, chia theo phòng ban</span></div>
         <div class="transform-row"><span class="mark"></span><span class="t">Nhận feedback cho chính phần làm của bạn</span></div>
@@ -280,7 +292,7 @@ button:focus-visible,a:focus-visible{outline:2px solid var(--orange); outline-of
     </div>
     <div class="audience-grid">
       <div class="audience-card" style="background:var(--dark-card); border-color:var(--line-dark);"><h3 style="color:var(--text-dark);">Bạn muốn tìm hiểu MT ở FMCG</h3><p style="color:var(--muted-dark);">Bạn muốn biết một vòng Assessment Center của chương trình Management Trainee diễn ra như thế nào.</p></div>
-      <div class="audience-card" style="background:var(--dark-card); border-color:var(--line-dark);"><h3 style="color:var(--text-dark);">Bạn chưa từng làm Group Case</h3><p style="color:var(--muted-dark);">Bạn muốn thử sức trong một môi trường an toàn trước khi bước vào buổi AC thật.</p></div>
+      <div class="audience-card" style="background:var(--dark-card); border-color:var(--line-dark);"><h3 style="color:var(--text-dark);">Bạn chưa từng làm Group Case</h3><p style="color:var(--muted-dark);">Bạn muốn làm Group Case một lần trong lớp nhỏ, có feedback, trước khi bước vào buổi AC thật.</p></div>
       <div class="audience-card" style="background:var(--dark-card); border-color:var(--line-dark);"><h3 style="color:var(--text-dark);">Bạn muốn nghe nhận xét thẳng</h3><p style="color:var(--muted-dark);">Bạn cần feedback cụ thể để biết điểm mạnh và điểm cần cải thiện của mình.</p></div>
     </div>
   </div>
@@ -311,11 +323,11 @@ button:focus-visible,a:focus-visible{outline:2px solid var(--orange); outline-of
         <span class="eyebrow">Gói Thực chiến</span>
         <div class="price-old">Giá gốc 3.000.000đ</div>
         <div class="price-new">2.000.000đ</div>
-        <div class="price-note">Trọn gói 3 buổi giải case</div>
+        <div class="price-note">Trọn gói 3 buổi giải case · tiết kiệm 1.000.000đ</div>
         <div class="perf-d"></div>
         <ul class="price-list">
           <li>3 buổi giải case: Mock Group Case, Individual Case và cách giải case của người làm đa quốc gia</li>
-          <li>Feedback cho phần làm của bạn</li>
+          <li>Feedback riêng cho phần Group Case và Individual Case của bạn</li>
           <li>Lớp tối đa 5 bạn, chia theo phòng ban</li>
         </ul>
         <button class="btn btn-orange" onclick="openConsultWidget()">Đăng ký tư vấn</button>
@@ -324,10 +336,10 @@ button:focus-visible,a:focus-visible{outline:2px solid var(--orange); outline-of
         <span class="eyebrow">Gói Combo</span>
         <div class="price-old">Giá gốc 3.719.000đ</div>
         <div class="price-new">2.500.000đ</div>
-        <div class="price-note">3 buổi giải case và 2 buổi cố vấn 1:1</div>
+        <div class="price-note">3 buổi giải case và 2 buổi cố vấn 1:1 · tiết kiệm 1.219.000đ</div>
         <div class="perf-d"></div>
         <ul class="price-list">
-          <li>Toàn bộ nội dung của gói Trải nghiệm</li>
+          <li>Toàn bộ nội dung của gói Thực chiến</li>
           <li>2 buổi cố vấn 1:1 với advisor để mock interview</li>
           <li>Lớp tối đa 5 bạn, chia theo phòng ban</li>
         </ul>
@@ -346,12 +358,16 @@ button:focus-visible,a:focus-visible{outline:2px solid var(--orange); outline-of
     </div>
     <div id="faq-list">
       <div class="faq-item">
-        <div class="faq-q"><h4>Đây có phải là một khoá học không?</h4><span class="plus">+</span></div>
-        <div class="faq-a"><p>Không. Chương trình không dạy kiến thức mà là nơi bạn luyện Assessment Center thực chiến qua Group Case và Individual Case, sau đó nhận feedback để dùng cho quá trình ứng tuyển.</p></div>
+        <div class="faq-q"><h4>Chương trình diễn ra như thế nào?</h4><span class="plus">+</span></div>
+        <div class="faq-a"><p>Chương trình gồm 3 buổi giải case: Mock Group Case, Individual Case và buổi xem cách người làm đa quốc gia giải case. Bạn nhận feedback cho phần làm của mình để dùng cho quá trình ứng tuyển.</p></div>
       </div>
       <div class="faq-item">
         <div class="faq-q"><h4>Chương trình phù hợp với ai?</h4><span class="plus">+</span></div>
-        <div class="faq-a"><p>Phù hợp với bạn nào muốn tìm hiểu vị trí Management Trainee tại các tập đoàn FMCG và muốn thử sức với một buổi Assessment Center.</p></div>
+        <div class="faq-a"><p>Phù hợp với bạn đang nhắm vào vị trí Management Trainee tại các tập đoàn FMCG và muốn làm một buổi Assessment Center có feedback trước khi vào vòng thật.</p></div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q"><h4>Sau chương trình mình nhận được gì?</h4><span class="plus">+</span></div>
+        <div class="faq-a"><p>Bạn đã làm cả Group Case và Individual Case, có feedback riêng cho cách làm việc nhóm và cách giải case một mình, và biết cách người làm đa quốc gia tiếp cận cùng bài toán. Gói Combo có thêm 2 buổi mock interview 1:1 với advisor.</p></div>
       </div>
       <div class="faq-item">
         <div class="faq-q"><h4>Mỗi lớp có bao nhiêu bạn?</h4><span class="plus">+</span></div>
@@ -372,7 +388,7 @@ button:focus-visible,a:focus-visible{outline:2px solid var(--orange); outline-of
 <section class="final">
   <div class="wrap">
     <span class="eyebrow on-dark"><span class="eyebrow-dot"></span>Bắt đầu ngay</span>
-    <h2>Sẵn sàng thử một buổi Assessment Center?</h2>
+    <h2>Sẵn sàng làm Assessment Center có feedback trước vòng thật?</h2>
     <p>Lớp chỉ nhận tối đa 5 bạn. Đăng ký tư vấn để chọn gói và phòng ban phù hợp.</p>
     <button class="btn btn-orange" onclick="openConsultWidget()">Đăng ký tư vấn</button>
   </div>
