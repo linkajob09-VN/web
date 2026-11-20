@@ -1102,7 +1102,7 @@ renderMentorChart();
   var reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   if(reduceMotion) return;
 
-  var revealSelector = '.problem-card, .about-card, .svc-card, .testi-card, .story-card, .fb-card, .gift-card, .audience-card, .instructor-card, .price-box, .module, .faq-item, .section-head, .rating-summary, .form-box';
+  var revealSelector = '.problem-card, .about-card, .svc-card, .testi-card, .story-card, .fb-card, .gift-card, .audience-card, .instructor-card, .price-box, .module, .faq-item, .section-head, .rating-summary, .form-box, .ac-card';
   var revealEls = document.querySelectorAll(revealSelector);
   revealEls.forEach(function(el, i){
     el.classList.add('reveal-init');
@@ -1142,7 +1142,7 @@ renderMentorChart();
     }
     requestAnimationFrame(step);
   }
-  var statEls = document.querySelectorAll('.hstat-num, #avgRating');
+  var statEls = document.querySelectorAll('.hstat-num, #avgRating, .ac-stats b');
   if(statEls.length && 'IntersectionObserver' in window){
     var statIo = new IntersectionObserver(function(entries){
       entries.forEach(function(entry){
