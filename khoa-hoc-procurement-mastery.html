@@ -1,0 +1,618 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Procurement Mastery · LinkaJob</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap');
+:root{
+  --dark:#0D0D0D;
+  --dark-card:#1A1A1A;
+  --paper:#F5F4F1;
+  --paper-2:#FFFFFF;
+  --orange:#fc5229;
+  --orange-tint:rgba(252,82,41,.1);
+  --orange-tint-2:rgba(252,82,41,.06);
+  --text:#1C1C1C;
+  --text-dark:#F0F0F0;
+  --muted:rgba(28,28,28,.45);
+  --muted-2:rgba(28,28,28,.3);
+  --muted-dark:rgba(240,240,240,.4);
+  --muted-dark-2:rgba(240,240,240,.28);
+  --line:rgba(28,28,28,.1);
+  --line-dark:rgba(255,255,255,.09);
+}
+*,*::before,*::after{box-sizing:border-box; margin:0; padding:0;}
+html{scroll-behavior:smooth; scroll-padding-top:84px;}
+body{font-family:'Montserrat',sans-serif; background:var(--paper); color:var(--text); line-height:1.55; -webkit-font-smoothing:antialiased;}
+a{color:inherit; text-decoration:none;}
+.wrap{max-width:1120px; margin:0 auto; padding:0 32px;}
+h1,h2,h3,h4{font-family:'Montserrat',sans-serif; font-weight:700; letter-spacing:-0.02em; line-height:1.15;}
+
+.eyebrow{display:inline-flex; align-items:center; gap:7px; font-size:12px; font-weight:600; background:var(--orange-tint); color:var(--orange); border:.5px solid rgba(252,82,41,.18); border-radius:100px; padding:5px 14px;}
+.eyebrow-dot{width:5px; height:5px; border-radius:50%; background:var(--orange); flex:none;}
+.eyebrow.on-dark{background:#1A1A1A; color:var(--muted-dark); border-color:var(--line-dark);}
+
+.btn{display:inline-flex; align-items:center; justify-content:center; gap:8px; padding:13px 26px; border-radius:100px; font-family:'Montserrat',sans-serif; font-weight:700; font-size:14px; cursor:pointer; border:none; transition:opacity .2s, transform .15s;}
+.btn-orange{background:var(--orange); color:#fff;}
+.btn-orange:hover{opacity:.88; transform:translateY(-1px);}
+.btn-ghost-dark{background:transparent; color:var(--muted-dark); border:.5px solid var(--line-dark);}
+.btn-ghost-dark:hover{color:var(--text-dark); border-color:rgba(252,82,41,.4);}
+
+/* hero */
+.hero{background:var(--dark); padding:64px 0 44px;}
+.hero-split{display:grid; grid-template-columns:1.15fr .85fr; gap:48px; align-items:center; text-align:left;}
+.hero-text .eyebrow{margin-bottom:20px;}
+.hero h1{font-size:clamp(26px,4.6vw,40px); color:var(--text-dark); letter-spacing:-1.6px; margin-bottom:14px;}
+.hero h1 em{color:var(--orange); font-style:normal;}
+.hero .sub{font-size:15px; color:var(--muted-dark); max-width:500px; margin:0 0 30px; line-height:1.7;}
+.hero-cta{display:flex; gap:12px; flex-wrap:wrap; margin-bottom:36px;}
+.hero-stats{display:flex; gap:40px; flex-wrap:wrap; margin-top:40px; padding-top:28px; border-top:.5px solid var(--line-dark);}
+.hstat-num{font-size:34px; font-weight:700; color:var(--orange); line-height:1;}
+.hstat-lbl{font-size:11px; color:var(--muted-dark-2); margin-top:5px; text-transform:uppercase; letter-spacing:.06em;}
+.hero-photo-col{position:relative;}
+.hero-photo{position:relative; border-radius:22px; overflow:hidden; aspect-ratio:4/5; background:linear-gradient(180deg,#1c1c1c,#0a0a0a); border:.5px solid var(--line-dark);}
+.hero-photo img{width:100%; height:100%; object-fit:cover; display:block;}
+.hero-photo .avatar-fallback{position:absolute; inset:0; align-items:center; justify-content:center; font-weight:800; font-size:52px; color:var(--orange);}
+.hero-exp-badge{position:absolute; top:16px; right:16px; width:78px; height:78px; border-radius:50%; background:var(--orange); display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; box-shadow:0 14px 30px rgba(252,82,41,.4); z-index:2;}
+.hero-exp-badge b{font-size:21px; font-weight:800; color:#fff; line-height:1;}
+.hero-exp-badge span{font-size:8px; font-weight:700; color:#fff; text-transform:uppercase; letter-spacing:.03em; line-height:1.25; margin-top:3px;}
+.hero-advisor-card{position:absolute; left:14px; right:14px; bottom:14px; background:rgba(13,13,13,.82); backdrop-filter:blur(10px); border:.5px solid var(--line-dark); border-radius:14px; padding:11px 13px; display:flex; align-items:center; gap:11px; z-index:2;}
+.hero-advisor-card .avatar{width:38px; height:38px; border-radius:50%; overflow:hidden; flex:none; background:linear-gradient(135deg,#252525,#1a1a1a); display:flex; align-items:center; justify-content:center; font-weight:700; font-size:13px; color:var(--orange);}
+.hero-advisor-card .avatar img{width:100%; height:100%; object-fit:cover;}
+.hero-advisor-card strong{display:block; font-size:13.5px; color:var(--text-dark); font-weight:700;}
+.hero-advisor-card span.r{display:block; font-size:11px; color:var(--orange); font-weight:600; margin-top:1px;}
+
+.wave{background:var(--dark); line-height:0;}
+.wave svg{width:100%; height:36px; display:block;}
+
+section{padding:80px 0;}
+.section-head{max-width:620px; margin-bottom:44px;}
+.section-head h2{font-size:30px; color:var(--text); margin-top:14px; letter-spacing:-1px;}
+.section-head p{margin-top:14px; font-size:15px; color:var(--muted); line-height:1.7;}
+.on-dark .section-head h2{color:var(--text-dark);}
+.on-dark .section-head p{color:var(--muted-dark);}
+
+.problem-grid{display:grid; grid-template-columns:repeat(4,1fr); gap:14px;}
+.problem-card{background:var(--paper-2); border:.5px solid var(--line); border-radius:16px; padding:24px 20px; transition:border-color .2s, transform .2s;}
+.problem-card:hover{border-color:rgba(252,82,41,.3); transform:translateY(-3px);}
+.problem-card .num{font-size:12px; color:var(--orange); font-weight:700; letter-spacing:.04em;}
+.problem-card h3{font-size:16px; margin:14px 0 8px; letter-spacing:-0.3px;}
+.problem-card p{font-size:13.5px; color:var(--muted); line-height:1.6;}
+
+.solution{background:var(--dark); text-align:center;}
+.solution h2{font-size:28px; max-width:720px; margin:16px auto; color:var(--text-dark); letter-spacing:-0.8px;}
+.solution p.lead{max-width:600px; margin:0 auto 30px; color:var(--muted-dark); font-size:15px;}
+.pill-row{display:flex; gap:10px; justify-content:center; flex-wrap:wrap;}
+.pill{background:var(--orange-tint); border:.5px solid rgba(252,82,41,.25); color:var(--orange); padding:9px 18px; border-radius:100px; font-size:13px; font-weight:600;}
+
+.transform-table{display:grid; grid-template-columns:1fr 1fr; border-radius:18px; overflow:hidden; border:.5px solid var(--line);}
+.col-before,.col-after{padding:30px 26px;}
+.col-before{background:#fff;}
+.col-after{background:var(--dark);}
+.col-head{font-size:12px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; margin-bottom:20px;}
+.col-before .col-head{color:var(--muted-2);}
+.col-after .col-head{color:var(--orange);}
+.transform-row{display:flex; gap:12px; padding:12px 0; border-top:.5px solid var(--line);}
+.col-after .transform-row{border-top:.5px solid var(--line-dark);}
+.transform-row:first-of-type{border-top:none;}
+.transform-row .mark{flex:none; width:18px; height:18px; border-radius:50%; margin-top:2px; display:flex; align-items:center; justify-content:center; font-size:10px; font-weight:700;}
+.col-before .mark{background:rgba(28,28,28,.06); color:var(--muted);}
+.col-after .mark{background:var(--orange); color:#fff;}
+.transform-row span.t{font-size:14px;}
+.col-before .transform-row span.t{color:var(--text);}
+.col-after .transform-row span.t{color:var(--muted-dark);}
+
+.module{border-top:.5px solid var(--line);}
+.module:last-child{border-bottom:.5px solid var(--line);}
+.module-q{display:flex; align-items:flex-start; gap:18px; padding:20px 0; cursor:pointer;}
+.module-num{font-size:22px; color:rgba(28,28,28,.18); font-weight:700; flex:none; width:36px;}
+.module-head{flex:1;}
+.module-head h3{font-size:16.5px; letter-spacing:-0.3px; margin-bottom:5px;}
+.module-outcome{display:flex; align-items:center; gap:6px; font-size:12.5px; color:var(--orange); font-weight:600;}
+.module-outcome-dot{width:4px; height:4px; border-radius:50%; background:var(--orange); flex:none;}
+.module-plus{font-size:18px; color:var(--orange); flex:none; transition:transform .2s ease; margin-top:2px;}
+.module.open .module-plus{transform:rotate(45deg);}
+.module-a{max-height:0; overflow:hidden; transition:max-height .25s ease;}
+.module-a ul{list-style:none; display:flex; flex-direction:column; gap:7px; padding:0 0 22px 54px;}
+.module-a li{font-size:13.5px; color:var(--muted);}
+
+.audience-grid{display:grid; grid-template-columns:repeat(3,1fr); gap:16px;}
+.audience-card{background:var(--paper-2); border:.5px solid var(--line); border-radius:16px; padding:26px;}
+.audience-card .eyebrow{margin-bottom:16px;}
+.audience-card p{font-size:14px; color:var(--muted); line-height:1.6;}
+
+.instructor-card{background:var(--dark-card); border:.5px solid var(--line-dark); border-radius:16px; padding:20px; display:flex; gap:18px; transition:border-color .25s ease, transform .25s ease;}
+.instructor-card:hover{border-color:rgba(252,82,41,.4); transform:translateY(-4px);}
+.instructor-photo{width:96px; height:96px; border-radius:14px; overflow:hidden; flex:none; position:relative; background:linear-gradient(135deg,#252525,#1a1a1a);}
+.instructor-photo img{width:100%; height:100%; object-fit:cover; display:block;}
+.instructor-photo .avatar-fallback{position:absolute; inset:0; align-items:center; justify-content:center; font-weight:700; font-size:26px; color:var(--orange);}
+.photo-verified{position:absolute; bottom:5px; right:5px; width:20px; height:20px; background:var(--orange); border-radius:50%; display:flex; align-items:center; justify-content:center; border:2px solid var(--dark-card); font-size:10px; color:#fff;}
+.instructor-card h3{font-size:17px; color:var(--text-dark); margin-bottom:4px;}
+.instructor-card .role{font-size:12.5px; color:var(--orange); font-weight:600; margin-bottom:12px;}
+.instructor-card ul{list-style:none; display:flex; flex-direction:column; gap:6px;}
+.instructor-card li{font-size:13px; color:var(--muted-dark);}
+.perf{height:.5px; background:repeating-linear-gradient(90deg,rgba(255,255,255,.14) 0,rgba(255,255,255,.14) 4px,transparent 4px,transparent 8px); margin:16px 0;}
+
+.gift-grid{display:grid; grid-template-columns:repeat(4,1fr); gap:16px;}
+.gift-card{background:var(--paper-2); border:.5px solid var(--line); border-radius:16px; padding:24px;}
+.gift-card h3{font-size:15.5px; margin-bottom:8px; letter-spacing:-0.2px;}
+.gift-card p{font-size:13px; color:var(--muted); line-height:1.6;}
+
+.pricing{background:var(--dark); text-align:center;}
+.price-grid{display:grid; grid-template-columns:1fr; gap:18px; max-width:460px; margin:0 auto;}
+.price-box{background:var(--dark-card); border:.5px solid rgba(252,82,41,.4); background:linear-gradient(180deg,rgba(252,82,41,.08),var(--dark-card) 55%); border-radius:20px; padding:32px 28px; text-align:left;}
+.price-box .eyebrow{margin-bottom:18px;}
+.price-new{font-size:34px; color:var(--orange); font-weight:700; letter-spacing:-1.3px; margin-bottom:6px;}
+.price-note{font-size:12px; color:var(--muted-dark-2); margin-bottom:8px;}
+.price-list{list-style:none; display:flex; flex-direction:column; gap:9px; margin:18px 0 22px;}
+.price-list li{font-size:12.8px; color:var(--muted-dark); padding-left:20px; position:relative;}
+.price-list li::before{content:""; position:absolute; left:0; top:7px; width:5px; height:5px; border-radius:50%; background:var(--orange);}
+.perf-d{height:.5px; background:repeating-linear-gradient(90deg,rgba(255,255,255,.14) 0,rgba(255,255,255,.14) 4px,transparent 4px,transparent 8px); margin:20px 0;}
+
+.faq-item{border-top:.5px solid var(--line); padding:20px 0;}
+.faq-item:last-child{border-bottom:.5px solid var(--line);}
+.faq-q{display:flex; justify-content:space-between; align-items:center; cursor:pointer; gap:16px;}
+.faq-q h4{font-weight:700; font-size:15px; letter-spacing:-0.2px;}
+.faq-q .plus{font-size:18px; color:var(--orange); transition:transform .2s ease; flex:none;}
+.faq-item.open .plus{transform:rotate(45deg);}
+.faq-a{max-height:0; overflow:hidden; transition:max-height .25s ease;}
+.faq-a p{font-size:13.5px; color:var(--muted); padding-top:14px; line-height:1.65;}
+
+.final{background:var(--dark); text-align:center;}
+.final h2{font-size:32px; color:var(--text-dark); max-width:620px; margin:16px auto 14px; letter-spacing:-1px;}
+.final p{color:var(--muted-dark); max-width:500px; margin:0 auto 32px; font-size:14.5px;}
+
+footer{background:var(--dark); color:var(--muted-dark-2); padding:28px 0; text-align:center; font-size:12.5px; border-top:.5px solid var(--line-dark);}
+footer span{color:var(--orange);}
+
+@media(max-width:900px){
+  .problem-grid,.audience-grid,.gift-grid{grid-template-columns:repeat(2,1fr);}
+}
+@media(max-width:860px){
+  .hero-split{grid-template-columns:1fr; gap:32px;}
+  .hero-photo-col{max-width:340px; width:100%; margin:0 auto;}
+}
+@media(max-width:760px){
+  .col-before,.col-after{padding:20px 16px;}
+  .col-head{font-size:10.5px; margin-bottom:14px;}
+  .transform-row{padding:9px 0; gap:9px;}
+  .transform-row span.t{font-size:12.5px; line-height:1.4;}
+}
+@media(max-width:560px){
+  .problem-grid,.audience-grid,.gift-grid{grid-template-columns:1fr;}
+  section{padding:56px 0;}
+  .wrap{padding:0 20px;}
+  .hero-cta{flex-direction:column; align-items:stretch;}
+  .hero-cta .btn{width:100%;}
+  .hero-stats{display:grid; grid-template-columns:1fr 1fr; gap:22px 14px;}
+  .module-a ul{padding-left:0;}
+  .instructor-card{flex-direction:column;}
+}
+@media(max-width:480px){.transform-table{grid-template-columns:1fr;}}
+
+/* animation */
+@media (prefers-reduced-motion: no-preference){
+  @keyframes heroFadeUp{from{opacity:0; transform:translateY(16px);} to{opacity:1; transform:translateY(0);}}
+  .hero .eyebrow,.hero h1,.hero .sub,.hero-cta,.hero-stats{animation:heroFadeUp .7s cubic-bezier(.22,1,.36,1) both;}
+  .hero h1{animation-delay:.06s;} .hero .sub{animation-delay:.16s;} .hero-cta{animation-delay:.26s;} .hero-stats{animation-delay:.36s;}
+  .reveal-init{opacity:0; transform:translateY(20px); transition:opacity .6s ease, transform .6s cubic-bezier(.22,1,.36,1);}
+  .reveal-init.is-visible{opacity:1; transform:translateY(0);}
+  .btn:active{transform:scale(.96);}
+}
+@media (prefers-reduced-motion: reduce){*{animation-duration:0.001ms !important; transition-duration:0.001ms !important;}}
+button,a{outline:none;}
+button:focus-visible,a:focus-visible{outline:2px solid var(--orange); outline-offset:2px; border-radius:6px;}
+</style>
+<link rel="stylesheet" href="nav.css">
+<link rel="stylesheet" href="dang-ky-tu-van.css">
+</head>
+<body>
+<div id="lj-nav-root"></div>
+
+<section class="hero">
+  <div class="wrap hero-split">
+    <div class="hero-text">
+      <span class="eyebrow on-dark"><span class="eyebrow-dot"></span>Khoá học Procurement & Sourcing · LinkaJob</span>
+      <h1>Procurement <em>Mastery</em></h1>
+      <p class="sub">Từ Buyer vận hành đến tư duy Strategic Sourcing. 5 buổi đi từ nền tảng đến quyết định thực chiến: hiểu bản đồ procurement, chọn đúng chiến lược sourcing và xử lý các tình huống của một Buyer thực thụ.</p>
+      <div class="hero-cta">
+        <button class="btn btn-orange" onclick="openConsultWidget()">Đăng ký tư vấn</button>
+        <a href="#noidung" class="btn btn-ghost-dark">Xem nội dung khoá</a>
+      </div>
+      <div class="hero-stats">
+        <div class="hstat"><div class="hstat-num">5</div><div class="hstat-lbl">Buổi học</div></div>
+        <div class="hstat"><div class="hstat-num">3</div><div class="hstat-lbl">Buổi lý thuyết</div></div>
+        <div class="hstat"><div class="hstat-num">2</div><div class="hstat-lbl">Buổi case study</div></div>
+        <div class="hstat"><div class="hstat-num">5</div><div class="hstat-lbl">Học viên</div></div>
+      </div>
+    </div>
+    <div class="hero-photo-col">
+      <div class="hero-photo">
+        <img id="heroPhotoMain" src="https://lh3.googleusercontent.com/d/12eTQkk1AA19yE_pGdEnHVKSk2fm3jCa4" alt="Nguyễn Hà Tú Anh" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+        <div class="avatar-fallback" style="display:none;">TA</div>
+        <div class="hero-advisor-card">
+          <div class="avatar">
+            <img id="heroPhotoMini" src="https://lh3.googleusercontent.com/d/12eTQkk1AA19yE_pGdEnHVKSk2fm3jCa4" alt="" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+            <span style="display:none;">TA</span>
+          </div>
+          <div><strong>Nguyễn Hà Tú Anh</strong><span class="r">Procurement Professional · Nestlé</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="wave"><svg viewBox="0 0 1440 40" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none"><path d="M0,40 C360,0 1080,0 1440,40 L1440,40 L0,40 Z" fill="#F5F4F1"/></svg></div>
+
+<section>
+  <div class="wrap">
+    <div class="section-head">
+      <span class="eyebrow"><span class="eyebrow-dot"></span>Vấn đề cốt lõi</span>
+      <h2>Vì sao nhiều Buyer giỏi vận hành vẫn khó lên tầm chiến lược?</h2>
+      <p>Procurement không chỉ là đặt hàng. Muốn đi xa, bạn cần hiểu bức tranh toàn cục và biết ra quyết định bằng dữ liệu.</p>
+    </div>
+    <div class="problem-grid">
+      <div class="problem-card"><span class="num">01</span><h3>Nhầm lẫn các khái niệm nền tảng</h3><p>Procurement, Purchasing và Sourcing hay bị dùng lẫn lộn nên khó xác định đúng vai trò và phạm vi công việc.</p></div>
+      <div class="problem-card"><span class="num">02</span><h3>Chỉ thấy một đoạn của quy trình</h3><p>Làm tốt phần việc được giao nhưng chưa nhìn được toàn bộ vòng đời từ nhu cầu đến thanh toán.</p></div>
+      <div class="problem-card"><span class="num">03</span><h3>Mua theo thói quen, không theo chiến lược</h3><p>Chưa biết phân loại nhà cung cấp và chọn đòn bẩy phù hợp cho từng nhóm hàng.</p></div>
+      <div class="problem-card"><span class="num">04</span><h3>Lúng túng khi tình huống “cháy” xảy ra</h3><p>Giao hàng trễ, nhu cầu khẩn cấp hay nhà cung cấp không đạt chuẩn đều cần cách xử lý bài bản.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="solution">
+  <div class="wrap">
+    <span class="eyebrow on-dark"><span class="eyebrow-dot"></span>Giải pháp</span>
+    <h2>Học cách nghĩ trước khi mua, rồi thực hành bằng case study</h2>
+    <p class="lead">Ba buổi lý thuyết xây nền tảng, bản đồ end-to-end và tư duy chiến lược. Hai buổi case study đưa bạn vào tình huống thật: xử lý một đơn mua hàng trọn vẹn và đề xuất Sourcing Strategy bằng dữ liệu. Giảng viên: Nguyễn Hà Tú Anh.</p>
+    <div class="pill-row">
+      <span class="pill">Procurement DNA</span>
+      <span class="pill">Source to Pay</span>
+      <span class="pill">Kraljic Matrix</span>
+      <span class="pill">Procurement Chessboard</span>
+      <span class="pill">TCO Challenge</span>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <div class="section-head">
+      <span class="eyebrow"><span class="eyebrow-dot"></span>Chuyển đổi</span>
+      <h2>Bạn sẽ khác đi thế nào sau khoá học?</h2>
+    </div>
+    <div class="transform-table">
+      <div class="col-before">
+        <div class="col-head">Before: Chưa tham gia</div>
+        <div class="transform-row"><span class="mark"></span><span class="t">Chưa phân biệt rõ Procurement, Purchasing và Sourcing</span></div>
+        <div class="transform-row"><span class="mark"></span><span class="t">Chỉ nắm một khâu, chưa thấy toàn bộ vòng đời Source to Pay</span></div>
+        <div class="transform-row"><span class="mark"></span><span class="t">Chọn nhà cung cấp theo giá hoặc thói quen</span></div>
+        <div class="transform-row"><span class="mark"></span><span class="t">Bị động khi giao hàng trễ, nhu cầu khẩn cấp hoặc xung đột nội bộ</span></div>
+        <div class="transform-row"><span class="mark"></span><span class="t">Khó thuyết phục khi phải đề xuất nhà cung cấp</span></div>
+      </div>
+      <div class="col-after">
+        <div class="col-head">After: Hoàn thành khoá</div>
+        <div class="transform-row"><span class="mark"></span><span class="t">Nắm vững khái niệm, thuật ngữ và vai trò của Buyer</span></div>
+        <div class="transform-row"><span class="mark"></span><span class="t">Nhìn toàn bộ quy trình end-to-end và P2P trên một bản đồ</span></div>
+        <div class="transform-row"><span class="mark"></span><span class="t">Phân loại nhà cung cấp bằng Kraljic Matrix, chọn đòn bẩy bằng Chessboard</span></div>
+        <div class="transform-row"><span class="mark"></span><span class="t">Có phương án xử lý các tình huống vận hành thường gặp</span></div>
+        <div class="transform-row"><span class="mark"></span><span class="t">Đề xuất Sourcing Strategy dựa trên TCO, chất lượng và rủi ro</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="noidung">
+  <div class="wrap">
+    <div class="section-head">
+      <span class="eyebrow"><span class="eyebrow-dot"></span>Nội dung khoá học</span>
+      <h2>5 buổi: từ nền tảng đến quyết định thực chiến</h2>
+      <p>Học lý thuyết để có khung tư duy, sau đó áp dụng ngay vào case study. Bấm vào từng buổi để xem chi tiết.</p>
+    </div>
+    <div id="module-list">
+      <div class="module open">
+        <div class="module-q">
+          <div class="module-num">01</div>
+          <div class="module-head">
+            <h3>Procurement DNA: Procurement, Purchasing & Sourcing <span style="color:var(--muted-2); font-weight:500;">· Lý thuyết</span></h3>
+            <div class="module-outcome"><span class="module-outcome-dot"></span>Phân biệt rõ 3 khái niệm hay bị nhầm lẫn và hiểu một ngày làm việc thật của người Buyer</div>
+          </div>
+          <span class="module-plus">+</span>
+        </div>
+        <div class="module-a">
+          <ul>
+            <li>So sánh Procurement, Purchasing và Sourcing: khác nhau ở đâu, ai làm gì</li>
+            <li>Direct vs. Indirect; Strategic vs. Operational Procurement</li>
+            <li>Vai trò, trách nhiệm và các stakeholder mà Buyer phải làm việc cùng mỗi ngày</li>
+            <li>Bộ thuật ngữ cốt lõi: MOQ, TCO, Lead time, Safety stock, Should-cost…</li>
+          </ul>
+        </div>
+      </div>
+      <div class="module">
+        <div class="module-q">
+          <div class="module-num">02</div>
+          <div class="module-head">
+            <h3>End-to-End Flow: From Source to Pay and Beyond <span style="color:var(--muted-2); font-weight:500;">· Lý thuyết</span></h3>
+            <div class="module-outcome"><span class="module-outcome-dot"></span>Nhìn toàn bộ vòng đời procurement trên một bản đồ duy nhất, từ nhu cầu đến thanh toán</div>
+          </div>
+          <span class="module-plus">+</span>
+        </div>
+        <div class="module-a">
+          <ul>
+            <li>Vòng đời Procurement end-to-end: các bước chính trong quy trình Sourcing</li>
+            <li>Quy trình Procure-to-Pay (P2P) vận hành thực tế ra sao</li>
+            <li>Tổng quan các mô hình Sourcing và khi nào dùng mô hình nào</li>
+          </ul>
+        </div>
+      </div>
+      <div class="module">
+        <div class="module-q">
+          <div class="module-num">03</div>
+          <div class="module-head">
+            <h3>Strategy Lens: Kraljic Matrix & Procurement Chessboard <span style="color:var(--muted-2); font-weight:500;">· Lý thuyết</span></h3>
+            <div class="module-outcome"><span class="module-outcome-dot"></span>Học cách nghĩ trước khi mua: phân loại đúng nhà cung cấp, chọn đúng đòn bẩy</div>
+          </div>
+          <span class="module-plus">+</span>
+        </div>
+        <div class="module-a">
+          <ul>
+            <li>Supplier Segmentation và cách ứng dụng Kraljic Matrix</li>
+            <li>Procurement Chessboard: các đòn bẩy Strategic Sourcing</li>
+            <li>Nhập môn Category Management và các hướng tiếp cận Strategic Sourcing</li>
+          </ul>
+        </div>
+      </div>
+      <div class="module">
+        <div class="module-q">
+          <div class="module-num">04</div>
+          <div class="module-head">
+            <h3>Operational Procurement <span style="color:var(--muted-2); font-weight:500;">· Case Study</span></h3>
+            <div class="module-outcome"><span class="module-outcome-dot"></span>Trải nghiệm trọn vẹn một đơn mua hàng và xử lý những tình huống “cháy” mà Buyer nào cũng gặp</div>
+          </div>
+          <span class="module-plus">+</span>
+        </div>
+        <div class="module-a">
+          <ul>
+            <li>Case study: quản lý end-to-end một yêu cầu mua hàng, từ Purchase Requisition đến Purchase Order và nhận hàng</li>
+            <li>Problem-solving: giao hàng trễ, nhu cầu khẩn cấp, nhà cung cấp không đạt chuẩn, xung đột với bộ phận nội bộ</li>
+          </ul>
+        </div>
+      </div>
+      <div class="module">
+        <div class="module-q">
+          <div class="module-num">05</div>
+          <div class="module-head">
+            <h3>Strategic Decision: Sourcing Strategy & TCO Challenge <span style="color:var(--muted-2); font-weight:500;">· Case Study</span></h3>
+            <div class="module-outcome"><span class="module-outcome-dot"></span>Đứng ở vị trí người ra quyết định: phân tích, so sánh và chọn nhà cung cấp bằng dữ liệu</div>
+          </div>
+          <span class="module-plus">+</span>
+        </div>
+        <div class="module-a">
+          <ul>
+            <li>Case study: phân tích spend category, đánh giá thị trường nhà cung cấp, đề xuất Sourcing Strategy</li>
+            <li>Sourcing Challenge: đánh giá đề xuất nhà cung cấp theo TCO, chất lượng, rủi ro và yêu cầu kinh doanh</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section style="padding-top:0">
+  <div class="wrap">
+    <div class="section-head">
+      <span class="eyebrow"><span class="eyebrow-dot"></span>Đối tượng</span>
+      <h2>Khoá học này dành cho ai</h2>
+    </div>
+    <div class="audience-grid">
+      <div class="audience-card">
+        <span class="eyebrow"><span class="eyebrow-dot"></span>Buyer và nhân sự mới</span>
+        <p>Bạn đang vận hành đơn hàng hằng ngày và muốn hiểu bức tranh lớn phía sau công việc của mình.</p>
+      </div>
+      <div class="audience-card">
+        <span class="eyebrow"><span class="eyebrow-dot"></span>Muốn lên Strategic Sourcing</span>
+        <p>Bạn cần công cụ và tư duy để chuyển từ xử lý giao dịch sang xây dựng chiến lược nhóm hàng.</p>
+      </div>
+      <div class="audience-card">
+        <span class="eyebrow"><span class="eyebrow-dot"></span>Chuyển sang ngành Procurement</span>
+        <p>Bạn đến từ vận hành, supply chain, tài chính… và muốn nắm nhanh ngôn ngữ, quy trình của nghề.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section style="background:var(--dark)" class="on-dark">
+  <div class="wrap">
+    <div class="section-head">
+      <span class="eyebrow on-dark"><span class="eyebrow-dot"></span>Giảng viên</span>
+      <h2>Nguyễn Hà Tú Anh</h2>
+      <p>Trực tiếp giảng dạy toàn bộ 5 buổi của khoá Procurement Mastery, từ nền tảng đến Sourcing Strategy và TCO.</p>
+    </div>
+    <div class="instructor-card">
+      <div class="instructor-photo">
+        <img id="instructorPhoto" src="https://lh3.googleusercontent.com/d/12eTQkk1AA19yE_pGdEnHVKSk2fm3jCa4" alt="Nguyễn Hà Tú Anh" loading="lazy" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+        <div class="avatar-fallback" style="display:none;">TA</div>
+      </div>
+      <div>
+        <h3>Nguyễn Hà Tú Anh</h3>
+        <div class="role">Procurement Professional · 5 năm 3 tháng tại Nestlé</div>
+        <ul>
+          <li>Packaging Sourcing Specialist: quản lý danh mục hơn 1.000 mã bao bì, chi tiêu hằng năm khoảng 35 triệu CHF (tương đương khoảng 1.000 tỷ đồng)</li>
+          <li>Procurement Business Partner (Confectionery & CPW) tại Bangkok: phụ trách các nhóm hàng Minerals, Fiber, Lecithin, Vitamin… cho Nestlé Indochina</li>
+          <li>Procurement Specialist (MILO & Milks) và Strategic Buyer (Innovation & Renovation) cho các nhãn hàng Nestlé Việt Nam</li>
+          <li>Management Trainee ngành Supply Chain tại Nestlé Việt Nam, luân chuyển qua 5 chức năng</li>
+          <li>P&G CEO Challenge 2021: Top 1 vòng quốc gia, APAC Regional Winner, Global Runner-up</li>
+        </ul>
+        <div class="perf"></div>
+        <div class="pill-row" style="justify-content:flex-start;">
+          <span class="pill">Procurement</span>
+          <span class="pill">Strategic Sourcing</span>
+          <span class="pill">Category Management</span>
+          <span class="pill">P2P</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <div class="section-head">
+      <span class="eyebrow"><span class="eyebrow-dot"></span>Sau khoá học</span>
+      <h2>Bạn nhận được gì?</h2>
+    </div>
+    <div class="gift-grid">
+      <div class="gift-card"><h3>Nền tảng vững chắc</h3><p>Phân biệt rõ Procurement, Purchasing, Sourcing và nắm bộ thuật ngữ cốt lõi của nghề.</p></div>
+      <div class="gift-card"><h3>Bản đồ end-to-end</h3><p>Hiểu toàn bộ vòng đời từ Source đến Pay cùng các mô hình Sourcing.</p></div>
+      <div class="gift-card"><h3>Tư duy chiến lược</h3><p>Dùng Kraljic Matrix và Procurement Chessboard để chọn đúng đòn bẩy cho từng nhóm hàng.</p></div>
+      <div class="gift-card"><h3>Kỹ năng ra quyết định</h3><p>Xử lý tình huống vận hành và đánh giá nhà cung cấp theo TCO, chất lượng, rủi ro.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="pricing" id="dangky">
+  <div class="wrap">
+    <span class="eyebrow on-dark"><span class="eyebrow-dot"></span>Lịch học và học phí</span>
+    <h2 style="color:var(--text-dark); font-size:28px; margin:16px 0 8px; letter-spacing:-0.8px;">Giữ chỗ cho khoá khai giảng 5/12</h2>
+    <p style="color:var(--muted-dark); font-size:13.5px; margin-bottom:36px;">Đăng ký tư vấn để nhận lịch chi tiết và giữ chỗ.</p>
+    <div class="price-grid">
+      <div class="price-box">
+        <span class="eyebrow" style="display:inline-flex;">Procurement Mastery · Khoá 1</span>
+        <div class="price-new">6.000.000đ</div>
+        <div class="price-note">Khai giảng 5/12 · Trọn khoá 5 buổi</div>
+        <div class="perf-d"></div>
+        <ul class="price-list">
+          <li>3 buổi lý thuyết: Procurement DNA, End-to-End Flow, Strategy Lens</li>
+          <li>2 buổi case study: Operational Procurement, Strategic Decision</li>
+          <li>Giảng viên Nguyễn Hà Tú Anh trực tiếp giảng dạy</li>
+        </ul>
+        <button class="btn btn-orange" style="width:100%" onclick="openConsultWidget()">Đăng ký tư vấn</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap" style="max-width:740px;">
+    <div class="section-head">
+      <span class="eyebrow"><span class="eyebrow-dot"></span>FAQ</span>
+      <h2>Câu hỏi thường gặp</h2>
+    </div>
+    <div id="faq-list">
+      <div class="faq-item">
+        <div class="faq-q"><h4>Khoá học này phù hợp với ai?</h4><span class="plus">+</span></div>
+        <div class="faq-a"><p>Buyer, nhân sự mới vào nghề, người muốn phát triển lên Strategic Sourcing và người chuyển sang ngành procurement từ các vị trí như vận hành, supply chain hay tài chính.</p></div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q"><h4>Khoá học khai giảng khi nào?</h4><span class="plus">+</span></div>
+        <div class="faq-a"><p>Khoá học khai giảng ngày 5/12. Lịch chi tiết các buổi tiếp theo sẽ được thông báo cho học viên khi đăng ký.</p></div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q"><h4>Khoá học gồm những buổi nào?</h4><span class="plus">+</span></div>
+        <div class="faq-a"><p>Khoá gồm 5 buổi: 3 buổi lý thuyết (Procurement DNA, End-to-End Flow, Strategy Lens) và 2 buổi case study (Operational Procurement, Strategic Decision: Sourcing Strategy & TCO Challenge).</p></div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q"><h4>Mình chưa từng làm procurement, có theo được không?</h4><span class="plus">+</span></div>
+        <div class="faq-a"><p>Được. Buổi 1 bắt đầu từ các khái niệm nền tảng và bộ thuật ngữ cốt lõi, sau đó nâng dần lên tư duy chiến lược và case study.</p></div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q"><h4>Mình muốn đăng ký thì làm thế nào?</h4><span class="plus">+</span></div>
+        <div class="faq-a"><p>Bấm "Đăng ký tư vấn", team LinkaJob sẽ liên hệ để tư vấn lộ trình và giữ chỗ cho bạn.</p></div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q"><h4>Học phí của khoá là bao nhiêu?</h4><span class="plus">+</span></div>
+        <div class="faq-a"><p>Học phí trọn khoá Procurement Mastery gồm 5 buổi là 6.000.000đ.</p></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="final">
+  <div class="wrap">
+    <span class="eyebrow on-dark"><span class="eyebrow-dot"></span>Bắt đầu ngay</span>
+    <h2>Sẵn sàng nâng tầm tư duy procurement?</h2>
+    <p>Từ nền tảng đến quyết định thực chiến, giữ chỗ cho khoá khai giảng ngày 5/12 ngay hôm nay.</p>
+    <button class="btn btn-orange" onclick="openConsultWidget()">Đăng ký tư vấn</button>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">Linka<span>Job</span> | Procurement Mastery · Giảng viên Nguyễn Hà Tú Anh · Khai giảng 5/12.</div>
+</footer>
+
+<script>
+  document.querySelectorAll('.faq-item').forEach(function(item){
+    var q=item.querySelector('.faq-q'), a=item.querySelector('.faq-a');
+    q.addEventListener('click',function(){
+      var isOpen=item.classList.contains('open');
+      document.querySelectorAll('.faq-item.open').forEach(function(o){o.classList.remove('open'); o.querySelector('.faq-a').style.maxHeight=null;});
+      if(!isOpen){item.classList.add('open'); a.style.maxHeight=a.scrollHeight+'px';}
+    });
+  });
+  document.querySelectorAll('.module').forEach(function(item){
+    var q=item.querySelector('.module-q'), a=item.querySelector('.module-a');
+    if(item.classList.contains('open')) a.style.maxHeight=a.scrollHeight+'px';
+    q.addEventListener('click',function(){
+      var isOpen=item.classList.contains('open');
+      item.classList.toggle('open',!isOpen);
+      a.style.maxHeight=isOpen?null:a.scrollHeight+'px';
+    });
+  });
+</script>
+
+<div id="lj-widget-root"></div>
+
+<script>
+/* scroll reveal + stat count-up */
+(function(){
+  if(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  var els=document.querySelectorAll('.problem-card, .gift-card, .audience-card, .instructor-card, .price-box, .module, .faq-item, .section-head');
+  els.forEach(function(el,i){el.classList.add('reveal-init'); el.style.transitionDelay=Math.min((i%6)*0.06,0.3)+'s';});
+  if('IntersectionObserver' in window){
+    var io=new IntersectionObserver(function(entries){entries.forEach(function(e){if(e.isIntersecting){e.target.classList.add('is-visible'); io.unobserve(e.target);}});},{threshold:0.12,rootMargin:'0px 0px -40px 0px'});
+    els.forEach(function(el){io.observe(el);});
+  } else {els.forEach(function(el){el.classList.add('is-visible');});}
+  function count(el){
+    var m=el.textContent.trim().match(/^(\d+)$/); if(!m) return;
+    var target=parseInt(m[1],10), start=null;
+    function step(ts){if(start===null)start=ts; var p=Math.min((ts-start)/900,1); el.textContent=Math.round(target*(1-Math.pow(1-p,3))); if(p<1)requestAnimationFrame(step);}
+    requestAnimationFrame(step);
+  }
+  var stats=document.querySelectorAll('.hstat-num');
+  if('IntersectionObserver' in window){
+    var sio=new IntersectionObserver(function(entries){entries.forEach(function(e){if(e.isIntersecting){count(e.target); sio.unobserve(e.target);}});},{threshold:0.4});
+    stats.forEach(function(el){sio.observe(el);});
+  }
+})();
+</script>
+
+<script>
+/* Lấy ảnh advisor từ hệ thống Đội ngũ Advisor; lỗi thì giữ ảnh mặc định */
+(function(){
+  var URL_='https://script.google.com/macros/s/AKfycbx7Bd9VvoyzfiiezQV9huoY2BKHH_Br1RAFIz00mjdyKeis-Zv-38a0gf_b-fMlul2C/exec';
+  var TARGET='hà tú anh';
+  fetch(URL_+'?action=getAdvisors&only_active=1')
+    .then(function(r){return r.json();})
+    .then(function(res){
+      if(!res||!res.data) return;
+      var m=res.data.find(function(a){return String(a.name||'').toLowerCase().indexOf(TARGET)>-1;});
+      var photo=m&&(m.photo||m.photo_url||m.avatar||m.image||m.image_url);
+      if(!photo) return;
+      ['heroPhotoMain','heroPhotoMini','instructorPhoto'].forEach(function(id){
+        var el=document.getElementById(id); if(!el) return;
+        var fb=el.nextElementSibling; if(fb) fb.style.display='none';
+        el.style.display=''; el.src=photo;
+      });
+    })
+    .catch(function(){});
+})();
+</script>
+<script src="nav.js"></script>
+<script>initSharedNav();</script>
+<script src="dang-ky-tu-van.js"></script>
+<script>initConsultWidget();</script>
+</body>
+</html>
