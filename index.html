@@ -512,6 +512,50 @@ button, a, .lj-nav-btn-plain, .fbtn, .story-card, .fb-card{ outline:none;}
 button:focus-visible, a:focus-visible, .lj-nav-btn-plain:focus-visible, .fbtn:focus-visible, .story-card:focus-visible, .fb-card:focus-visible{
   outline:2px solid var(--orange); outline-offset:2px; border-radius:6px;
 }
+
+/* ===== Promo: Khám phá Assessment Center ===== */
+.ac-promo{padding:8px 0 56px;}
+.ac-card{position:relative; display:grid; grid-template-columns:1.15fr .85fr; gap:40px; align-items:center; background:var(--dark); border-radius:24px; padding:44px 44px; overflow:hidden; border:.5px solid var(--line-dark);}
+.ac-card::before{content:""; position:absolute; right:-120px; top:-140px; width:380px; height:380px; border-radius:50%; background:radial-gradient(circle,rgba(252,82,41,.28),transparent 68%); pointer-events:none;}
+.ac-card > *{position:relative;}
+.ac-tags{display:flex; gap:8px; flex-wrap:wrap; margin-bottom:18px;}
+.ac-new{background:var(--orange); color:#fff; font-size:12px; font-weight:700; padding:5px 14px; border-radius:100px;}
+.ac-seat{background:#1A1A1A; color:var(--text-dark); border:.5px solid var(--line-dark); font-size:12px; font-weight:600; padding:5px 14px; border-radius:100px;}
+.ac-card h2{font-size:clamp(24px,3.4vw,34px); color:var(--text-dark); letter-spacing:-1.1px; margin-bottom:14px;}
+.ac-card .ac-lead{font-size:14.5px; color:rgba(240,240,240,.72); line-height:1.7; max-width:480px; margin-bottom:22px;}
+.ac-price{display:flex; align-items:baseline; gap:10px; flex-wrap:wrap; margin-bottom:24px;}
+.ac-price b{font-size:28px; color:var(--orange); letter-spacing:-1px;}
+.ac-price s{font-size:13px; color:rgba(240,240,240,.5);}
+.ac-price span{font-size:12.5px; color:rgba(240,240,240,.6);}
+.ac-cta{display:flex; gap:12px; flex-wrap:wrap;}
+.ac-list{background:var(--dark-card); border:.5px solid var(--line-dark); border-radius:18px; padding:8px 22px;}
+.ac-list-head{font-size:12px; font-weight:600; color:rgba(240,240,240,.6); padding:14px 0 6px;}
+.ac-row{display:flex; gap:14px; padding:15px 0; border-top:.5px solid var(--line-dark);}
+.ac-row:first-of-type{border-top:none;}
+.ac-n{flex:none; width:28px; height:28px; border-radius:50%; background:var(--orange-tint); color:var(--orange); font-size:12.5px; font-weight:700; display:flex; align-items:center; justify-content:center;}
+.ac-row strong{display:block; font-size:14.5px; color:var(--text-dark); margin-bottom:3px;}
+.ac-row span.d{font-size:12.5px; color:rgba(240,240,240,.62); line-height:1.55;}
+.ac-bonus{margin:6px 0 14px; padding:11px 14px; border-radius:12px; background:var(--orange-tint); color:var(--orange); font-size:12.5px; font-weight:600;}
+.ac-stats{display:grid; grid-template-columns:repeat(4,auto); gap:6px 22px; justify-content:start; margin-bottom:22px; padding:16px 0; border-top:.5px solid var(--line-dark); border-bottom:.5px solid var(--line-dark);}
+.ac-stats b{display:block; font-size:22px; line-height:1.1; color:var(--text-dark); letter-spacing:-.6px;}
+.ac-stats span{display:block; margin-top:4px; font-size:11px; line-height:1.4; color:rgba(240,240,240,.6); max-width:108px;}
+.ac-do,.ac-get{font-size:12.5px; line-height:1.55; margin-top:6px; display:flex; gap:8px;}
+.ac-do{color:rgba(240,240,240,.62);}
+.ac-get{color:var(--text-dark);}
+.ac-do i,.ac-get i{flex:none; width:54px; font-style:normal; font-weight:700; font-size:11.5px; padding-top:1px;}
+.ac-do i{color:rgba(240,240,240,.45);}
+.ac-get i{color:var(--orange);}
+.eyebrow.ac-link{transition:border-color .2s, background .2s;}
+.eyebrow.ac-link:hover{border-color:rgba(252,82,41,.5); background:rgba(252,82,41,.16);}
+@media(max-width:860px){
+  .ac-card{grid-template-columns:1fr; gap:28px; padding:32px 24px;}
+}
+@media(max-width:560px){
+  .ac-promo{padding-bottom:40px;}
+  .ac-stats{grid-template-columns:1fr 1fr; gap:14px 18px;}
+  .ac-stats span{max-width:none;}
+  .ac-cta .btn{width:100%;}
+}
 </style>
 <link rel="stylesheet" href="nav.css">
 <link rel="stylesheet" href="dang-ky-tu-van.css">
@@ -523,9 +567,10 @@ button:focus-visible, a:focus-visible, .lj-nav-btn-plain:focus-visible, .fbtn:fo
 
 <section class="hero">
   <div class="wrap">
-    <div style="display:flex; flex-direction:row; align-items:center; justify-content:center; gap:10px; margin-bottom:32px;">
+    <div style="display:flex; flex-direction:row; flex-wrap:wrap; align-items:center; justify-content:center; gap:10px; margin-bottom:32px;">
       <span class="eyebrow" style="margin-bottom:0;">Career advisor</span>
       <a class="eyebrow" style="margin-bottom:0;">Career course</a>
+      <a class="eyebrow ac-link" href="kham-pha-assessment-center.html" style="margin-bottom:0;"><span class="eyebrow-dot"></span>Mới: Khám phá Assessment Center</a>
     </div>
     <h1 style="white-space:normal;">Kết nối 1-1 với Advisor <br><em>đang làm tại các tập đoàn đa quốc gia</em></h1>
     <p class="sub"> Để ứng tuyển & làm việc tại các công ty đa quốc gia không mơ hồ, không tự ti và hiểu rõ yêu cầu nhà tuyển dụng.</p>
@@ -538,6 +583,47 @@ button:focus-visible, a:focus-visible, .lj-nav-btn-plain:focus-visible, .fbtn:fo
       <div class="hstat"><div class="hstat-num">25+</div><div class="hstat-lbl">Advisors</div></div>
       <div class="hstat"><div class="hstat-num">8</div><div class="hstat-lbl">Lĩnh vực</div></div>
       <div class="hstat"><div class="hstat-num">~80%</div><div class="hstat-lbl">Advisee nhận offer</div></div>
+    </div>
+  </div>
+</section>
+
+<section class="ac-promo" id="assessment-center">
+  <div class="wrap">
+    <div class="ac-card">
+      <div>
+        <div class="ac-tags">
+          <span class="ac-new">Chương trình mới</span>
+          <span class="ac-seat">Mỗi lớp tối đa 5 bạn</span>
+        </div>
+        <h2>Luyện Group Case và Individual Case, nhận feedback riêng trước vòng Assessment Center thật</h2>
+        <p class="ac-lead">Bạn giải case theo format vòng Assessment Center của các tập đoàn FMCG, xem cách người đang làm tại công ty đa quốc gia giải cùng bài toán, và biết rõ điểm mạnh, điểm cần sửa của mình trước khi ứng tuyển Management Trainee.</p>
+        <div class="ac-stats">
+          <div><b>3</b><span>buổi giải case</span></div>
+          <div><b>5</b><span>bạn tối đa mỗi lớp, chia theo phòng ban</span></div>
+          <div><b>25+</b><span>Advisor LinkaJob đang làm tại MNC</span></div>
+          <div><b>~80%</b><span>advisee LinkaJob nhận offer</span></div>
+        </div>
+        <div class="ac-price">
+          <b>Từ 2.000.000đ</b><s>3.000.000đ</s><span>Gói Thực chiến, 3 buổi giải case</span>
+        </div>
+        <div class="ac-cta">
+          <a href="kham-pha-assessment-center.html" class="btn btn-orange">Xem chương trình chi tiết →</a>
+          <button class="btn btn-ghost-dark" onclick="openConsultWidget()">Đăng ký tư vấn</button>
+        </div>
+      </div>
+      <div class="ac-list">
+        <div class="ac-list-head">Mỗi buổi, bạn mang về một kết quả cụ thể</div>
+        <div class="ac-row"><span class="ac-n">1</span><div><strong>Mock Group Case</strong>
+          <p class="ac-do"><i>Bạn làm</i>Giải case cùng nhóm tối đa 5 bạn cùng phòng ban.</p>
+          <p class="ac-get"><i>Bạn nhận</i>Feedback về cách bạn làm việc nhóm: bạn nổi bật ở đâu, cần điều chỉnh gì.</p></div></div>
+        <div class="ac-row"><span class="ac-n">2</span><div><strong>Individual Case</strong>
+          <p class="ac-do"><i>Bạn làm</i>Tự phân tích và đề xuất giải pháp cho một case.</p>
+          <p class="ac-get"><i>Bạn nhận</i>Nhận xét riêng cho cách bạn giải case một mình.</p></div></div>
+        <div class="ac-row"><span class="ac-n">3</span><div><strong>Cách giải case của người làm đa quốc gia</strong>
+          <p class="ac-do"><i>Bạn làm</i>Xem người đang làm tại MNC cấu trúc và giải cùng bài toán bạn vừa làm.</p>
+          <p class="ac-get"><i>Bạn nhận</i>Một chuẩn để đối chiếu với bài của mình và biết cần cải thiện gì.</p></div></div>
+        <div class="ac-bonus">Gói Combo 2.500.000đ: thêm 2 buổi mock interview 1:1 với advisor</div>
+      </div>
     </div>
   </div>
 </section>
