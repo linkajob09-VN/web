@@ -83,6 +83,7 @@ section{padding:80px 0;}
 .problem-card .num{font-size:12px; color:var(--orange); font-weight:700; letter-spacing:.04em;}
 .problem-card h3{font-size:16px; margin:14px 0 8px; letter-spacing:-0.3px;}
 .problem-card p{font-size:13.5px; color:var(--muted); line-height:1.6;}
+.problem-card p b{color:var(--text); font-weight:700;}
 
 .solution{background:var(--dark); text-align:center;}
 .solution h2{font-size:28px; max-width:720px; margin:16px auto; color:var(--text-dark); letter-spacing:-0.8px;}
@@ -260,6 +261,20 @@ footer span{color:var(--orange);}
 @media (prefers-reduced-motion: reduce){*{animation-duration:0.001ms !important; transition-duration:0.001ms !important;}}
 button,a{outline:none;}
 button:focus-visible,a:focus-visible{outline:2px solid var(--orange); outline-offset:2px; border-radius:6px;}
+
+/* đối tượng */
+.audience-grid{grid-template-columns:repeat(3,1fr);}
+.audience-card{display:flex; flex-direction:column; padding:28px 26px; transition:border-color .2s, transform .2s;}
+.audience-card:hover{border-color:rgba(252,82,41,.3); transform:translateY(-3px);}
+.aud-top{display:flex; align-items:center; gap:12px; margin-bottom:18px;}
+.aud-ico{width:46px; height:46px; border-radius:14px; background:var(--orange-tint); color:var(--orange); display:flex; align-items:center; justify-content:center; font-size:22px; flex:none;}
+.aud-tag{font-size:12px; font-weight:700; color:var(--orange); text-transform:uppercase; letter-spacing:.06em;}
+.audience-card h3{font-size:18px; letter-spacing:-.4px; line-height:1.3; margin-bottom:14px;}
+.aud-chips{display:flex; flex-wrap:wrap; gap:6px; margin-bottom:16px;}
+.aud-chip{font-size:11.5px; font-weight:600; color:var(--text); background:var(--paper); border:.5px solid var(--line); border-radius:100px; padding:4px 11px;}
+.audience-card p{font-size:14px; line-height:1.7;}
+.audience-card p b{color:var(--text); font-weight:700;}
+@media(max-width:760px){.audience-grid{grid-template-columns:1fr;}}
 </style>
 <link rel="stylesheet" href="nav.css">
 <link rel="stylesheet" href="dang-ky-tu-van.css">
@@ -304,16 +319,16 @@ button:focus-visible,a:focus-visible{outline:2px solid var(--orange); outline-of
 
 <section>
   <div class="wrap">
-    <div class="section-head">
+    <div class="section-head" style="max-width:760px;">
       <span class="eyebrow"><span class="eyebrow-dot"></span>Vấn đề cốt lõi</span>
-      <h2>Vì sao nhiều Buyer giỏi vận hành vẫn khó lên tầm chiến lược?</h2>
-      <p>Procurement không chỉ là đặt hàng. Muốn đi xa, bạn cần hiểu bức tranh toàn cục và biết ra quyết định bằng dữ liệu.</p>
+      <h2>“Em muốn làm Procurement nhưng chưa hiểu rõ thực tế doanh nghiệp cần điều gì?”</h2>
+      <p>Rất nhiều bạn tâm sự với LinkaJob về khó khăn khi tìm hiểu và ứng tuyển Procurement tại các công ty đa quốc gia:</p>
     </div>
     <div class="problem-grid">
-      <div class="problem-card"><span class="num">01</span><h3>Nhầm lẫn các khái niệm nền tảng</h3><p>Procurement, Purchasing và Sourcing hay bị dùng lẫn lộn nên khó xác định đúng vai trò và phạm vi công việc.</p></div>
-      <div class="problem-card"><span class="num">02</span><h3>Chỉ thấy một đoạn của quy trình</h3><p>Làm tốt phần việc được giao nhưng chưa nhìn được toàn bộ vòng đời từ nhu cầu đến thanh toán.</p></div>
-      <div class="problem-card"><span class="num">03</span><h3>Mua theo thói quen, không theo chiến lược</h3><p>Chưa biết phân loại nhà cung cấp và chọn đòn bẩy phù hợp cho từng nhóm hàng.</p></div>
-      <div class="problem-card"><span class="num">04</span><h3>Lúng túng khi tình huống “cháy” xảy ra</h3><p>Giao hàng trễ, nhu cầu khẩn cấp hay nhà cung cấp không đạt chuẩn đều cần cách xử lý bài bản.</p></div>
+      <div class="problem-card"><span class="num">01</span><h3>Khó chọn đúng vị trí ứng tuyển</h3><p><b>Procurement, Purchasing, Sourcing</b> hay bị nhầm lẫn, nên khó hiểu đúng <b>JD</b> và khó giải thích vì sao mình phù hợp.</p></div>
+      <div class="problem-card"><span class="num">02</span><h3>Kiến thức rời rạc, thiếu bức tranh end-to-end</h3><p>Giáo trình tách khỏi thực tế, chưa hình dung được <b>công việc hằng ngày</b> của một người làm Procurement.</p></div>
+      <div class="problem-card"><span class="num">03</span><h3>Thiếu tư duy chiến lược để nổi bật</h3><p>Chưa có kinh nghiệm và <b>insight ngành</b> để làm <b>CV</b> và <b>phỏng vấn</b> thật ấn tượng.</p></div>
+      <div class="problem-card"><span class="num">04</span><h3>Chưa từng xử lý tình huống thực tế</h3><p><b>Giao hàng trễ, nhu cầu khẩn cấp, nhà cung cấp không đạt chuẩn</b>: gặp ngay năm đầu đi làm nhưng hiếm khi được thực hành.</p></div>
     </div>
   </div>
 </section>
@@ -460,20 +475,20 @@ button:focus-visible,a:focus-visible{outline:2px solid var(--orange); outline-of
   <div class="wrap">
     <div class="section-head">
       <span class="eyebrow"><span class="eyebrow-dot"></span>Đối tượng</span>
-      <h2>Khoá học này dành cho ai</h2>
+      <h2>Khoá học dành cho ai?</h2>
     </div>
     <div class="audience-grid">
       <div class="audience-card">
-        <span class="eyebrow"><span class="eyebrow-dot"></span>Buyer và nhân sự mới</span>
-        <p>Bạn đang vận hành đơn hàng hằng ngày và muốn hiểu bức tranh lớn phía sau công việc của mình.</p>
+        <div class="aud-top"><div class="aud-ico"><i class="ti ti-school"></i></div><span class="aud-tag">Sinh viên năm 3 - 4</span></div>
+        <p>Bạn muốn hiểu nghề <b>Procurement</b> trước khi ứng tuyển <b>Internship</b> hoặc <b>Management Trainee</b>, và cần nền tảng chuyên ngành mà giáo trình chưa cung cấp.</p>
       </div>
       <div class="audience-card">
-        <span class="eyebrow"><span class="eyebrow-dot"></span>Muốn lên Strategic Sourcing</span>
-        <p>Bạn cần công cụ và tư duy để chuyển từ xử lý giao dịch sang xây dựng chiến lược nhóm hàng.</p>
+        <div class="aud-top"><div class="aud-ico"><i class="ti ti-briefcase"></i></div><span class="aud-tag">Fresh graduate</span></div>
+        <p>Bạn đang chuẩn bị ứng tuyển và muốn nắm nhanh <b>ngôn ngữ, quy trình và tư duy</b> của nghề.</p>
       </div>
       <div class="audience-card">
-        <span class="eyebrow"><span class="eyebrow-dot"></span>Chuyển sang ngành Procurement</span>
-        <p>Bạn đến từ vận hành, supply chain, tài chính… và muốn nắm nhanh ngôn ngữ, quy trình của nghề.</p>
+        <div class="aud-top"><div class="aud-ico"><i class="ti ti-arrows-shuffle"></i></div><span class="aud-tag">Thay đổi ngành mới</span></div>
+        <p>Bạn đến từ các ngành liên quan và muốn chuyển sang Procurement một cách <b>chắc chắn, bài bản</b>.</p>
       </div>
     </div>
   </div>
