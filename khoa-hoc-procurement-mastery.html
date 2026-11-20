@@ -193,6 +193,59 @@ footer span{color:var(--orange);}
 }
 @media(max-width:480px){.transform-table{grid-template-columns:1fr;}}
 
+/* kết quả đạt được (numbered) */
+.gift-card .num{font-size:12px; color:var(--orange); font-weight:700; letter-spacing:.04em; display:block; margin-bottom:12px;}
+
+/* quyền lợi học viên */
+.benefits{background:var(--dark);}
+.benefit-grid{display:grid; grid-template-columns:repeat(3,1fr); gap:18px;}
+.benefit-card{background:var(--dark-card); border:.5px solid var(--line-dark); border-radius:24px; padding:28px; display:flex; flex-direction:column; transition:border-color .25s, transform .25s;}
+.benefit-card:hover{border-color:rgba(252,82,41,.4); transform:translateY(-4px);}
+.benefit-top{display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:26px;}
+.benefit-ico{width:52px; height:52px; border-radius:14px; background:rgba(252,82,41,.12); color:var(--orange); display:flex; align-items:center; justify-content:center; font-weight:800; font-size:15px; letter-spacing:-.2px;}
+.benefit-val{font-size:12.5px; font-weight:700; color:var(--orange); border:.5px solid rgba(252,82,41,.35); background:rgba(252,82,41,.06); border-radius:100px; padding:5px 12px;}
+.benefit-card h3{font-size:18px; color:var(--text-dark); letter-spacing:-.4px; line-height:1.3; margin-bottom:12px;}
+.benefit-card p{font-size:13.5px; color:var(--muted-dark-2); line-height:1.7;}
+
+/* quy trình đăng ký */
+.step-grid{display:grid; grid-template-columns:repeat(3,1fr); gap:16px; margin-bottom:32px;}
+.step-card{background:var(--paper-2); border:.5px solid var(--line); border-radius:16px; padding:26px 24px;}
+.step-card .num{width:34px; height:34px; border-radius:50%; background:var(--orange); color:#fff; font-weight:700; font-size:14px; display:flex; align-items:center; justify-content:center; margin-bottom:16px;}
+.step-card h3{font-size:16px; margin-bottom:10px; letter-spacing:-.3px;}
+.step-card ul{list-style:none; display:flex; flex-direction:column; gap:7px;}
+.step-card li{font-size:13.5px; color:var(--muted); line-height:1.6; padding-left:16px; position:relative;}
+.step-card li::before{content:""; position:absolute; left:0; top:9px; width:5px; height:5px; border-radius:50%; background:var(--orange);}
+
+/* học phí và lịch học */
+.pricing .section-head{margin:0 auto 44px; text-align:center;}
+.tuition{display:grid; grid-template-columns:1.55fr 1fr; border-radius:32px; overflow:hidden; border:.5px solid rgba(252,82,41,.35); text-align:left; max-width:1040px; margin:0 auto; box-shadow:0 0 90px rgba(252,82,41,.10);}
+.tuition-main{background:linear-gradient(135deg,#2c1d19 0%,#1a1a1a 45%); padding:36px;}
+.tuition-tag{display:flex; align-items:center; gap:14px; margin-bottom:26px; flex-wrap:wrap;}
+.tuition-tag b{background:var(--orange); color:#fff; font-size:14px; padding:9px 18px; border-radius:100px;}
+.tuition-date{font-size:30px !important; font-weight:800; color:var(--orange) !important; letter-spacing:-1px;}
+.tuition-tag span{font-size:14px; color:var(--muted-dark-2); font-weight:500;}
+.sched-grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:12px; margin-bottom:26px;}
+.sched-box{background:rgba(255,255,255,.05); border:.5px solid var(--line-dark); border-radius:18px; padding:18px 16px;}
+.sched-date{font-size:26px; font-weight:800; color:var(--orange); letter-spacing:-1px; line-height:1.1;}
+.sched-date.soon{font-size:14px; font-weight:600; letter-spacing:0; color:var(--muted-dark-2); padding:6px 0;}
+.sched-n{font-size:11px; color:var(--muted-dark-2); letter-spacing:.08em; text-transform:uppercase; margin:10px 0 6px;}
+.sched-t{font-size:12.5px; font-weight:700; color:var(--text-dark); text-transform:uppercase; line-height:1.35;}
+.tuition-list{list-style:none; display:flex; flex-direction:column; gap:12px; margin-bottom:0;}
+.tuition-list li{font-size:14px; color:var(--muted-dark-2); padding-left:20px; position:relative; line-height:1.6;}
+.tuition-list li::before{content:""; position:absolute; left:0; top:9px; width:6px; height:6px; border-radius:50%; background:var(--orange);}
+.tuition-gift{display:flex; align-items:center; gap:16px; border:.5px dashed rgba(252,82,41,.45); background:rgba(252,82,41,.07); border-radius:16px; padding:16px 18px;}
+.tuition-gift b{flex:none; background:var(--orange); color:#fff; font-size:12px; letter-spacing:.06em; text-transform:uppercase; padding:8px 16px; border-radius:100px;}
+.tuition-gift span{font-size:14px; color:var(--text-dark); line-height:1.55;}
+.tuition-price{background:linear-gradient(160deg,#f0764d 0%,#e85a33 50%,#cc4526 100%); display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:36px 28px;}
+.tuition-price .lbl{font-size:13px; font-weight:700; letter-spacing:.16em; color:rgba(255,255,255,.92); text-transform:uppercase;}
+.tuition-price .amt{font-size:clamp(40px,5.4vw,58px); font-weight:800; color:#fff; letter-spacing:-2.5px; line-height:1; margin:20px 0 14px;}
+.tuition-price .sub{font-size:14.5px; color:rgba(255,255,255,.92); margin-bottom:32px;}
+.btn-white{background:#fff; color:#cc4526; width:100%; padding:17px 26px; font-size:15px; box-shadow:0 10px 24px rgba(0,0,0,.18);}
+.btn-white:hover{opacity:.94; transform:translateY(-1px);}
+
+@media(max-width:900px){.benefit-grid,.step-grid{grid-template-columns:1fr;} .tuition{grid-template-columns:1fr;}}
+@media(max-width:560px){.tuition-main{padding:24px 18px;} .tuition-gift{flex-direction:column; align-items:flex-start;} .benefit-card{padding:22px;}}
+
 /* animation */
 @media (prefers-reduced-motion: no-preference){
   @keyframes heroFadeUp{from{opacity:0; transform:translateY(16px);} to{opacity:1; transform:translateY(0);}}
@@ -215,7 +268,7 @@ button:focus-visible,a:focus-visible{outline:2px solid var(--orange); outline-of
 <section class="hero">
   <div class="wrap hero-split">
     <div class="hero-text">
-      <span class="eyebrow on-dark"><span class="eyebrow-dot"></span>Khoá học Procurement & Sourcing · LinkaJob</span>
+      <span class="eyebrow on-dark"><span class="eyebrow-dot"></span>Khoá học Supply Chain FMCG · LinkaJob</span>
       <h1>Procurement <em>Mastery</em></h1>
       <p class="sub">Từ Buyer vận hành đến tư duy Strategic Sourcing. 5 buổi đi từ nền tảng đến quyết định thực chiến: hiểu bản đồ procurement, chọn đúng chiến lược sourcing và xử lý các tình huống của một Buyer thực thụ.</p>
       <div class="hero-cta">
@@ -461,35 +514,80 @@ button:focus-visible,a:focus-visible{outline:2px solid var(--orange); outline-of
 <section>
   <div class="wrap">
     <div class="section-head">
-      <span class="eyebrow"><span class="eyebrow-dot"></span>Sau khoá học</span>
-      <h2>Bạn nhận được gì?</h2>
+      <span class="eyebrow"><span class="eyebrow-dot"></span>Kết quả đạt được</span>
+      <h2>Bạn nhận được gì sau khoá học</h2>
     </div>
     <div class="gift-grid">
-      <div class="gift-card"><h3>Nền tảng vững chắc</h3><p>Phân biệt rõ Procurement, Purchasing, Sourcing và nắm bộ thuật ngữ cốt lõi của nghề.</p></div>
-      <div class="gift-card"><h3>Bản đồ end-to-end</h3><p>Hiểu toàn bộ vòng đời từ Source đến Pay cùng các mô hình Sourcing.</p></div>
-      <div class="gift-card"><h3>Tư duy chiến lược</h3><p>Dùng Kraljic Matrix và Procurement Chessboard để chọn đúng đòn bẩy cho từng nhóm hàng.</p></div>
-      <div class="gift-card"><h3>Kỹ năng ra quyết định</h3><p>Xử lý tình huống vận hành và đánh giá nhà cung cấp theo TCO, chất lượng, rủi ro.</p></div>
+      <div class="gift-card"><span class="num">01</span><h3>Nền tảng chuyên ngành vững chắc</h3><p>Phân biệt rõ Procurement, Purchasing, Sourcing và nắm bộ thuật ngữ cốt lõi (MOQ, TCO, Lead time, Should-cost) để đọc hiểu JD và viết CV đúng ngôn ngữ ngành.</p></div>
+      <div class="gift-card"><span class="num">02</span><h3>Bản đồ end-to-end</h3><p>Hiểu toàn bộ vòng đời từ Source đến Pay cùng các mô hình Sourcing, hình dung được công việc thật của một Buyer tại tập đoàn đa quốc gia.</p></div>
+      <div class="gift-card"><span class="num">03</span><h3>Tư duy chiến lược</h3><p>Dùng Kraljic Matrix và Procurement Chessboard để phân loại nhà cung cấp và chọn đúng đòn bẩy cho từng nhóm hàng.</p></div>
+      <div class="gift-card"><span class="num">04</span><h3>Kỹ năng ra quyết định</h3><p>Xử lý tình huống vận hành và đánh giá nhà cung cấp theo TCO, chất lượng, rủi ro qua hai case study thực hành.</p></div>
     </div>
   </div>
 </section>
 
-<section class="pricing" id="dangky">
+<section class="benefits on-dark">
   <div class="wrap">
-    <span class="eyebrow on-dark"><span class="eyebrow-dot"></span>Lịch học và học phí</span>
-    <h2 style="color:var(--text-dark); font-size:28px; margin:16px 0 8px; letter-spacing:-0.8px;">Giữ chỗ cho khoá khai giảng 5/12</h2>
-    <p style="color:var(--muted-dark); font-size:13.5px; margin-bottom:36px;">Đăng ký tư vấn để nhận lịch chi tiết và giữ chỗ.</p>
-    <div class="price-grid">
-      <div class="price-box">
-        <span class="eyebrow" style="display:inline-flex;">Procurement Mastery · Khoá 1</span>
-        <div class="price-new">6.000.000đ</div>
-        <div class="price-note">Khai giảng 5/12 · Trọn khoá 5 buổi</div>
-        <div class="perf-d"></div>
-        <ul class="price-list">
-          <li>3 buổi lý thuyết: Procurement DNA, End-to-End Flow, Strategy Lens</li>
-          <li>2 buổi case study: Operational Procurement, Strategic Decision</li>
+    <div class="section-head">
+      <span class="eyebrow on-dark"><span class="eyebrow-dot"></span>Quyền lợi học viên</span>
+      <h2>Bạn nhận được gì khi tham gia Procurement Mastery</h2>
+    </div>
+    <div class="benefit-grid">
+      <div class="benefit-card">
+        <div class="benefit-top"><div class="benefit-ico">DOC</div><span class="benefit-val">1.000.000đ</span></div>
+        <h3>Tài liệu ứng tuyển Procurement</h3>
+        <p>CV template, 100+ câu hỏi phỏng vấn, framework Sourcing Strategy &amp; TCO, checklist Assessment Centre và danh sách công ty đa quốc gia tuyển dụng Procurement.</p>
+      </div>
+      <div class="benefit-card">
+        <div class="benefit-top"><div class="benefit-ico">1:1</div><span class="benefit-val">800.000đ</span></div>
+        <h3>2 buổi meeting 1:1 với Advisor bất kỳ</h3>
+        <p>Chọn Advisor phù hợp trong mạng lưới LinkaJob để sửa CV hoặc luyện phỏng vấn riêng cho bạn.</p>
+      </div>
+      <div class="benefit-card">
+        <div class="benefit-top"><div class="benefit-ico">3M</div><span class="benefit-val">1.000.000đ</span></div>
+        <h3>3 tháng đồng hành cùng team nội bộ LinkaJob</h3>
+        <p>Được team nội bộ LinkaJob đồng hành review CV và mock interview trong suốt 3 tháng.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <div class="section-head">
+      <span class="eyebrow"><span class="eyebrow-dot"></span>Đăng ký</span>
+      <h2>Quy trình đăng ký khoá học</h2>
+      <p>Chỉ 3 bước để giữ chỗ và bắt đầu hành trình Procurement Mastery.</p>
+    </div>
+    <div class="step-grid">
+      <div class="step-card"><div class="num">1</div><h3>Đăng ký tư vấn</h3><ul><li>Bấm “Đăng ký tư vấn” và để lại thông tin liên hệ.</li><li>Team LinkaJob liên hệ để tìm hiểu background và mục tiêu của bạn.</li></ul></div>
+      <div class="step-card"><div class="num">2</div><h3>Tư vấn lộ trình &amp; giữ chỗ</h3><ul><li>Được tư vấn lộ trình phù hợp và hiểu rõ nội dung, quyền lợi đi kèm.</li><li>Giữ chỗ cho khoá khai giảng 5/12/2026.</li></ul></div>
+      <div class="step-card"><div class="num">3</div><h3>Xác nhận tham gia</h3><ul><li>Hoàn tất thanh toán học phí.</li><li>Nhận lịch chi tiết các buổi và bắt đầu học.</li></ul></div>
+    </div>
+    <button class="btn btn-orange" onclick="openConsultWidget()">Đăng ký tư vấn ngay</button>
+  </div>
+</section>
+
+<section class="pricing on-dark" id="dangky">
+  <div class="wrap">
+    <div class="section-head">
+      <span class="eyebrow on-dark"><span class="eyebrow-dot"></span>Học phí và lịch học</span>
+      <h2>Procurement Mastery</h2>
+    </div>
+    <div class="tuition">
+      <div class="tuition-main">
+        <div class="tuition-tag"><b>Khai giảng</b><span class="tuition-date">5/12/2026</span></div>
+        <ul class="tuition-list">
+          <li>Trọn bộ 5 buổi: 3 buổi lý thuyết và 2 buổi case study</li>
           <li>Giảng viên Nguyễn Hà Tú Anh trực tiếp giảng dạy</li>
+          <li>Học viên cũ của LinkaJob: nhập mã ưu đãi khi đăng ký để được giảm giá</li>
         </ul>
-        <button class="btn btn-orange" style="width:100%" onclick="openConsultWidget()">Đăng ký tư vấn</button>
+      </div>
+      <div class="tuition-price">
+        <div class="lbl">Học phí trọn khoá</div>
+        <div class="amt">6.000.000đ</div>
+        <div class="sub">5 buổi học</div>
+        <button class="btn btn-white" onclick="openConsultWidget()">Đăng ký ngay</button>
       </div>
     </div>
   </div>
@@ -508,7 +606,7 @@ button:focus-visible,a:focus-visible{outline:2px solid var(--orange); outline-of
       </div>
       <div class="faq-item">
         <div class="faq-q"><h4>Khoá học khai giảng khi nào?</h4><span class="plus">+</span></div>
-        <div class="faq-a"><p>Khoá học khai giảng ngày 5/12. Lịch chi tiết các buổi tiếp theo sẽ được thông báo cho học viên khi đăng ký.</p></div>
+        <div class="faq-a"><p>Khoá học khai giảng ngày 5/12/2026. Lịch chi tiết các buổi tiếp theo sẽ được thông báo cho học viên khi đăng ký.</p></div>
       </div>
       <div class="faq-item">
         <div class="faq-q"><h4>Khoá học gồm những buổi nào?</h4><span class="plus">+</span></div>
@@ -534,13 +632,13 @@ button:focus-visible,a:focus-visible{outline:2px solid var(--orange); outline-of
   <div class="wrap">
     <span class="eyebrow on-dark"><span class="eyebrow-dot"></span>Bắt đầu ngay</span>
     <h2>Sẵn sàng nâng tầm tư duy procurement?</h2>
-    <p>Từ nền tảng đến quyết định thực chiến, giữ chỗ cho khoá khai giảng ngày 5/12 ngay hôm nay.</p>
+    <p>Từ nền tảng đến quyết định thực chiến, giữ chỗ cho khoá khai giảng ngày 5/12/2026 ngay hôm nay.</p>
     <button class="btn btn-orange" onclick="openConsultWidget()">Đăng ký tư vấn</button>
   </div>
 </section>
 
 <footer>
-  <div class="wrap">Linka<span>Job</span> | Procurement Mastery · Giảng viên Nguyễn Hà Tú Anh · Khai giảng 5/12.</div>
+  <div class="wrap">Linka<span>Job</span> | Procurement Mastery · Giảng viên Nguyễn Hà Tú Anh · Khai giảng 5/12/2026.</div>
 </footer>
 
 <script>
@@ -569,7 +667,7 @@ button:focus-visible,a:focus-visible{outline:2px solid var(--orange); outline-of
 /* scroll reveal + stat count-up */
 (function(){
   if(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-  var els=document.querySelectorAll('.problem-card, .gift-card, .audience-card, .instructor-card, .price-box, .module, .faq-item, .section-head');
+  var els=document.querySelectorAll('.problem-card, .gift-card, .audience-card, .instructor-card, .benefit-card, .step-card, .tuition, .module, .faq-item, .section-head');
   els.forEach(function(el,i){el.classList.add('reveal-init'); el.style.transitionDelay=Math.min((i%6)*0.06,0.3)+'s';});
   if('IntersectionObserver' in window){
     var io=new IntersectionObserver(function(entries){entries.forEach(function(e){if(e.isIntersecting){e.target.classList.add('is-visible'); io.unobserve(e.target);}});},{threshold:0.12,rootMargin:'0px 0px -40px 0px'});
