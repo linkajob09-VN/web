@@ -5803,7 +5803,7 @@ function csLoadSeasonDetail(seasonId, callback) {
   apiGet('getSeasonDetail', { season_id: seasonId }).then(function(res){
     if (!res || !res.success) { toast('Lỗi tải chi tiết mùa: ' + (res && res.error), 'error'); return; }
     CM_ENROLLMENTS = (res.data.enrollments || []).map(function(x){
-      return { id: x.enrollment_id, season_id: x.season_id, name: x.name, email: x.email || '', phone: x.phone, plan: x.plan, enrolled_at: csNormDate(x.enrolled_at) };
+      return { id: x.enrollment_id, season_id: x.season_id, name: x.name, email: x.email || '', phone: x.phone, plan: x.plan, enrolled_at: csNormDate(x.enrolled_at), confirmed_at: x.confirmed_at || '', account_sent_at: x.account_email_sent_at || '' };
     });
     CM_ASSIGNMENTS = (res.data.assignments || []).map(function(x){
       return { id: x.assignment_id, season_id: x.season_id, title: x.title, problem_link: x.problem_link || '', due_date: csNormDate(x.due_date), sort_order: Number(x.sort_order) || 0, sent_at: x.sent_at ? csNormDate(x.sent_at) : '' };
@@ -5887,9 +5887,12 @@ function renderCmSettingsTab(s) {
 
 function renderCmEnrollTab(s) {
   var list = CM_ENROLLMENTS.filter(function(e){ return e.season_id === s.id; });
-  var html = '<div style="padding:16px 24px;display:flex;justify-content:flex-end"><button class="update-btn" onclick="openEnrollModal(\'' + s.id + '\')">+ Thêm học viên</button></div>';
-  html += '<table class="bookings-table"><thead><tr><th>HỌC VIÊN</th><th>SĐT</th><th>HÌNH THỨC</th><th>THANH TOÁN</th><th>NGÀY ĐĂNG KÝ</th><th></th></tr></thead><tbody>';
-  if (list.length === 0) html += '<tr><td colspan="6" style="text-align:center;color:var(--muted);padding:24px 0">Chưa có học viên nào — bấm "+ Thêm học viên" để bắt đầu.</td></tr>';
+  var pendingAcct = list.filter(function(e){ return !e.account_sent_at && e.email; }).length;
+  var html = '<div style="padding:16px 24px;display:flex;justify-content:flex-end;gap:10px;flex-wrap:wrap">' +
+    (pendingAcct ? '<button class="detail-btn" onclick="cmConfirmAllPending(\'' + s.id + '\')">📧 Gửi tài khoản cho ' + pendingAcct + ' học viên chưa gửi</button>' : '') +
+    '<button class="update-btn" onclick="openEnrollModal(\'' + s.id + '\')">+ Thêm học viên</button></div>';
+  html += '<table class="bookings-table"><thead><tr><th>HỌC VIÊN</th><th>SĐT</th><th>HÌNH THỨC</th><th>THANH TOÁN</th><th>TÀI KHOẢN</th><th>NGÀY ĐĂNG KÝ</th><th></th></tr></thead><tbody>';
+  if (list.length === 0) html += '<tr><td colspan="7" style="text-align:center;color:var(--muted);padding:24px 0">Chưa có học viên nào — bấm "+ Thêm học viên" để bắt đầu.</td></tr>';
   list.forEach(function(e){
     var pay = cmComputePayment(e.id, s.price_full);
     var pending = CM_PENDING_PAYMENTS.filter(function(x){ return x.enrollment_id === e.id; });
@@ -5898,8 +5901,10 @@ function renderCmEnrollTab(s) {
     }).join('');
     html += '<tr><td><b>' + e.name + '</b>' + (e.email ? '<div style="font-size:11.5px;color:var(--muted)">' + e.email + '</div>' : '') + '</td><td>' + (e.phone || '') + '</td><td>' + cmPlanLabel(e.plan) + '</td>' +
       '<td>' + cmPayBadge(pay.status) + ' <span style="font-size:11.5px;color:var(--muted)">(' + fmtMoney(pay.paid) + ' / ' + fmtMoney(s.price_full) + ')</span>' + pendingHtml + '</td>' +
+      '<td>' + cmAcctBadge(e) + '</td>' +
       '<td>' + fmtDateStr(e.enrolled_at) + '</td>' +
-      '<td style="white-space:nowrap"><button class="detail-btn" onclick="openCollectPaymentModal(\'' + e.id + '\')">Thu học phí</button></td></tr>';
+      '<td style="white-space:nowrap"><button class="' + (e.account_sent_at ? 'detail-btn' : 'update-btn') + '" onclick="openConfirmEnrollModal(\'' + e.id + '\')">' + (e.account_sent_at ? 'Gửi lại' : 'Xác nhận & gửi TK') + '</button> ' +
+      '<button class="detail-btn" onclick="openCollectPaymentModal(\'' + e.id + '\')">Thu học phí</button></td></tr>';
   });
   html += '</tbody></table>';
   return html;
@@ -5974,12 +5979,12 @@ function openEnrollModal(seasonId) {
     }).join('') + '</datalist>';
   } catch (e) {}
   var html = '<div class="modal-field"><div class="form-label">Họ tên <span style="color:var(--brand)">*</span></div><input class="form-input" id="cm-en-name" list="cm-en-suggest" oninput="cmEnrollAutofill()" placeholder="VD: Nguyễn Văn A" style="margin-top:6px"></div>' + dl;
-  html += '<div class="modal-field"><div class="form-label">Email (để gửi lời mời lớp — KHÔNG tạo tài khoản)</div><input class="form-input" type="email" id="cm-en-email" placeholder="hocvien@gmail.com" style="margin-top:6px"></div>';
+  html += '<div class="modal-field"><div class="form-label">Email (dùng để tạo tài khoản & gửi mail cho học viên)</div><input class="form-input" type="email" id="cm-en-email" placeholder="hocvien@gmail.com" style="margin-top:6px"></div>';
   html += '<div class="modal-field"><div class="form-label">Số điện thoại</div><input class="form-input" id="cm-en-phone" placeholder="VD: 0901234567" style="margin-top:6px"></div>';
   html += '<div class="modal-field"><div class="form-label">Hình thức thanh toán</div><select class="form-input" id="cm-en-plan" style="margin-top:6px">' + planOptions + '</select></div>';
   html += '<div class="modal-field"><div class="form-label">Số tiền đóng ngay (nếu có)</div><input class="form-input" type="number" id="cm-en-initial-pay" placeholder="VD: 500000" style="margin-top:6px"></div>';
   html += '<div id="cm-en-error" style="color:var(--brand);font-size:12.5px;display:none"></div>';
-  html += '<div style="font-size:12px;color:var(--muted)">Học viên không có tài khoản đăng nhập — staff quản lý hoàn toàn trên dashboard. Không gửi email khi thêm.</div>';
+  html += '<div style="font-size:12px;color:var(--muted)">Thêm xong, học viên được cấp ngay 2 buổi cố vấn 1-1 (90 ngày). Chưa gửi email — bấm \"Xác nhận &amp; gửi TK\" ở dòng học viên sau khi kiểm tra thông tin để tạo tài khoản và gửi mail.</div>';
   document.getElementById('modal-body').innerHTML = html;
   document.getElementById('modal-actions').innerHTML = '<button class="detail-btn" onclick="closeModal()">Hủy</button> <button class="login-btn" id="cm-en-save" style="width:auto;padding:10px 24px" onclick="saveEnrollModal(\'' + seasonId + '\')">Thêm học viên</button>';
   document.getElementById('modal-overlay').classList.add('open');
@@ -6024,6 +6029,73 @@ function saveEnrollModal(seasonId) {
     showErr('Lỗi kết nối: ' + e.message);
     if (btn) { btn.disabled = false; btn.textContent = 'Thêm học viên'; }
   });
+}
+
+// ── MỚI: Xác nhận thông tin học viên & gửi email tài khoản ──
+function cmFmtDT(iso) {
+  if (!iso) return '';
+  var d = new Date(iso); if (isNaN(d.getTime())) return '';
+  var p = function(n){ return (n < 10 ? '0' : '') + n; };
+  return p(d.getDate()) + '/' + p(d.getMonth() + 1) + ' ' + p(d.getHours()) + ':' + p(d.getMinutes());
+}
+function cmAcctBadge(e) {
+  if (e.account_sent_at) return '<span class="badge cm-pay-badge-paid">Đã gửi TK</span><div style="font-size:11px;color:var(--muted);margin-top:3px">' + cmFmtDT(e.account_sent_at) + '</div>';
+  if (!e.email) return '<span class="badge cm-pay-badge-none">Thiếu email</span>';
+  return '<span class="badge cm-pay-badge-partial">Chưa gửi</span>';
+}
+function openConfirmEnrollModal(enrollmentId) {
+  var e = CM_ENROLLMENTS.find(function(x){ return x.id === enrollmentId; });
+  if (!e) { toast('Không tìm thấy học viên', 'error'); return; }
+  var resend = !!e.account_sent_at;
+  document.getElementById('modal-title').textContent = resend ? 'Gửi lại tài khoản — ' + e.name : 'Xác nhận học viên & gửi tài khoản';
+  var html = '<div style="font-size:12.5px;color:var(--muted);margin-bottom:12px">Kiểm tra lại thông tin. Khi xác nhận, hệ thống sẽ tạo tài khoản học viên, cấp 2 buổi cố vấn 1-1 (nếu chưa có) và gửi email hướng dẫn đăng nhập.</div>';
+  html += '<div class="modal-field"><div class="form-label">Họ tên <span style="color:var(--brand)">*</span></div><input class="form-input" id="cm-cf-name" value="' + escHtml(e.name) + '" style="margin-top:6px"></div>';
+  html += '<div class="modal-field"><div class="form-label">Email nhận tài khoản <span style="color:var(--brand)">*</span></div><input class="form-input" type="email" id="cm-cf-email" value="' + escHtml(e.email) + '" placeholder="hocvien@gmail.com" style="margin-top:6px"></div>';
+  html += '<div class="modal-field"><div class="form-label">Số điện thoại</div><input class="form-input" id="cm-cf-phone" value="' + escHtml(e.phone || '') + '" style="margin-top:6px"></div>';
+  if (resend) html += '<label style="display:flex;align-items:center;gap:8px;font-size:13px;margin-top:6px;cursor:pointer"><input type="checkbox" id="cm-cf-reset"> Đặt lại mật khẩu mới (chọn nếu học viên quên / đã đổi mật khẩu)</label>';
+  html += '<div id="cm-cf-error" style="color:var(--brand);font-size:12.5px;display:none;margin-top:8px"></div>';
+  document.getElementById('modal-body').innerHTML = html;
+  document.getElementById('modal-actions').innerHTML = '<button class="detail-btn" onclick="closeModal()">Hủy</button> <button class="login-btn" id="cm-cf-save" style="width:auto;padding:10px 24px" onclick="saveConfirmEnroll(\'' + enrollmentId + '\')">' + (resend ? 'Gửi lại email' : 'Xác nhận & gửi email') + '</button>';
+  document.getElementById('modal-overlay').classList.add('open');
+}
+function saveConfirmEnroll(enrollmentId) {
+  var name = v('cm-cf-name'), email = v('cm-cf-email'), phone = v('cm-cf-phone');
+  var errEl = document.getElementById('cm-cf-error');
+  var showErr = function(msg){ if (errEl) { errEl.textContent = msg; errEl.style.display = 'block'; } toast(msg, 'error'); };
+  if (errEl) errEl.style.display = 'none';
+  if (!name) { showErr('Vui lòng nhập họ tên'); return; }
+  if (!/^\S+@\S+\.\S+$/.test(email)) { showErr('Email không hợp lệ'); return; }
+  var resetEl = document.getElementById('cm-cf-reset');
+  var btn = document.getElementById('cm-cf-save');
+  if (btn) { btn.disabled = true; btn.textContent = 'Đang gửi...'; }
+  apiPost({ action: 'confirmCourseEnrollment', enrollment_id: enrollmentId, name: name, email: email, phone: phone, reset_password: !!(resetEl && resetEl.checked), by: currentUser && currentUser.email }).then(function(res){
+    if (!res || !res.success) {
+      showErr((res && res.error) || 'Không gửi được — kiểm tra bản Apps Script đã Deploy phiên bản mới chưa');
+      if (btn) { btn.disabled = false; btn.textContent = 'Xác nhận & gửi email'; }
+      return;
+    }
+    closeModal();
+    toast('Đã gửi tài khoản tới ' + res.email + ' ✅' + (res.password_included ? '' : ' (học viên đã có mật khẩu riêng)') + (res.expiry_from_today ? ' · 2 buổi 1-1 tính 90 ngày từ hôm nay' : ''), 'success');
+    csLoadSeasonDetail(_cmCurrentSeasonId, function(){ document.getElementById('main-content').innerHTML = renderSeasonDetail(); });
+  }).catch(function(err){
+    showErr('Lỗi kết nối: ' + err.message);
+    if (btn) { btn.disabled = false; btn.textContent = 'Xác nhận & gửi email'; }
+  });
+}
+// Gửi tài khoản hàng loạt cho học viên cũ chưa được gửi (mỗi lần tối đa 40 người)
+function cmConfirmAllPending(seasonId) {
+  var n = CM_ENROLLMENTS.filter(function(e){ return e.season_id === seasonId && !e.account_sent_at && e.email; }).length;
+  if (!n) { toast('Không còn học viên nào chưa gửi', 'info'); return; }
+  if (!confirm('Gửi email tài khoản cho ' + n + ' học viên chưa được gửi?\n\nMỗi bạn sẽ được: tạo tài khoản (nếu chưa có), cấp 2 buổi cố vấn 1-1 (nếu chưa có) và nhận 1 email.\nHọc viên đã ghi danh quá 90 ngày sẽ được tính 90 ngày từ hôm nay.\nHọc viên thiếu email sẽ bị bỏ qua.')) return;
+  toast('Đang gửi... vui lòng chờ, đừng đóng trang', 'info');
+  apiPost({ action: 'confirmCourseEnrollments', season_id: seasonId, by: currentUser && currentUser.email }).then(function(res){
+    if (!res || !res.success) { toast((res && res.error) || 'Không gửi được', 'error'); return; }
+    var msg = 'Đã gửi ' + res.sent + '/' + res.processed + ' học viên';
+    if (res.failed && res.failed.length) msg += ' · Lỗi: ' + res.failed.map(function(f){ return f.name + ' (' + f.error + ')'; }).join('; ');
+    if (res.remaining) msg += ' · Còn ' + res.remaining + ' người — bấm nút lần nữa để gửi tiếp';
+    if (res.failed && res.failed.length) alert(msg); else toast(msg, 'success');
+    csLoadSeasonDetail(seasonId, function(){ document.getElementById('main-content').innerHTML = renderSeasonDetail(); });
+  }).catch(function(err){ toast('Lỗi kết nối: ' + err.message + ' — tải lại trang để xem đã gửi được bao nhiêu', 'error'); });
 }
 
 // ── Modal: Thêm bài tập ──
