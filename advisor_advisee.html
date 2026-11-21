@@ -452,6 +452,61 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
   .sc-grid.month .sc-chip { font-size:9px; padding:1px 3px; }
   .sc-toolbar, .sc-bar, .sc-pick { margin-left:8px; margin-right:8px; padding-left:8px; padding-right:8px; }
 }
+/* ── Trang Khoá học của Advisee (cổng học viên) ── */
+.cp-card { background:var(--white); border-radius:var(--radius-md); box-shadow:var(--shadow); margin-bottom:22px; overflow:hidden; }
+.cp-head { padding:22px 24px 18px; }
+.cp-title { font-size:21px; font-weight:800; letter-spacing:-.3px; line-height:1.25; }
+.cp-sub { font-size:13px; color:var(--muted); margin-top:5px; line-height:1.6; }
+.cp-links { display:flex; flex-wrap:wrap; gap:10px; padding:0 24px 20px; }
+.cp-chip { display:inline-flex; align-items:center; gap:6px; padding:10px 16px; border-radius:100px; border:1.5px solid var(--border); background:var(--white); font-size:13.5px; font-weight:600; color:var(--text); text-decoration:none; transition:all .15s; }
+a.cp-chip:hover { border-color:var(--brand); color:var(--brand); }
+.cp-chip.main { background:var(--brand); border-color:var(--brand); color:#fff; }
+a.cp-chip.main:hover { opacity:.88; color:#fff; }
+.cp-chip.off { color:#8a8782; background:var(--bg); border-style:dashed; font-weight:500; }
+.cp-one { margin:0 24px 20px; padding:16px 18px; border-radius:14px; background:var(--brand-light); border:1.5px solid #fbcfc3; display:flex; align-items:center; gap:14px; flex-wrap:wrap; }
+.cp-one-ic { font-size:26px; }
+.cp-one-body { flex:1; min-width:210px; }
+.cp-one-t { font-size:14.5px; font-weight:800; }
+.cp-one-s { font-size:12.5px; color:#6b4a40; margin-top:3px; line-height:1.55; }
+.cp-sec { padding:18px 24px 22px; border-top:1px solid var(--border); }
+.cp-sec-t { font-size:12px; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:.06em; margin-bottom:12px; display:flex; align-items:center; justify-content:space-between; gap:10px; }
+.cp-empty { font-size:13.5px; color:var(--muted); padding:6px 0; line-height:1.6; }
+.cp-lesson { border:1.5px solid var(--border); border-radius:12px; margin-bottom:10px; overflow:hidden; background:var(--white); }
+.cp-lesson.next { border-color:var(--brand); box-shadow:0 0 0 3px var(--brand-light); }
+.cp-lrow { display:flex; align-items:center; gap:14px; padding:14px 16px; cursor:pointer; }
+.cp-lrow:hover { background:#FBFAF8; }
+.cp-no { width:34px; height:34px; border-radius:50%; background:var(--bg); color:var(--muted); display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:800; flex-shrink:0; }
+.cp-lesson.done .cp-no { background:var(--green-bg); color:var(--green); }
+.cp-lesson.next .cp-no { background:var(--brand); color:#fff; }
+.cp-lmain { flex:1; min-width:0; }
+.cp-ltitle { font-size:14.5px; font-weight:700; line-height:1.35; }
+.cp-lmeta { font-size:12.5px; color:var(--muted); margin-top:2px; }
+.cp-lright { display:flex; align-items:center; gap:8px; flex-wrap:wrap; justify-content:flex-end; }
+.cp-caret { color:var(--muted); font-size:12px; transition:transform .15s; }
+.cp-lesson.open .cp-caret { transform:rotate(180deg); }
+.cp-lbody { display:none; padding:16px; border-top:1px solid var(--border); background:#FBFAF8; }
+.cp-lesson.open .cp-lbody { display:block; }
+.cp-llinks { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:14px; }
+.cp-llinks .cp-chip { padding:7px 13px; font-size:12.5px; }
+.cp-note { font-size:13px; color:#44403c; line-height:1.65; margin-bottom:14px; white-space:pre-line; }
+.cp-cols { display:grid; grid-template-columns:1fr 1fr; gap:18px; }
+.cp-col-t { font-size:13px; font-weight:800; margin-bottom:8px; }
+.cp-ta { width:100%; padding:9px 12px; font:inherit; font-size:13.5px; line-height:1.5; border:1.5px solid var(--border); border-radius:10px; background:var(--white); color:var(--text); outline:none; resize:vertical; margin-bottom:8px; display:block; }
+.cp-ta:focus { border-color:var(--brand); }
+.cp-save { display:flex; align-items:center; justify-content:flex-end; gap:12px; margin-top:4px; }
+.cp-saved { font-size:12.5px; color:var(--green); font-weight:600; }
+.cp-lock { font-size:13px; color:var(--muted); background:var(--white); border:1.5px dashed var(--border); border-radius:10px; padding:12px 14px; }
+.cp-hw { display:flex; align-items:flex-start; justify-content:space-between; gap:14px; flex-wrap:wrap; padding:12px 0; border-top:1px solid var(--border); }
+.cp-hw:first-of-type { border-top:none; padding-top:0; }
+.cp-hw-r { font-size:12.5px; text-align:right; max-width:300px; line-height:1.55; }
+@media (max-width:640px) {
+  .cp-cols { grid-template-columns:1fr; gap:14px; }
+  .cp-head, .cp-sec { padding-left:16px; padding-right:16px; }
+  .cp-links { padding:0 16px 18px; }
+  .cp-one { margin:0 16px 18px; }
+  .cp-lrow { flex-wrap:wrap; }
+  .cp-lright { width:100%; justify-content:flex-start; padding-left:48px; }
+}
 </style>
 </head>
 <body>
@@ -476,7 +531,7 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
 
   <div class="login-card">
     <h2>Đăng nhập</h2>
-    <p class="subtitle">Dành cho Advisor & Advisee</p>
+    <p class="subtitle">Dành cho Advisor & Advisee<br><span style="font-size:14px">Học viên khoá học: chọn vai trò <b>Advisee</b></span></p>
 
     <div class="field-group">
       <div class="field-label">Email</div>
@@ -564,6 +619,9 @@ const PACKAGES = {
   'Đặc Biệt':   { price: 1499000, sessions: 4, days: 28 },
   'Chuyên Sâu': { price: 2199000, sessions: 6, days: 56 },
 };
+
+// Gói quyền lợi 2 buổi cố vấn 1-1 của học viên khoá học — PHẢI khớp CP_PKG_NAME trong CoursePortal.gs
+var CP_PKG_NAME = 'Khoá học - Cố vấn 1-1';
 
 const TIME_SLOTS = ['08:00','09:00','10:00','11:00','14:00','15:00','16:00','17:00','18:00','19:00','20:00','21:00'];
 const DAYS_VI = ['CN','T2','T3','T4','T5','T6','T7'];
@@ -1096,7 +1154,7 @@ function buildTabBar(role) {
   if (role === 'Advisee' && window._myDocs && !window._hasBookings && !window._hasCourses) tabs = [];
   // Advisee: chỉ mở thêm section "Khoá học" khi đã đăng ký ít nhất 1 khoá
   if (window._hasCourses) {
-    if (role === 'Advisee') tabs.push({ id:'courses', icon:'🎓', label:'Khoá học' });
+    if (role === 'Advisee') tabs.unshift({ id:'courses', icon:'🎓', label:'Khoá học' });
     if (role === 'Advisor') tabs.push({ id:'my-courses', icon:'🎓', label:'Khoá học' });
   }
   // Advisee: luôn có nút "Tài liệu luyện tập" (xem danh sách, đã mua thì hiện nút Sử dụng)
@@ -1281,7 +1339,7 @@ function buildAdviseeFromBooking(b, allSessions, pkgFlag) {
   var mySessions = allSessions.filter(function(s){ return s.booking_id === b.booking_id; });
   var sessionsTotal = Number(b.sessions_total) || 0;
   var sessionsUnlimited = !!(pkgFlag && pkgFlag.sessionsUnlimited);
-  var advisorUnlimited = !!(pkgFlag && pkgFlag.advisorUnlimited);
+  var advisorUnlimited = !!(pkgFlag && pkgFlag.advisorUnlimited) || b.package_name === CP_PKG_NAME;
   if (sessionsUnlimited) {
     // Không giới hạn buổi: hiện các buổi đã có + đúng 1 buổi kế tiếp để đặt
     var maxNo = 0;
@@ -1417,6 +1475,11 @@ function renderAdvisee(tab) {
 }
 
 function renderAdviseeExpiredNotice(ae) {
+  if (ae.pkg === CP_PKG_NAME) {
+    return '<div class="card" style="max-width:520px;margin:60px auto;text-align:center;padding:40px 32px"><div style="font-size:48px;margin-bottom:16px">⏰</div>' +
+      '<div style="font-size:18px;font-weight:800;margin-bottom:8px">Quyền lợi cố vấn 1-1 của khoá học đã hết hạn</div>' +
+      '<div style="font-size:13.5px;color:var(--muted);line-height:1.7">Hết hạn ngày <strong>' + fmtDateVN(ae.expiry) + '</strong> (đã đặt ' + ae.sessionsDone + '/' + ae.sessionsTotal + ' buổi). Cần thêm thời gian? Vui lòng liên hệ LinkaJob để được hỗ trợ.</div></div>';
+  }
   return '<div class="card" style="max-width:520px;margin:60px auto;text-align:center;padding:40px 32px">' +
     '<div style="font-size:48px;margin-bottom:16px">⏰</div>' +
     '<div style="font-size:18px;font-weight:800;margin-bottom:8px">Gói cố vấn của bạn đã hết hạn</div>' +
@@ -1494,7 +1557,165 @@ function loadMyDocumentsAsync(c) {
   }).catch(function(e){ c.innerHTML = '<div class="empty-state">Lỗi tải tài liệu: ' + esc(e.message) + '</div>'; });
 }
 
+// ════════════════════════════════════════════════════════════
+//  ADVISEE — TRANG KHOÁ HỌC (cổng học viên)
+//  Dữ liệu từ action getMyCoursePortal (CoursePortal.gs): Zoom, Zalo, slide, lịch học từng buổi,
+//  bài tập về nhà, "3 điều học được / 3 điều cần cải thiện" và quyền lợi 2 buổi cố vấn 1-1.
+//  Backend chưa cập nhật (hoặc phiên chưa có token) → tự rơi về giao diện cũ loadMyCoursesLegacyAsync.
+// ════════════════════════════════════════════════════════════
+var _cpData = [];
+function cpEsc(s) { return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
+function cpUrl(s) { s = String(s || '').trim(); return /^https?:\/\//i.test(s) ? s : ''; }
+function cpDateLabel(ds) {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(ds || '')) return '';
+  var d = new Date(ds + 'T00:00:00');
+  return DAYS_VI[d.getDay()] + ' ' + d.getDate() + '/' + (d.getMonth() + 1) + (d.getFullYear() !== new Date().getFullYear() ? '/' + d.getFullYear() : '');
+}
+function cpChip(icon, label, url, emptyText, main) {
+  var u = cpUrl(url);
+  return u ? '<a class="cp-chip' + (main ? ' main' : '') + '" href="' + cpEsc(u) + '" target="_blank" rel="noopener">' + icon + ' ' + label + '</a>'
+           : '<span class="cp-chip off">' + icon + ' ' + label + ' · ' + emptyText + '</span>';
+}
+function cpAuthFail(res) {
+  if (res && res.code === 'auth') { toast(res.error || 'Phiên đăng nhập đã hết hạn', 'error'); setTimeout(doLogout, 1500); return true; }
+  return false;
+}
+
 function loadMyCoursesAsync(c) {
+  if (!currentUser || !currentUser.token) { loadMyCoursesLegacyAsync(c); return; }
+  apiGet('getMyCoursePortal', { token: currentUser.token }).then(function(res){
+    if (cpAuthFail(res)) return;
+    if (!res || !res.success) { loadMyCoursesLegacyAsync(c); return; }
+    _cpData = res.data || [];
+    if (!_cpData.length) { c.innerHTML = '<div class="card"><div class="empty-state"><div class="icon">🎓</div>Bạn chưa đăng ký khoá học nào.</div></div>'; return; }
+    c.innerHTML = _cpData.map(cpCourseHtml).join('');
+  }).catch(function(){ loadMyCoursesLegacyAsync(c); });
+}
+
+function cpCourseHtml(en, ei) {
+  var today = ymd(new Date());
+  var h = '<div class="cp-card">';
+  // 1) Tiêu đề + khai giảng + giảng viên
+  var started = en.start_date && en.start_date <= today;
+  var sub = [];
+  if (en.start_date) sub.push((started ? 'Khai giảng ' : 'Khai giảng ') + cpDateLabel(en.start_date));
+  if (en.instructor_advisor) sub.push('Giảng viên: ' + cpEsc(en.instructor_advisor));
+  if (en.schedule_note) sub.push('🗓 ' + cpEsc(en.schedule_note));
+  h += '<div class="cp-head"><div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px">' +
+    '<div class="cp-title">' + cpEsc(en.course_name) + (en.season_no ? ' — Mùa ' + cpEsc(en.season_no) : '') + '</div>' +
+    (en.status ? '<span class="badge badge-confirmed" style="flex-shrink:0">' + cpEsc(en.status) + '</span>' : '') + '</div>' +
+    (sub.length ? '<div class="cp-sub">' + sub.join(' · ') + '</div>' : '') + '</div>';
+  // 2) Zoom / Zalo / Slide chung
+  h += '<div class="cp-links">' + cpChip('🎥', 'Vào lớp Zoom', en.zoom_link, 'sẽ cập nhật', true) + cpChip('💬', 'Nhóm Zalo', en.zalo_link, 'sẽ cập nhật') + cpChip('📑', 'Tất cả slide', en.slide_link, 'sẽ cập nhật') + '</div>';
+  // 3) Quyền lợi 2 buổi cố vấn 1-1
+  h += cpOneOnOneHtml(en.one_on_one, today);
+  // 4) Lịch học & từng buổi
+  var ls = en.lessons || [];
+  var nextIdx = -1, openIdx = -1;
+  for (var i = 0; i < ls.length; i++) { if (ls[i].date && ls[i].date >= today) { nextIdx = i; break; } }
+  for (var j = ls.length - 1; j >= 0; j--) { if (ls[j].date && ls[j].date <= today && !cpHasRefl(ls[j])) { openIdx = j; break; } }
+  h += '<div class="cp-sec"><div class="cp-sec-t"><span>Lịch học &amp; phản hồi từng buổi</span><span style="text-transform:none;letter-spacing:0;font-weight:500">' + ls.length + ' buổi</span></div>';
+  if (!ls.length) h += '<div class="cp-empty">Lịch học và slide từng buổi sẽ được cập nhật tại đây trước ngày khai giảng.</div>';
+  ls.forEach(function(l, li){ h += cpLessonHtml(ei, li, l, today, li === nextIdx, li === openIdx); });
+  h += '</div>';
+  // 5) Bài tập về nhà
+  h += '<div class="cp-sec"><div class="cp-sec-t"><span>Bài tập về nhà</span></div>' + cpHwHtml(en, ei, today) + '</div>';
+  return h + '</div>';
+}
+
+function cpOneOnOneHtml(o, today) {
+  if (!o) return '';
+  var days = null;
+  if (o.expiry) days = Math.ceil((new Date(o.expiry + 'T00:00:00') - new Date(today + 'T00:00:00')) / 86400000);
+  var expired = days !== null && days < 0;
+  var left = Math.max(0, (o.total || 0) - (o.used || 0));
+  var line = 'Đã đặt ' + (o.used || 0) + '/' + o.total + ' buổi · Advisor: ' + (o.advisor_name ? cpEsc(o.advisor_name) : 'chưa chọn — chọn bất kỳ advisor nào của LinkaJob') +
+    (o.expiry ? ' · ' + (expired ? '<b style="color:#B91C1C">Đã hết hạn ' + fmtDateVN(o.expiry) + '</b>' : 'dùng đến ' + fmtDateVN(o.expiry) + ' (còn ' + days + ' ngày)') : '');
+  var cta = expired ? 'Xem các buổi 1-1 →' : (left === 0 ? 'Xem các buổi 1-1 →' : (o.used ? 'Đặt buổi tiếp theo →' : 'Chọn advisor & đặt lịch →'));
+  return '<div class="cp-one"><div class="cp-one-ic">🤝</div><div class="cp-one-body"><div class="cp-one-t">' + o.total + ' buổi cố vấn 1-1 dành riêng cho học viên khoá học</div>' +
+    '<div class="cp-one-s">' + line + '</div></div>' +
+    '<button class="login-btn" style="width:auto;padding:11px 20px;font-size:14px" onclick="switchRoleTab(\'my-bookings\')">' + cta + '</button></div>';
+}
+
+function cpHasRefl(l) {
+  var r = l.reflection;
+  return !!(r && (r.learned || []).concat(r.improve || []).some(function(x){ return String(x || '').trim(); }));
+}
+function cpReflBadge(l, future) {
+  if (future) return '';
+  return cpHasRefl(l) ? '<span class="badge badge-confirmed">✓ Đã phản hồi</span>' : '<span class="badge badge-pending">Chưa phản hồi</span>';
+}
+
+function cpLessonHtml(ei, li, l, today, isNext, isOpen) {
+  var future = !!l.date && l.date > today, isToday = l.date === today, done = !!l.date && l.date < today;
+  var when = [cpDateLabel(l.date), l.time_start ? (l.time_start + (l.time_end ? '–' + l.time_end : '')) : ''].filter(Boolean).join(' · ') || 'Chưa có lịch';
+  var stBadge = !l.date ? '' : isToday ? '<span class="badge badge-pending">Hôm nay</span>' : future ? '<span class="badge" style="background:#EFF6FF;color:#1D4ED8">' + (isNext ? 'Buổi kế tiếp' : 'Sắp tới') + '</span>' : '';
+  var id = 'cp-l-' + ei + '-' + li;
+  var h = '<div class="cp-lesson' + (isNext ? ' next' : '') + (done ? ' done' : '') + (isOpen ? ' open' : '') + '" id="' + id + '">' +
+    '<div class="cp-lrow" onclick="document.getElementById(\'' + id + '\').classList.toggle(\'open\')">' +
+      '<div class="cp-no">' + (done && cpHasRefl(l) ? '✓' : (l.lesson_no || (li + 1))) + '</div>' +
+      '<div class="cp-lmain"><div class="cp-ltitle">' + cpEsc(l.title || ('Buổi ' + (l.lesson_no || (li + 1)))) + '</div><div class="cp-lmeta">' + cpEsc(when) + '</div></div>' +
+      '<div class="cp-lright">' + stBadge + '<span id="cp-rb-' + ei + '-' + li + '">' + cpReflBadge(l, future || !l.date) + '</span><span class="cp-caret">▼</span></div>' +
+    '</div><div class="cp-lbody">';
+  var links = cpChip('📑', 'Slide buổi này', l.slide_link, 'chưa có') + (cpUrl(l.recording_link) ? cpChip('▶️', 'Xem lại bản ghi', l.recording_link, '') : '');
+  h += '<div class="cp-llinks">' + links + '</div>';
+  if (l.note) h += '<div class="cp-note">' + cpEsc(l.note) + '</div>';
+  if (future || !l.date) {
+    h += '<div class="cp-lock">🔒 Bạn sẽ ghi được “3 điều học được” và “3 điều cần cải thiện” sau khi buổi học diễn ra.</div>';
+  } else {
+    var r = l.reflection || { learned: [], improve: [] };
+    var col = function(key, title, vals, ph) {
+      var s = '<div><div class="cp-col-t">' + title + '</div>';
+      for (var k = 0; k < 3; k++) s += '<textarea class="cp-ta" rows="2" maxlength="500" id="cp-' + ei + '-' + li + '-' + key + k + '" placeholder="' + ph + ' ' + (k + 1) + '">' + cpEsc((vals || [])[k] || '') + '</textarea>';
+      return s + '</div>';
+    };
+    h += '<div class="cp-cols">' + col('L', '✨ 3 điều bạn học được', r.learned, 'Điều học được') + col('I', '🎯 3 điều cần cải thiện', r.improve, 'Điều cần cải thiện') + '</div>' +
+      '<div class="cp-save"><span class="cp-saved" id="cp-st-' + ei + '-' + li + '">' + (r.updated_at ? 'Đã lưu · ' + cpEsc(String(r.updated_at).slice(0, 16).replace('T', ' ')) : '') + '</span>' +
+      '<button class="login-btn" id="cp-btn-' + ei + '-' + li + '" style="width:auto;padding:10px 22px;font-size:14px" onclick="cpSaveRefl(' + ei + ',' + li + ')">Lưu phản hồi</button></div>';
+  }
+  return h + '</div></div>';
+}
+
+function cpSaveRefl(ei, li) {
+  var en = _cpData[ei], l = en && en.lessons[li];
+  if (!l) return;
+  var get = function(key, k) { var el = document.getElementById('cp-' + ei + '-' + li + '-' + key + k); return el ? el.value.trim() : ''; };
+  var learned = [get('L', 0), get('L', 1), get('L', 2)], improve = [get('I', 0), get('I', 1), get('I', 2)];
+  if (!learned.concat(improve).some(Boolean)) { toast('Hãy điền ít nhất 1 ý', 'error'); return; }
+  var btn = document.getElementById('cp-btn-' + ei + '-' + li);
+  btn.disabled = true; btn.innerHTML = '<span class="spinner"></span>';
+  apiPost({ action: 'saveCourseReflection', token: (currentUser && currentUser.token) || '', enrollment_id: en.enrollment_id, lesson_id: l.lesson_id, learned: learned, improve: improve }).then(function(res){
+    btn.disabled = false; btn.textContent = 'Lưu phản hồi';
+    if (cpAuthFail(res)) return;
+    if (!res || !res.success) { toast((res && res.error) || 'Không lưu được, thử lại nhé', 'error'); return; }
+    l.reflection = { learned: learned, improve: improve, updated_at: res.updated_at };
+    var rb = document.getElementById('cp-rb-' + ei + '-' + li); if (rb) rb.innerHTML = cpReflBadge(l, false);
+    var st = document.getElementById('cp-st-' + ei + '-' + li); if (st) st.textContent = 'Đã lưu · ' + res.updated_at;
+    toast('Đã lưu phản hồi ✅', 'success');
+  }).catch(function(e){ btn.disabled = false; btn.textContent = 'Lưu phản hồi'; toast('Lỗi kết nối: ' + e.message, 'error'); });
+}
+
+function cpHwHtml(en, ei, today) {
+  var as = en.assignments || [];
+  if (!as.length) return '<div class="cp-empty">Chưa có bài tập nào.</div>';
+  return as.map(function(a, ai){
+    var sub = a.submission, late = !sub && a.due_date && a.due_date < today;
+    var left = '<div><b style="font-size:14px">' + cpEsc(a.title) + '</b><div style="font-size:12.5px;color:var(--muted);margin-top:2px">' +
+      (a.due_date ? 'Hạn nộp ' + fmtDateVN(a.due_date) : 'Chưa đặt hạn nộp') + (late ? ' · <b style="color:#B91C1C">Quá hạn</b>' : '') +
+      (cpUrl(a.problem_link) ? ' · <a href="' + cpEsc(cpUrl(a.problem_link)) + '" target="_blank" rel="noopener" style="color:var(--brand)">Xem đề bài</a>' : '') + '</div></div>';
+    var right = sub
+      ? '<div class="cp-hw-r">✅ Đã nộp' + (sub.grade ? ' · Điểm: <b style="color:var(--brand)">' + cpEsc(sub.grade) + '</b>' : ' · Đang chờ chấm') + (sub.feedback ? '<div style="color:var(--muted)">' + cpEsc(sub.feedback) + '</div>' : '') + '</div>'
+      : '<button class="btn-secondary" style="width:auto;padding:8px 16px;font-size:13px" onclick="cpOpenSubmit(' + ei + ',' + ai + ')">Nộp bài</button>';
+    return '<div class="cp-hw">' + left + right + '</div>';
+  }).join('');
+}
+function cpOpenSubmit(ei, ai) {
+  var en = _cpData[ei], a = en && en.assignments[ai];
+  if (a) openSubmitAssignmentModal(en.enrollment_id, a.assignment_id);
+}
+
+// Giao diện cũ (dự phòng khi backend chưa có getMyCoursePortal)
+function loadMyCoursesLegacyAsync(c) {
   apiGet('getMyCourseEnrollments', { email: currentUser.email }).then(function(res){
     var list = (res && res.data) ? res.data : [];
     if (list.length === 0) {
@@ -5308,11 +5529,17 @@ function renderMyBookings() {
   // Booking card
   html += '<div class="aee-booking-card">';
   html += '<div class="aee-advisor-row">';
-  html += avatarCircle(ae.advisor, 48);
-  html += '<div class="aee-advisor-info"><div class="aee-advisor-name">' + ae.advisor + '</div><div class="aee-advisor-title">' + (ae.advisorTitle||'Advisor · LinkaJob') + '</div></div>';
+  if (!ae.advisor) {
+    html += '<div class="av-circle" style="width:48px;height:48px;background:var(--bg);color:var(--muted);font-size:20px;flex-shrink:0;border:1.5px dashed var(--border)">?</div>';
+    html += '<div class="aee-advisor-info"><div class="aee-advisor-name">Chưa chọn advisor</div><div class="aee-advisor-title">Chọn bất kỳ advisor nào của LinkaJob để xem lịch và đặt buổi</div></div>';
+    html += '<button class="login-btn" style="width:auto;padding:10px 18px;font-size:13.5px;margin-left:auto" onclick="openPickAdvisorModal(\'' + ae.id + '\')">Chọn advisor →</button>';
+  } else {
+    html += avatarCircle(ae.advisor, 48);
+    html += '<div class="aee-advisor-info"><div class="aee-advisor-name">' + ae.advisor + '</div><div class="aee-advisor-title">' + (ae.advisorTitle||'Advisor · LinkaJob') + '</div></div>';
+  }
   html += '</div>';
   html += '<div class="aee-pkg-row">';
-  html += '<div><div class="aee-pkg-name">Gói ' + ae.pkg + '</div><div class="aee-pkg-meta">' + (ae.sessionsUnlimited ? 'Không giới hạn buổi' : ((pkg.sessions||ae.sessionsTotal) + ' buổi')) + ' · 45–60 phút/buổi' + (ae.advisorUnlimited ? ' · Không giới hạn advisor' : '') + ' · ' + (ae.bookingId||'') + '</div></div>';
+  html += '<div><div class="aee-pkg-name">' + (ae.pkg === CP_PKG_NAME ? '🎓 Quyền lợi khoá học — Cố vấn 1-1' : 'Gói ' + ae.pkg) + '</div><div class="aee-pkg-meta">' + (ae.sessionsUnlimited ? 'Không giới hạn buổi' : ((pkg.sessions||ae.sessionsTotal) + ' buổi')) + ' · 45–60 phút/buổi' + (ae.advisorUnlimited ? ' · Không giới hạn advisor' : '') + ' · ' + (ae.bookingId||'') + '</div></div>';
   html += '<div class="aee-progress-badge">' + (ae.sessionsUnlimited ? ('Đã dùng ' + ae.sessionsDone + ' buổi') : ('Đã đặt ' + ae.sessionsDone + '/' + ae.sessionsTotal)) + '</div>';
   html += '</div>';
   var expiryDate = new Date(ae.expiry + 'T00:00:00');
@@ -5321,11 +5548,12 @@ function renderMyBookings() {
   var expiryLabel = expiryDate.getDate() + '/' + (expiryDate.getMonth()+1) + '/' + expiryDate.getFullYear();
   var expiryColor = daysLeft <= 7 ? '#C2410C' : '#92400E';
   html += '<div style="display:flex;align-items:center;gap:10px;background:#FFFBEB;border:1.5px solid #FDE68A;border-radius:10px;padding:12px 16px;margin-top:16px;font-size:13px;color:#92400E">';
-  html += '<span style="font-size:16px">⏱</span><span>Gói hết hạn vào <strong style="color:' + expiryColor + '">' + expiryLabel + '</strong> — còn ' + daysLeft + ' ngày</span></div>';
-  html += '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-top:12px">';
-  html += '<div style="border:1.5px solid var(--border);border-radius:12px;padding:16px 18px;cursor:pointer;transition:border-color .15s" onmouseover="this.style.borderColor=\"var(--brand)\"" onmouseout="this.style.borderColor=\"var(--border)\"" onclick="openExtendModal(\'' + ae.id + '\')">' + '<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px"><span style="font-size:18px">📅</span><div style="font-size:14px;font-weight:700">Gia hạn thời gian</div></div><div style="font-size:12.5px;color:var(--muted);margin-bottom:8px">Chọn số tuần cần thêm</div><div style="font-size:13px;font-weight:700;color:var(--brand)">100.000đ / tuần</div></div>';
-  html += ae.advisorUnlimited ? ('<div style="border:1.5px solid var(--brand);border-radius:12px;padding:16px 18px;cursor:pointer;transition:border-color .15s;background:var(--brand-light)" onclick="openPickAdvisorModal(\'' + ae.id + '\')">' + '<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px"><span style="font-size:18px">🔄</span><div style="font-size:14px;font-weight:700">Đổi advisor</div></div><div style="font-size:12.5px;color:var(--muted);margin-bottom:8px">Không giới hạn, đổi bất cứ lúc nào</div><div style="font-size:13px;font-weight:700;color:var(--brand)">Miễn phí</div></div>') : ('<div style="border:1.5px solid var(--border);border-radius:12px;padding:16px 18px;cursor:pointer;transition:border-color .15s" onmouseover="this.style.borderColor=\"var(--brand)\"" onmouseout="this.style.borderColor=\"var(--border)\"" onclick="openSwitchAdvisorModal(\'' + ae.id + '\')">' + '<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px"><span style="font-size:18px">🔄</span><div style="font-size:14px;font-weight:700">Meet advisor khác</div></div><div style="font-size:12.5px;color:var(--muted);margin-bottom:8px">Đổi sang advisor mới, 1 lần</div><div style="font-size:13px;font-weight:700;color:var(--brand)">100.000đ</div></div>');
-  html += '<div style="border:1.5px solid var(--border);border-radius:12px;padding:16px 18px;cursor:pointer;transition:border-color .15s" onmouseover="this.style.borderColor=\"var(--brand)\"" onmouseout="this.style.borderColor=\"var(--border)\"" onclick="openUpgradePackageModal(\'' + ae.id + '\')">' + '<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px"><span style="font-size:18px">⬆</span><div style="font-size:14px;font-weight:700">Nâng cấp gói</div></div><div style="font-size:12.5px;color:var(--muted);margin-bottom:8px">Giữ nguyên buổi/thời gian đã dùng</div><div style="font-size:13px;font-weight:700;color:var(--brand)">Chỉ trả chênh lệch</div></div>';
+  html += '<span style="font-size:16px">⏱</span><span>' + (ae.pkg === CP_PKG_NAME ? 'Quyền lợi hết hạn vào' : 'Gói hết hạn vào') + ' <strong style="color:' + expiryColor + '">' + expiryLabel + '</strong> — còn ' + daysLeft + ' ngày</span></div>';
+  var isCp = (ae.pkg === CP_PKG_NAME); // quyền lợi khoá học: chỉ có "Chọn/Đổi advisor", không có gia hạn/nâng cấp có phí
+  html += '<div style="display:grid;grid-template-columns:' + (isCp ? '1fr' : '1fr 1fr 1fr') + ';gap:12px;margin-top:12px">';
+  if (!isCp) html += '<div style="border:1.5px solid var(--border);border-radius:12px;padding:16px 18px;cursor:pointer;transition:border-color .15s" onmouseover="this.style.borderColor=\"var(--brand)\"" onmouseout="this.style.borderColor=\"var(--border)\"" onclick="openExtendModal(\'' + ae.id + '\')">' + '<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px"><span style="font-size:18px">📅</span><div style="font-size:14px;font-weight:700">Gia hạn thời gian</div></div><div style="font-size:12.5px;color:var(--muted);margin-bottom:8px">Chọn số tuần cần thêm</div><div style="font-size:13px;font-weight:700;color:var(--brand)">100.000đ / tuần</div></div>';
+  if (!(isCp && !ae.advisor)) html += ae.advisorUnlimited ? ('<div style="border:1.5px solid var(--brand);border-radius:12px;padding:16px 18px;cursor:pointer;transition:border-color .15s;background:var(--brand-light)" onclick="openPickAdvisorModal(\'' + ae.id + '\')">' + '<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px"><span style="font-size:18px">🔄</span><div style="font-size:14px;font-weight:700">' + (ae.advisor ? 'Đổi advisor' : 'Chọn advisor') + '</div></div><div style="font-size:12.5px;color:var(--muted);margin-bottom:8px">Không giới hạn, đổi bất cứ lúc nào</div><div style="font-size:13px;font-weight:700;color:var(--brand)">Miễn phí</div></div>') : ('<div style="border:1.5px solid var(--border);border-radius:12px;padding:16px 18px;cursor:pointer;transition:border-color .15s" onmouseover="this.style.borderColor=\"var(--brand)\"" onmouseout="this.style.borderColor=\"var(--border)\"" onclick="openSwitchAdvisorModal(\'' + ae.id + '\')">' + '<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px"><span style="font-size:18px">🔄</span><div style="font-size:14px;font-weight:700">Meet advisor khác</div></div><div style="font-size:12.5px;color:var(--muted);margin-bottom:8px">Đổi sang advisor mới, 1 lần</div><div style="font-size:13px;font-weight:700;color:var(--brand)">100.000đ</div></div>');
+  if (!isCp) html += '<div style="border:1.5px solid var(--border);border-radius:12px;padding:16px 18px;cursor:pointer;transition:border-color .15s" onmouseover="this.style.borderColor=\"var(--brand)\"" onmouseout="this.style.borderColor=\"var(--border)\"" onclick="openUpgradePackageModal(\'' + ae.id + '\')">' + '<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px"><span style="font-size:18px">⬆</span><div style="font-size:14px;font-weight:700">Nâng cấp gói</div></div><div style="font-size:12.5px;color:var(--muted);margin-bottom:8px">Giữ nguyên buổi/thời gian đã dùng</div><div style="font-size:13px;font-weight:700;color:var(--brand)">Chỉ trả chênh lệch</div></div>';
   html += '</div></div>';
 
   // Compact session list
@@ -5509,6 +5737,7 @@ function pickAdvisor(aeId, name) {
 function openBookSessionModal(aeId, sessionNo) {
   var ae = MOCK.advisees.find(function(x){ return x.id === aeId; });
   if (!ae) return;
+  if (!String(ae.advisor || '').trim()) { openPickAdvisorModal(aeId); return; } // chưa chọn advisor (VD quyền lợi khoá học): chọn trước rồi mới đặt giờ
   _bookSessionCtx = { aeId: aeId, sessionNo: sessionNo, advisorName: ae.advisor, advisorUnlimited: !!ae.advisorUnlimited };
   _bk = { avail: {}, booked: {}, selDate: null, selM: null, step: 'pick' };
   _cal.advisee = { view: 'week', anchor: new Date() };
