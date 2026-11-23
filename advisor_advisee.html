@@ -6004,6 +6004,7 @@ function submitAdviseeFeedbackModal(sessionNo) {
   var rating = (adviseeStarState[sessionNo]||{}).selected || 0;
   var text   = (document.getElementById('m-fbtext-' + sessionNo)||{}).value || '';
   if (!rating) { toast('Vui lòng chọn số sao', 'error'); return; }
+  draftClear_(['m-fbtext-' + sessionNo]);
   var ae = MOCK.advisees.find(function(x){ return x.name === currentUser.name; });
   if (!ae) return;
   var s = ae.sessions.find(function(x){ return x.no === sessionNo; });
@@ -6177,6 +6178,11 @@ function renderAdvisorNotesForm(aeId, sessionNo) {
   return html;
 }
 
+// Bước 1: kiểm tra + hiện màn hình xác nhận (nháp vẫn được giữ nếu quay lại sửa)
+var _pendingNotes = null;
+function escHtmlConfirm_(t) {
+  return String(t || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
 function submitAdvisorNotes(aeId, sessionNo) {
   var summary     = (document.getElementById('an-summary-'  + aeId + '-' + sessionNo)||{}).value || '';
   var feedback    = (document.getElementById('an-feedback-' + aeId + '-' + sessionNo)||{}).value || '';
@@ -6184,11 +6190,50 @@ function submitAdvisorNotes(aeId, sessionNo) {
 
   if (!summary.trim() || !feedback.trim()) { toast('Vui lòng điền Nội dung và Nhận xét trước khi gửi', 'error'); return; }
 
+  var ae0 = MOCK.advisees.find(function(x){ return x.id === aeId; });
+  if (!ae0) return;
+  var inlineForm = !!document.getElementById('anote-form-' + aeId + '-' + sessionNo);
+  _pendingNotes = { aeId: aeId, sessionNo: sessionNo, summary: summary, feedback: feedback, actionItems: actionItems, inline: inlineForm };
+
+  function row(label, val, empty) {
+    return '<div style="font-size:10.5px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin:12px 0 4px">' + label + '</div>' +
+      '<div style="font-size:13.5px;line-height:1.65;white-space:pre-wrap;background:var(--bg);border-radius:10px;padding:10px 12px;' + (val.trim() ? '' : 'color:var(--muted);font-style:italic') + '">' +
+      (val.trim() ? escHtmlConfirm_(val.trim()) : empty) + '</div>';
+  }
+  var body = '<div style="background:#FFFBEB;border:1px solid #FDE68A;border-radius:10px;padding:10px 12px;font-size:13px;color:#92400E;line-height:1.6">' +
+    '⚠️ Vui lòng kiểm tra lại thông tin. Sau khi gửi, <b>' + escHtmlConfirm_(ae0.name) + '</b> và Staff sẽ xem được nhận xét này.</div>';
+  body += row('Nội dung đã trao đổi', summary, '');
+  body += row('Nhận xét & Góp ý cho Advisee', feedback, '');
+  body += row('Việc cần làm trước buổi sau', actionItems, '(Không có)');
+
+  document.getElementById('modal-title').textContent = 'Xác nhận gửi nhận xét · Buổi ' + sessionNo;
+  document.getElementById('modal-body').innerHTML = body;
+  document.getElementById('modal-actions').innerHTML =
+    '<button class="btn-secondary" onclick="cancelConfirmAdvisorNotes()" style="width:auto;padding:10px 20px">← Quay lại sửa</button>' +
+    '<button class="login-btn" id="anote-confirm-btn" onclick="confirmSubmitAdvisorNotes()" style="width:auto;padding:10px 24px;background:#7C3AED">Xác nhận gửi ✓</button>';
+  document.getElementById('modal-overlay').classList.add('open');
+}
+function cancelConfirmAdvisorNotes() {
+  var p = _pendingNotes; _pendingNotes = null;
+  if (!p) { closeModal(); return; }
+  if (p.inline) { closeModal(); } else { openSessionDetailModal(p.aeId, p.sessionNo); }
+}
+
+// Bước 2: gửi thật sau khi Advisor xác nhận
+function confirmSubmitAdvisorNotes() {
+  var p = _pendingNotes;
+  if (!p) return;
+  var btn = document.getElementById('anote-confirm-btn');
+  if (btn) { if (btn.disabled) return; btn.disabled = true; }
+  _pendingNotes = null;
+  var aeId = p.aeId, sessionNo = p.sessionNo, summary = p.summary, feedback = p.feedback, actionItems = p.actionItems;
+
   var ae = MOCK.advisees.find(function(x){ return x.id === aeId; });
   if (!ae) return;
   var s = ae.sessions.find(function(x){ return x.no === sessionNo; });
   if (!s) return;
 
+  draftClear_(['an-summary-'+aeId+'-'+sessionNo,'an-feedback-'+aeId+'-'+sessionNo,'an-actions-'+aeId+'-'+sessionNo]);
   var notesSessionId = s.session_id || (ae.bookingId + '-' + sessionNo);
 
   // Lưu thật lên Sheet (tab AdvisorNotes) — KHÔNG public, chỉ Advisee & Staff xem được.
@@ -6219,7 +6264,19 @@ function submitAdvisorNotes(aeId, sessionNo) {
 
 function openAdvisorNotesEdit(aeId, sessionNo) {
   var ae = MOCK.advisees.find(function(x){ return x.id === aeId; });
-  if (ae) { var s = ae.sessions.find(function(x){ return x.no === sessionNo; }); if (s) s.advisorNotes = null; }
+  if (ae) {
+    var s = ae.sessions.find(function(x){ return x.no === sessionNo; });
+    if (s) {
+      var n = s.advisorNotes;
+      if (n) {
+        var k = aeId + '-' + sessionNo;
+        if (!draftGet_('an-summary-' + k))  draftSet_('an-summary-' + k,  n.summary || '');
+        if (!draftGet_('an-feedback-' + k)) draftSet_('an-feedback-' + k, n.feedback || '');
+        if (!draftGet_('an-actions-' + k))  draftSet_('an-actions-' + k,  n.actionItems || '');
+      }
+      s.advisorNotes = null;
+    }
+  }
   openSessionDetailModal(aeId, sessionNo);
 }
 
@@ -6630,6 +6687,48 @@ function hideModal() {
   if (mb) { mb.style.maxHeight = ''; mb.style.overflowY = ''; }
 }
 document.getElementById('modal-overlay').addEventListener('click', function(e){ if (e.target.id === 'modal-overlay') closeModal(); });
+
+// ════════════════════════════════════════════════════════════
+//  LƯU NHÁP TỰ ĐỘNG — nhận xét Advisor / feedback Advisee / thông tin chuẩn bị
+//  Lỡ nhấp ra ngoài modal (hoặc bấm Đóng, reload) thì mở lại vẫn còn nội dung đã gõ.
+//  Nháp tự xoá sau khi gửi thành công.
+// ════════════════════════════════════════════════════════════
+var DRAFT_SELECTOR = '[id^="an-summary-"],[id^="an-feedback-"],[id^="an-actions-"],[id^="m-fbtext-"],[id^="m-prep-"]';
+function draftKey_(id) {
+  var who = (typeof currentUser !== 'undefined' && currentUser) ? (currentUser.email || currentUser.name || '') : '';
+  return 'draft:' + who + ':' + id;
+}
+function draftSet_(id, val) {
+  try { if (val && val.trim()) localStorage.setItem(draftKey_(id), val); else localStorage.removeItem(draftKey_(id)); } catch (e) {}
+}
+function draftGet_(id) { try { return localStorage.getItem(draftKey_(id)) || ''; } catch (e) { return ''; } }
+function draftClear_(ids) { try { (ids || []).forEach(function(id){ localStorage.removeItem(draftKey_(id)); }); } catch (e) {} }
+
+// Ghi nháp mỗi khi gõ
+document.addEventListener('input', function(e) {
+  var el = e.target;
+  if (el && el.id && el.matches && el.matches(DRAFT_SELECTOR)) draftSet_(el.id, el.value);
+});
+
+// Khôi phục nháp mỗi khi form được render lại
+function draftRestore_(root) {
+  if (!root || !root.querySelectorAll) return;
+  var list = root.matches && root.matches(DRAFT_SELECTOR) ? [root] : [];
+  list = list.concat([].slice.call(root.querySelectorAll(DRAFT_SELECTOR)));
+  var restored = false;
+  list.forEach(function(el) {
+    if (el.dataset.draftRestored || el.value) return;
+    el.dataset.draftRestored = '1';
+    var d = draftGet_(el.id);
+    if (d) { el.value = d; restored = true; }
+  });
+  if (restored) toast('Đã khôi phục nội dung bạn đang viết dở ✍️', 'success');
+}
+new MutationObserver(function(muts) {
+  muts.forEach(function(m) { [].forEach.call(m.addedNodes, function(n) { if (n.nodeType === 1) draftRestore_(n); }); });
+}).observe(document.body, { childList: true, subtree: true });
+draftRestore_(document.body);
+
 
 const AV_COLORS = [['#D0E8FF','#2475B0'],['#FFD6D0','#C0392B'],['#D0F0E8','#1A7A5E'],['#EDE9FE','#6D28D9'],['#FEF3C7','#92400E'],['#FCE7F3','#9D174D']];
 const colorCache = {};
