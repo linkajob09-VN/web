@@ -5764,8 +5764,12 @@ function saveSeasonEditor(seasonId) {
   var classLink = v('cm-se-classlink');
   var slideLink = v('cm-se-slidelink');
   var maxSeats = Number(document.getElementById('cm-se-maxseats').value) || 0;
-  // Giảng viên không còn nhập ở đây: advisor được chọn theo từng buổi học (tab 'Buổi khoá học'). Giữ nguyên giá trị cũ để không mất dữ liệu.
-  var instructorAdvisor = ((CM_SEASONS.find(function(x){ return x.id === seasonId; }) || {}).instructor_advisor) || '';
+  // Giảng viên phụ trách: lấy từ các ô chọn Advisor trong tab Cài đặt mùa (lưu dạng "Tên A, Tên B").
+  // Nếu vì lý do nào đó danh sách chưa hiện thì giữ nguyên giá trị cũ để không mất dữ liệu.
+  var _insBoxes = document.querySelectorAll('.cm-se-adv');
+  var instructorAdvisor = _insBoxes.length
+    ? Array.prototype.slice.call(document.querySelectorAll('.cm-se-adv:checked')).map(function(el){ return el.value; }).join(', ')
+    : (((CM_SEASONS.find(function(x){ return x.id === seasonId; }) || {}).instructor_advisor) || '');
   var plans = Array.prototype.slice.call(document.querySelectorAll('.cm-se-plan:checked')).map(function(el){ return el.value; });
   if (!seasonNo) { toast('Vui lòng nhập số mùa', 'error'); return; }
   if (!price) { toast('Vui lòng nhập học phí', 'error'); return; }
@@ -5843,9 +5847,10 @@ function renderSeasonDetail() {
   var html = '<div style="margin-bottom:14px"><button class="detail-btn" onclick="loadCoursesPageAsync()">← Quay lại Khoá học</button></div>';
   html += pageHeader((course ? course.name : '') + ' — Mùa ' + s.season_no, 'Khai giảng ' + fmtDateStr(s.start_date) + ' · ' + fmtMoney(s.price_full) + ' · ' + s.status);
 
-  html += '<div class="card" style="margin-bottom:16px"><div style="padding:16px 24px;display:grid;grid-template-columns:1fr 1fr;gap:14px;font-size:13px">';
+  html += '<div class="card" style="margin-bottom:16px"><div style="padding:16px 24px;display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;font-size:13px">';
   html += '<div><div class="form-label">Link lớp học</div>' + (s.class_link ? ('<a href="' + s.class_link + '" target="_blank" style="color:var(--brand)">' + s.class_link + '</a>') : '<span style="color:var(--muted)">Chưa có — vào tab "Cài đặt mùa" để thêm</span>') + '</div>';
   html += '<div><div class="form-label">Tài liệu slide</div>' + (s.slide_link ? ('<a href="' + s.slide_link + '" target="_blank" style="color:var(--brand)">' + s.slide_link + '</a>') : '<span style="color:var(--muted)">Chưa có — vào tab "Cài đặt mùa" để thêm</span>') + '</div>';
+  html += '<div><div class="form-label">Giảng viên phụ trách</div>' + (cmSplitInstructors(s.instructor_advisor).length ? '<b>' + escHtml(cmSplitInstructors(s.instructor_advisor).join(', ')) + '</b>' : '<span style="color:var(--muted)">Chưa chọn — vào tab "Cài đặt mùa" để chọn</span>') + '</div>';
   html += '</div></div>';
 
   html += '<div class="card">';
@@ -5864,6 +5869,15 @@ function renderSeasonDetail() {
   return html;
 }
 
+function cmSplitInstructors(str) {
+  return String(str || '').split(',').map(function(x){ return x.trim(); }).filter(Boolean);
+}
+function cmRefreshInsChips() {
+  Array.prototype.slice.call(document.querySelectorAll('.cm-se-adv')).forEach(function(el){
+    el.parentNode.style.borderColor = el.checked ? 'var(--brand)' : 'var(--border)';
+  });
+}
+
 function renderCmSettingsTab(s) {
   var html = '<div style="padding:20px 24px;display:grid;grid-template-columns:1fr 1fr;gap:14px">';
   html += '<div><div class="form-label">Mùa số</div><input class="form-input" type="number" id="cm-se-no" value="' + s.season_no + '" style="margin-top:6px"></div>';
@@ -5874,6 +5888,19 @@ function renderCmSettingsTab(s) {
   html += '<div><div class="form-label">Link lớp học (Zoom/Meet)</div><input class="form-input" id="cm-se-classlink" value="' + (s.class_link || '') + '" placeholder="https://meet.google.com/..." style="margin-top:6px"></div>';
   html += '<div><div class="form-label">Link tài liệu slide</div><input class="form-input" id="cm-se-slidelink" value="' + (s.slide_link || '') + '" placeholder="https://drive.google.com/..." style="margin-top:6px"></div>';
   html += '<div><div class="form-label">Số chỗ tối đa</div><input class="form-input" type="number" id="cm-se-maxseats" value="' + s.max_seats + '" placeholder="VD: 30" style="margin-top:6px"></div>';
+  // Giảng viên phụ trách: chọn từ danh sách Advisor (lưu vào trường instructor_advisor, ngăn cách bằng dấu phẩy)
+  var _selIns = cmSplitInstructors(s.instructor_advisor);
+  var _insNames = (sheetData.advisors || []).filter(function(a){ return a.active; }).map(function(a){ return a.name; });
+  _selIns.forEach(function(n){ if (_insNames.indexOf(n) === -1) _insNames.push(n); }); // giữ tên đã lưu dù advisor đó đã ngưng hoạt động
+  html += '<div style="grid-column:1 / -1"><div class="form-label" style="margin-bottom:4px">Giảng viên phụ trách</div>' +
+    '<div style="font-size:12px;color:var(--muted);margin-bottom:8px">Chọn từ danh sách Advisor (chọn được nhiều người). Học viên sẽ thấy tên giảng viên trong thông tin khoá.</div>';
+  if (!_insNames.length) html += '<span style="font-size:12.5px;color:var(--muted)">Chưa có Advisor nào trong danh sách.</span>';
+  _insNames.forEach(function(n){
+    var on = _selIns.indexOf(n) !== -1;
+    html += '<label style="display:inline-flex;align-items:center;gap:6px;font-size:13px;margin:0 10px 8px 0;padding:7px 12px;border:1.5px solid ' + (on ? 'var(--brand)' : 'var(--border)') + ';border-radius:100px;cursor:pointer" onclick="setTimeout(cmRefreshInsChips,0)">' +
+      '<input type="checkbox" class="cm-se-adv" value="' + escHtml(n) + '" ' + (on ? 'checked' : '') + '> ' + escHtml(n) + '</label>';
+  });
+  html += '</div>';
   html += '<div style="grid-column:1 / -1"><div class="form-label" style="margin-bottom:8px">Hình thức thanh toán cho phép</div>';
   [['full', 'Đóng full'], ['deposit_500k', 'Cọc 500k'], ['deposit_50', 'Cọc 50%']].forEach(function(pl){
     var checked = (s.plans || []).indexOf(pl[0]) !== -1;
