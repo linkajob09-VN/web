@@ -5857,6 +5857,9 @@ function mdMeet_(url) {
   var shown = String(url).replace(/^https?:\/\//, '').replace(/\/$/, '');
   return '<a href="' + escHtml(url) + '" target="_blank" rel="noopener">🎥 ' + escHtml(shown) + ' ↗</a>';
 }
+function escHtml(v) {
+  return String(v == null ? '' : v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
 // Advisor của 1 buổi = advisor tại thời điểm buổi đó được đặt/diễn ra (s.advisor, lưu ở tab Sessions).
 // Không dùng ae.advisor (advisor HIỆN TẠI của gói) vì advisee có thể đã đổi advisor sau buổi này.
 function sessionAdvisorName_(ae, s) { return (s && s.advisor) || (ae && ae.advisor) || ''; }
