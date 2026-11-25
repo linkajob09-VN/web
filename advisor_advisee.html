@@ -507,6 +507,40 @@ a.cp-chip.main:hover { opacity:.88; color:#fff; }
   .cp-lrow { flex-wrap:wrap; }
   .cp-lright { width:100%; justify-content:flex-start; padding-left:48px; }
 }
+
+/* ── Chi tiết buổi meeting: 1 cách trình bày duy nhất (staff / advisor / advisee) ── */
+.md-info { align-items:center; display:grid; grid-template-columns:92px 1fr; gap:8px 12px; font-size:13.5px; padding:12px 14px; background:var(--bg); border-radius:10px; }
+.md-info .md-l { color:var(--muted); }
+.md-info .md-v { word-break:break-word; font-weight:500; }
+.md-info .md-v a { color:#0284C7; text-decoration:none; font-weight:500; }
+.md-info .md-v a:hover { text-decoration:underline; }
+.md-info .md-act { display:inline-flex; gap:6px; margin-left:8px; vertical-align:middle; flex-wrap:wrap; }
+.md-panel { background:var(--md-bg); border:1.5px solid var(--md-bd); border-radius:12px; padding:14px 16px; margin-top:12px; }
+.md-panel-h { display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:10px; }
+.md-panel-t { font-size:11.5px; font-weight:700; letter-spacing:.07em; text-transform:uppercase; color:var(--md-fg); }
+.md-panel-m { font-size:11px; color:var(--muted); }
+.md-row { padding:8px 0; border-bottom:1px solid var(--md-bd); font-size:13px; }
+.md-row:first-child { padding-top:0; }
+.md-row:last-child { border-bottom:0; padding-bottom:0; }
+.md-row-l { font-size:10.5px; font-weight:700; letter-spacing:.05em; text-transform:uppercase; color:var(--md-fg); margin-bottom:3px; }
+.md-row-v { line-height:1.65; white-space:pre-line; word-break:break-word; }
+.md-row-v a { color:var(--md-fg); }
+.md-empty { font-size:12.5px; color:var(--muted); font-style:italic; }
+/* Nội dung dùng lại (prep-card, anote-card, form...) nằm trong khối màu: bỏ khung/nền riêng để không bị "khung trong khung" */
+.md-panel .prep-card, .md-panel .anote-card { background:transparent; border:0; padding:0; }
+.md-panel { position:relative; }
+.md-panel .prep-card-header, .md-panel .anote-card-header { position:absolute; top:15px; right:16px; margin:0; }
+.md-panel .prep-card-row, .md-panel .prep-submitted-row { display:block; padding:8px 0; border-bottom:1px solid var(--md-bd); font-size:13px; }
+.md-panel .prep-card-row:first-of-type, .md-panel .prep-submitted-row:first-of-type { padding-top:0; }
+.md-panel .prep-card-row:last-child, .md-panel .prep-submitted-row:last-child { border-bottom:0; padding-bottom:0; }
+.md-panel .prep-card-lbl, .md-panel .prep-submitted-label, .md-panel .anote-card-lbl { display:block; font-size:10.5px; font-weight:700; letter-spacing:.05em; text-transform:uppercase; color:var(--md-fg); margin:0 0 3px; min-width:0; }
+.md-panel .prep-card-val, .md-panel .prep-submitted-val, .md-panel .anote-card-val { line-height:1.65; word-break:break-word; }
+.md-panel .prep-card-val a, .md-panel .prep-submitted-val a { color:var(--md-fg); }
+.md-panel .anote-card-row { border-bottom-color:var(--md-bd); }
+.md-panel .prep-card-header .prep-card-title, .md-panel .anote-card-header .anote-card-title { display:none; }
+.md-panel .prep-panel, .md-panel .prep-panel-submitted, .md-panel .anote-panel { background:transparent; border:0; padding:0; }
+.md-panel .prep-missing, .md-panel .anote-missing { padding:0; }
+.aee-feedback-textarea:focus { border-color:#16A34A; }
 </style>
 </head>
 <body>
@@ -5812,6 +5846,59 @@ function renderMyBookings() {
   return html;
 }
 
+
+// ═════════════════════════════════════════════════════════════
+//  CHI TIẾT BUỔI MEETING — 1 cách biểu đạt chung cho Staff / Advisor / Advisee
+//  Thông tin: 1 Loại · 2 Advisor · 3 Advisee · 4 Thời gian · 5 Trạng thái · 6 Meet
+//  Nội dung : 7 Chuẩn bị của Advisee (xanh dương) · 8 Feedback của Advisee (xanh lá) · 9 Feedback của Advisor (tím)
+// ═════════════════════════════════════════════════════════════
+var MD_TONES_ = {
+  blue:   { bg:'#F0F9FF', bd:'#BAE6FD', fg:'#0369A1' },
+  green:  { bg:'#F0FDF4', bd:'#BBF7D0', fg:'#15803D' },
+  purple: { bg:'#FAF5FF', bd:'#E9D5FF', fg:'#7C3AED' }
+};
+function mdStatus_(key) {
+  var m = { done:['Đã hoàn thành','var(--green)'], feedback:['Đã diễn ra · chờ feedback','#C2410C'], upcoming:['Sắp tới','#1D4ED8'],
+            locked:['Chưa mở khoá','var(--muted)'], cancelled:['Đã huỷ','#B91C1C'] }[key] || ['—','var(--muted)'];
+  return '<span style="color:' + m[1] + ';font-weight:700">' + m[0] + '</span>';
+}
+function mdMeet_(url) {
+  if (!url) return '<span style="color:var(--muted)">—</span>';
+  var shown = String(url).replace(/^https?:\/\//, '').replace(/\/$/, '');
+  return '<a href="' + escHtml(url) + '" target="_blank" rel="noopener">🎥 ' + escHtml(shown) + ' ↗</a>';
+}
+// o: { type, advisor, advisee, time, timeAction, status, meet, extra:[[label, html]] } — tất cả là HTML đã escape
+function mdInfo_(o) {
+  var dash = '<span style="color:var(--muted)">—</span>';
+  var rows = [
+    ['Loại',       o.type    || dash],
+    ['Advisor',    o.advisor || dash],
+    ['Advisee',    o.advisee || dash],
+    ['Thời gian',  (o.time || dash) + (o.timeAction ? '<span class="md-act">' + o.timeAction + '</span>' : '')],
+    ['Trạng thái', o.status  || dash],
+    ['Meet',       o.meet    || dash]
+  ].concat(o.extra || []);
+  return '<div class="md-info">' + rows.map(function (r) {
+    return '<div class="md-l">' + r[0] + '</div><div class="md-v">' + r[1] + '</div>';
+  }).join('') + '</div>';
+}
+// tone: 'blue' | 'green' | 'purple'. meta: chữ nhỏ bên phải tiêu đề (vd "Gửi lúc ...")
+function mdPanel_(tone, title, inner, meta) {
+  var t = MD_TONES_[tone];
+  return '<div class="md-panel" style="--md-bg:' + t.bg + ';--md-bd:' + t.bd + ';--md-fg:' + t.fg + '">' +
+    '<div class="md-panel-h"><div class="md-panel-t">' + title + '</div>' + (meta ? '<div class="md-panel-m">' + meta + '</div>' : '') + '</div>' + inner + '</div>';
+}
+function mdRows_(rows) {   // [[label, html]] — bỏ dòng rỗng
+  return rows.filter(function (r) { return r[1]; }).map(function (r) {
+    return '<div class="md-row"><div class="md-row-l">' + r[0] + '</div><div class="md-row-v">' + r[1] + '</div></div>';
+  }).join('');
+}
+function mdEmpty_(text) { return '<div class="md-empty">' + text + '</div>'; }
+function mdStars_(n) {
+  n = Math.max(0, Math.min(5, Number(n) || 0));
+  return '<div style="color:#F59E0B;font-size:16px;margin-bottom:6px">' + '★'.repeat(n) + '<span style="color:#D1D5DB">' + '☆'.repeat(5 - n) + '</span> <span style="font-size:12px;color:var(--muted)">(' + n + '/5)</span></div>';
+}
+
 function openAdviseeSessionModal(sessionNo) {
   var ae = MOCK.advisees.find(function(x){ return x.name === currentUser.name || x.email === currentUser.email; });
   if (!ae) return;
@@ -5823,24 +5910,21 @@ function openAdviseeSessionModal(sessionNo) {
   document.getElementById('modal-title').textContent = 'Buổi ' + sessionNo;
   var body = '';
 
-  // Header — 1 khối duy nhất, gộp cả 2 trường hợp: chưa có lịch (chọn giờ) / đã có lịch (đổi giờ)
-  body += '<div style="display:flex;align-items:center;justify-content:space-between;background:var(--bg);border-radius:10px;padding:12px 16px;margin-bottom:16px;flex-wrap:wrap;gap:8px">';
-  body += '<div><div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:2px">Thời gian</div><div style="font-size:14px;font-weight:600">' + dateLabel + '</div></div>';
-  body += '<div style="display:flex;gap:8px">';
-  if (s.meetLink) body += '<a href="' + s.meetLink + '" target="_blank" class="detail-btn">🎥 Vào Meet</a>';
+  var _mdHead = body; body = '';
   if (s.status === 'upcoming' && !s.date) {
     body += '<button class="detail-btn" onclick="closeModal();openBookSessionModal(\'' + ae.id + '\',' + sessionNo + ')">🗓 Chọn giờ meeting</button>';
   } else if (s.status === 'upcoming' && s.date) {
     body += '<button class="detail-btn" onclick="closeModal();openRescheduleModal(\'' + ae.id + '\',' + sessionNo + ',\'advisee\')">🔄 Đổi giờ</button>';
   }
-  body += '</div></div>';
+  var _mdAct = body;
+  body = _mdHead + mdInfo_({ type: escHtml(ae.pkg || 'Cố vấn 1-1') + ' · buổi ' + sessionNo, advisor: escHtml(ae.advisor || ''), advisee: escHtml(ae.name || ''), time: escHtml(dateLabel), timeAction: _mdAct, status: mdStatus_(s.status), meet: mdMeet_(s.meetLink) });
 
-  // Chuẩn bị
-  body += '<div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;margin-bottom:8px">Chuẩn bị của bạn</div>';
+  // Chuẩn bị của Advisee (xanh dương)
+  var _mdKeep = body; body = '';
   if (s.status === 'upcoming') {
     if (s.prepInfo) {
-      body += '<div class="prep-panel-submitted" style="border-radius:10px;border:1.5px solid #BBF7D0">';
-      body += '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px"><div style="font-size:12px;font-weight:700;color:#065F46">✅ Đã gửi</div><button class="prep-edit-btn" onclick="closeModal();openPrepFormModal(' + sessionNo + ')">✎ Sửa</button></div>';
+      body += '<div class="prep-panel-submitted">';
+      body += '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px"><div style="font-size:12px;font-weight:700;color:#0369A1">✅ Đã gửi</div><button class="prep-edit-btn" onclick="closeModal();openPrepFormModal(' + sessionNo + ')">✎ Sửa</button></div>';
       if (s.prepInfo.cvLink)     body += '<div class="prep-submitted-row"><span class="prep-submitted-label">CV / Hồ sơ</span><span class="prep-submitted-val"><a href="' + s.prepInfo.cvLink + '" target="_blank">' + s.prepInfo.cvLink + '</a></span></div>';
       if (s.prepInfo.question)   body += '<div class="prep-submitted-row"><span class="prep-submitted-label">Câu hỏi</span><span class="prep-submitted-val">' + s.prepInfo.question + '</span></div>';
       if (s.prepInfo.otherLinks) body += '<div class="prep-submitted-row"><span class="prep-submitted-label">Links khác</span><span class="prep-submitted-val">' + s.prepInfo.otherLinks + '</span></div>';
@@ -5857,18 +5941,19 @@ function openAdviseeSessionModal(sessionNo) {
     body += s.prepInfo ? renderPrepCard(s.prepInfo) : '<div class="prep-missing">Không có thông tin chuẩn bị.</div>';
   }
 
-  // Nhận xét Advisor
-  if (s.status === 'done' || s.status === 'feedback') {
-    body += '<div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;margin:16px 0 8px">Nhận xét từ Advisor</div>';
-    body += renderAdvisorNotesCard(s.advisorNotes, false, null, sessionNo);
-  }
+  var _secPrep = body; body = _mdKeep;
+
+  // Feedback của Advisor (tím)
+  var _secAdvFb = (s.status === 'done' || s.status === 'feedback') ? renderAdvisorNotesCard(s.advisorNotes, false, null, sessionNo) : '';
+
+  // Feedback của Advisee (xanh lá)
+  var _mdKeep2 = body; body = '';
 
   // Feedback form (status === feedback)
   if (s.status === 'feedback') {
     if (!adviseeStarState[sessionNo]) adviseeStarState[sessionNo] = { selected:0, hover:0 };
     var st = adviseeStarState[sessionNo];
-    body += '<div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;margin:16px 0 8px">Feedback của bạn cho Advisor</div>';
-    body += '<div style="background:#FFF7ED;border:1.5px solid #FED7AA;border-radius:10px;padding:14px">';
+    body += '<div>';
     body += '<div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px">Đánh giá</div>';
     body += '<div id="m-stars-' + sessionNo + '" style="display:flex;gap:6px;margin-bottom:12px">';
     for (var star = 1; star <= 5; star++) {
@@ -5883,8 +5968,7 @@ function openAdviseeSessionModal(sessionNo) {
 
   // Feedback đã gửi (done)
   if (s.status === 'done' && s.feedback) {
-    body += '<div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;margin:16px 0 8px">Feedback của bạn</div>';
-    body += '<div style="background:#FFF7ED;border:1.5px solid #FED7AA;border-radius:10px;padding:12px 14px">';
+    body += '<div>';
     var stars2 = '';
     for (var i2=1;i2<=5;i2++) stars2 += '<span style="color:'+(i2<=s.feedback.rating?'#F59E0B':'#D1D5DB')+';font-size:16px">★</span>';
     body += '<div style="margin-bottom:6px">' + stars2 + '</div>';
@@ -5892,10 +5976,16 @@ function openAdviseeSessionModal(sessionNo) {
     body += '</div>';
   }
 
+  var _secAdvee = body; body = _mdKeep2;
+
+  body += mdPanel_('blue', 'Chuẩn bị của Advisee', _secPrep || mdEmpty_('Chưa có thông tin chuẩn bị.'));
+  body += mdPanel_('green', 'Feedback của Advisee', _secAdvee || mdEmpty_(s.status === 'done' ? 'Bạn chưa gửi feedback.' : 'Chưa tới lúc — sẽ có sau khi buổi hoàn thành.'));
+  body += mdPanel_('purple', 'Feedback của Advisor', _secAdvFb || mdEmpty_('Chưa tới lúc — sẽ có sau khi buổi hoàn thành.'));
+
   document.getElementById('modal-body').innerHTML = body;
   var actions = '<button class="btn-secondary" onclick="closeModal()" style="width:auto;padding:10px 20px">Đóng</button>';
-  if (s.status === 'upcoming' && !s.prepInfo) actions += '<button class="login-btn" onclick="submitPrepInfoModal('+sessionNo+')" style="width:auto;padding:10px 24px">Gửi chuẩn bị →</button>';
-  if (s.status === 'feedback') actions += '<button class="login-btn" onclick="submitAdviseeFeedbackModal('+sessionNo+')" style="width:auto;padding:10px 24px;background:#C2410C">Gửi feedback & mở khoá →</button>';
+  if (s.status === 'upcoming' && !s.prepInfo) actions += '<button class="login-btn" onclick="submitPrepInfoModal('+sessionNo+')" style="width:auto;padding:10px 24px;background:#0369A1">Gửi chuẩn bị →</button>';
+  if (s.status === 'feedback') actions += '<button class="login-btn" onclick="submitAdviseeFeedbackModal('+sessionNo+')" style="width:auto;padding:10px 24px;background:#15803D">Gửi feedback & mở khoá →</button>';
   document.getElementById('modal-actions').innerHTML = actions;
   document.getElementById('modal-overlay').classList.add('open');
 }
@@ -6602,37 +6692,28 @@ function openSessionDetailModal(aeId, sessionNo) {
 
   var body = '';
 
-  // Thời gian + link Meet
-  body += '<div style="display:flex;align-items:center;justify-content:space-between;background:var(--bg);border-radius:10px;padding:12px 16px;margin-bottom:16px;flex-wrap:wrap;gap:8px">';
-  body += '<div><div style="font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:2px">Thời gian</div><div style="font-size:14px;font-weight:600">' + dateLabel + '</div></div>';
-  body += '<div style="display:flex;gap:8px">';
-  if (s.meetLink) body += '<a href="' + s.meetLink + '" target="_blank" class="detail-btn">🎥 Vào Meet</a>';
+  var _mdHead = body; body = '';
   if (s.status === 'upcoming') body += '<button class="detail-btn" onclick="closeModal();openRescheduleModal(\'' + ae.id + '\',' + sessionNo + ',\'advisor\')">🔄 Đổi giờ</button>';
-  body += '</div></div>';
+  var _mdAct = body;
+  body = _mdHead + mdInfo_({ type: escHtml(ae.pkg || 'Cố vấn 1-1') + ' · buổi ' + sessionNo, advisor: escHtml(ae.advisor || ''), advisee: escHtml(ae.name || ''), time: escHtml(dateLabel), timeAction: _mdAct, status: mdStatus_(s.status), meet: mdMeet_(s.meetLink) });
 
-  // Prep info từ Advisee
-  body += '<div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;margin-bottom:8px">Chuẩn bị của Advisee</div>';
-  body += renderPrepCard(s.prepInfo);
+  // Chuẩn bị của Advisee (xanh dương)
+  var _secPrep = renderPrepCard(s.prepInfo);
 
-  // Feedback của Advisee cho Advisor (nếu có)
+  // Feedback của Advisee (xanh lá)
+  var _secAdvee = '';
   if (s.feedback) {
-    body += '<div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;margin:14px 0 8px">3 điều bạn học/nhận được sau buổi cố vấn</div>';
-    body += '<div style="background:#FFF7ED;border:1.5px solid #FED7AA;border-radius:10px;padding:12px 14px">';
-    var stars = '';
-    for (var i=1;i<=5;i++) stars += '<span style="color:' + (i<=s.feedback.rating?'#F59E0B':'#D1D5DB') + ';font-size:15px">★</span>';
-    body += '<div style="margin-bottom:6px">' + stars + '</div>';
-    if (s.feedback.text) body += '<div style="font-size:13px;color:var(--text);line-height:1.65">' + s.feedback.text + '</div>';
-    body += '</div>';
+    _secAdvee = mdStars_(s.feedback.rating) + (s.feedback.text ? '<div style="font-size:13px;line-height:1.65;white-space:pre-line;word-break:break-word">' + s.feedback.text + '</div>' : '');
   }
 
-  // Advisor notes — đã có hoặc form điền mới
-  body += '<div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;margin:14px 0 8px">Nhận xét của Advisor</div>';
+  // Feedback của Advisor (tím) — đã có hoặc form điền mới
+  var _mdKeep = body; body = '';
   if (s.advisorNotes) {
     body += renderAdvisorNotesCard(s.advisorNotes, false, null, s.no);
     body += '<div style="margin-top:8px;text-align:right"><button class="anote-edit-btn" style="font-size:12px" onclick="openAdvisorNotesEdit(\'' + aeId + '\',' + sessionNo + ')">✎ Sửa nhận xét</button></div>';
   } else if (s.status === 'done' || s.status === 'feedback') {
     // Form nhận xét inline trong modal
-    body += '<div style="background:#FAF5FF;border:1.5px solid #E9D5FF;border-radius:10px;padding:14px">';
+    body += '<div>';
     body += '<div style="font-size:10.5px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px">Nội dung đã trao đổi <span style="color:var(--brand)">*</span></div>';
     body += '<textarea class="anote-input" id="an-summary-' + aeId + '-' + sessionNo + '" rows="3" placeholder="Tóm tắt nội dung chính đã thảo luận..."></textarea>';
     body += '<div style="font-size:10.5px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin:10px 0 6px">Nhận xét & Góp ý <span style="color:var(--brand)">*</span></div>';
@@ -6643,6 +6724,12 @@ function openSessionDetailModal(aeId, sessionNo) {
   } else {
     body += '<div class="anote-missing">Buổi chưa diễn ra.</div>';
   }
+
+  var _secAdvFb = body; body = _mdKeep;
+
+  body += mdPanel_('blue', 'Chuẩn bị của Advisee', _secPrep);
+  body += mdPanel_('green', 'Feedback của Advisee', _secAdvee || mdEmpty_(s.status === 'done' ? 'Advisee chưa gửi feedback.' : 'Chưa tới lúc — sẽ có sau khi buổi hoàn thành.'));
+  body += mdPanel_('purple', 'Feedback của Advisor', _secAdvFb);
 
   document.getElementById('modal-body').innerHTML = body;
 
