@@ -5634,7 +5634,7 @@ function renderStaffAdviseeDetail(aeId, fromAdvisorId) {
     var needNote = (s.status==='done'||s.status==='feedback') && !s.advisorNotes;
     html += '<div style="display:flex;align-items:center;gap:14px;padding:14px 24px;border-top:1px solid var(--border)">';
     html += '<div style="width:32px;height:32px;border-radius:50%;background:' + sc.bg + ';color:' + sc.color + ';display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0">' + (s.status==='done'?'✓':String(s.no)) + '</div>';
-    html += '<div style="flex:1"><div style="font-weight:600;font-size:14px">Buổi ' + s.no + '</div><div style="font-size:12px;color:var(--muted);margin-top:2px">' + dateLabel + '</div></div>';
+    html += '<div style="flex:1;min-width:120px"><div style="font-weight:600;font-size:14px">Buổi ' + s.no + '</div><div style="font-size:12px;color:var(--muted);margin-top:2px">' + dateLabel + '</div></div>';
     html += '<span style="background:' + sc.bg + ';color:' + sc.color + ';font-size:12px;font-weight:700;padding:4px 12px;border-radius:100px">' + sc.label + '</span>';
     if (needNote) html += '<span style="background:#FEF3C7;color:#92400E;font-size:11px;font-weight:700;padding:3px 10px;border-radius:100px">Cần nhận xét</span>';
     if (s.meetLink && s.status !== 'locked') html += '<a href="' + s.meetLink + '" target="_blank" class="detail-btn" style="font-size:12px;padding:6px 12px">🎥 Meet</a>';
@@ -5822,9 +5822,9 @@ function renderMyBookings() {
     if (s.status === 'done' && !s.advisorNotes) extraTag = '<span style="font-size:11px;color:var(--muted);font-style:italic">⏳ Chờ nhận xét</span>';
     var indBg    = s.status==='done'?'var(--green-bg)':s.status==='upcoming'?'#EFF6FF':s.status==='feedback'?'#FFF7ED':'var(--bg)';
     var indColor = s.status==='done'?'var(--green)':s.status==='upcoming'?'#1D4ED8':s.status==='feedback'?'#C2410C':'var(--muted)';
-    html += '<div style="display:flex;align-items:center;gap:14px;padding:14px 24px;border-top:1px solid var(--border)">';
+    html += '<div style="display:flex;align-items:center;flex-wrap:wrap;gap:10px 14px;padding:14px 24px;border-top:1px solid var(--border)">';
     html += '<div style="width:32px;height:32px;border-radius:50%;background:'+indBg+';color:'+indColor+';display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0">'+(s.status==='done'?'✓':String(s.no))+'</div>';
-    html += '<div style="flex:1"><div style="font-weight:600;font-size:14px">Buổi ' + s.no + '</div><div style="font-size:12px;color:var(--muted);margin-top:2px">' + dateLabel + '</div></div>';
+    html += '<div style="flex:1;min-width:120px"><div style="font-weight:600;font-size:14px">Buổi ' + s.no + '</div><div style="font-size:12px;color:var(--muted);margin-top:2px">' + dateLabel + '</div></div>';
     html += '<span style="background:'+sc.bg+';color:'+sc.color+';font-size:12px;font-weight:700;padding:4px 12px;border-radius:100px">'+sc.label+'</span>';
     if (extraTag) html += extraTag;
     if (s.meetLink && s.status !== 'locked') html += '<a href="'+s.meetLink+'" target="_blank" class="detail-btn" style="font-size:12px;padding:6px 12px">🎥 Meet</a>';
@@ -5856,6 +5856,17 @@ function mdMeet_(url) {
   if (!url) return '<span style="color:var(--muted)">—</span>';
   var shown = String(url).replace(/^https?:\/\//, '').replace(/\/$/, '');
   return '<a href="' + escHtml(url) + '" target="_blank" rel="noopener">🎥 ' + escHtml(shown) + ' ↗</a>';
+}
+// Advisor của 1 buổi = advisor tại thời điểm buổi đó được đặt/diễn ra (s.advisor, lưu ở tab Sessions).
+// Không dùng ae.advisor (advisor HIỆN TẠI của gói) vì advisee có thể đã đổi advisor sau buổi này.
+function sessionAdvisorName_(ae, s) { return (s && s.advisor) || (ae && ae.advisor) || ''; }
+function mdAdvisorOf_(ae, s) {
+  var name = sessionAdvisorName_(ae, s);
+  var h = escHtml(name);
+  if (name && ae && ae.advisor && s && s.advisor && normName(s.advisor) !== normName(ae.advisor)) {
+    h += ' <span style="font-size:11.5px;font-weight:600;color:var(--muted);background:#fff;border:1px solid var(--border);border-radius:100px;padding:2px 8px;margin-left:4px;white-space:nowrap">Advisor hiện tại: ' + escHtml(ae.advisor) + '</span>';
+  }
+  return h;
 }
 // o: { type, advisor, advisee, time, timeAction, status, meet, extra:[[label, html]] } — tất cả là HTML đã escape
 function mdInfo_(o) {
@@ -5907,7 +5918,7 @@ function openAdviseeSessionModal(sessionNo) {
     body += '<button class="detail-btn" onclick="closeModal();openRescheduleModal(\'' + ae.id + '\',' + sessionNo + ',\'advisee\')">🔄 Đổi giờ</button>';
   }
   var _mdAct = body;
-  body = _mdHead + mdInfo_({ type: escHtml(ae.pkg || 'Cố vấn 1-1') + ' · buổi ' + sessionNo, advisor: escHtml(ae.advisor || ''), advisee: escHtml(ae.name || ''), time: escHtml(dateLabel), timeAction: _mdAct, status: mdStatus_(s.status), meet: mdMeet_(s.meetLink) });
+  body = _mdHead + mdInfo_({ type: escHtml(ae.pkg || 'Cố vấn 1-1') + ' · buổi ' + sessionNo, advisor: mdAdvisorOf_(ae, s), advisee: escHtml(ae.name || ''), time: escHtml(dateLabel), timeAction: _mdAct, status: mdStatus_(s.status), meet: mdMeet_(s.meetLink) });
 
   // Chuẩn bị của Advisee (xanh dương)
   var _mdKeep = body; body = '';
@@ -5999,6 +6010,8 @@ function applyAdvisorChange_(ae, newName) {
     new_advisor_name: newName, new_advisor_id: adv.id || '', new_advisor_email: adv.email || '',
   }).then(function(res){
     if (!res || !res.success) { toast('Không đổi được advisor: ' + (res && res.error ? res.error : 'lỗi không xác định'), 'error'); return false; }
+    // Chốt advisor cũ cho các buổi đã đặt/đã meet mà chưa có advisor riêng, để lịch sử không bị đổi theo advisor mới
+    (ae.sessions || []).forEach(function(x){ if (!x.advisor && (x.date || x.status === 'done' || x.status === 'feedback')) x.advisor = ae.advisor || ''; });
     ae.advisor = newName; ae.advisorTitle = adv.title ? (adv.title + (adv.company ? ' · ' + adv.company : '')) : ae.advisorTitle;
     return true;
   }).catch(function(e){ toast('Lỗi kết nối: ' + e.message, 'error'); return false; });
@@ -6330,7 +6343,7 @@ function submitAdviseeFeedbackModal(sessionNo) {
   apiPost({
     action: 'submitAdviseeFeedback',
     session_id: feedbackSessionId,
-    advisor_name: ae.advisor,
+    advisor_name: sessionAdvisorName_(ae, s),
     advisee_name: ae.name,
     rating: rating,
     text: text,
@@ -6548,7 +6561,7 @@ function confirmSubmitAdvisorNotes() {
   apiPost({
     action: 'submitAdvisorNotes',
     session_id: notesSessionId,
-    advisor_name: ae.advisor,
+    advisor_name: sessionAdvisorName_(ae, s),
     advisee_name: ae.name,
     summary: summary.trim(),
     feedback: feedback.trim(),
@@ -6685,7 +6698,7 @@ function openSessionDetailModal(aeId, sessionNo) {
   var _mdHead = body; body = '';
   if (s.status === 'upcoming') body += '<button class="detail-btn" onclick="closeModal();openRescheduleModal(\'' + ae.id + '\',' + sessionNo + ',\'advisor\')">🔄 Đổi giờ</button>';
   var _mdAct = body;
-  body = _mdHead + mdInfo_({ type: escHtml(ae.pkg || 'Cố vấn 1-1') + ' · buổi ' + sessionNo, advisor: escHtml(ae.advisor || ''), advisee: escHtml(ae.name || ''), time: escHtml(dateLabel), timeAction: _mdAct, status: mdStatus_(s.status), meet: mdMeet_(s.meetLink) });
+  body = _mdHead + mdInfo_({ type: escHtml(ae.pkg || 'Cố vấn 1-1') + ' · buổi ' + sessionNo, advisor: mdAdvisorOf_(ae, s), advisee: escHtml(ae.name || ''), time: escHtml(dateLabel), timeAction: _mdAct, status: mdStatus_(s.status), meet: mdMeet_(s.meetLink) });
 
   // Chuẩn bị của Advisee (xanh dương)
   var _secPrep = renderPrepCard(s.prepInfo);
@@ -7091,13 +7104,6 @@ function fmtShort(d) { return d.getDate() + '/' + (d.getMonth()+1); }
 function pad(n) { return String(n).padStart(2,'0'); }
 function v(id) { const el = document.getElementById(id); return el ? el.value.trim() : ''; }
 function esc(obj) { return JSON.stringify(obj).replace(/"/g, '&quot;'); }
-function escHtml(s) {
-  return String(s == null ? '' : s)
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;');
-}
 function mkInitials(name) { return name.split(' ').filter(Boolean).map(function(w){ return w[0]; }).join('').slice(0,2).toUpperCase(); }
 
 
