@@ -5903,11 +5903,57 @@ function renderSeasonDetail() {
 function cmSplitInstructors(str) {
   return String(str || '').split(',').map(function(x){ return x.trim(); }).filter(Boolean);
 }
-function cmRefreshInsChips() {
-  Array.prototype.slice.call(document.querySelectorAll('.cm-se-adv')).forEach(function(el){
-    el.parentNode.style.borderColor = el.checked ? 'var(--brand)' : 'var(--border)';
-  });
+// ── Dropdown chọn nhiều Giảng viên phụ trách ──
+// Giữ nguyên các checkbox .cm-se-adv (nằm trong panel) để saveSeasonEditor đọc như cũ.
+function cmInsToggle(ev) {
+  if (ev) ev.stopPropagation();
+  var p = document.getElementById('cm-ins-panel');
+  if (!p) return;
+  var open = p.style.display === 'none' || !p.style.display;
+  p.style.display = open ? 'block' : 'none';
+  var arrow = document.getElementById('cm-ins-arrow');
+  if (arrow) arrow.style.transform = open ? 'rotate(180deg)' : '';
+  if (open) { var q = document.getElementById('cm-ins-search'); if (q) { q.value = ''; cmInsFilter(''); q.focus(); } }
 }
+function cmInsFilter(q) {
+  q = String(q || '').toLowerCase();
+  var shown = 0;
+  Array.prototype.slice.call(document.querySelectorAll('#cm-ins-list .cm-ins-row')).forEach(function(row){
+    var ok = !q || row.getAttribute('data-name').toLowerCase().indexOf(q) !== -1;
+    row.style.display = ok ? 'flex' : 'none';
+    if (ok) shown++;
+  });
+  var empty = document.getElementById('cm-ins-empty');
+  if (empty) empty.style.display = shown ? 'none' : 'block';
+}
+function cmInsRemove(name) {
+  Array.prototype.slice.call(document.querySelectorAll('.cm-se-adv')).forEach(function(el){
+    if (el.value === name) el.checked = false;
+  });
+  cmRefreshInsChips();
+}
+function cmRefreshInsChips() {
+  var sel = Array.prototype.slice.call(document.querySelectorAll('.cm-se-adv:checked')).map(function(el){ return el.value; });
+  var label = document.getElementById('cm-ins-label');
+  if (label) {
+    label.textContent = sel.length ? ('Đã chọn ' + sel.length + ' giảng viên') : 'Chọn giảng viên…';
+    label.style.color = sel.length ? 'var(--text)' : 'var(--muted)';
+  }
+  var box = document.getElementById('cm-ins-chips');
+  if (box) {
+    box.innerHTML = sel.map(function(n){
+      return '<span style="display:inline-flex;align-items:center;gap:6px;font-size:12.5px;padding:4px 6px 4px 11px;border:1.5px solid var(--brand);background:var(--brand-light);border-radius:100px">' +
+        escHtml(n) +
+        '<button type="button" title="Bỏ chọn" data-name="' + escHtml(n) + '" onclick="cmInsRemove(this.getAttribute(\'data-name\'))" style="border:0;background:transparent;cursor:pointer;font-size:15px;line-height:1;color:var(--muted);padding:0 4px">×</button></span>';
+    }).join('');
+  }
+}
+// Bấm ra ngoài thì đóng dropdown
+document.addEventListener('click', function(e){
+  var w = document.getElementById('cm-ins-wrap');
+  var p = document.getElementById('cm-ins-panel');
+  if (w && p && p.style.display === 'block' && !w.contains(e.target)) cmInsToggle();
+});
 
 function renderCmSettingsTab(s) {
   var html = '<div style="padding:20px 24px;display:grid;grid-template-columns:1fr 1fr;gap:14px">';
@@ -5925,12 +5971,25 @@ function renderCmSettingsTab(s) {
   _selIns.forEach(function(n){ if (_insNames.indexOf(n) === -1) _insNames.push(n); }); // giữ tên đã lưu dù advisor đó đã ngưng hoạt động
   html += '<div style="grid-column:1 / -1"><div class="form-label" style="margin-bottom:4px">Giảng viên phụ trách</div>' +
     '<div style="font-size:12px;color:var(--muted);margin-bottom:8px">Chọn từ danh sách Advisor (chọn được nhiều người). Học viên sẽ thấy tên giảng viên trong thông tin khoá.</div>';
-  if (!_insNames.length) html += '<span style="font-size:12.5px;color:var(--muted)">Chưa có Advisor nào trong danh sách.</span>';
-  _insNames.forEach(function(n){
-    var on = _selIns.indexOf(n) !== -1;
-    html += '<label style="display:inline-flex;align-items:center;gap:6px;font-size:13px;margin:0 10px 8px 0;padding:7px 12px;border:1.5px solid ' + (on ? 'var(--brand)' : 'var(--border)') + ';border-radius:100px;cursor:pointer" onclick="setTimeout(cmRefreshInsChips,0)">' +
-      '<input type="checkbox" class="cm-se-adv" value="' + escHtml(n) + '" ' + (on ? 'checked' : '') + '> ' + escHtml(n) + '</label>';
-  });
+  if (!_insNames.length) {
+    html += '<span style="font-size:12.5px;color:var(--muted)">Chưa có Advisor nào trong danh sách.</span>';
+  } else {
+    html += '<div id="cm-ins-wrap" style="position:relative;max-width:440px">' +
+      '<button type="button" onclick="cmInsToggle(event)" class="form-input" style="display:flex;align-items:center;justify-content:space-between;width:100%;box-sizing:border-box;text-align:left;cursor:pointer;background:var(--white)">' +
+        '<span id="cm-ins-label" style="color:' + (_selIns.length ? 'var(--text)' : 'var(--muted)') + '">' + (_selIns.length ? 'Đã chọn ' + _selIns.length + ' giảng viên' : 'Chọn giảng viên…') + '</span>' +
+        '<span id="cm-ins-arrow" style="font-size:12px;color:var(--muted);transition:transform .15s">▾</span></button>' +
+      '<div id="cm-ins-panel" style="display:none;position:absolute;z-index:30;left:0;right:0;top:calc(100% + 4px);background:var(--white);border:1.5px solid var(--border);border-radius:var(--radius-sm);box-shadow:0 8px 24px rgba(0,0,0,.12);padding:8px">' +
+        '<input id="cm-ins-search" class="form-input" placeholder="Tìm advisor…" oninput="cmInsFilter(this.value)" style="width:100%;box-sizing:border-box;margin-bottom:6px">' +
+        '<div id="cm-ins-list" style="max-height:240px;overflow-y:auto">';
+    _insNames.forEach(function(n){
+      var on = _selIns.indexOf(n) !== -1;
+      html += '<label class="cm-ins-row" data-name="' + escHtml(n) + '" style="display:flex;align-items:center;gap:8px;font-size:13px;padding:7px 8px;border-radius:8px;cursor:pointer" onmouseover="this.style.background=\'var(--bg)\'" onmouseout="this.style.background=\'\'">' +
+        '<input type="checkbox" class="cm-se-adv" value="' + escHtml(n) + '" ' + (on ? 'checked' : '') + ' onchange="cmRefreshInsChips()"> ' + escHtml(n) + '</label>';
+    });
+    html += '</div><div id="cm-ins-empty" style="display:none;font-size:12.5px;color:var(--muted);padding:8px">Không tìm thấy advisor nào.</div></div></div>' +
+      '<div id="cm-ins-chips" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px"></div>' +
+      '<img src="data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==" style="display:none" onload="cmRefreshInsChips()">';
+  }
   html += '</div>';
   html += '<div style="grid-column:1 / -1"><div class="form-label" style="margin-bottom:8px">Hình thức thanh toán cho phép</div>';
   [['full', 'Đóng full'], ['deposit_500k', 'Cọc 500k'], ['deposit_50', 'Cọc 50%']].forEach(function(pl){
