@@ -1936,25 +1936,15 @@ function renderSchedulePicker() {
 }
 
 function avRefresh() {
+  // Lịch trống của Advisor dùng chung giao diện LJS.avail (lịch tháng + thêm lịch trống + sửa theo khung giờ cũ)
   var root = document.getElementById('av-root');
   if (!root) return;
-  _av.loading = true;
-  Promise.all([
-    apiGet('getSlots', { advisor: currentUser.name }).catch(function (e) { return { _err: e.message }; }),
-    apiPost({ action: 'getAvailabilityRules', advisor_name: currentUser.name }).catch(function (e) { return { _err: e.message }; })
-  ]).then(function (r) {
-    var s = r[0], ru = r[1];
-    _av.slots = (s && s.data) ? s.data : [];
-    _av.slotsErr = (s && s._err) ? s._err : '';
-    if (typeof sheetData !== 'undefined' && s && s.data) sheetData.slots = s.data;
-    if (ru && ru.success) { _av.rules = ru.data || []; _av.rulesErr = ''; }
-    else {
-      _av.rules = [];
-      var msg = (ru && (ru.error || ru._err)) || 'không tải được';
-      _av.rulesErr = /Unknown action/i.test(msg) ? 'Backend chưa cập nhật (cần dán Availability.gs và gắn vào doPost).' : msg;
-    }
-    _av.loading = false;
-    avRender();
+  var p = avAdvisorPayload();
+  LJS.avail.mount(root, {
+    key: 'self',
+    advisor: { name: p.advisor_name, id: p.advisor_id, email: p.advisor_email },
+    actor: { email: currentUser.email },
+    staffMode: false
   });
 }
 
@@ -13488,7 +13478,7 @@ function csPickSeasonToEnroll_() {
     if (!o.free.length && !o.booked.length) h += '<div class="ljs-empty">Chưa có khung giờ nào cho ngày này.</div>';
     o.free.forEach(function (f, i) {
       h += '<div class="ljs-row"><span><span class="ljs-tag ljs-free" style="font-size:12.5px;padding:4px 10px">🕐 ' + str(f.a) + ' – ' + str(f.b) + '</span> <span style="font-weight:400;color:var(--muted,#555);font-size:12.5px;margin-left:6px">Trống</span></span>' +
-        '<span class="ljs-acts"><button type="button" class="ljs-btn sec sm" onclick="LJS.avail._open(\'' + key + '\',{date:\'' + ds + '\',range:' + i + '})">✎ Sửa</button>' +
+        '<span class="ljs-acts"><button type="button" class="ljs-btn sec sm" onclick="LJS.avail._open(\'' + key + '\',{date:\'' + ds + '\',range:' + i + '})">✎ Sửa giờ</button>' +
         '<button type="button" class="ljs-btn sec sm danger" onclick="LJS.avail._delRange(\'' + key + '\',\'' + ds + '\',' + i + ')">🗑 Xoá</button></span></div>';
     });
     o.booked.forEach(function (b) { h += '<div class="ljs-row bk"><span>🔒 ' + str(b[0]) + ' – ' + str(b[1]) + ' · Đã có Advisee đặt</span></div>'; });
