@@ -5864,12 +5864,7 @@ function escHtml(v) {
 // Không dùng ae.advisor (advisor HIỆN TẠI của gói) vì advisee có thể đã đổi advisor sau buổi này.
 function sessionAdvisorName_(ae, s) { return (s && s.advisor) || (ae && ae.advisor) || ''; }
 function mdAdvisorOf_(ae, s) {
-  var name = sessionAdvisorName_(ae, s);
-  var h = escHtml(name);
-  if (name && ae && ae.advisor && s && s.advisor && normName(s.advisor) !== normName(ae.advisor)) {
-    h += ' <span style="font-size:11.5px;font-weight:600;color:var(--muted);background:#fff;border:1px solid var(--border);border-radius:100px;padding:2px 8px;margin-left:4px;white-space:nowrap">Advisor hiện tại: ' + escHtml(ae.advisor) + '</span>';
-  }
-  return h;
+  return escHtml(sessionAdvisorName_(ae, s));
 }
 // o: { type, advisor, advisee, time, timeAction, status, meet, extra:[[label, html]] } — tất cả là HTML đã escape
 function mdInfo_(o) {
