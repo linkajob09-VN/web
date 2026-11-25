@@ -11975,13 +11975,15 @@ function ljCmSubmitConsult() {
   if (ljSlotStartMs_(date, time) < Date.now() && !confirm('Giờ này đã qua. Vẫn tạo meeting?')) return;
   var btn = document.getElementById('lj-cm-submit'); btn.disabled = true; btn.textContent = 'Đang tạo...';
   apiPost({
-    action: 'createManualMeeting', meeting_type: 'consult', attendee_name: name, date: date, time: time, duration_minutes: dur,
+    action: 'createManualMeeting', meeting_type: 'consult', attendee_name: name, phone: phone, email: email, date: date, time: time, duration_minutes: dur,
     guest_emails: email ? [email] : [], staff_name: staff, create_meet: mode === 'new', meet_link: mode === 'custom' ? link : '',
     send_invite: invite, notes: [phone ? 'SĐT: ' + phone : '', email ? 'Email: ' + email : '', notes].filter(Boolean).join(' | '),
     title: '[LinkaJob] Tư vấn — ' + name, by: currentUser && currentUser.email,
   }).then(function (res) {
     if (!res || !res.success) { btn.disabled = false; btn.textContent = 'Tạo meeting tư vấn'; return ljCmErr_((res && res.error) || 'Có lỗi khi tạo meeting.'); }
-    toast('Đã tạo meeting tư vấn' + (res.meet_link ? ' + Google Meet' : '') + (res.invited ? ' · đã mời ' + res.invited + ' người' : '') + ' ✅', 'success');
+    toast('Đã tạo meeting tư vấn' + (res.meet_link ? ' + Google Meet' : '') + (res.invited ? ' · đã mời ' + res.invited + ' người' : '') +
+      (res.lead_id ? (res.lead_created ? ' · đã thêm vào Leads tư vấn' : ' · đã cập nhật lịch vào lead có sẵn') : '') + ' ✅', 'success');
+    if (res.lead_error) toast('Meeting đã tạo nhưng chưa lưu được vào Leads tư vấn: ' + res.lead_error, 'error');
     closeModal(); loadMeetingCalendarAsync();
   }).catch(function (e) { btn.disabled = false; btn.textContent = 'Tạo meeting tư vấn'; ljCmErr_('Lỗi kết nối: ' + e.message); });
 }
