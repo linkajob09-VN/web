@@ -7091,6 +7091,13 @@ function fmtShort(d) { return d.getDate() + '/' + (d.getMonth()+1); }
 function pad(n) { return String(n).padStart(2,'0'); }
 function v(id) { const el = document.getElementById(id); return el ? el.value.trim() : ''; }
 function esc(obj) { return JSON.stringify(obj).replace(/"/g, '&quot;'); }
+function escHtml(s) {
+  return String(s == null ? '' : s)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
 function mkInitials(name) { return name.split(' ').filter(Boolean).map(function(w){ return w[0]; }).join('').slice(0,2).toUpperCase(); }
 
 
