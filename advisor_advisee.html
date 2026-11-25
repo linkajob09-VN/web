@@ -2440,25 +2440,15 @@ function renderSchedulePicker() {
 }
 
 function avRefresh() {
+  // Lịch trống của Advisor dùng chung giao diện LJS.avail (lịch tháng + thêm lịch trống + sửa theo khung giờ cũ)
   var root = document.getElementById('av-root');
   if (!root) return;
-  _av.loading = true;
-  Promise.all([
-    apiGet('getSlots', { advisor: currentUser.name }).catch(function (e) { return { _err: e.message }; }),
-    apiPost({ action: 'getAvailabilityRules', advisor_name: currentUser.name }).catch(function (e) { return { _err: e.message }; })
-  ]).then(function (r) {
-    var s = r[0], ru = r[1];
-    _av.slots = (s && s.data) ? s.data : [];
-    _av.slotsErr = (s && s._err) ? s._err : '';
-    if (typeof sheetData !== 'undefined' && s && s.data) sheetData.slots = s.data;
-    if (ru && ru.success) { _av.rules = ru.data || []; _av.rulesErr = ''; }
-    else {
-      _av.rules = [];
-      var msg = (ru && (ru.error || ru._err)) || 'không tải được';
-      _av.rulesErr = /Unknown action/i.test(msg) ? 'Backend chưa cập nhật (cần dán Availability.gs và gắn vào doPost).' : msg;
-    }
-    _av.loading = false;
-    avRender();
+  var p = avAdvisorPayload();
+  LJS.avail.mount(root, {
+    key: 'self',
+    advisor: { name: p.advisor_name, id: p.advisor_id, email: p.advisor_email },
+    actor: { email: currentUser.email },
+    staffMode: false
   });
 }
 
@@ -7290,6 +7280,531 @@ document.getElementById('login-password').addEventListener('keydown', function(e
 // Nếu đã có phiên đăng nhập hợp lệ trong localStorage, vào thẳng dashboard
 // thay vì hiện lại màn hình đăng nhập mỗi khi F5/mở lại trình duyệt.
 tryRestoreSession();
+</script>
+<script>
+/* ═══════════════════════════════════════════════════════════════════════════
+   LJS — LinkaJob Schedule UI. Giao diện lịch DÙNG CHUNG cho advisor_advisee.html và dashboard.html.
+   (Giữ NGUYÊN văn bản này ở cả 2 file để Advisor / Advisee / Staff thấy cùng một thiết kế.)
+     LJS.picker.mount(host, opts)  — ĐẶT LỊCH: lịch tháng + chọn giờ + tóm tắt
+     LJS.avail.mount(host, opts)   — GỬI LỊCH TRỐNG: lịch cố định hàng tuần + lịch tháng + sửa từng ngày
+   Cần có sẵn trong trang: apiGet(action, params), apiPost(payload), toast(msg, type), biến CSS --brand, --border…
+   ═══════════════════════════════════════════════════════════════════════════ */
+(function (global) {
+  'use strict';
+  var STEP = 15, MEET = 60;
+  var DOW_FULL = ['Thứ Hai', 'Thứ Ba', 'Thứ Tư', 'Thứ Năm', 'Thứ Sáu', 'Thứ Bảy', 'Chủ nhật'];
+  var DOW_SHORT = ['T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'CN'];
+  var WD_HDR = ['T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'CN'];
+
+  // ── helpers ──
+  function pad(n) { return (n < 10 ? '0' : '') + n; }
+  function esc(s) { return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
+  function ymd(d) { return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()); }
+  function parse(ds) { var p = String(ds).slice(0, 10).split('-'); return new Date(+p[0], +p[1] - 1, +p[2]); }
+  function minOf(t) { var m = /(\d{1,2}):(\d{2})/.exec(String(t || '')); return m ? (+m[1]) * 60 + (+m[2]) : null; }
+  function str(m) { return pad(Math.floor(m / 60)) + ':' + pad(m % 60); }
+  function dowIdx(ds) { return (parse(ds).getDay() + 6) % 7; }                       // T2 = 0 … CN = 6
+  function dayShort(ds) { var d = parse(ds); return DOW_FULL[dowIdx(ds)] + ' ' + d.getDate() + '/' + (d.getMonth() + 1); }
+  function dayFull(ds) { return dayShort(ds) + '/' + ds.slice(0, 4); }
+  function norm(s) { return String(s || '').trim().replace(/\s+/g, ' ').toLowerCase(); }
+  function nowMinIfToday(ds) { var n = new Date(); return ds === ymd(n) ? n.getHours() * 60 + n.getMinutes() : -1; }
+  function safeKey(k) { return String(k).replace(/[^\w-]/g, '_'); }
+  function say(msg, type) { if (typeof global.toast === 'function') global.toast(msg, type); }
+  function inDom(el) { return !!(el && el.ownerDocument && el.ownerDocument.body.contains(el)); }
+
+  // Gom các giờ bắt đầu (mỗi giờ phủ `dur` phút) thành các khoảng liên tục [a, b)
+  function rangesOf(starts, dur) {
+    var out = [];
+    (starts || []).slice().sort(function (a, b) { return a - b; }).forEach(function (s) {
+      var e = s + (dur || MEET);
+      if (out.length && s <= out[out.length - 1][1]) out[out.length - 1][1] = Math.max(out[out.length - 1][1], e);
+      else out.push([s, e]);
+    });
+    return out;
+  }
+  function rangeText(rs) {
+    if (!rs.length) return '';
+    return str(rs[0][0]) + '–' + str(rs[0][1]) + (rs.length > 1 ? ' +' + (rs.length - 1) : '');
+  }
+  // [from,to) trừ các khoảng busy, chỉ giữ mảnh >= 60 phút
+  function subtract(from, to, busy) {
+    var pieces = [[from, to]];
+    busy.forEach(function (b) {
+      var next = [];
+      pieces.forEach(function (p) {
+        if (b[1] <= p[0] || b[0] >= p[1]) { next.push(p); return; }
+        if (b[0] > p[0]) next.push([p[0], b[0]]);
+        if (b[1] < p[1]) next.push([b[1], p[1]]);
+      });
+      pieces = next;
+    });
+    return pieces.filter(function (p) { return p[1] - p[0] >= MEET; });
+  }
+
+  // ── CSS (chèn 1 lần) ──
+  var CSS = [
+    '.ljs{color:var(--text,#111);font-size:14px;line-height:1.5}.ljs *{box-sizing:border-box}',
+    '.ljs button{font-family:inherit}',
+    /* lịch tháng */
+    '.ljs-nav{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:10px}',
+    '.ljs-navl{display:flex;align-items:center;gap:6px}',
+    '.ljs-ib{width:32px;height:32px;border-radius:8px;border:1.5px solid var(--border,#D8D5D0);background:var(--white,#fff);cursor:pointer;font-size:17px;line-height:1;color:inherit}',
+    '.ljs-ib:hover{border-color:var(--brand,#F4451A);color:var(--brand,#F4451A)}',
+    '.ljs-nl{font-weight:700;font-size:15px;min-width:118px;text-align:center}',
+    '.ljs-ghost{font-size:12.5px;font-weight:600;padding:6px 12px;border-radius:8px;border:1.5px solid var(--border,#D8D5D0);background:var(--white,#fff);cursor:pointer;color:inherit}',
+    '.ljs-ghost:hover{border-color:var(--brand,#F4451A);color:var(--brand,#F4451A)}',
+    '.ljs-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px}',
+    '.ljs-wd{font-size:11px;font-weight:700;color:var(--muted,#555);text-align:center;padding:4px 0;letter-spacing:.04em}',
+    '.ljs-cell{position:relative;min-height:68px;padding:6px;border-radius:10px;border:1.5px solid transparent;background:#FAFAF8;text-align:left;cursor:default;display:flex;flex-direction:column;gap:4px;overflow:hidden;color:inherit}',
+    '.ljs-cell.on{cursor:pointer;background:var(--white,#fff);border-color:var(--border,#D8D5D0)}',
+    '.ljs-cell.on:hover{border-color:var(--brand,#F4451A)}',
+    '.ljs-cell.other{opacity:.4}.ljs-cell.past{opacity:.45}',
+    '.ljs-cell.sel{border-color:var(--brand,#F4451A);background:var(--brand-light,#fff1ee);box-shadow:0 0 0 1px var(--brand,#F4451A) inset}',
+    '.ljs-dn{align-self:flex-start;min-width:22px;height:22px;line-height:22px;text-align:center;border-radius:100px;font-size:12px;font-weight:700;padding:0 5px}',
+    '.ljs-cell.today .ljs-dn{background:var(--brand,#F4451A);color:#fff}',
+    '.ljs-cb{display:flex;flex-direction:column;gap:3px;min-width:0}',
+    '.ljs-pill,.ljs-tag{display:inline-block;max-width:100%;font-size:10.5px;font-weight:700;padding:2px 7px;border-radius:100px;border:1px solid transparent;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}',
+    '.ljs-free{background:#ECFDF5;color:#047857;border-color:#A7F3D0}',
+    '.ljs-booked{background:#FEF3C7;color:#92400E;border-color:#FDE68A}',
+    '.ljs-rule{background:#EFF6FF;color:#1D4ED8;border-color:#BFDBFE}',
+    '.ljs-legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--muted,#555);margin-top:10px}',
+    '.ljs-legend i{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:5px;vertical-align:middle}',
+    /* ĐẶT LỊCH */
+    '.ljs-pk{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,1fr);gap:18px;align-items:start}',
+    '.ljs-side{border:1.5px solid var(--border,#D8D5D0);border-radius:14px;padding:14px 16px;background:var(--white,#fff);min-height:220px}',
+    '.ljs-side h4{font-size:15px;font-weight:700;margin:0 0 2px}',
+    '.ljs-sub{font-size:12.5px;color:var(--muted,#555);margin-bottom:12px}',
+    '.ljs-grp{font-size:11.5px;font-weight:700;color:var(--muted,#555);margin:12px 0 6px;letter-spacing:.03em}',
+    '.ljs-chips{display:grid;grid-template-columns:repeat(auto-fill,minmax(64px,1fr));gap:8px}',
+    '.ljs-chip{font-size:13px;font-weight:600;padding:8px 0;border-radius:10px;border:1.5px solid var(--border,#D8D5D0);background:var(--white,#fff);cursor:pointer;color:inherit}',
+    '.ljs-chip:hover{border-color:var(--brand,#F4451A);color:var(--brand,#F4451A)}',
+    '.ljs-chip.on{background:var(--brand,#F4451A);border-color:var(--brand,#F4451A);color:#fff}',
+    '.ljs-hint{font-size:13px;color:var(--muted,#555);padding:22px 4px;text-align:center;line-height:1.6}',
+    '.ljs-sum{margin-top:14px;background:var(--green-bg,#f0fdf4);border:1.5px solid #A7F3D0;border-radius:12px;padding:12px 14px;font-size:13.5px;display:flex;gap:10px;align-items:center}',
+    '.ljs-sum .ck{width:24px;height:24px;border-radius:50%;background:var(--green,#16a34a);color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;flex:none}',
+    '.ljs-sum b.t{color:var(--brand,#F4451A)}',
+    /* GỬI LỊCH TRỐNG */
+    '.ljs-card{background:var(--white,#fff);border-radius:var(--radius-md,16px);box-shadow:var(--shadow,0 1px 4px rgba(0,0,0,.08));padding:20px 22px;margin-bottom:16px}',
+    '.ljs-h{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:6px}',
+    '.ljs-t{font-size:16px;font-weight:700}',
+    '.ljs-acts{display:flex;gap:8px;flex-wrap:wrap}',
+    '.ljs-btn{font-size:13px;font-weight:700;padding:9px 16px;border-radius:10px;border:1.5px solid var(--brand,#F4451A);background:var(--brand,#F4451A);color:#fff;cursor:pointer}',
+    '.ljs-btn:disabled{opacity:.55;cursor:not-allowed}',
+    '.ljs-btn.sec{background:var(--white,#fff);color:inherit;border-color:var(--border,#D8D5D0)}',
+    '.ljs-btn.sec:hover{border-color:var(--brand,#F4451A);color:var(--brand,#F4451A)}',
+    '.ljs-btn.sm{padding:6px 11px;font-size:12.5px;font-weight:600;border-radius:8px}',
+    '.ljs-btn.danger{color:#B91C1C}.ljs-btn.danger:hover{border-color:#B91C1C;color:#B91C1C}',
+    '.ljs-p{font-size:13px;color:var(--muted,#555);line-height:1.65;margin:0 0 12px}',
+    '.ljs-stats{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0 14px}',
+    '.ljs-warn{background:#FEF2F2;border:1px solid #FECACA;color:#B91C1C;border-radius:10px;padding:10px 14px;font-size:13px;margin-bottom:10px}',
+    '.ljs-sec{font-size:13px;font-weight:700;margin:4px 0 8px;display:flex;align-items:center;gap:8px}',
+    '.ljs-rules{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:6px}',
+    '.ljs-rl{display:inline-flex;align-items:center;gap:8px;border:1.5px solid #BFDBFE;background:#EFF6FF;border-radius:12px;padding:6px 6px 6px 12px;font-size:13px;font-weight:600;color:#1D4ED8}',
+    '.ljs-rl button{border:none;background:transparent;cursor:pointer;font-size:13px;padding:3px 5px;border-radius:6px;color:inherit}',
+    '.ljs-rl button:hover{background:rgba(29,78,216,.12)}',
+    '.ljs-empty{font-size:13px;color:var(--muted,#555);padding:6px 0}',
+    '.ljs-hr{border:none;border-top:1px solid var(--border,#D8D5D0);margin:16px 0}',
+    '.ljs-day{margin-top:16px;border:1.5px solid var(--border,#D8D5D0);border-radius:14px;padding:14px 16px}',
+    '.ljs-row{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;border:1px solid var(--border,#D8D5D0);border-radius:10px;padding:9px 12px;margin-bottom:8px;font-size:13.5px;font-weight:600}',
+    '.ljs-row.bk{background:#FFFBEB;border-color:#FDE68A;color:#92400E}',
+    '.ljs-comp{margin-top:16px;border:1.5px solid var(--brand,#F4451A);border-radius:14px;padding:16px 18px;background:#FFFBFA}',
+    '.ljs-seg{display:inline-flex;border:1.5px solid var(--border,#D8D5D0);border-radius:10px;overflow:hidden;margin-bottom:12px}',
+    '.ljs-seg button{border:none;background:var(--white,#fff);padding:8px 14px;font-size:13px;font-weight:600;cursor:pointer;color:inherit}',
+    '.ljs-seg button.on{background:var(--brand,#F4451A);color:#fff}',
+    '.ljs-dows{display:flex;gap:6px;flex-wrap:wrap;margin:6px 0 12px}',
+    '.ljs-dow{min-width:44px;padding:8px 10px;border-radius:10px;border:1.5px solid var(--border,#D8D5D0);background:var(--white,#fff);font-size:13px;font-weight:600;cursor:pointer;color:inherit}',
+    '.ljs-dow.on{border-color:var(--brand,#F4451A);background:var(--brand-light,#fff1ee);color:var(--brand,#F4451A)}',
+    '.ljs-dow:disabled{opacity:.5;cursor:not-allowed}',
+    '.ljs-fields{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:6px}.ljs-fields>div{flex:1;min-width:120px}',
+    '.ljs-lb{font-size:12px;color:var(--muted,#555);margin-bottom:4px}',
+    '.ljs-in{width:100%;padding:10px 12px;font-size:14px;border:1.5px solid var(--border,#D8D5D0);border-radius:10px;background:var(--white,#fff);color:inherit;font-family:inherit}',
+    '.ljs-in:focus{outline:none;border-color:var(--brand,#F4451A)}',
+    '.ljs-foot{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;margin-top:14px}',
+    '@media(max-width:640px){.ljs-pk{grid-template-columns:1fr}.ljs-card{padding:16px 14px}}',
+    '@media(max-width:560px){.ljs-cell{min-height:48px;padding:4px}.ljs-pill{font-size:0;width:8px;height:8px;padding:0;border-radius:50%}.ljs-cb{flex-direction:row;flex-wrap:wrap}}'
+  ].join('');
+  function injectCss() {
+    if (document.getElementById('ljs-css')) return;
+    var st = document.createElement('style'); st.id = 'ljs-css'; st.textContent = CSS; document.head.appendChild(st);
+  }
+
+  // ── lịch tháng dùng chung ──
+  function monthWeeks(ym) {
+    var y = +ym.slice(0, 4), m = +ym.slice(5, 7) - 1;
+    var first = new Date(y, m, 1), start = new Date(y, m, 1 - ((first.getDay() + 6) % 7)), weeks = [];
+    for (var w = 0; w < 6; w++) {
+      var row = [];
+      for (var d = 0; d < 7; d++) row.push(ymd(new Date(start.getFullYear(), start.getMonth(), start.getDate() + w * 7 + d)));
+      if (w >= 4 && row[0].slice(0, 7) > ym) break;   // hàng cuối hoàn toàn thuộc tháng sau → bỏ
+      weeks.push(row);
+    }
+    return weeks;
+  }
+  function addMonth(ym, k) { var y = +ym.slice(0, 4), m = +ym.slice(5, 7) - 1 + k; var d = new Date(y, m, 1); return d.getFullYear() + '-' + pad(d.getMonth() + 1); }
+  // o: { month, selected, nav(dir)->js, today()->js, cell(ds)->{html,enabled}, day(ds)->js }
+  function calHtml(o) {
+    var today = ymd(new Date());
+    var h = '<div class="ljs-nav"><div class="ljs-navl"><button type="button" class="ljs-ib" aria-label="Tháng trước" onclick="' + o.nav(-1) + '">‹</button>' +
+      '<span class="ljs-nl">Tháng ' + (+o.month.slice(5, 7)) + ' ' + o.month.slice(0, 4) + '</span>' +
+      '<button type="button" class="ljs-ib" aria-label="Tháng sau" onclick="' + o.nav(1) + '">›</button></div>' +
+      '<button type="button" class="ljs-ghost" onclick="' + o.nav(0) + '">Hôm nay</button></div><div class="ljs-grid">';
+    WD_HDR.forEach(function (w) { h += '<div class="ljs-wd">' + w + '</div>'; });
+    monthWeeks(o.month).forEach(function (week) {
+      week.forEach(function (ds) {
+        var c = o.cell(ds) || {}, other = ds.slice(0, 7) !== o.month;
+        var cls = 'ljs-cell' + (c.enabled ? ' on' : '') + (other ? ' other' : '') + (ds < today ? ' past' : '') + (ds === today ? ' today' : '') + (o.selected === ds ? ' sel' : '');
+        h += '<button type="button" class="' + cls + '"' + (c.enabled ? ' onclick="' + o.day(ds) + '"' : ' tabindex="-1"') + ' aria-label="' + esc(dayFull(ds)) + '">' +
+          '<span class="ljs-dn">' + parse(ds).getDate() + '</span><span class="ljs-cb">' + (c.html || '') + '</span></button>';
+      });
+    });
+    return h + '</div>';
+  }
+  function stepMonth(cur, dir) { return dir === 0 ? ymd(new Date()).slice(0, 7) : addMonth(cur, dir); }
+
+  /* ═════════════════════════════ ĐẶT LỊCH ═════════════════════════════ */
+  // opts: { key, slots:{ 'YYYY-MM-DD':[{m, ...}] }, sel:{date,m}|null, onSelect(date,m) (date=null khi bỏ chọn), dur, note(html), emptyHtml }
+  var PK = {};
+  var picker = {
+    mount: function (host, o) {
+      if (!host) return;
+      injectCss();
+      var key = safeKey(o.key || 'pk'), st = PK[key] || (PK[key] = {});
+      st.o = o; st.host = host; st.key = key;
+      var dates = Object.keys(o.slots || {}).filter(function (d) { return (o.slots[d] || []).length; }).sort();
+      st.dates = dates;
+      if (o.sel && o.sel.date) st.day = o.sel.date;
+      if (!st.month || o.resetMonth) st.month = ((o.sel && o.sel.date) || dates[0] || ymd(new Date())).slice(0, 7);
+      if (st.day && !(o.slots[st.day] || []).length) st.day = null;
+      render(st);
+    },
+    reset: function (key) { delete PK[safeKey(key)]; },
+    _day: function (key, ds) {
+      var st = PK[key]; if (!st) return;
+      st.day = ds;
+      if (st.o.sel && st.o.sel.date !== ds) { st.o.sel = null; st.o.onSelect && st.o.onSelect(null, null); }
+      render(st);
+    },
+    _time: function (key, ds, m) {
+      var st = PK[key]; if (!st) return;
+      st.day = ds; st.o.sel = { date: ds, m: m };
+      st.o.onSelect && st.o.onSelect(ds, m);
+      render(st);
+    },
+    _month: function (key, dir) { var st = PK[key]; if (!st) return; st.month = stepMonth(st.month, dir); render(st); }
+  };
+  function render(st) {
+    var o = st.o, host = st.host;
+    if (!inDom(host)) { var again = document.getElementById(host.id); if (again) host = st.host = again; else return; }
+    var key = st.key, dur = o.dur || MEET, dates = st.dates, slots = o.slots || {};
+    if (!dates.length) { host.innerHTML = '<div class="ljs">' + (o.emptyHtml || '<div class="ljs-hint">📭 Advisor hiện chưa có giờ trống nào từ hôm nay trở đi.<br>Vui lòng liên hệ đội LinkaJob để được hỗ trợ xếp lịch.</div>') + '</div>'; return; }
+    var cal = calHtml({
+      month: st.month, selected: st.day,
+      nav: function (d) { return "LJS.picker._month('" + key + "'," + d + ")"; },
+      day: function (ds) { return "LJS.picker._day('" + key + "','" + ds + "')"; },
+      cell: function (ds) {
+        var list = slots[ds] || [];
+        if (!list.length) return { enabled: false };
+        return { enabled: true, html: '<span class="ljs-pill ljs-free">Trống</span>' };
+      }
+    });
+    cal += '<div class="ljs-legend"><span><i style="background:#10B981"></i>Ngày còn giờ trống</span><span><i style="background:var(--brand,#F4451A)"></i>Hôm nay</span></div>';
+
+    var side;
+    if (!st.day) {
+      side = '<div class="ljs-hint">👆 Bấm vào một ngày có giờ trống<br>để chọn giờ bắt đầu.</div>';
+    } else {
+      var list = (slots[st.day] || []).slice().sort(function (a, b) { return a.m - b.m; });
+      var rs = rangesOf(list.map(function (x) { return x.m; }), dur);
+      side = '<h4>' + esc(dayFull(st.day)) + '</h4><div class="ljs-sub">Advisor rảnh: ' + rs.map(function (r) { return str(r[0]) + '–' + str(r[1]); }).join(', ') + '</div>';
+      [['Sáng', 0, 720], ['Chiều', 720, 1080], ['Tối', 1080, 1440]].forEach(function (g) {
+        var part = list.filter(function (x) { return x.m >= g[1] && x.m < g[2]; });
+        if (!part.length) return;
+        side += '<div class="ljs-grp">' + g[0].toUpperCase() + '</div><div class="ljs-chips">' + part.map(function (x) {
+          var on = o.sel && o.sel.date === st.day && o.sel.m === x.m;
+          return '<button type="button" class="ljs-chip' + (on ? ' on' : '') + '" onclick="LJS.picker._time(\'' + key + '\',\'' + st.day + '\',' + x.m + ')">' + str(x.m) + '</button>';
+        }).join('') + '</div>';
+      });
+    }
+    var sum = (o.sel && o.sel.date)
+      ? '<div class="ljs-sum"><span class="ck">✓</span><div>Buổi meeting: <b>' + esc(dayFull(o.sel.date)) + '</b> · <b class="t">' + str(o.sel.m) + ' – ' + str(o.sel.m + dur) + '</b> <span style="color:var(--muted,#555);font-size:12.5px">(' + dur + ' phút)</span></div></div>'
+      : '';
+    host.innerHTML = '<div class="ljs"><div class="ljs-pk"><div>' + cal + '</div><div><div class="ljs-side">' + side + '</div>' + sum + '</div></div>' + (o.note || '') + '</div>';
+  }
+
+  /* ═════════════════════════════ GỬI LỊCH TRỐNG ═════════════════════════════ */
+  // opts: { key, advisor:{name,id,email}, actor:{email}, staffMode, onLoaded }
+  var AV = {};
+  function buildModel(rows, advisorName) {
+    var today = ymd(new Date()), by = {};
+    (rows || []).forEach(function (s) {
+      if (s.advisor_name && norm(s.advisor_name) !== norm(advisorName)) return;
+      var d = String(s.date || '').slice(0, 10);
+      if (!d || d < today) return;
+      var a = minOf(s.time_start); if (a == null) return;
+      var b = minOf(s.time_end); if (b == null || b <= a) b = a + MEET; b = Math.max(b, a + MEET);
+      var st = String(s.status || 'available').toLowerCase();
+      var o = by[d] = by[d] || { avail: [], booked: [], free: [] };
+      if (st === 'booked') o.booked.push([a, a + MEET]);
+      else if (st === 'available') o.avail.push({ id: s.slot_id, a: a, b: b });
+    });
+    Object.keys(by).forEach(function (d) {
+      var o = by[d], merged = [];
+      o.booked.sort(function (x, y) { return x[0] - y[0]; });
+      o.avail.slice().sort(function (x, y) { return x.a - y.a; }).forEach(function (r) {
+        var last = merged[merged.length - 1];
+        if (last && r.a <= last.b) { last.b = Math.max(last.b, r.b); last.ids.push(r.id); } else merged.push({ a: r.a, b: r.b, ids: [r.id] });
+      });
+      merged.forEach(function (m) { subtract(m.a, m.b, o.booked).forEach(function (p) { o.free.push({ a: p[0], b: p[1], ids: m.ids }); }); });
+      o.free.sort(function (x, y) { return x.a - y.a; });
+    });
+    return by;
+  }
+  function who(st) { var a = st.o.advisor || {}; return { advisor_name: a.name, advisor_id: a.id || '', advisor_email: a.email || '' }; }
+  function timeSelect(id, val) {
+    var h = '<select class="ljs-in" id="' + id + '">';
+    for (var m = 5 * 60; m <= 23 * 60 + 45; m += STEP) h += '<option value="' + str(m) + '"' + (str(m) === val ? ' selected' : '') + '>' + str(m) + '</option>';
+    return h + '</select>';
+  }
+
+  var avail = {
+    mount: function (host, o) {
+      if (!host) return;
+      injectCss();
+      var key = safeKey(o.key || 'av'), st = AV[key];
+      if (!st || st.o.advisor.name !== o.advisor.name) st = AV[key] = { month: ymd(new Date()).slice(0, 7), day: null, comp: null, rules: [], rows: [], loading: true };
+      st.o = o; st.host = host; st.key = key;
+      avail.refresh(key);
+    },
+    refresh: function (key) {
+      var st = AV[key]; if (!st) return;
+      st.loading = true; paint(st);
+      var adv = st.o.advisor.name;
+      Promise.all([
+        global.apiGet('getSlots', { advisor: adv }).catch(function (e) { return { _err: e.message }; }),
+        global.apiPost({ action: 'getAvailabilityRules', advisor_name: adv }).catch(function (e) { return { _err: e.message }; })
+      ]).then(function (r) {
+        var s = r[0], ru = r[1];
+        st.rows = (s && s.data) || []; st.slotsErr = (s && s._err) || '';
+        if (ru && ru.success) { st.rules = ru.data || []; st.rulesErr = ''; st.rulesOk = true; }
+        else { st.rules = []; st.rulesOk = false; var msg = (ru && (ru.error || ru._err)) || 'không tải được'; st.rulesErr = /Unknown action/i.test(msg) ? 'Backend chưa bật tính năng lịch cố định hàng tuần (cần Availability.gs).' : msg; }
+        st.loading = false; paint(st);
+        if (st.o.onLoaded) { var f = st.o.onLoaded; st.o.onLoaded = null; try { f(); } catch (e) { } }
+      });
+    },
+    _month: function (key, dir) { var st = AV[key]; if (!st) return; st.month = stepMonth(st.month, dir); paint(st); },
+    _day: function (key, ds) { var st = AV[key]; if (!st) return; st.day = ds; st.comp = null; paint(st); },
+    // mở form thêm / sửa. opts: {} | {rule:id} | {date, range:index} | {date}
+    _open: function (key, opts) {
+      var st = AV[key]; if (!st) return; opts = opts || {};
+      var model = buildModel(st.rows, st.o.advisor.name), c = { mode: st.rulesOk ? 'weekly' : 'single', dows: [], date: '', from: '09:00', to: '17:00', ruleId: '', replaceIds: [], lock: false, title: 'Thêm lịch trống' };
+      if (opts.rule) {
+        var r = st.rules.filter(function (x) { return String(x.rule_id) === String(opts.rule); })[0]; if (!r) return;
+        c.mode = 'weekly'; c.ruleId = r.rule_id; c.dows = [Number(r.dow)]; c.from = r.time_start; c.to = r.time_end; c.lock = true; c.title = 'Sửa lịch cố định · ' + DOW_FULL[r.dow - 1];
+      } else if (opts.date && opts.range != null) {
+        var o = model[opts.date], f = o && o.free[opts.range]; if (!f) return;
+        c.mode = 'single'; c.date = opts.date; c.from = str(f.a); c.to = str(f.b); c.replaceIds = f.ids.slice(); c.lock = true; c.title = dayShort(opts.date) + ' · sửa khung giờ';
+      } else {
+        var d = opts.date || st.day || ymd(new Date(Date.now() + 86400000));
+        c.date = d; c.dows = [dowIdx(d) + 1];
+        if (opts.date) c.mode = 'single';
+      }
+      st.comp = c; paint(st);
+      var el = st.host.querySelector('.ljs-comp'); if (el && el.scrollIntoView) el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    },
+    _close: function (key) { var st = AV[key]; if (!st) return; st.comp = null; paint(st); },
+    _mode: function (key, m) { var st = AV[key]; if (!st || !st.comp) return; keepComp(st); st.comp.mode = m; paint(st); },
+    _dow: function (key, i) {
+      var st = AV[key]; if (!st || !st.comp || st.comp.lock) return; keepComp(st);
+      var a = st.comp.dows, k = a.indexOf(i); if (k > -1) a.splice(k, 1); else a.push(i); paint(st);
+    },
+    _save: function (key) { save(AV[key]); },
+    _delRule: function (key, id) {
+      var st = AV[key]; if (!st) return;
+      var r = st.rules.filter(function (x) { return String(x.rule_id) === String(id); })[0]; if (!r) return;
+      if (!global.confirm('Xoá lịch cố định ' + DOW_FULL[r.dow - 1] + ' ' + r.time_start + ' – ' + r.time_end + '?\nCác ngày sắp tới của lịch này sẽ bị gỡ. Giờ đã có advisee đặt được giữ lại.')) return;
+      global.apiPost({ action: 'deleteAvailabilityRule', rule_id: id, by: actorEmail(st) }).then(function (res) {
+        if (!res || !res.success) { say('Lỗi: ' + ((res && res.error) || 'không xoá được'), 'error'); return; }
+        say('Đã xoá lịch cố định ✅', 'success'); avail.refresh(key);
+      }).catch(function (e) { say('Lỗi kết nối: ' + e.message, 'error'); });
+    },
+    _delRange: function (key, ds, idx) {
+      var st = AV[key]; if (!st) return;
+      var f = (buildModel(st.rows, st.o.advisor.name)[ds] || { free: [] }).free[idx]; if (!f) return;
+      if (!global.confirm('Xoá khung giờ ' + str(f.a) + ' – ' + str(f.b) + ' ngày ' + dayFull(ds) + '?\nGiờ đã có advisee đặt được giữ lại.')) return;
+      delSlots(st, f.ids, 'Đã xoá khung giờ');
+    },
+    _skip: function (key, ds) {
+      var st = AV[key]; if (!st) return;
+      var o = buildModel(st.rows, st.o.advisor.name)[ds]; if (!o) return;
+      var ids = []; o.free.forEach(function (f) { f.ids.forEach(function (id) { if (ids.indexOf(id) < 0) ids.push(id); }); });
+      if (!ids.length) return;
+      if (!global.confirm((st.o.staffMode ? 'Advisor nghỉ ' : 'Nghỉ ') + dayFull(ds) + '?\nCác khoảng giờ trống của ngày này sẽ bị gỡ. Giờ đã có advisee đặt được giữ lại (cần báo advisee hoặc LinkaJob để đổi giờ buổi đó).\nCác tuần khác của lịch cố định không bị ảnh hưởng.')) return;
+      delSlots(st, ids, 'Đã nghỉ ' + dayShort(ds));
+    }
+  };
+  function actorEmail(st) { return (st.o.actor && st.o.actor.email) || ''; }
+  function delSlots(st, ids, okMsg) {
+    global.apiPost({ action: 'deleteSlots', slot_ids: ids }).then(function (res) {
+      if (!res || !res.success) { say('Lỗi: ' + ((res && res.error) || 'không xoá được'), 'error'); return; }
+      say(okMsg + (res.skipped_booked ? ' (giữ lại giờ đã có người đặt)' : '') + ' ✅', 'success'); avail.refresh(st.key);
+    }).catch(function (e) { say('Lỗi kết nối: ' + e.message, 'error'); });
+  }
+  // lưu giá trị đang gõ trong form trước khi vẽ lại
+  function keepComp(st) {
+    var c = st.comp; if (!c) return;
+    var f = document.getElementById('ljs-' + st.key + '-from'), t = document.getElementById('ljs-' + st.key + '-to'), d = document.getElementById('ljs-' + st.key + '-date');
+    if (f) c.from = f.value; if (t) c.to = t.value; if (d && !c.lock) c.date = d.value;
+  }
+  function busy(st, on) {
+    var b = document.getElementById('ljs-' + st.key + '-save');
+    if (b) { b.disabled = on; b.innerHTML = on ? 'Đang lưu...' : 'Lưu lịch'; }
+  }
+
+  function save(st) {
+    var c = st && st.comp; if (!c) return;
+    keepComp(st);
+    var from = Math.ceil(minOf(c.from) / STEP) * STEP, to = Math.floor(minOf(c.to) / STEP) * STEP;
+    if (isNaN(from) || isNaN(to)) { say('Vui lòng chọn giờ bắt đầu và kết thúc', 'error'); return; }
+    if (to - from < MEET) { say('Khoảng giờ phải dài ít nhất 60 phút', 'error'); return; }
+    var p = who(st), actor = actorEmail(st);
+
+    if (c.mode === 'weekly') {
+      if (!c.dows.length) { say('Chọn ít nhất 1 ngày trong tuần', 'error'); return; }
+      busy(st, true);
+      global.apiPost({ action: 'saveAvailabilityRule', advisor_name: p.advisor_name, advisor_id: p.advisor_id, advisor_email: p.advisor_email, days: c.dows, time_start: str(from), time_end: str(to), rule_id: c.ruleId || '', by: actor }).then(function (res) {
+        if (!res || !res.success) { say('Lỗi: ' + ((res && res.error) || 'không lưu được'), 'error'); busy(st, false); return; }
+        say('Đã lưu lịch cố định hàng tuần ✅', 'success'); st.comp = null; avail.refresh(st.key);
+      }).catch(function (e) { say('Lỗi kết nối: ' + e.message, 'error'); busy(st, false); });
+      return;
+    }
+
+    var ds = c.date;
+    if (!ds) { say('Vui lòng chọn ngày', 'error'); return; }
+    if (ds < ymd(new Date())) { say('Ngày phải từ hôm nay trở đi', 'error'); return; }
+    var model = buildModel(st.rows, st.o.advisor.name), o = model[ds] || { free: [], booked: [] };
+    var busyR = o.booked.slice();
+    if (!c.replaceIds.length) o.free.forEach(function (x) { busyR.push([x.a, x.b]); });     // thêm mới: chỉ ghi phần chưa có
+    var nowM = nowMinIfToday(ds);
+    if (nowM >= 0) from = Math.max(from, Math.ceil((nowM + 1) / STEP) * STEP);
+    var pieces = subtract(from, to, busyR);
+    if (!pieces.length) { say('Khung giờ này đã có trong lịch (hoặc trùng giờ đã đặt)', 'error'); return; }
+    busy(st, true);
+    var groups = {};
+    pieces.forEach(function (pc) { var d = pc[1] - pc[0]; (groups[d] = groups[d] || []).push(ds + '_' + str(pc[0])); });
+    var durs = Object.keys(groups), i = 0;
+    var addNext = function () {
+      if (i >= durs.length) { say('Đã lưu khung giờ ✅', 'success'); st.comp = null; avail.refresh(st.key); return; }
+      var d = durs[i++];
+      global.apiPost({ action: 'addSlots', advisor: p.advisor_name, advisor_id: p.advisor_id, advisor_email: p.advisor_email, slots: groups[d], duration_minutes: Number(d), added_by: actor }).then(function (res) {
+        if (!res || !res.success) { say('Lỗi: ' + ((res && res.error) || 'không gửi được'), 'error'); busy(st, false); avail.refresh(st.key); return; }
+        addNext();
+      }).catch(function (e) { say('Lỗi kết nối: ' + e.message, 'error'); busy(st, false); avail.refresh(st.key); });
+    };
+    if (c.replaceIds.length) {
+      global.apiPost({ action: 'deleteSlots', slot_ids: c.replaceIds }).then(function (res) {
+        if (!res || !res.success) { say('Lỗi: ' + ((res && res.error) || 'không cập nhật được'), 'error'); busy(st, false); return; }
+        addNext();
+      }).catch(function (e) { say('Lỗi kết nối: ' + e.message, 'error'); busy(st, false); });
+    } else addNext();
+  }
+
+  function paint(st) {
+    var host = st.host;
+    if (!inDom(host)) { var again = host.id && document.getElementById(host.id); if (again) host = st.host = again; else return; }
+    var key = st.key, o = st.o, adv = o.advisor.name;
+    var title = o.staffMode ? '📅 Lịch trống của ' + esc(adv) : '📅 Lịch trống của tôi';
+    var h = '<div class="ljs"><div class="ljs-card">' +
+      '<div class="ljs-h"><div class="ljs-t">' + title + '</div><div class="ljs-acts">' +
+      '<button type="button" class="ljs-btn sec sm" onclick="LJS.avail.refresh(\'' + key + '\')">↻ Làm mới</button>' +
+      '<button type="button" class="ljs-btn" onclick="LJS.avail._open(\'' + key + '\')">+ Thêm lịch trống</button></div></div>';
+    h += '<p class="ljs-p">' + (o.staffMode
+      ? 'Bạn đang chỉnh lịch <b>thay Advisor</b>. Mọi thay đổi hiện ngay cho Advisee khi đặt lịch.'
+      : 'Bạn chỉ cần gửi lịch <b>một lần</b> — hệ thống tự áp dụng cho các tuần tiếp theo. Khi bận, hãy <b>nghỉ ngày đó</b> hoặc sửa giờ ngay trên lịch.') +
+      ' Mỗi buổi meeting dài 60 phút.</p>';
+    if (st.loading && !st.rows.length) { host.innerHTML = h + '<div class="ljs-empty">Đang tải lịch…</div></div></div>'; return; }
+    if (st.slotsErr) h += '<div class="ljs-warn">⚠ Không tải được lịch trống: ' + esc(st.slotsErr) + '</div>';
+
+    var model = buildModel(st.rows, adv), dates = Object.keys(model);
+    var nFree = 0, nBooked = 0;
+    dates.forEach(function (d) { nFree += model[d].free.length; nBooked += model[d].booked.length; });
+    h += '<div class="ljs-stats"><span class="ljs-tag ljs-free" style="font-size:12px;padding:4px 10px">🟢 ' + nFree + ' khung giờ trống sắp tới</span>' +
+      '<span class="ljs-tag ljs-booked" style="font-size:12px;padding:4px 10px">🟡 ' + nBooked + ' buổi đã được đặt</span></div>';
+
+    // 1) lịch cố định hàng tuần
+    h += '<div class="ljs-sec">🔁 Lịch cố định hàng tuần</div>';
+    if (st.rulesErr) h += '<div class="ljs-warn">⚠ ' + esc(st.rulesErr) + '</div>';
+    if (st.rulesOk && !st.rules.length) h += '<div class="ljs-empty">Chưa có lịch cố định. Bấm <b>+ Thêm lịch trống</b> → “Lặp lại hàng tuần” để chọn các thứ trong tuần và khoảng giờ rảnh.</div>';
+    if (st.rules.length) {
+      h += '<div class="ljs-rules">' + st.rules.slice().sort(function (a, b) { return a.dow - b.dow || String(a.time_start).localeCompare(String(b.time_start)); }).map(function (r) {
+        return '<span class="ljs-rl">' + DOW_FULL[r.dow - 1] + ' · ' + esc(r.time_start) + '–' + esc(r.time_end) +
+          '<span><button type="button" title="Sửa" onclick="LJS.avail._open(\'' + key + '\',{rule:\'' + esc(r.rule_id) + '\'})">✎</button>' +
+          '<button type="button" title="Xoá" onclick="LJS.avail._delRule(\'' + key + '\',\'' + esc(r.rule_id) + '\')">🗑</button></span></span>';
+      }).join('') + '</div><div class="ljs-lb">Tự áp dụng cho các tuần tiếp theo (luôn giữ sẵn 8 tuần phía trước).</div>';
+    }
+    h += '<hr class="ljs-hr">';
+
+    // 2) lịch tháng
+    h += '<div class="ljs-sec">🗓 Lịch theo ngày <span style="font-weight:400;color:var(--muted,#555)">— bấm vào một ngày để xem, sửa hoặc nghỉ</span></div>';
+    h += calHtml({
+      month: st.month, selected: st.day,
+      nav: function (d) { return "LJS.avail._month('" + key + "'," + d + ")"; },
+      day: function (ds) { return "LJS.avail._day('" + key + "','" + ds + "')"; },
+      cell: function (ds) {
+        var m = model[ds], past = ds < ymd(new Date());
+        var html = '';
+        if (m && m.free.length) html += '<span class="ljs-pill ljs-free">' + rangeText(m.free.map(function (f) { return [f.a, f.b]; })) + '</span>';
+        if (m && m.booked.length) html += '<span class="ljs-pill ljs-booked">' + m.booked.length + ' đã đặt</span>';
+        return { enabled: !past, html: html };
+      }
+    });
+    h += '<div class="ljs-legend"><span><i style="background:#10B981"></i>Giờ trống</span><span><i style="background:#F59E0B"></i>Đã có người đặt</span><span><i style="background:var(--brand,#F4451A)"></i>Hôm nay</span></div>';
+
+    // 3) form thêm/sửa hoặc panel ngày
+    if (st.comp) h += compHtml(st);
+    else if (st.day) h += dayHtml(st, model);
+    h += '</div></div>';
+    host.innerHTML = h;
+  }
+
+  function dayHtml(st, model) {
+    var key = st.key, ds = st.day, o = model[ds] || { free: [], booked: [] };
+    var h = '<div class="ljs-day"><div class="ljs-h" style="margin-bottom:10px"><div class="ljs-t" style="font-size:15px">' + esc(dayFull(ds)) + '</div><div class="ljs-acts">' +
+      '<button type="button" class="ljs-btn sec sm" onclick="LJS.avail._open(\'' + key + '\',{date:\'' + ds + '\'})">+ Thêm giờ ngày này</button>' +
+      (o.free.length ? '<button type="button" class="ljs-btn sec sm danger" onclick="LJS.avail._skip(\'' + key + '\',\'' + ds + '\')">' + (st.o.staffMode ? '🚫 Advisor nghỉ ngày này' : '🚫 Nghỉ ngày này') + '</button>' : '') + '</div></div>';
+    if (!o.free.length && !o.booked.length) h += '<div class="ljs-empty">Chưa có khung giờ nào cho ngày này.</div>';
+    o.free.forEach(function (f, i) {
+      h += '<div class="ljs-row"><span><span class="ljs-tag ljs-free" style="font-size:12.5px;padding:4px 10px">🕐 ' + str(f.a) + ' – ' + str(f.b) + '</span> <span style="font-weight:400;color:var(--muted,#555);font-size:12.5px;margin-left:6px">Trống</span></span>' +
+        '<span class="ljs-acts"><button type="button" class="ljs-btn sec sm" onclick="LJS.avail._open(\'' + key + '\',{date:\'' + ds + '\',range:' + i + '})">✎ Sửa giờ</button>' +
+        '<button type="button" class="ljs-btn sec sm danger" onclick="LJS.avail._delRange(\'' + key + '\',\'' + ds + '\',' + i + ')">🗑 Xoá</button></span></div>';
+    });
+    o.booked.forEach(function (b) { h += '<div class="ljs-row bk"><span>🔒 ' + str(b[0]) + ' – ' + str(b[1]) + ' · Đã có Advisee đặt</span></div>'; });
+    return h + '</div>';
+  }
+
+  function compHtml(st) {
+    var key = st.key, c = st.comp, id = 'ljs-' + key;
+    var h = '<div class="ljs-comp"><div class="ljs-t" style="font-size:15px;margin-bottom:10px">' + esc(c.title) + '</div>';
+    if (!c.lock) {
+      h += '<div class="ljs-seg"><button type="button" class="' + (c.mode === 'weekly' ? 'on' : '') + '"' + (st.rulesOk ? '' : ' disabled style="opacity:.5;cursor:not-allowed"') + ' onclick="LJS.avail._mode(\'' + key + '\',\'weekly\')">🔁 Lặp lại hàng tuần</button>' +
+        '<button type="button" class="' + (c.mode === 'single' ? 'on' : '') + '" onclick="LJS.avail._mode(\'' + key + '\',\'single\')">Chỉ một ngày</button></div>';
+    }
+    if (c.mode === 'weekly') {
+      h += '<div class="ljs-lb">Các ngày rảnh trong tuần <span style="color:var(--brand,#F4451A)">*</span></div><div class="ljs-dows">';
+      for (var i = 1; i <= 7; i++) h += '<button type="button" class="ljs-dow' + (c.dows.indexOf(i) > -1 ? ' on' : '') + '"' + (c.lock ? ' disabled' : '') + ' onclick="LJS.avail._dow(\'' + key + '\',' + i + ')">' + DOW_SHORT[i - 1] + '</button>';
+      h += '</div>';
+    } else {
+      h += '<div class="ljs-fields"><div><div class="ljs-lb">Ngày <span style="color:var(--brand,#F4451A)">*</span></div><input class="ljs-in" type="date" id="' + id + '-date" value="' + esc(c.date) + '" min="' + ymd(new Date()) + '"' + (c.lock ? ' disabled' : '') + '></div></div>';
+    }
+    h += '<div class="ljs-fields"><div><div class="ljs-lb">Rảnh từ</div>' + timeSelect(id + '-from', c.from) + '</div><div><div class="ljs-lb">Đến</div>' + timeSelect(id + '-to', c.to) + '</div></div>';
+    h += '<div class="ljs-lb" style="line-height:1.6;margin-top:8px">Tối thiểu 60 phút. VD rảnh 09:00 – 17:00 thì Advisee đặt được mọi giờ bắt đầu từ 09:00 đến 16:00 (kể cả 09:30, 10:15…).' +
+      (c.mode === 'weekly' ? '<br>Lịch cố định tự áp dụng cho các tuần tiếp theo, không cần gửi lại.' : '') + '</div>';
+    h += '<div class="ljs-foot"><button type="button" class="ljs-btn sec" onclick="LJS.avail._close(\'' + key + '\')">Đóng</button>' +
+      '<button type="button" class="ljs-btn" id="' + id + '-save" onclick="LJS.avail._save(\'' + key + '\')">Lưu lịch</button></div></div>';
+    return h;
+  }
+
+  global.LJS = { picker: picker, avail: avail, util: { rangesOf: rangesOf, str: str, minOf: minOf, dayFull: dayFull, ymd: ymd, esc: esc, injectCss: injectCss }, version: '1.0' };
+})(window);
 </script>
 </body>
 </html>
