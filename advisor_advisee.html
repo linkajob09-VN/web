@@ -1619,7 +1619,8 @@ function cpCourseHtml(en, ei) {
   ls.forEach(function(l, li){ h += cpLessonHtml(ei, li, l, today, li === nextIdx, li === openIdx); });
   h += '</div>';
   // 5) Bài tập về nhà
-  h += '<div class="cp-sec"><div class="cp-sec-t"><span>Bài tập về nhà</span></div>' + cpHwHtml(en, ei, today) + '</div>';
+  var hwRest = cpHwHtml(en, ei, today, true);
+  if (hwRest) h += '<div class="cp-sec"><div class="cp-sec-t"><span>' + (cpHasLinkedHw(en) ? 'Bài tập chung' : 'Bài tập về nhà') + '</span></div>' + hwRest + '</div>';
   return h + '</div>';
 }
 
@@ -1657,9 +1658,13 @@ function cpLessonHtml(ei, li, l, today, isNext, isOpen) {
       '<div class="cp-lmain"><div class="cp-ltitle">' + cpEsc(l.title || ('Buổi ' + (l.lesson_no || (li + 1)))) + '</div><div class="cp-lmeta">' + cpEsc(when) + '</div></div>' +
       '<div class="cp-lright">' + stBadge + '<span id="cp-rb-' + ei + '-' + li + '">' + cpReflBadge(l, future || !l.date) + '</span><span class="cp-caret">▼</span></div>' +
     '</div><div class="cp-lbody">';
-  var links = cpChip('📑', 'Slide buổi này', l.slide_link, 'chưa có') + (cpUrl(l.recording_link) ? cpChip('▶️', 'Xem lại bản ghi', l.recording_link, '') : '');
+  var docs = (l.documents && l.documents.length) ? l.documents : (cpUrl(l.slide_link) ? [{ name: 'Slide buổi này', url: l.slide_link }] : []);
+  var links = docs.length ? docs.map(function(d){ return cpChip('📑', cpEsc(d.name || 'Tài liệu'), d.url, ''); }).join('') : cpChip('📑', 'Tài liệu buổi này', '', 'chưa có');
+  links += (cpUrl(l.recording_link) ? cpChip('▶️', 'Xem lại bản ghi', l.recording_link, '') : '');
   h += '<div class="cp-llinks">' + links + '</div>';
   if (l.note) h += '<div class="cp-note">' + cpEsc(l.note) + '</div>';
+  var lessonHw = cpLessonHwHtml(ei, l, today);
+  if (lessonHw) h += '<div class="cp-col-t" style="margin:12px 0 6px">📝 Bài tập của buổi này</div>' + lessonHw;
   if (future || !l.date) {
     h += '<div class="cp-lock">🔒 Bạn sẽ ghi được “3 điều học được” và “3 điều cần cải thiện” sau khi buổi học diễn ra.</div>';
   } else {
@@ -1695,19 +1700,47 @@ function cpSaveRefl(ei, li) {
   }).catch(function(e){ btn.disabled = false; btn.textContent = 'Lưu phản hồi'; toast('Lỗi kết nối: ' + e.message, 'error'); });
 }
 
-function cpHwHtml(en, ei, today) {
+function cpAsgLesson(a) { return String(a.lesson_id || a.course_session_id || '').trim(); }
+function cpLessonKey(l) { return String(l.lesson_id || l.course_session_id || '').trim(); }
+function cpLessonKeys(en) {
+  var m = {};
+  (en.lessons || []).forEach(function(l){ var k = cpLessonKey(l); if (k) m[k] = true; });
+  return m;
+}
+function cpHasLinkedHw(en) {
+  var keys = cpLessonKeys(en);
+  return (en.assignments || []).some(function(a){ var k = cpAsgLesson(a); return k && keys[k]; });
+}
+function cpHwItemHtml(en, ei, ai, today) {
+  var a = en.assignments[ai];
+  var sub = a.submission, late = !sub && a.due_date && a.due_date < today;
+  var left = '<div><b style="font-size:14px">' + cpEsc(a.title) + '</b><div style="font-size:12.5px;color:var(--muted);margin-top:2px">' +
+    (a.due_date ? 'Hạn nộp ' + fmtDateVN(a.due_date) : 'Chưa đặt hạn nộp') + (late ? ' · <b style="color:#B91C1C">Quá hạn</b>' : '') +
+    (cpUrl(a.problem_link) ? ' · <a href="' + cpEsc(cpUrl(a.problem_link)) + '" target="_blank" rel="noopener" style="color:var(--brand)">Xem đề bài</a>' : '') + '</div></div>';
+  var right = sub
+    ? '<div class="cp-hw-r">✅ Đã nộp' + (sub.feedback ? ' · <b style="color:var(--brand)">Đã có nhận xét</b>' : ' · Đang chờ nhận xét') + (sub.feedback ? '<div style="color:var(--text);margin-top:4px;white-space:pre-wrap">' + cpEsc(sub.feedback) + '</div>' : '') + '</div>'
+    : '<button class="btn-secondary" style="width:auto;padding:8px 16px;font-size:13px" onclick="cpOpenSubmit(' + ei + ',' + ai + ')">Nộp bài</button>';
+  return '<div class="cp-hw">' + left + right + '</div>';
+}
+// Bài tập gắn với 1 buổi học → hiện ngay trong buổi đó
+function cpLessonHwHtml(ei, l, today) {
+  var en = _cpData[ei], k = cpLessonKey(l);
+  if (!en || !k) return '';
+  var out = '';
+  (en.assignments || []).forEach(function(a, ai){ if (cpAsgLesson(a) === k) out += cpHwItemHtml(en, ei, ai, today); });
+  return out;
+}
+// onlyUnlinked = true: chỉ các bài chưa gắn buổi nào (hiện ở mục "Bài tập" cuối trang)
+function cpHwHtml(en, ei, today, onlyUnlinked) {
   var as = en.assignments || [];
   if (!as.length) return '<div class="cp-empty">Chưa có bài tập nào.</div>';
-  return as.map(function(a, ai){
-    var sub = a.submission, late = !sub && a.due_date && a.due_date < today;
-    var left = '<div><b style="font-size:14px">' + cpEsc(a.title) + '</b><div style="font-size:12.5px;color:var(--muted);margin-top:2px">' +
-      (a.due_date ? 'Hạn nộp ' + fmtDateVN(a.due_date) : 'Chưa đặt hạn nộp') + (late ? ' · <b style="color:#B91C1C">Quá hạn</b>' : '') +
-      (cpUrl(a.problem_link) ? ' · <a href="' + cpEsc(cpUrl(a.problem_link)) + '" target="_blank" rel="noopener" style="color:var(--brand)">Xem đề bài</a>' : '') + '</div></div>';
-    var right = sub
-      ? '<div class="cp-hw-r">✅ Đã nộp' + (sub.grade ? ' · Điểm: <b style="color:var(--brand)">' + cpEsc(sub.grade) + '</b>' : ' · Đang chờ chấm') + (sub.feedback ? '<div style="color:var(--muted)">' + cpEsc(sub.feedback) + '</div>' : '') + '</div>'
-      : '<button class="btn-secondary" style="width:auto;padding:8px 16px;font-size:13px" onclick="cpOpenSubmit(' + ei + ',' + ai + ')">Nộp bài</button>';
-    return '<div class="cp-hw">' + left + right + '</div>';
-  }).join('');
+  var keys = cpLessonKeys(en), out = '';
+  as.forEach(function(a, ai){
+    var k = cpAsgLesson(a);
+    if (onlyUnlinked && k && keys[k]) return;
+    out += cpHwItemHtml(en, ei, ai, today);
+  });
+  return out;
 }
 function cpOpenSubmit(ei, ai) {
   var en = _cpData[ei], a = en && en.assignments[ai];
@@ -1742,7 +1775,7 @@ function loadMyCoursesLegacyAsync(c) {
           html += '<div style="border-top:1px solid var(--border);padding:10px 0;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">';
           html += '<div><b style="font-size:13.5px">' + a.title + '</b><div style="font-size:12px;color:var(--muted)">Hạn nộp ' + fmtDateVN(a.due_date) + (a.problem_link ? ' · <a href="' + a.problem_link + '" target="_blank" style="color:var(--brand)">Xem đề bài</a>' : '') + '</div></div>';
           if (sub) {
-            html += '<div style="font-size:12.5px;text-align:right">✅ Đã nộp' + (sub.grade ? ' · Điểm: <b style="color:var(--brand)">' + sub.grade + '</b>' : ' · Đang chờ chấm') + (sub.feedback ? '<div style="color:var(--muted);max-width:260px">' + sub.feedback + '</div>' : '') + '</div>';
+            html += '<div style="font-size:12.5px;text-align:right">✅ Đã nộp' + (sub.feedback ? ' · Đã có nhận xét' : ' · Đang chờ nhận xét') + (sub.feedback ? '<div style="color:var(--muted);max-width:260px">' + sub.feedback + '</div>' : '') + '</div>';
           } else {
             html += '<button class="btn-secondary" style="width:auto;padding:7px 14px;font-size:12.5px" onclick="openSubmitAssignmentModal(\'' + en.enrollment_id + '\',\'' + a.assignment_id + '\')">Nộp bài</button>';
           }
@@ -1774,27 +1807,222 @@ function submitMyAssignment(enrollmentId, assignmentId) {
   }).catch(function(e){ toast('Lỗi kết nối: ' + e.message, 'error'); btn.innerHTML = 'Nộp bài'; btn.disabled = false; });
 }
 
-// ── Advisor: tab "Khoá học tôi dạy" — danh sách mùa học được phân công làm
-//    giảng viên (gán ở dashboard admin, tab Cài đặt mùa). Bản xem nhanh;
-//    quản lý chi tiết (bài tập/chấm bài) vẫn thao tác trên dashboard admin. ──
+// ── Advisor: tab "Khoá học" — mùa học mình là giảng viên phụ trách (gán ở dashboard → Cài đặt mùa).
+//    Bấm "Quản lý khoá" để: xem học viên, thêm tài liệu từng buổi, tạo/sửa bài tập, viết nhận xét bài nộp. ──
+var _isCtx = { el: null, seasonId: '', data: null, tab: 'stu', addIdx: -1, list: [] };
+
 function loadInstructorCoursesAsync(c) {
+  _isCtx.el = c;
+  c.innerHTML = '<div class="empty-state">Đang tải...</div>';
   apiGet('getInstructorCourses', { advisor: currentUser.name }).then(function(res){
     var list = (res && res.data) ? res.data : [];
+    _isCtx.list = list;
     if (list.length === 0) {
       c.innerHTML = '<div class="card"><div class="empty-state"><div class="icon">🎓</div>Bạn chưa được phân công làm giảng viên khoá học nào.</div></div>';
       return;
     }
     var html = '';
     list.forEach(function(s){
-      html += '<div class="card" style="margin-bottom:12px;padding:18px 20px;display:flex;justify-content:space-between;align-items:center">' +
-        '<div><div style="font-weight:800;font-size:14.5px">' + s.course_name + ' — Mùa ' + s.season_no + '</div>' +
-        '<div style="font-size:12.5px;color:var(--muted);margin-top:3px">' + s.enrolled_count + ' học viên</div></div>' +
-        '<span class="badge">' + s.status + '</span></div>';
+      html += '<div class="card" style="margin-bottom:12px;padding:18px 20px;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">' +
+        '<div><div style="font-weight:800;font-size:14.5px">' + cpEsc(s.course_name) + ' — Mùa ' + cpEsc(s.season_no) + '</div>' +
+        '<div style="font-size:12.5px;color:var(--muted);margin-top:3px">' + cpEsc(s.enrolled_count) + ' học viên · <span class="badge">' + cpEsc(s.status) + '</span></div></div>' +
+        '<button class="login-btn" style="width:auto;padding:10px 20px;font-size:13.5px" onclick="isOpenSeason(\'' + cpEsc(s.season_id) + '\')">Quản lý khoá</button></div>';
     });
     c.innerHTML = html;
-  }).catch(function(e){ c.innerHTML = '<div class="empty-state">Lỗi tải khoá học: ' + e.message + '</div>'; });
+  }).catch(function(e){ c.innerHTML = '<div class="empty-state">Lỗi tải khoá học: ' + cpEsc(e.message) + '</div>'; });
 }
-  
+
+function isOpenSeason(seasonId) {
+  _isCtx.seasonId = seasonId; _isCtx.tab = 'stu'; _isCtx.addIdx = -1;
+  isReload();
+}
+function isReload() {
+  var c = _isCtx.el; if (!c) return;
+  c.innerHTML = '<div class="empty-state">Đang tải...</div>';
+  apiGet('getInstructorSeason', { token: (currentUser && currentUser.token) || '', season_id: _isCtx.seasonId }).then(function(res){
+    if (cpAuthFail(res)) return;
+    if (!res || !res.success) { c.innerHTML = '<div class="empty-state">' + cpEsc((res && res.error) || 'Không tải được khoá học') + '</div><div style="text-align:center"><button class="btn-secondary" style="width:auto;padding:9px 18px" onclick="loadInstructorCoursesAsync(_isCtx.el)">← Quay lại</button></div>'; return; }
+    _isCtx.data = res.data; isRender();
+  }).catch(function(e){ c.innerHTML = '<div class="empty-state">Lỗi kết nối: ' + cpEsc(e.message) + '</div>'; });
+}
+function isSessionLabel(ses, i) {
+  return 'Buổi ' + (i + 1) + (ses.topic ? ' · ' + cpEsc(ses.topic) : '') + (ses.date ? ' (' + fmtDateVN(ses.date) + ')' : '');
+}
+function isPendingCount() {
+  var d = _isCtx.data, n = 0;
+  d.students.forEach(function(st){ Object.keys(st.submissions).forEach(function(k){ if (!st.submissions[k].feedback) n++; }); });
+  return n;
+}
+function isRender() {
+  var c = _isCtx.el, d = _isCtx.data, se = d.season, tab = _isCtx.tab;
+  var h = '<div style="margin-bottom:12px"><button class="btn-secondary" style="width:auto;padding:8px 16px;font-size:13px" onclick="loadInstructorCoursesAsync(_isCtx.el)">← Danh sách khoá</button></div>';
+  h += '<div class="card" style="padding:18px 22px;margin-bottom:14px"><div style="font-weight:800;font-size:16px">' + cpEsc(se.course_name) + ' — Mùa ' + cpEsc(se.season_no) + '</div>' +
+    '<div style="font-size:12.5px;color:var(--muted);margin-top:4px">' + (se.start_date ? 'Khai giảng ' + fmtDateVN(se.start_date) + ' · ' : '') + 'Giảng viên: ' + cpEsc((se.instructors || []).join(', ')) +
+    (cpUrl(se.class_link) ? ' · <a href="' + cpEsc(se.class_link) + '" target="_blank" rel="noopener" style="color:var(--brand)">Link lớp học</a>' : '') + '</div></div>';
+  var pend = isPendingCount();
+  var tabs = [['stu', 'Học viên (' + d.students.length + ')'], ['content', 'Nội dung khoá'], ['hw', 'Bài tập'], ['fb', 'Nhận xét' + (pend ? ' (' + pend + ' chờ)' : '')]];
+  h += '<div class="card"><div style="display:flex;gap:6px;padding:12px 16px 0;border-bottom:1px solid var(--border);overflow-x:auto">';
+  tabs.forEach(function(t){
+    h += '<div onclick="_isCtx.tab=\'' + t[0] + '\';_isCtx.addIdx=-1;isRender()" style="padding:10px 12px;font-size:13.5px;font-weight:600;cursor:pointer;white-space:nowrap;border-bottom:2px solid ' + (tab === t[0] ? 'var(--brand)' : 'transparent') + ';color:' + (tab === t[0] ? 'var(--brand)' : 'var(--muted)') + '">' + t[1] + '</div>';
+  });
+  h += '</div><div style="padding:16px 20px 20px">';
+  h += tab === 'content' ? isContentHtml() : tab === 'hw' ? isHwHtml() : tab === 'fb' ? isFbHtml() : isStudentsHtml();
+  h += '</div></div>';
+  c.innerHTML = h;
+}
+
+// ── Tab Học viên (không có học phí) ──
+function isStudentsHtml() {
+  var d = _isCtx.data;
+  if (!d.students.length) return '<div class="cp-empty">Chưa có học viên nào.</div>';
+  var h = '<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:13.5px;min-width:520px"><thead><tr style="text-align:left;color:var(--muted);font-size:12px"><th style="padding:8px 6px">HỌC VIÊN</th><th style="padding:8px 6px">SĐT</th><th style="padding:8px 6px">BÀI ĐÃ NỘP</th></tr></thead><tbody>';
+  d.students.forEach(function(st){
+    h += '<tr style="border-top:1px solid var(--border)"><td style="padding:10px 6px"><b>' + cpEsc(st.name) + '</b><div style="font-size:12px;color:var(--muted)">' + cpEsc(st.email) + '</div></td><td style="padding:10px 6px">' + cpEsc(st.phone) + '</td><td style="padding:10px 6px">' + Object.keys(st.submissions).length + ' / ' + d.assignments.length + '</td></tr>';
+  });
+  return h + '</tbody></table></div>';
+}
+
+// ── Tab Nội dung khoá: tài liệu cho từng buổi ──
+function isContentHtml() {
+  var d = _isCtx.data;
+  if (!d.sessions.length) return '<div class="cp-empty">Chưa có buổi học nào. Lịch từng buổi do nhân viên tạo trên dashboard.</div>';
+  var h = '<div style="font-size:12.5px;color:var(--muted);margin-bottom:12px">Thêm tài liệu cho từng buổi — học viên sẽ thấy ngay trong buổi tương ứng.</div>';
+  d.sessions.forEach(function(ses, i){
+    h += '<div style="border:1.5px solid var(--border);border-radius:12px;padding:14px 16px;margin-bottom:12px">' +
+      '<div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap"><b style="font-size:14px">' + isSessionLabel(ses, i) + '</b>' +
+      '<button class="btn-secondary" style="width:auto;padding:7px 14px;font-size:12.5px" onclick="_isCtx.addIdx=' + (_isCtx.addIdx === i ? -1 : i) + ';isRender()">+ Thêm tài liệu</button></div>';
+    var docs = ses.documents || [];
+    if (!docs.length) h += '<div class="cp-empty" style="margin-top:8px">Chưa có tài liệu</div>';
+    docs.forEach(function(doc, j){
+      h += '<div style="display:flex;justify-content:space-between;align-items:center;gap:10px;padding:8px 0;border-top:1px solid var(--border);font-size:13.5px">' +
+        '<a href="' + cpEsc(cpUrl(doc.url)) + '" target="_blank" rel="noopener" style="color:var(--brand);word-break:break-all">📑 ' + cpEsc(doc.name || 'Tài liệu') + '</a>' +
+        '<button class="btn-secondary" style="width:auto;padding:5px 12px;font-size:12px" onclick="isRemoveDoc(' + i + ',' + j + ')">Xoá</button></div>';
+    });
+    if (_isCtx.addIdx === i) {
+      h += '<div style="display:flex;gap:8px;flex-wrap:wrap;border-top:1px solid var(--border);padding-top:10px;margin-top:6px">' +
+        '<input class="form-input" id="is-dn" placeholder="Tên tài liệu" style="flex:1;min-width:150px;margin:0">' +
+        '<input class="form-input" id="is-du" placeholder="Link (Drive, Notion...)" style="flex:2;min-width:200px;margin:0">' +
+        '<button class="login-btn" id="is-doc-btn" style="width:auto;padding:9px 20px;font-size:13px" onclick="isAddDoc(' + i + ')">Lưu</button></div>';
+    }
+    h += '</div>';
+  });
+  return h;
+}
+function isSaveDocs(i, docs, btn, okMsg) {
+  var ses = _isCtx.data.sessions[i];
+  apiPost({ action: 'saveSessionDocs', token: (currentUser && currentUser.token) || '', course_session_id: ses.course_session_id, documents: docs }).then(function(res){
+    if (cpAuthFail(res)) return;
+    if (!res || !res.success) { toast((res && res.error) || 'Không lưu được', 'error'); if (btn) { btn.disabled = false; btn.textContent = 'Lưu'; } return; }
+    ses.documents = res.documents || docs; _isCtx.addIdx = -1; isRender(); toast(okMsg, 'success');
+  }).catch(function(e){ toast('Lỗi kết nối: ' + e.message, 'error'); if (btn) { btn.disabled = false; btn.textContent = 'Lưu'; } });
+}
+function isAddDoc(i) {
+  var name = v('is-dn'), url = v('is-du');
+  if (!/^https?:\/\//i.test(url)) { toast('Link phải bắt đầu bằng http:// hoặc https://', 'error'); return; }
+  var btn = document.getElementById('is-doc-btn'); btn.disabled = true; btn.innerHTML = '<span class="spinner"></span>';
+  var docs = (_isCtx.data.sessions[i].documents || []).slice();
+  docs.push({ name: name || 'Tài liệu', url: url });
+  isSaveDocs(i, docs, btn, 'Đã thêm tài liệu ✅');
+}
+function isRemoveDoc(i, j) {
+  if (!confirm('Xoá tài liệu này khỏi buổi học?')) return;
+  var docs = (_isCtx.data.sessions[i].documents || []).slice();
+  docs.splice(j, 1);
+  isSaveDocs(i, docs, null, 'Đã xoá tài liệu');
+}
+
+// ── Tab Bài tập ──
+function isHwHtml() {
+  var d = _isCtx.data;
+  var h = '<div style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap"><div style="font-size:12.5px;color:var(--muted)">Bài tập tạo ở đây sẽ hiện ngay cho học viên, trong buổi được chọn.</div>' +
+    '<button class="login-btn" style="width:auto;padding:9px 18px;font-size:13px" onclick="isOpenHwModal(\'\')">+ Thêm bài tập</button></div>';
+  if (!d.assignments.length) return h + '<div class="cp-empty">Chưa có bài tập nào.</div>';
+  d.assignments.forEach(function(a){
+    var si = d.sessions.findIndex(function(x){ return x.course_session_id === a.course_session_id; });
+    var nSub = d.students.filter(function(st){ return st.submissions[a.assignment_id]; }).length;
+    h += '<div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;border-top:1px solid var(--border);padding:12px 0">' +
+      '<div><b style="font-size:14px">' + cpEsc(a.title) + '</b><div style="font-size:12.5px;color:var(--muted);margin-top:2px">' +
+      (si > -1 ? isSessionLabel(d.sessions[si], si) : 'Chưa gắn buổi nào') + ' · ' + (a.due_date ? 'Hạn ' + fmtDateVN(a.due_date) : 'Chưa đặt hạn') + ' · ' + nSub + '/' + d.students.length + ' đã nộp' +
+      (cpUrl(a.problem_link) ? ' · <a href="' + cpEsc(a.problem_link) + '" target="_blank" rel="noopener" style="color:var(--brand)">Đề bài</a>' : '') + '</div></div>' +
+      '<div style="white-space:nowrap"><button class="btn-secondary" style="width:auto;padding:6px 14px;font-size:12.5px" onclick="isOpenHwModal(\'' + cpEsc(a.assignment_id) + '\')">Chỉnh sửa</button> ' +
+      '<button class="btn-secondary" style="width:auto;padding:6px 14px;font-size:12.5px" onclick="isDeleteHw(\'' + cpEsc(a.assignment_id) + '\')">Xoá</button></div></div>';
+  });
+  return h;
+}
+function isOpenHwModal(aid) {
+  var d = _isCtx.data;
+  var a = aid ? d.assignments.filter(function(x){ return x.assignment_id === aid; })[0] : { title: '', problem_link: '', due_date: '', course_session_id: '' };
+  if (!a) return;
+  document.getElementById('modal-title').textContent = aid ? 'Chỉnh sửa bài tập' : 'Thêm bài tập';
+  var opts = '<option value="">Không gắn buổi nào</option>' + d.sessions.map(function(ses, i){
+    return '<option value="' + cpEsc(ses.course_session_id) + '"' + (ses.course_session_id === a.course_session_id ? ' selected' : '') + '>' + isSessionLabel(ses, i) + '</option>';
+  }).join('');
+  document.getElementById('modal-body').innerHTML =
+    '<div class="modal-field"><div class="form-label">Tên bài tập</div><input class="form-input" id="is-hw-title" value="' + cpEsc(a.title) + '" placeholder="VD: Viết CV"></div>' +
+    '<div class="modal-field"><div class="form-label">Thuộc buổi học</div><select class="form-input" id="is-hw-ses">' + opts + '</select></div>' +
+    '<div class="modal-field"><div class="form-label">Link đề bài (nếu có)</div><input class="form-input" id="is-hw-link" value="' + cpEsc(a.problem_link) + '" placeholder="https://..."></div>' +
+    '<div class="modal-field"><div class="form-label">Hạn nộp</div><input class="form-input" type="date" id="is-hw-due" value="' + cpEsc(a.due_date) + '"></div>';
+  document.getElementById('modal-actions').innerHTML = '<button class="btn-secondary" onclick="closeModal()" style="width:auto;padding:10px 20px">Huỷ</button> <button class="login-btn" id="is-hw-save" style="width:auto;padding:10px 24px" onclick="isSaveHw(\'' + cpEsc(aid) + '\')">Lưu</button>';
+  document.getElementById('modal-overlay').classList.add('open');
+}
+function isSaveHw(aid) {
+  var title = v('is-hw-title');
+  if (!title) { toast('Vui lòng nhập tên bài tập', 'error'); return; }
+  var link = v('is-hw-link');
+  if (link && !/^https?:\/\//i.test(link)) { toast('Link đề bài phải bắt đầu bằng http:// hoặc https://', 'error'); return; }
+  var btn = document.getElementById('is-hw-save'); btn.disabled = true; btn.innerHTML = '<span class="spinner"></span>';
+  apiPost({ action: 'saveInstructorAssignment', token: (currentUser && currentUser.token) || '', season_id: _isCtx.seasonId, assignment_id: aid, title: title, problem_link: link, due_date: v('is-hw-due'), course_session_id: v('is-hw-ses') }).then(function(res){
+    if (cpAuthFail(res)) return;
+    if (!res || !res.success) { toast((res && res.error) || 'Không lưu được', 'error'); btn.disabled = false; btn.textContent = 'Lưu'; return; }
+    closeModal(); toast('Đã lưu bài tập ✅', 'success'); isReload();
+  }).catch(function(e){ toast('Lỗi kết nối: ' + e.message, 'error'); btn.disabled = false; btn.textContent = 'Lưu'; });
+}
+function isDeleteHw(aid) {
+  if (!confirm('Xoá bài tập này?')) return;
+  apiPost({ action: 'deleteInstructorAssignment', token: (currentUser && currentUser.token) || '', assignment_id: aid }).then(function(res){
+    if (cpAuthFail(res)) return;
+    if (!res || !res.success) { toast((res && res.error) || 'Không xoá được', 'error'); return; }
+    toast('Đã xoá bài tập', 'success'); isReload();
+  }).catch(function(e){ toast('Lỗi kết nối: ' + e.message, 'error'); });
+}
+
+// ── Tab Nhận xét: chỉ nhận xét, không chấm điểm số ──
+function isFbHtml() {
+  var d = _isCtx.data;
+  if (!d.assignments.length) return '<div class="cp-empty">Chưa có bài tập nào.</div>';
+  var h = '';
+  d.assignments.forEach(function(a, ai){
+    h += '<div style="margin-bottom:18px"><div style="font-weight:700;font-size:14px;margin-bottom:8px">' + cpEsc(a.title) + '</div>';
+    var any = false;
+    d.students.forEach(function(st, si){
+      var sub = st.submissions[a.assignment_id];
+      if (!sub) return;
+      any = true;
+      var id = 'is-fb-' + ai + '-' + si;
+      h += '<div style="border:1.5px solid var(--border);border-radius:12px;padding:12px 14px;margin-bottom:10px">' +
+        '<div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;font-size:13.5px"><b>' + cpEsc(st.name) + '</b>' +
+        '<span>' + (cpUrl(sub.file_link) ? '<a href="' + cpEsc(sub.file_link) + '" target="_blank" rel="noopener" style="color:var(--brand)">Xem bài làm</a>' : '') +
+        ' · ' + (sub.feedback ? '<span class="badge badge-confirmed">Đã nhận xét</span>' : '<span class="badge badge-pending">Chờ nhận xét</span>') + '</span></div>' +
+        '<textarea class="form-input" id="' + id + '" rows="4" style="margin-top:8px;width:100%;resize:vertical" placeholder="Nhập nhận xét cho học viên...">' + cpEsc(sub.feedback) + '</textarea>' +
+        '<div style="text-align:right;margin-top:8px"><button class="login-btn" id="' + id + '-b" style="width:auto;padding:8px 18px;font-size:13px" onclick="isSaveFb(' + ai + ',' + si + ')">Lưu nhận xét</button></div></div>';
+    });
+    if (!any) h += '<div class="cp-empty">Chưa có học viên nào nộp bài này.</div>';
+    h += '</div>';
+  });
+  return h;
+}
+function isSaveFb(ai, si) {
+  var d = _isCtx.data, a = d.assignments[ai], st = d.students[si], sub = st.submissions[a.assignment_id];
+  var id = 'is-fb-' + ai + '-' + si, txt = v(id);
+  if (!txt) { toast('Vui lòng nhập nhận xét', 'error'); return; }
+  var btn = document.getElementById(id + '-b'); btn.disabled = true; btn.innerHTML = '<span class="spinner"></span>';
+  apiPost({ action: 'saveSubmissionFeedback', token: (currentUser && currentUser.token) || '', submission_id: sub.submission_id, feedback: txt }).then(function(res){
+    if (cpAuthFail(res)) return;
+    if (!res || !res.success) { toast((res && res.error) || 'Không lưu được', 'error'); btn.disabled = false; btn.textContent = 'Lưu nhận xét'; return; }
+    sub.feedback = txt; toast('Đã lưu nhận xét ✅', 'success'); isRender();
+  }).catch(function(e){ toast('Lỗi kết nối: ' + e.message, 'error'); btn.disabled = false; btn.textContent = 'Lưu nhận xét'; });
+}
+
 function renderAdvisorOverview() {
   var myAdvisees = MOCK.advisees.filter(function(ae){ return normName(ae.advisor) === normName(currentUser.name) && !isAdviseeExpired(ae); });
   var totalDone  = myAdvisees.reduce(function(sum,ae){ return sum + ae.sessionsDone; }, 0);
