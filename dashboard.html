@@ -5699,7 +5699,7 @@ function loadCoursesPageAsync() {
         status: x.status, start_date: csNormDate(x.start_date),
         class_link: x.class_link || '', slide_link: x.slide_link || '',
         price_full: Number(x.price_full) || 0, plans: x.plans || [],
-        max_seats: Number(x.max_seats) || 0, enrolled_count: Number(x.enrolled_count) || 0, instructor_advisor: x.instructor_advisor || '',
+        max_seats: Number(x.max_seats) || 0, enrolled_count: Number(x.enrolled_count) || 0, instructor_advisor: x.instructor_advisor || '', free_sessions: (x.free_sessions === '' || x.free_sessions == null) ? '' : Number(x.free_sessions),
       };
     });
     c.innerHTML = renderCoursesPage();
@@ -5785,6 +5785,8 @@ function saveSeasonEditor(seasonId) {
   var classLink = v('cm-se-classlink');
   var slideLink = v('cm-se-slidelink');
   var maxSeats = Number(document.getElementById('cm-se-maxseats').value) || 0;
+  var freeSessions = Number(document.getElementById('cm-se-freesessions').value);
+  if (isNaN(freeSessions) || freeSessions < 0 || freeSessions > 20 || freeSessions !== Math.floor(freeSessions)) { toast('Số buổi 1-1 tặng kèm phải là số nguyên từ 0 đến 20', 'error'); return; }
   // Giảng viên phụ trách: lấy từ các ô chọn Advisor trong tab Cài đặt mùa (lưu dạng "Tên A, Tên B").
   // Nếu vì lý do nào đó danh sách chưa hiện thì giữ nguyên giá trị cũ để không mất dữ liệu.
   var _insBoxes = document.querySelectorAll('.cm-se-adv');
@@ -5800,7 +5802,7 @@ function saveSeasonEditor(seasonId) {
   var payload = {
     action: 'saveCourseSeason', season_id: seasonId, course_id: currentSeason ? currentSeason.course_id : '',
     season_no: seasonNo, status: status, start_date: start, price_full: price,
-    class_link: classLink, slide_link: slideLink, max_seats: maxSeats, instructor_advisor: instructorAdvisor, plans: plans,
+    class_link: classLink, slide_link: slideLink, max_seats: maxSeats, instructor_advisor: instructorAdvisor, plans: plans, free_sessions: freeSessions,
   };
 
   var btn = document.getElementById('cm-se-save-btn');
@@ -5828,7 +5830,7 @@ function csLoadSeasonDetail(seasonId, callback) {
   apiGet('getSeasonDetail', { season_id: seasonId }).then(function(res){
     if (!res || !res.success) { toast('Lỗi tải chi tiết mùa: ' + (res && res.error), 'error'); return; }
     CM_ENROLLMENTS = (res.data.enrollments || []).map(function(x){
-      return { id: x.enrollment_id, season_id: x.season_id, name: x.name, email: x.email || '', phone: x.phone, plan: x.plan, enrolled_at: csNormDate(x.enrolled_at), confirmed_at: x.confirmed_at || '', account_sent_at: x.account_email_sent_at || '' };
+      return { id: x.enrollment_id, season_id: x.season_id, name: x.name, email: x.email || '', phone: x.phone, plan: x.plan, enrolled_at: csNormDate(x.enrolled_at), confirmed_at: x.confirmed_at || '', account_sent_at: x.account_email_sent_at || '', advisor: ((res.data.advisor_info || {})[x.enrollment_id]) || null };
     });
     CM_ASSIGNMENTS = (res.data.assignments || []).map(function(x){
       return { id: x.assignment_id, season_id: x.season_id, title: x.title, problem_link: x.problem_link || '', due_date: csNormDate(x.due_date), sort_order: Number(x.sort_order) || 0, sent_at: x.sent_at ? csNormDate(x.sent_at) : '' };
@@ -5955,6 +5957,7 @@ function renderCmSettingsTab(s) {
   html += '<div><div class="form-label">Link lớp học (Zoom/Meet)</div><input class="form-input" id="cm-se-classlink" value="' + (s.class_link || '') + '" placeholder="https://meet.google.com/..." style="margin-top:6px"></div>';
   html += '<div><div class="form-label">Link tài liệu slide</div><input class="form-input" id="cm-se-slidelink" value="' + (s.slide_link || '') + '" placeholder="https://drive.google.com/..." style="margin-top:6px"></div>';
   html += '<div><div class="form-label">Số chỗ tối đa</div><input class="form-input" type="number" id="cm-se-maxseats" value="' + s.max_seats + '" placeholder="VD: 30" style="margin-top:6px"></div>';
+  html += '<div><div class="form-label">Số buổi 1-1 tặng kèm (mỗi học viên)</div><input class="form-input" type="number" min="0" max="20" id="cm-se-freesessions" value="' + cmFreeSessions(s) + '" style="margin-top:6px"><div style="font-size:11.5px;color:var(--muted);margin-top:4px">Mặc định cho cả mùa. Có thể sửa riêng từng học viên khi bấm "Kích hoạt 1-1". Chỉ có hiệu lực với học viên chưa kích hoạt.</div></div>';
   // Giảng viên phụ trách: chọn từ danh sách Advisor (lưu vào trường instructor_advisor, ngăn cách bằng dấu phẩy)
   var _selIns = cmSplitInstructors(s.instructor_advisor);
   var _insNames = (sheetData.advisors || []).filter(function(a){ return a.active; }).map(function(a){ return a.name; });
@@ -5995,11 +5998,13 @@ function renderCmSettingsTab(s) {
 function renderCmEnrollTab(s) {
   var list = CM_ENROLLMENTS.filter(function(e){ return e.season_id === s.id; });
   var pendingAcct = list.filter(function(e){ return !e.account_sent_at && e.email; }).length;
+  var pendingAdv = list.filter(function(e){ return e.advisor && !e.advisor.activated && e.advisor.planned_sessions > 0; }).length;
   var html = '<div style="padding:16px 24px;display:flex;justify-content:flex-end;gap:10px;flex-wrap:wrap">' +
     (pendingAcct ? '<button class="detail-btn" onclick="cmConfirmAllPending(\'' + s.id + '\')">📧 Gửi tài khoản cho ' + pendingAcct + ' học viên chưa gửi</button>' : '') +
+    (pendingAdv ? '<button class="detail-btn" onclick="openActivateSeasonModal(\'' + s.id + '\')">⚡ Kích hoạt 1-1 cho ' + pendingAdv + ' học viên</button>' : '') +
     '<button class="update-btn" onclick="openEnrollModal(\'' + s.id + '\')">+ Thêm học viên</button></div>';
-  html += '<table class="bookings-table"><thead><tr><th>HỌC VIÊN</th><th>SĐT</th><th>HÌNH THỨC</th><th>THANH TOÁN</th><th>TÀI KHOẢN</th><th>NGÀY ĐĂNG KÝ</th><th></th></tr></thead><tbody>';
-  if (list.length === 0) html += '<tr><td colspan="7" style="text-align:center;color:var(--muted);padding:24px 0">Chưa có học viên nào — bấm "+ Thêm học viên" để bắt đầu.</td></tr>';
+  html += '<table class="bookings-table"><thead><tr><th>HỌC VIÊN</th><th>SĐT</th><th>HÌNH THỨC</th><th>THANH TOÁN</th><th>TÀI KHOẢN</th><th>BUỔI 1-1</th><th>NGÀY ĐĂNG KÝ</th><th></th></tr></thead><tbody>';
+  if (list.length === 0) html += '<tr><td colspan="8" style="text-align:center;color:var(--muted);padding:24px 0">Chưa có học viên nào — bấm "+ Thêm học viên" để bắt đầu.</td></tr>';
   list.forEach(function(e){
     var pay = cmComputePayment(e.id, s.price_full);
     var pending = CM_PENDING_PAYMENTS.filter(function(x){ return x.enrollment_id === e.id; });
@@ -6009,8 +6014,10 @@ function renderCmEnrollTab(s) {
     html += '<tr><td><b>' + e.name + '</b>' + (e.email ? '<div style="font-size:11.5px;color:var(--muted)">' + e.email + '</div>' : '') + '</td><td>' + (e.phone || '') + '</td><td>' + cmPlanLabel(e.plan) + '</td>' +
       '<td>' + cmPayBadge(pay.status) + ' <span style="font-size:11.5px;color:var(--muted)">(' + fmtMoney(pay.paid) + ' / ' + fmtMoney(s.price_full) + ')</span>' + pendingHtml + '</td>' +
       '<td>' + cmAcctBadge(e) + '</td>' +
+      '<td>' + cmAdvisorBadge(e) + '</td>' +
       '<td>' + fmtDateStr(e.enrolled_at) + '</td>' +
-      '<td style="white-space:nowrap"><button class="' + (e.account_sent_at ? 'detail-btn' : 'update-btn') + '" onclick="openConfirmEnrollModal(\'' + e.id + '\')">' + (e.account_sent_at ? 'Gửi lại' : 'Xác nhận & gửi TK') + '</button> ' +
+      '<td style="white-space:nowrap"><button class="' + ((e.advisor && e.advisor.activated) ? 'detail-btn' : 'update-btn') + '" onclick="openAdvisorActivateModal(\'' + e.id + '\')">' + ((e.advisor && e.advisor.activated) ? 'Chỉnh 1-1' : 'Kích hoạt 1-1') + '</button> ' +
+      '<button class="' + (e.account_sent_at ? 'detail-btn' : 'update-btn') + '" onclick="openConfirmEnrollModal(\'' + e.id + '\')">' + (e.account_sent_at ? 'Gửi lại' : 'Xác nhận & gửi TK') + '</button> ' +
       '<button class="detail-btn" onclick="openCollectPaymentModal(\'' + e.id + '\')">Thu học phí</button></td></tr>';
   });
   html += '</tbody></table>';
@@ -6145,6 +6152,104 @@ function cmFmtDT(iso) {
   var p = function(n){ return (n < 10 ? '0' : '') + n; };
   return p(d.getDate()) + '/' + p(d.getMonth() + 1) + ' ' + p(d.getHours()) + ':' + p(d.getMinutes());
 }
+// ── MỚI: Kiểm soát buổi 1-1 tặng kèm — số buổi theo mùa, staff kích hoạt thủ công ──
+var CM_DEFAULT_FREE_SESSIONS = 2;
+function cmFreeSessions(s) {
+  return (s.free_sessions === '' || s.free_sessions == null) ? CM_DEFAULT_FREE_SESSIONS : Number(s.free_sessions);
+}
+function cmAdvisorBadge(e) {
+  var a = e.advisor;
+  if (!a) return '<span style="color:var(--muted)">—</span>';
+  if (!a.activated) {
+    return '<span class="badge cm-pay-badge-none">Chưa kích hoạt</span><div style="font-size:11.5px;color:var(--muted);margin-top:3px">Dự kiến ' + a.planned_sessions + ' buổi</div>';
+  }
+  var st = a.expired ? '<span class="badge cm-pay-badge-none">Hết hạn</span>' : '<span class="badge cm-pay-badge-paid">Đã kích hoạt</span>';
+  return st + '<div style="font-size:11.5px;color:var(--muted);margin-top:3px">Đã đặt ' + a.sessions_booked + '/' + a.sessions_total + ' buổi · hạn ' + fmtDateStr(a.expiry_date) + '</div>';
+}
+function openAdvisorActivateModal(enrollmentId) {
+  var e = CM_ENROLLMENTS.find(function(x){ return x.id === enrollmentId; });
+  if (!e) { toast('Không tìm thấy học viên', 'error'); return; }
+  var a = e.advisor || { planned_sessions: CM_DEFAULT_FREE_SESSIONS, activated: false };
+  var edit = !!a.activated;
+  document.getElementById('modal-title').textContent = (edit ? 'Chỉnh buổi 1-1 — ' : 'Kích hoạt buổi 1-1 — ') + e.name;
+  var html = '<div style="font-size:12.5px;color:var(--muted);margin-bottom:12px">' + (edit
+    ? 'Học viên đã được kích hoạt. Bạn có thể tăng/giảm tổng số buổi (không thấp hơn số buổi đã đặt: <b>' + a.sessions_booked + '</b>) và đổi ngày hết hạn.'
+    : 'Sau khi kích hoạt, học viên sẽ thấy và đặt lịch được buổi cố vấn 1-1 trong tài khoản. Chưa kích hoạt thì học viên không đặt được.') + '</div>';
+  html += '<div class="modal-field"><div class="form-label">Số buổi 1-1 <span style="color:var(--brand)">*</span></div><input class="form-input" type="number" min="' + (edit ? Math.max(1, a.sessions_booked) : 1) + '" max="20" id="cm-adv-sessions" value="' + (edit ? a.sessions_total : a.planned_sessions) + '" style="margin-top:6px"></div>';
+  if (edit) {
+    html += '<div class="modal-field"><div class="form-label">Ngày hết hạn</div><input class="form-input" type="date" id="cm-adv-expiry" value="' + (a.expiry_date || '') + '" style="margin-top:6px"></div>';
+  } else {
+    html += '<div class="modal-field"><div class="form-label">Hạn dùng (số ngày, tính từ hôm nay)</div><input class="form-input" type="number" min="1" max="730" id="cm-adv-days" value="90" style="margin-top:6px"></div>';
+  }
+  html += '<div id="cm-adv-error" style="color:var(--brand);font-size:12.5px;display:none;margin-top:8px"></div>';
+  document.getElementById('modal-body').innerHTML = html;
+  document.getElementById('modal-actions').innerHTML = '<button class="detail-btn" onclick="closeModal()">Hủy</button> <button class="login-btn" id="cm-adv-save" style="width:auto;padding:10px 24px" onclick="saveAdvisorActivate(\'' + enrollmentId + '\',' + (edit ? 'true' : 'false') + ')">' + (edit ? 'Lưu thay đổi' : 'Kích hoạt') + '</button>';
+  document.getElementById('modal-overlay').classList.add('open');
+}
+function saveAdvisorActivate(enrollmentId, edit) {
+  var errEl = document.getElementById('cm-adv-error');
+  var showErr = function(msg){ if (errEl) { errEl.textContent = msg; errEl.style.display = 'block'; } toast(msg, 'error'); };
+  if (errEl) errEl.style.display = 'none';
+  var sessions = Number(document.getElementById('cm-adv-sessions').value);
+  if (!(sessions >= 1) || sessions !== Math.floor(sessions) || sessions > 20) { showErr('Số buổi phải là số nguyên từ 1 đến 20'); return; }
+  var payload = { action: 'activateCourseAdvisor', enrollment_id: enrollmentId, sessions: sessions, by: currentUser && currentUser.email };
+  if (edit) {
+    var ex = document.getElementById('cm-adv-expiry').value;
+    if (ex) payload.expiry_date = ex;
+  } else {
+    var days = Number(document.getElementById('cm-adv-days').value);
+    if (!(days >= 1) || days !== Math.floor(days) || days > 730) { showErr('Số ngày hạn dùng phải từ 1 đến 730'); return; }
+    payload.days = days;
+  }
+  var btn = document.getElementById('cm-adv-save');
+  if (btn) { btn.disabled = true; btn.textContent = 'Đang lưu...'; }
+  apiPost(payload).then(function(res){
+    if (!res || !res.success) {
+      showErr((res && res.error) || 'Không lưu được — kiểm tra bản Apps Script đã Deploy phiên bản mới chưa');
+      if (btn) { btn.disabled = false; btn.textContent = edit ? 'Lưu thay đổi' : 'Kích hoạt'; }
+      return;
+    }
+    closeModal();
+    toast(edit ? 'Đã cập nhật buổi 1-1 ✅' : 'Đã kích hoạt ' + sessions + ' buổi 1-1 ✅', 'success');
+    csLoadSeasonDetail(_cmCurrentSeasonId, function(){ document.getElementById('main-content').innerHTML = renderSeasonDetail(); });
+  }).catch(function(err){
+    showErr('Lỗi kết nối: ' + err.message);
+    if (btn) { btn.disabled = false; btn.textContent = edit ? 'Lưu thay đổi' : 'Kích hoạt'; }
+  });
+}
+function openActivateSeasonModal(seasonId) {
+  var list = CM_ENROLLMENTS.filter(function(e){ return e.season_id === seasonId && e.advisor && !e.advisor.activated && e.advisor.planned_sessions > 0; });
+  if (!list.length) { toast('Không còn học viên nào chưa kích hoạt', 'info'); return; }
+  var total = list.reduce(function(sum, e){ return sum + e.advisor.planned_sessions; }, 0);
+  document.getElementById('modal-title').textContent = 'Kích hoạt buổi 1-1 cho cả mùa';
+  var html = '<div style="font-size:12.5px;color:var(--muted);margin-bottom:12px">Sẽ kích hoạt cho <b>' + list.length + '</b> học viên chưa kích hoạt, tổng <b>' + total + '</b> buổi (theo số buổi dự kiến của từng người). Học viên đã kích hoạt không bị ảnh hưởng.</div>';
+  html += '<div class="modal-field"><div class="form-label">Hạn dùng (số ngày, tính từ hôm nay)</div><input class="form-input" type="number" min="1" max="730" id="cm-advall-days" value="90" style="margin-top:6px"></div>';
+  document.getElementById('modal-body').innerHTML = html;
+  document.getElementById('modal-actions').innerHTML = '<button class="detail-btn" onclick="closeModal()">Hủy</button> <button class="login-btn" id="cm-advall-save" style="width:auto;padding:10px 24px" onclick="saveActivateSeason(\'' + seasonId + '\')">Kích hoạt ' + list.length + ' học viên</button>';
+  document.getElementById('modal-overlay').classList.add('open');
+}
+function saveActivateSeason(seasonId) {
+  var days = Number(document.getElementById('cm-advall-days').value);
+  if (!(days >= 1) || days !== Math.floor(days) || days > 730) { toast('Số ngày hạn dùng phải từ 1 đến 730', 'error'); return; }
+  var btn = document.getElementById('cm-advall-save');
+  if (btn) { btn.disabled = true; btn.textContent = 'Đang kích hoạt... đừng đóng trang'; }
+  apiPost({ action: 'activateCourseAdvisorSeason', season_id: seasonId, days: days, by: currentUser && currentUser.email }).then(function(res){
+    if (!res || !res.success) {
+      toast((res && res.error) || 'Không kích hoạt được', 'error');
+      if (btn) { btn.disabled = false; btn.textContent = 'Thử lại'; }
+      return;
+    }
+    closeModal();
+    var msg = 'Đã kích hoạt ' + res.activated + ' học viên';
+    if (res.already) msg += ' · ' + res.already + ' đã có từ trước';
+    if (res.failed && res.failed.length) { alert(msg + '\nLỗi: ' + res.failed.map(function(f){ return f.name + ' (' + f.error + ')'; }).join('; ')); }
+    else toast(msg + ' ✅', 'success');
+    csLoadSeasonDetail(seasonId, function(){ document.getElementById('main-content').innerHTML = renderSeasonDetail(); });
+  }).catch(function(err){
+    toast('Lỗi kết nối: ' + err.message + ' — tải lại trang để xem đã kích hoạt được bao nhiêu', 'error');
+    if (btn) { btn.disabled = false; btn.textContent = 'Thử lại'; }
+  });
+}
 function cmAcctBadge(e) {
   if (e.account_sent_at) return '<span class="badge cm-pay-badge-paid">Đã gửi TK</span><div style="font-size:11px;color:var(--muted);margin-top:3px">' + cmFmtDT(e.account_sent_at) + '</div>';
   if (!e.email) return '<span class="badge cm-pay-badge-none">Thiếu email</span>';
@@ -6155,7 +6260,7 @@ function openConfirmEnrollModal(enrollmentId) {
   if (!e) { toast('Không tìm thấy học viên', 'error'); return; }
   var resend = !!e.account_sent_at;
   document.getElementById('modal-title').textContent = resend ? 'Gửi lại tài khoản — ' + e.name : 'Xác nhận học viên & gửi tài khoản';
-  var html = '<div style="font-size:12.5px;color:var(--muted);margin-bottom:12px">Kiểm tra lại thông tin. Khi xác nhận, hệ thống sẽ tạo tài khoản học viên, cấp 2 buổi cố vấn 1-1 (nếu chưa có) và gửi email hướng dẫn đăng nhập.</div>';
+  var html = '<div style="font-size:12.5px;color:var(--muted);margin-bottom:12px">Kiểm tra lại thông tin. Khi xác nhận, hệ thống sẽ tạo tài khoản học viên và gửi email hướng dẫn đăng nhập. Buổi cố vấn 1-1 được kích hoạt riêng bằng nút "Kích hoạt 1-1".</div>';
   html += '<div class="modal-field"><div class="form-label">Họ tên <span style="color:var(--brand)">*</span></div><input class="form-input" id="cm-cf-name" value="' + escHtml(e.name) + '" style="margin-top:6px"></div>';
   html += '<div class="modal-field"><div class="form-label">Email nhận tài khoản <span style="color:var(--brand)">*</span></div><input class="form-input" type="email" id="cm-cf-email" value="' + escHtml(e.email) + '" placeholder="hocvien@gmail.com" style="margin-top:6px"></div>';
   html += '<div class="modal-field"><div class="form-label">Số điện thoại</div><input class="form-input" id="cm-cf-phone" value="' + escHtml(e.phone || '') + '" style="margin-top:6px"></div>';
@@ -6182,7 +6287,7 @@ function saveConfirmEnroll(enrollmentId) {
       return;
     }
     closeModal();
-    toast('Đã gửi tài khoản tới ' + res.email + ' ✅' + (res.password_included ? '' : ' (học viên đã có mật khẩu riêng)') + (res.expiry_from_today ? ' · 2 buổi 1-1 tính 90 ngày từ hôm nay' : ''), 'success');
+    toast('Đã gửi tài khoản tới ' + res.email + ' ✅' + (res.password_included ? '' : ' (học viên đã có mật khẩu riêng)'), 'success');
     csLoadSeasonDetail(_cmCurrentSeasonId, function(){ document.getElementById('main-content').innerHTML = renderSeasonDetail(); });
   }).catch(function(err){
     showErr('Lỗi kết nối: ' + err.message);
@@ -6193,7 +6298,7 @@ function saveConfirmEnroll(enrollmentId) {
 function cmConfirmAllPending(seasonId) {
   var n = CM_ENROLLMENTS.filter(function(e){ return e.season_id === seasonId && !e.account_sent_at && e.email; }).length;
   if (!n) { toast('Không còn học viên nào chưa gửi', 'info'); return; }
-  if (!confirm('Gửi email tài khoản cho ' + n + ' học viên chưa được gửi?\n\nMỗi bạn sẽ được: tạo tài khoản (nếu chưa có), cấp 2 buổi cố vấn 1-1 (nếu chưa có) và nhận 1 email.\nHọc viên đã ghi danh quá 90 ngày sẽ được tính 90 ngày từ hôm nay.\nHọc viên thiếu email sẽ bị bỏ qua.')) return;
+  if (!confirm('Gửi email tài khoản cho ' + n + ' học viên chưa được gửi?\n\nMỗi bạn sẽ được: tạo tài khoản (nếu chưa có) và nhận 1 email. Buổi 1-1 không được cấp ở bước này (kích hoạt riêng).\nHọc viên thiếu email sẽ bị bỏ qua.')) return;
   toast('Đang gửi... vui lòng chờ, đừng đóng trang', 'info');
   apiPost({ action: 'confirmCourseEnrollments', season_id: seasonId, by: currentUser && currentUser.email }).then(function(res){
     if (!res || !res.success) { toast((res && res.error) || 'Không gửi được', 'error'); return; }
@@ -11248,7 +11353,7 @@ insDeptOf_ = function(lead) { return deptPrimary_(lead && lead.interested_dept);
             status: x.status, start_date: csNormDate(x.start_date),
             class_link: x.class_link || '', slide_link: x.slide_link || '',
             price_full: Number(x.price_full) || 0, plans: x.plans || [],
-            max_seats: Number(x.max_seats) || 0, enrolled_count: Number(x.enrolled_count) || 0, instructor_advisor: x.instructor_advisor || '',
+            max_seats: Number(x.max_seats) || 0, enrolled_count: Number(x.enrolled_count) || 0, instructor_advisor: x.instructor_advisor || '', free_sessions: (x.free_sessions === '' || x.free_sessions == null) ? '' : Number(x.free_sessions),
           };
         });
       }
